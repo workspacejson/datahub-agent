@@ -1,0 +1,35 @@
+{
+  "name": "@workspacejson/datahub-agent",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Public reference DataHub application consuming released workspace.json interfaces: DataHub MCP consumption, dbt/DataHub URN-to-source-file joins, evaluation and demo assets.",
+  "license": "Apache-2.0",
+  "author": "workspace-json contributors",
+  "homepage": "https://github.com/workspacejson/datahub-agent",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/workspacejson/datahub-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/workspacejson/datahub-agent/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:clean-room": "node scripts/check-clean-room.mjs",
+    "parity:datahub-adapter": "tsx migration/parity-datahub-shim.mjs"
+  },
+  "dependencies": {
+    "@workspacejson/spec": "0.4.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "tsx": "4.19.2",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

@@ -8,3 +8,6 @@ __pycache__/
 *.pyc
 .venv/
 .DS_Store
+
+# parity harness cache — the pre-migration side, fetched on demand
+.parity-cache/

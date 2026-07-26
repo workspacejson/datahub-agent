@@ -1,0 +1,49 @@
+{
+  "_provenance": {
+    "corpus": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+    "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+    "generated_by": "scripts/build-corpus-fixture.mjs",
+    "note": "NOT a real @workspacejson/cli producer run — that package is unpublished and clean-room rules forbid source consumption. Keys are the corpus's real tracked file list (git ls-files); evidence values are intentionally empty. Exercises key membership only.",
+    "file_count": 36
+  },
+  "generated": {
+    "fileIndex": {
+      ".devcontainer.json": {},
+      ".github/CODEOWNERS": {},
+      ".github/workflows/validate_on_platforms.yml": {},
+      ".gitignore": {},
+      ".python-version": {},
+      ".sqlfluff": {},
+      ".sqlfluffignore": {},
+      ".vscode/extensions.json": {},
+      "Dockerfile": {},
+      "LICENSE": {},
+      "README.md": {},
+      "RELEASE.md": {},
+      "dbt-completion.bash": {},
+      "dbt_project.yml": {},
+      "etc/dbdiagram_definition.txt": {},
+      "etc/jaffle_shop_erd.png": {},
+      "images/dbt_full_deploy_commands.png": {},
+      "images/dbt_performance.png": {},
+      "images/open_in_codespaces.png": {},
+      "models/customers.sql": {},
+      "models/docs.md": {},
+      "models/orders.sql": {},
+      "models/overview.md": {},
+      "models/schema.yml": {},
+      "models/staging/schema.yml": {},
+      "models/staging/stg_customers.sql": {},
+      "models/staging/stg_orders.sql": {},
+      "models/staging/stg_payments.sql": {},
+      "profiles.yml": {},
+      "pyproject.toml": {},
+      "requirements.txt": {},
+      "seeds/.gitkeep": {},
+      "seeds/raw_customers.csv": {},
+      "seeds/raw_orders.csv": {},
+      "seeds/raw_payments.csv": {},
+      "uv.lock": {}
+    }
+  }
+}

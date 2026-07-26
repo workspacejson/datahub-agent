@@ -40,9 +40,23 @@ PROOF CORPUS:     HAC-143 (tracked separately, not part of this repository)
 ## Repository layout
 
 ```
-docs/         clean-room import rule and other bounded documentation
-examples/     runnable, judge-visible usage examples
-evaluation/   held-out evaluation and baseline measurement (LOC, etc.)
+src/adapters/workspacejson/   the dbt/DataHub join: path normalization, URN
+                              resolution, fileIndex join  (see its README)
+test/                         tests and proof-corpus fixtures
+migration/                    parity harness for the adopted adapter
+scripts/                      fixture and probe generators
+docs/                         clean-room rule, adoption provenance, feedback log
+examples/                     runnable, judge-visible usage examples
+evaluation/                   proof corpus, node-type coverage, measurement
+```
+
+## Verifying this repository
+
+```bash
+npm install
+npm test                        # 27 tests, incl. the URN -> evidence integration test
+npm run typecheck
+npm run parity:datahub-adapter  # 35/35 against the frozen migration baseline
 ```
 
 ## Local quickstart
@@ -51,9 +65,16 @@ See [`docs/quickstart.md`](docs/quickstart.md) for running a local DataHub insta
 
 ## Status
 
-This repository is being bootstrapped under [HAC-214](https://linear.app/marcelle-labs/issue/HAC-214). Related, not-yet-resolved decisions that gate future work here:
+Bootstrapped under [HAC-214](https://linear.app/marcelle-labs/issue/HAC-214).
 
-- [HAC-143](https://linear.app/marcelle-labs/issue/HAC-143) — proof corpus not yet selected/frozen.
+Landed:
+
+- [META-248](https://linear.app/marcelle-labs/issue/META-248) — the workspace.json DataHub/dbt adapter is adopted as an internal module, parity preserved at 35/35 against the frozen migration baseline. See [`docs/provenance.md`](docs/provenance.md).
+- [HAC-143](https://linear.app/marcelle-labs/issue/HAC-143) — proof corpus frozen at [`dbt-labs/jaffle_shop_duckdb@36bde6cb`](https://github.com/dbt-labs/jaffle_shop_duckdb/tree/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb). See [`evaluation/proof-corpus.md`](evaluation/proof-corpus.md), including its recorded limitations.
+- [HAC-162](https://linear.app/marcelle-labs/issue/HAC-162) — `original_file_path` verified populated across every dbt node type the join uses. See [`evaluation/dbt-node-coverage.md`](evaluation/dbt-node-coverage.md).
+
+Not yet resolved, gating further work:
+
 - [HAC-213](https://linear.app/marcelle-labs/issue/HAC-213) — Path-B (`workspacejson signals datahub`) not yet ruled.
 - [HAC-163](https://linear.app/marcelle-labs/issue/HAC-163) — agent substrate (build on the DataHub Analytics Agent/LangGraph vs. own) not yet decided; gates [HAC-148](https://linear.app/marcelle-labs/issue/HAC-148), [HAC-149](https://linear.app/marcelle-labs/issue/HAC-149), [HAC-152](https://linear.app/marcelle-labs/issue/HAC-152).
 
