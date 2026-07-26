@@ -1,0 +1,209 @@
+# Devpost draft — ready to paste
+
+Field-by-field content for [HAC-215](https://linear.app/marcelle-labs/issue/HAC-215).
+Kept in the repository so it is version-controlled and reviewable rather than
+retyped from memory during submission week.
+
+Submission:
+https://devpost.com/submit-to/28039-build-with-datahub-the-agent-hackathon/manage/submissions/1074840/project-overview
+
+> **Accuracy rule for this file.** Nothing here claims a technology that has not
+> actually been exercised. Lines that will become true later are marked
+> `[UPDATE AFTER …]` rather than written optimistically now. See
+> [`feedback-evidence.md`](feedback-evidence.md) for the used / not-yet table.
+
+---
+
+## Project name
+
+```
+workspace.json for DataHub
+```
+
+## Tagline
+
+```
+Connects a DataHub dataset to the code that produces it — and to how that code actually behaves.
+```
+
+## Category
+
+**Metadata-Aware Code Generation & Development**
+
+---
+
+## "Inspiration"
+
+```
+DataHub knows a dataset's lineage, schema, and ownership. Git knows which files
+change together, which ones churn, and which ones break things. Nobody joins
+them, so an agent working on a data pipeline sees the catalog or the repository,
+never both at once.
+
+The join sounds trivial: a dbt model is a file, so walk from the dataset URN to
+the model to the file. We tried it. It returned zero rows — silently, with no
+error. dbt reports original_file_path relative to the dbt project root, while
+repository evidence is keyed relative to the git root. Any real repo with dbt
+nested in a subdirectory produces an empty join and no warning that anything
+went wrong.
+
+A silent zero is the worst possible failure shape for a metadata join. That is
+the problem this project exists to close.
+```
+
+## "What it does"
+
+```
+Resolves a DataHub dataset URN to the source file that produces it, then attaches
+repository behavioral evidence to it:
+
+  DataHub dataset URN
+    -> dbt manifest node        (database.schema.alias reconstruction)
+    -> original_file_path       (accounted for, never silently dropped)
+    -> repo-root-relative key   (the normalization that makes the join work)
+    -> workspace.json evidence  (co-change, churn, fragility)
+
+Two properties we cared about more than features:
+
+Nothing vanishes. Extraction reports every dbt node as kept, excluded, or
+dropped, under a checkable invariant (kept + dropped + excluded == total). A node
+with no resolvable source file produces a warning that names it. Measured against
+our proof corpus, the naive path silently discards 23 of 28 nodes; ours discards
+none without saying so.
+
+Claims are pinned to evidence. The proof corpus is frozen at an immutable commit.
+Every coverage number is reproducible from that commit with one command.
+```
+
+## "How we built it"
+
+```
+The join is verified against dbt-labs/jaffle_shop_duckdb, frozen at commit
+36bde6cba69d962b83be1d52fc65a0dce1cb4ebb. It runs on DuckDB, so a judge can
+rebuild the exact manifest with no warehouse and no credentials.
+
+We verified original_file_path coverage across every dbt node type the join
+touches rather than assuming SQL-model behavior generalizes. Result: models (SQL
+and Python), seeds, snapshots, tests and sources all populate it — zero nulls at
+dbt 1.12.0. Snapshots, Python models and sources are absent from the corpus, so
+those were verified against a purpose-built probe instead of being extrapolated.
+
+The path-normalization adapter is pre-existing work, adopted into this repository
+with per-file provenance: four of five files are byte-identical to their
+pre-migration origin, the fifth carries one documented type-only deviation, and a
+35-check parity harness runs against the original to prove behavior is unchanged.
+
+[UPDATE AFTER HAC-148] DataHub MCP read path.
+[UPDATE AFTER HAC-152] End-to-end demo path.
+```
+
+## "Challenges we ran into"
+
+```
+The join silently returned zero rows on nested dbt projects. Reproduced 5/5
+matches at the repo root, 0/5 when nested. Fixed by deriving the project prefix
+from wherever dbt_project.yml actually lives, and enumerating every dbt project
+rather than assuming a single knowable path.
+
+Silent drops hid behind a passing test suite. Filtering to resource_type ==
+"model" with a truthy original_file_path looks correct and is not: on our corpus
+it throws away 23 of 28 nodes with no warning, and on the node-type probe it
+throws away exactly the snapshot and seed. Both filters now report.
+
+A dependency's type stub was masking a real compile error. The adapter only
+typechecked upstream because an ambient declaration shadowed node:fs. Against
+real @types/node it produced four errors. We did not carry the shim forward —
+it would have masked type errors across the whole application.
+```
+
+## "Accomplishments that we're proud of"
+
+```
+Every number in this submission is reproducible from a pinned commit by anyone
+who clones the repo. The proof corpus is frozen, the fixtures are regenerated by
+a script that refuses to run against an unpinned checkout, and the node-type
+coverage claim is backed by pasted command output rather than prose.
+
+We also documented what our proof corpus cannot show — that its dbt project sits
+at the repository root, so it never exercises the nested-project normalization
+that is the adapter's entire reason to exist. That case is covered by an explicit
+perturbation test instead. Stating the limitation is worth more than a number
+that quietly does not support the claim.
+```
+
+## "What we learned"
+
+```
+dbt's manifest is more consistent than its reputation suggests: original_file_path
+is populated for every node type we tested, including snapshots and Python models.
+The risk was never the null. It was the filter above the null.
+
+A source's original_file_path points at the YAML that declares it, not at a model
+file, so per-source evidence is not separable from the other sources sharing that
+file. Worth knowing before promising per-source scores.
+```
+
+## "What's next"
+
+```
+Publish the producer CLI so the evidence side of the join can be generated for
+any repository rather than reconstructed. Wire the DataHub MCP read path. Extend
+the corpus to a deeper-history pipeline repository, since co-change signal from
+92 commits is illustrative rather than statistical.
+```
+
+---
+
+## Links
+
+| Field | Value |
+| -- | -- |
+| Public repository | `https://github.com/workspacejson/datahub-agent` |
+| `examples/` | `https://github.com/workspacejson/datahub-agent/tree/main/examples` — `[UPDATE AFTER HAC-148/HAC-152]` |
+| Runnable / setup path | `https://github.com/workspacejson/datahub-agent/blob/main/docs/quickstart.md` |
+| Video | `[NOT YET RECORDED]` |
+| Upstream contributions | `https://github.com/workspacejson/cli/pull/10` |
+
+## Technologies — tick only these
+
+- `dbt` — used (manifest parsing, multi-node-type coverage, dbt 1.12.0)
+- `DataHub` — used for **dataset URN semantics** only
+- `TypeScript`, `Node.js`, `DuckDB`, `Python`
+
+**Do not tick yet:** DataHub OSS/Core, DataHub MCP Server, Agent Context Kit,
+Analytics Agent. None have been exercised. Add them only when
+`feedback-evidence.md` moves them to *used*.
+
+## Pre-existing-work disclosure — paste verbatim
+
+```
+The workspace.json standard, its producer CLI, and the dbt path-normalization
+adapter in src/adapters/workspacejson/ are pre-existing work, developed before
+the hackathon and adopted into this repository under META-248 with full
+provenance recorded in docs/provenance.md — frozen baseline commit, per-file
+source identity, and a 35/35 parity harness run against the pre-migration origin.
+
+New work for this hackathon: the DataHub dataset-URN resolution seam (urn.ts),
+non-silent dbt node extraction (nodes.ts), the end-to-end URN to dbt to source to
+evidence integration test, the proof corpus selection and its node-type coverage
+verification, and the DataHub application itself.
+```
+
+## Feedback questions
+
+Answers are maintained in [`feedback-evidence.md`](feedback-evidence.md) — copy
+from there at submission time so the two never drift. Highest-value improvement,
+in short:
+
+```
+DataHub's dbt ingestion should preserve original_file_path (and the dbt
+unique_id) on the dataset entity. The entire URN -> model -> file chain exists
+only because the source location is not retrievable from DataHub: it requires
+re-reading manifest.json out of band and reconstructing database.schema.alias to
+match back. Carried as a dataset property or custom aspect, any consumer wanting
+to connect a dataset to the code producing it gets it in one hop.
+
+Concretely: because the path must be reconstructed rather than carried, a naive
+join silently returns zero rows on nested dbt projects — no error, no warning.
+Reproduced 5/5 at the repository root, 0/5 nested.
+```
