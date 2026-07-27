@@ -5,7 +5,12 @@
  *
  * Reads before-state, plans the mutations, applies them, reads after-state, and
  * records every attempt. A receipt is produced whether or not the write
- * succeeded — a silent failure is the outcome this is built to prevent.
+ * succeeded — a silent failure is the outcome this is built to prevent. That
+ * promise is why no transport error is allowed to escape: an exception thrown
+ * past the receipt would be exactly the silent failure this exists to avoid.
+ *
+ * The enriched event goes to stdout unless --out names a file, so the default
+ * invocation can be piped or retained. Diagnostics stay on stderr.
  *
  * Usage:
  *   node scripts/run-writeback.mjs <event.json> [--gms URL] [--dry-run] [--out FILE]
@@ -30,43 +35,93 @@ const eventPath =
   argv.find((a) => a.endsWith(".json")) ??
   join(repoRoot, "test/fixtures/golden/change-impact-event.nested.json");
 
-const { planWriteback, refusalReason, redact, attachReceipt, LINK_LABEL, EVIDENCE_TIER_PROPERTY_ID } =
-  await import(join(repoRoot, "src/integration/writeback.ts"));
+const {
+  planWriteback,
+  refusalReason,
+  redact,
+  attachReceipt,
+  isNoop,
+  unreadableState,
+  LINK_LABEL,
+  EVIDENCE_TIER_PROPERTY_ID,
+} = await import(join(repoRoot, "src/integration/writeback.ts"));
 
 const event = JSON.parse(readFileSync(resolve(eventPath), "utf8"));
 
+/**
+ * Post a GraphQL document, and never throw.
+ *
+ * Transport failure, a non-JSON body and a GraphQL error all come back as
+ * `ok: false` with the detail preserved, so every caller reaches the receipt.
+ */
 async function gql(query, variables = {}) {
-  const response = await fetch(`${GMS}/api/graphql`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-    signal: AbortSignal.timeout(30_000),
-  });
-  const body = await response.json();
-  return { ok: !body.errors, body };
+  try {
+    const response = await fetch(`${GMS}/api/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const text = await response.text();
+    let body;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      return {
+        ok: false,
+        body: null,
+        error: `HTTP ${response.status}: non-JSON response ${text.slice(0, 200)}`,
+      };
+    }
+    if (body.errors) {
+      return { ok: false, body, error: JSON.stringify(body.errors).slice(0, 300) };
+    }
+    if (!response.ok) {
+      return { ok: false, body, error: `HTTP ${response.status}` };
+    }
+    return { ok: true, body, error: null };
+  } catch (e) {
+    return { ok: false, body: null, error: `${e.name}: ${e.message}` };
+  }
 }
 
-/** Read the state this writeback would change. */
+/**
+ * Read the state this writeback would change.
+ *
+ * A failed read returns `read: "failed"` rather than nulls that would be
+ * indistinguishable from a catalog holding nothing. Recording an unreachable
+ * instance as an empty one would manufacture a clean before/after pair for a
+ * write that never landed.
+ */
 async function readState(urn) {
-  const { body } = await gql(`query($urn: String!) {
+  const { ok, body, error } = await gql(`query($urn: String!) {
     dataset(urn: $urn) {
       institutionalMemory { elements { url label } }
       structuredProperties { properties { structuredProperty { urn } values { ... on StringValue { stringValue } } } }
     }
   }`, { urn });
+
+  if (!ok) return unreadableState(error ?? "unknown read failure");
+
   const ds = body?.data?.dataset;
+  if (ds === undefined) return unreadableState("response carried no dataset field");
+
+  // A null dataset is a real answer: the entity is not in the catalog.
   const link =
     (ds?.institutionalMemory?.elements ?? []).find((e) => e.label === LINK_LABEL)?.url ?? null;
   const tierProp = (ds?.structuredProperties?.properties ?? []).find((p) =>
     p.structuredProperty?.urn?.includes(EVIDENCE_TIER_PROPERTY_ID),
   );
   const tier = tierProp?.values?.[0]?.stringValue ?? null;
-  return { linkUrl: link, evidenceTier: tier };
+  return { linkUrl: link, evidenceTier: tier, read: "ok", readError: null };
 }
+
+/** A state we deliberately did not read, because a dry run changes nothing. */
+const notRead = (why) => unreadableState(why);
 
 /** Define the structured property once. Safe to repeat — an existing id is not an error we propagate. */
 async function ensureProperty() {
-  const { body } = await gql(`mutation($input: CreateStructuredPropertyInput!) {
+  const { body, error } = await gql(`mutation($input: CreateStructuredPropertyInput!) {
     createStructuredProperty(input: $input) { urn }
   }`, {
     input: {
@@ -87,11 +142,17 @@ async function ensureProperty() {
   });
   const created = body?.data?.createStructuredProperty?.urn ?? null;
   const already = JSON.stringify(body?.errors ?? "").match(/already exists|Conflict|duplicate/i);
-  return { created, already: Boolean(already), raw: JSON.stringify(body).slice(0, 300) };
+  return {
+    created,
+    already: Boolean(already),
+    raw: error ?? JSON.stringify(body).slice(0, 300),
+  };
 }
 
 const refused = refusalReason(event);
-const before = DRY ? { linkUrl: null, evidenceTier: null } : await readState(event.subject.urn);
+const before = DRY
+  ? notRead("dry run: the catalog was not read")
+  : await readState(event.subject.urn);
 const plan = planWriteback(event);
 const attempts = [];
 
@@ -109,17 +170,22 @@ if (!refused && !DRY) {
       step.mutation === "upsertLink"
         ? `mutation($input: UpsertLinkInput!) { upsertLink(input: $input) }`
         : `mutation($input: UpsertStructuredPropertiesInput!) { upsertStructuredProperties(input: $input) { properties { structuredProperty { urn } } } }`;
-    const { ok, body } = await gql(query, step.variables);
+    const { ok, body, error } = await gql(query, step.variables);
     attempts.push({
       mutation: step.mutation,
       variables: redact(step.variables),
       succeeded: ok,
-      response: JSON.stringify(ok ? body.data : body.errors).slice(0, 400),
+      response: (ok ? JSON.stringify(body.data) : (error ?? "unknown failure")).slice(0, 400),
     });
   }
 }
 
-const after = DRY || refused ? before : await readState(event.subject.urn);
+const after =
+  DRY || refused
+    ? before
+    : await readState(event.subject.urn);
+
+const verified = before.read === "ok" && after.read === "ok";
 
 const receipt = {
   targetUrn: event.subject.urn,
@@ -129,27 +195,40 @@ const receipt = {
   before,
   after,
   attempts,
-  succeeded: !refused && attempts.length > 0 && attempts.every((a) => a.succeeded),
-  noop:
-    !refused &&
-    before.linkUrl === after.linkUrl &&
-    before.evidenceTier === after.evidenceTier &&
-    before.linkUrl !== null,
+  // A write is only claimed successful when its mutations landed AND the result
+  // was observable. Mutations returning cleanly against an unreadable instance
+  // is not the same as a verified write.
+  succeeded:
+    !refused && attempts.length > 0 && attempts.every((a) => a.succeeded) && verified,
+  noop: !refused && isNoop(before, after),
+  verified,
   refusedBecause: refused,
 };
 
 const enriched = attachReceipt(event, receipt);
 const json = `${JSON.stringify(enriched, null, 2)}\n`;
+
+// The receipt is the product. Without a destination it goes to stdout so it can
+// be piped or retained; discarding it would defeat the point of emitting one.
 if (OUT) {
   writeFileSync(resolve(OUT), json);
-  console.log(`written to ${OUT}`);
+  console.error(`written to ${OUT}`);
+} else {
+  process.stdout.write(json);
 }
+
+const describe = (s) =>
+  s.read === "failed"
+    ? `UNREADABLE (${s.readError})`
+    : `link=${s.linkUrl ? "present" : "absent"} tier=${s.evidenceTier ?? "unset"}`;
 
 console.error(`\ntarget       ${receipt.targetUrn}`);
 console.error(`mode         ${DRY ? "dry-run" : "applied"}`);
 console.error(`refused      ${refused ?? "no"}`);
-console.error(`before       link=${before.linkUrl ? "present" : "absent"} tier=${before.evidenceTier ?? "unset"}`);
-console.error(`after        link=${after.linkUrl ? "present" : "absent"} tier=${after.evidenceTier ?? "unset"}`);
+console.error(`before       ${describe(before)}`);
+console.error(`after        ${describe(after)}`);
 for (const a of attempts) console.error(`  ${a.succeeded ? "ok  " : "FAIL"} ${a.mutation}  ${a.response.slice(0, 110)}`);
-console.error(`succeeded    ${receipt.succeeded}   noop=${receipt.noop}`);
-process.exit(receipt.succeeded || DRY || refused ? 0 : 1);
+console.error(`succeeded    ${receipt.succeeded}   noop=${receipt.noop}   verified=${receipt.verified}`);
+
+// A refusal is a legitimate outcome, not a failure. A dry run asserts nothing.
+process.exit(DRY || refused || receipt.succeeded ? 0 : 1);

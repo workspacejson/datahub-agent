@@ -82,12 +82,26 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       expect(event.writeback?.attempts.every((a) => a.succeeded)).toBe(true);
     });
 
+    it("observed both sides of the write, so the transition is evidence", () => {
+      // Mutations returning cleanly against an instance that could not be read
+      // is not a verified write. A fixture is only a demonstration if the
+      // before and after states were actually observed.
+      expect(event.writeback?.verified).toBe(true);
+      expect(event.writeback?.before.read).toBe("ok");
+      expect(event.writeback?.after.read).toBe("ok");
+    });
+
     it("was captured against a clean instance — nothing was there before", () => {
       // This is what makes the fixture a first-run transcript rather than an
       // exploratory one. Re-running the writeback against an already-enriched
       // instance yields noop=true and before === after, which is a correct
       // result but a misleading thing to commit as the demonstration.
-      expect(event.writeback?.before).toEqual({ linkUrl: null, evidenceTier: null });
+      expect(event.writeback?.before).toEqual({
+        linkUrl: null,
+        evidenceTier: null,
+        read: "ok",
+        readError: null,
+      });
       expect(event.writeback?.noop).toBe(false);
     });
 

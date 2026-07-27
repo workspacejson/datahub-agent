@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.0",
   "provenance": {
-    "producedAt": "2026-07-27T11:27:37.019Z",
+    "producedAt": "2026-07-27T11:58:49.146Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -146,18 +146,22 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T11:27:46.701Z",
+    "attemptedAt": "2026-07-27T11:58:50.727Z",
     "revision": {
       "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
       "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
     },
     "before": {
       "linkUrl": null,
-      "evidenceTier": null
+      "evidenceTier": null,
+      "read": "ok",
+      "readError": null
     },
     "after": {
       "linkUrl": "https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql",
-      "evidenceTier": "VERIFIED"
+      "evidenceTier": "VERIFIED",
+      "read": "ok",
+      "readError": null
     },
     "attempts": [
       {
@@ -205,6 +209,7 @@
     ],
     "succeeded": true,
     "noop": false,
+    "verified": true,
     "refusedBecause": null
   }
 }

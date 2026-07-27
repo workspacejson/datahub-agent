@@ -21,9 +21,12 @@ import {
   EVIDENCE_TIER_PROPERTY_ID,
   LINK_LABEL,
   attachReceipt,
+  isNoop,
   planWriteback,
   redact,
   refusalReason,
+  unreadableState,
+  type CatalogState,
   type WritebackReceipt,
 } from "../../src/integration/writeback.js";
 
@@ -267,19 +270,60 @@ describe("redact", () => {
   });
 });
 
+/** A state the catalog actually answered for. */
+const readState = (
+  linkUrl: string | null,
+  evidenceTier: CatalogState["evidenceTier"] = null,
+): CatalogState => ({ linkUrl, evidenceTier, read: "ok", readError: null });
+
+describe("unreadableState", () => {
+  it("carries the failure rather than presenting nulls as an answer", () => {
+    const state = unreadableState("TypeError: fetch failed");
+    expect(state.read).toBe("failed");
+    expect(state.readError).toBe("TypeError: fetch failed");
+    expect(state.linkUrl).toBeNull();
+  });
+});
+
+describe("isNoop", () => {
+  it("is true when the state already matched and both sides were read", () => {
+    expect(isNoop(readState(SOURCE_URL, "VERIFIED"), readState(SOURCE_URL, "VERIFIED"))).toBe(true);
+  });
+
+  it("is false when the link was absent before, which is a real write", () => {
+    expect(isNoop(readState(null), readState(SOURCE_URL, "VERIFIED"))).toBe(false);
+  });
+
+  it("is false when the tier changed even though the link did not", () => {
+    expect(isNoop(readState(SOURCE_URL, "OBSERVED"), readState(SOURCE_URL, "VERIFIED"))).toBe(false);
+  });
+
+  it.each([
+    ["the before state", unreadableState("boom"), readState(SOURCE_URL, "VERIFIED")],
+    ["the after state", readState(SOURCE_URL, "VERIFIED"), unreadableState("boom")],
+    ["both states", unreadableState("boom"), unreadableState("boom")],
+  ])("is never true when %s could not be read", (_label, before, after) => {
+    // "nothing changed" and "we could not tell whether anything changed" are
+    // different claims, and only the first is evidence of idempotency. Two
+    // unreadable states are equal to each other, which is exactly the trap.
+    expect(isNoop(before, after)).toBe(false);
+  });
+});
+
 describe("attachReceipt", () => {
   const receipt = (overrides: Partial<WritebackReceipt> = {}): WritebackReceipt => ({
     targetUrn: URN,
     actor: { tool: "@workspacejson/datahub-agent", version: "0.0.1" },
     attemptedAt: "2026-07-27T00:00:00.000Z",
     revision: { repository: "https://github.com/dcaribou/transfermarkt-datasets", commit: COMMIT },
-    before: { linkUrl: null, evidenceTier: null },
-    after: { linkUrl: SOURCE_URL, evidenceTier: "VERIFIED" },
+    before: readState(null),
+    after: readState(SOURCE_URL, "VERIFIED"),
     attempts: [
       { mutation: "upsertLink", variables: {}, succeeded: true, response: "true" },
     ],
     succeeded: true,
     noop: false,
+    verified: true,
     refusedBecause: null,
     ...overrides,
   });
@@ -314,7 +358,7 @@ describe("attachReceipt", () => {
       resolvedEvent(),
       receipt({
         succeeded: false,
-        after: { linkUrl: null, evidenceTier: null },
+        after: readState(null),
         attempts: [
           { mutation: "upsertLink", variables: {}, succeeded: false, response: "connection refused" },
         ],
@@ -324,13 +368,34 @@ describe("attachReceipt", () => {
     expect(failed.writeback?.attempts[0]?.response).toBe("connection refused");
   });
 
+  it("carries an unreachable instance as unreadable, not as an empty catalog", () => {
+    // The whole failure mode: a receipt showing before=absent, after=absent on
+    // an instance that was never reached would look like a clean, honest write
+    // that simply did nothing. `read: "failed"` is what stops that reading.
+    const unreachable = attachReceipt(
+      resolvedEvent(),
+      receipt({
+        succeeded: false,
+        verified: false,
+        before: unreadableState("TypeError: fetch failed"),
+        after: unreadableState("TypeError: fetch failed"),
+        attempts: [
+          { mutation: "upsertLink", variables: {}, succeeded: false, response: "TypeError: fetch failed" },
+        ],
+      }),
+    );
+    expect(unreachable.writeback?.before.read).toBe("failed");
+    expect(unreachable.writeback?.verified).toBe(false);
+    expect(unreachable.writeback?.noop).toBe(false);
+  });
+
   it("records a refusal with its reason instead of an empty attempt list", () => {
     const refused = attachReceipt(
       resolvedEvent(),
       receipt({
         succeeded: false,
         attempts: [],
-        after: { linkUrl: null, evidenceTier: null },
+        after: readState(null),
         refusedBecause: "no commit-pinned source URL is available",
       }),
     );

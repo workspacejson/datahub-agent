@@ -50,6 +50,30 @@ export interface MutationAttempt {
 }
 
 /**
+ * The catalog state this writeback observed, on one side of the write.
+ *
+ * `read` exists because a null `linkUrl` is otherwise two different facts
+ * wearing the same face: the catalog answered and holds no link, or the catalog
+ * never answered at all. That is the same distinction the change-impact
+ * contract draws between `absent` and `failed`, and collapsing it here would
+ * let an unreadable instance be recorded as an empty one — a before/after pair
+ * showing a clean write that never happened.
+ */
+export interface CatalogState {
+  linkUrl: string | null;
+  evidenceTier: EvidenceTier | null;
+  /** Whether the catalog answered. When "failed", the fields above are not claims. */
+  read: "ok" | "failed";
+  /** What went wrong, when the read failed. */
+  readError: string | null;
+}
+
+/** A state that could not be read. The nulls are explicitly not assertions. */
+export function unreadableState(error: string): CatalogState {
+  return { linkUrl: null, evidenceTier: null, read: "failed", readError: error };
+}
+
+/**
  * A receipt is emitted whether or not the write succeeded. A writeback that
  * fails silently is worse than one that fails loudly, and a reviewer needs to
  * see the failure as readily as the success.
@@ -60,15 +84,36 @@ export interface WritebackReceipt {
   attemptedAt: string;
   /** Revision the enrichment was derived from. */
   revision: { repository: string | null; commit: string | null };
-  before: { linkUrl: string | null; evidenceTier: EvidenceTier | null };
-  after: { linkUrl: string | null; evidenceTier: EvidenceTier | null };
+  before: CatalogState;
+  after: CatalogState;
   attempts: MutationAttempt[];
   /** True only when every attempt succeeded. */
   succeeded: boolean;
   /** Set when the write was skipped because the state already matched. */
   noop: boolean;
+  /**
+   * True when both states were read. A write whose effect could not be observed
+   * is not a verified write, however cleanly its mutations returned.
+   */
+  verified: boolean;
   /** Why the writeback did not proceed, when it did not. */
   refusedBecause: string | null;
+}
+
+/**
+ * Whether the write changed nothing because the state already matched.
+ *
+ * Never true on an unreadable state: "nothing changed" and "we could not tell
+ * whether anything changed" are different claims, and only the first is
+ * evidence of idempotency.
+ */
+export function isNoop(before: CatalogState, after: CatalogState): boolean {
+  if (before.read !== "ok" || after.read !== "ok") return false;
+  return (
+    before.linkUrl !== null &&
+    before.linkUrl === after.linkUrl &&
+    before.evidenceTier === after.evidenceTier
+  );
 }
 
 export const LINK_LABEL = "Producing source (workspace.json)" as const;

@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.0",
   "provenance": {
-    "producedAt": "2026-07-27T11:27:37.804Z",
+    "producedAt": "2026-07-27T11:58:49.888Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -126,18 +126,22 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T11:27:47.383Z",
+    "attemptedAt": "2026-07-27T11:58:51.496Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
     },
     "before": {
       "linkUrl": null,
-      "evidenceTier": null
+      "evidenceTier": null,
+      "read": "ok",
+      "readError": null
     },
     "after": {
       "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
-      "evidenceTier": "VERIFIED"
+      "evidenceTier": "VERIFIED",
+      "read": "ok",
+      "readError": null
     },
     "attempts": [
       {
@@ -185,6 +189,7 @@
     ],
     "succeeded": true,
     "noop": false,
+    "verified": true,
     "refusedBecause": null
   }
 }
