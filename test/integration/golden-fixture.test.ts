@@ -121,11 +121,17 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       expect(event.writeback?.observation?.lastError).toBeNull();
     });
 
-    it("was captured against a clean instance — nothing was there before", () => {
-      // This is what makes the fixture a first-run transcript rather than an
-      // exploratory one. Re-running the writeback against an already-enriched
-      // instance yields noop=true and before === after, which is a correct
-      // result but a misleading thing to commit as the demonstration.
+    it("is a first enrichment run — this tool had written nothing before it", () => {
+      // Precisely: a first enrichment run against a *bootstrapped* instance,
+      // not a first run against a clean one. The catalog had been ingested and
+      // used; what was reset before capture was only the link and the
+      // structured-property value this tool owns. That is what the before-state
+      // below asserts, and it is all it asserts.
+      //
+      // The distinction matters because re-running the writeback against an
+      // already-enriched instance yields noop=true and before === after — a
+      // correct result, but a misleading thing to commit as the demonstration.
+      // Making the reset deterministic and verified is tracked under HAC-146.
       expect(event.writeback?.before).toEqual({
         linkUrl: null,
         evidenceTier: null,
