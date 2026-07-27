@@ -126,7 +126,14 @@ checked before reporting it as one. Recorded because it is the kind of thing
 that reads as a broken package when it is actually a caller using CJS resolution
 against an ESM-only export map.
 
-### Highest-value DataHub improvement (running candidate)
+### Highest-value DataHub improvement — SUPERSEDED, see the 2026-07-27 entry
+
+> **This candidate was measured and found wrong on 2026-07-27.** dbt ingestion
+> **does** preserve the source path — as `customProperties.dbt_file_path`, and it
+> *is* projected through MCP. It also emits a commit-pinned `externalUrl`. The
+> claim below overstates the gap. It is left in place because this log is
+> append-only and a corrected record is worth more than a tidy one; the accurate
+> version is in the 2026-07-27 session entry.
 
 *Candidate, not final — to be revised as DataHub surfaces are actually used.*
 
@@ -146,6 +153,104 @@ Evidence this is a real gap and not a preference: a naive join silently returns
 error. Reproduced 5/5 at root, 0/5 nested. A silent zero is the worst possible
 failure shape for a metadata join, and it is a direct consequence of the file
 path having to be reconstructed rather than carried.
+
+---
+
+## 2026-07-27 — Session 2: live DataHub, MCP read path, upstream contribution
+
+Scope: HAC-148, HAC-156. First session with a real DataHub instance.
+
+### What worked
+
+**The quickstart is genuinely one command, and it works.** `datahub docker
+quickstart` brought up seven services and reported success in ~4 minutes on a
+clean machine. The migration job (`system-update`) exited 0 without intervention.
+
+**dbt ingestion carries more than expected.** A single recipe pointed at
+`manifest.json` produced datasets, column-level lineage, and — the part that
+matters here — a **commit-pinned source URL**, because `git_info.branch` accepts
+a SHA rather than only a branch name:
+
+```yaml
+git_info:
+  repo: https://github.com/dbt-labs/jaffle_shop_duckdb
+  branch: 36bde6cba69d962b83be1d52fc65a0dce1cb4ebb
+```
+
+**`url_subdir` handles nested dbt projects correctly.** For a project at `dbt/`,
+it produced `.../blob/<sha>/dbt/models/curated/game_events.sql` — the repo-root
+prefix applied exactly as needed.
+
+### Correction to our own earlier claim
+
+Session 1 recorded the top improvement as *"dbt ingestion should preserve
+`original_file_path` on the dataset entity."* **That was wrong**, and measuring
+it is what showed us:
+
+* `customProperties.dbt_file_path` is populated **and** projected through MCP;
+* `customProperties.dbt_unique_id` likewise;
+* `properties.externalUrl` is populated, commit-pinned.
+
+Recorded rather than quietly edited, because a log that revises its own history
+is not evidence. The superseded entry above is annotated in place.
+
+### The actual gap, narrower and better
+
+`externalUrl` is held by DataHub and **dropped by the MCP projection**. It is
+requested for `CorpGroup`, `Dashboard`, `Chart`, `Assertion` and `Document` in
+the same GraphQL document — `Dataset` is the omission.
+
+Reproducible scan: `node scripts/probe-mcp-dataset-fields.mjs`
+
+```text
+DataHub holds:              externalUrl  https://github.com/.../blob/36bde6cb.../models/customers.sql
+MCP projects to the agent:  (absent)
+DROPPED AT THE MCP BOUNDARY: externalUrl
+```
+
+Full record: [`evaluation/mcp-field-coverage.md`](../evaluation/mcp-field-coverage.md).
+
+Why it matters, stated precisely rather than dramatically: `dbt_file_path` is
+relative to the dbt project, so an agent holding only it must also know the
+repository, the commit, and the project's offset from the repository root, then
+rebuild the URL. `externalUrl` is that answer, already assembled by the server
+and then discarded at the boundary.
+
+### Contributed upstream rather than worked around
+
+One line in `entity_details.gql`, matching how `Dashboard` and `Chart` already
+request the field. Regression test asserts against the GraphQL document, so it
+runs without credentials; confirmed red before and green after.
+
+Worth stating plainly: the fix makes our own path-normalization shim largely
+unnecessary for DataHub consumers. We filed it anyway. A workaround only we can
+operate is worth less than a fix everyone gets.
+
+### Where setup caused delay
+
+**Docker Desktop's "Apply & Restart" shut down without restarting** — twice —
+needing a manual relaunch each time. Not a DataHub issue, but it cost two
+multi-minute waits diagnosing a daemon that simply was not running.
+
+**The documented 8 GB minimum is real.** The declared JVM initial heaps across
+the quickstart's services sum to ~3 GB before container overhead, and those are
+`-Xms` floors. At 5.8 GB the risk is OOM during the migration job, which would
+leave a half-migrated state — worse than failing clean. At 12.7 GB the whole
+stack settled at ~3.8 GB with no drama.
+
+**Client/server version skew warning.** CLI `1.6.0.15` against GMS `v1.5.0.6`
+prints an incompatibility warning and recommends downgrading. It did not affect
+ingestion or reads in this session, but it is noise that a first-time user will
+reasonably worry about.
+
+### Highest-value DataHub improvement — revised
+
+**Project `Dataset.externalUrl` through the MCP server.** Same conclusion as
+before in spirit, but now correctly located: the fix belongs in the MCP
+projection, not in dbt ingestion, because ingestion already does its part.
+
+This is filed as a one-line upstream change with a live repro rather than left
+as a suggestion.
 
 ---
 
