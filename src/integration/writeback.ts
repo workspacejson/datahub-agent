@@ -50,27 +50,95 @@ export interface MutationAttempt {
 }
 
 /**
+ * Why the fields of a `CatalogState` are or are not claims about the catalog.
+ *
+ * This is deliberately the same three-way vocabulary the change-impact contract
+ * uses for `UnavailableReason`, minus `absent` — because here the absence of a
+ * link is carried by `linkUrl: null` under `read: "ok"`, which *is* the positive
+ * claim. The two non-claims are kept apart for the same reason they are there:
+ *
+ *   ok           the catalog answered; the fields below are its answer
+ *   failed       we asked and did not get an answer
+ *   not-queried  we chose not to ask
+ *
+ * Collapsing `not-queried` into `failed` reports a deliberate decision as a
+ * fault — the identical error, in the opposite direction, to reporting a fault
+ * as an answer.
+ */
+export type ReadStatus = "ok" | "failed" | "not-queried";
+
+/**
  * The catalog state this writeback observed, on one side of the write.
  *
- * `read` exists because a null `linkUrl` is otherwise two different facts
- * wearing the same face: the catalog answered and holds no link, or the catalog
- * never answered at all. That is the same distinction the change-impact
- * contract draws between `absent` and `failed`, and collapsing it here would
- * let an unreadable instance be recorded as an empty one — a before/after pair
- * showing a clean write that never happened.
+ * `read` exists because a null `linkUrl` is otherwise several different facts
+ * wearing the same face: the catalog answered and holds no link, the catalog
+ * never answered, or nobody asked. That is the same distinction the
+ * change-impact contract draws between `absent`, `failed` and `not-queried`,
+ * and collapsing it here would let an unreadable instance be recorded as an
+ * empty one — a before/after pair showing a clean write that never happened.
  */
 export interface CatalogState {
   linkUrl: string | null;
   evidenceTier: EvidenceTier | null;
-  /** Whether the catalog answered. When "failed", the fields above are not claims. */
-  read: "ok" | "failed";
-  /** What went wrong, when the read failed. */
+  /** Whether the catalog answered. Unless "ok", the fields above are not claims. */
+  read: ReadStatus;
+  /** What went wrong, or why nothing was asked. Null only when the read is "ok". */
   readError: string | null;
 }
 
 /** A state that could not be read. The nulls are explicitly not assertions. */
 export function unreadableState(error: string): CatalogState {
   return { linkUrl: null, evidenceTier: null, read: "failed", readError: error };
+}
+
+/**
+ * A state nobody asked for. Distinct from `unreadableState`: a dry run declining
+ * to read is a decision, not a failure, and a receipt that calls it a failure is
+ * lying about its own behaviour.
+ */
+export function notQueriedState(why: string): CatalogState {
+  return { linkUrl: null, evidenceTier: null, read: "not-queried", readError: why };
+}
+
+/**
+ * The state the writeback is trying to bring about.
+ *
+ * Without this the receipt can only compare its two observations to each other,
+ * and a before/after pair has no opinion about whether either one is *right*.
+ * Every claim the receipt makes is relative to this.
+ */
+export interface WritebackIntent {
+  linkUrl: string;
+  evidenceTier: EvidenceTier;
+}
+
+/**
+ * How the after-state came to be observed.
+ *
+ * A mutation can return cleanly and still not be visible for minutes — the
+ * index-convergence lag measured in HAC-221. So the after-state is polled until
+ * it matches intent or a bound elapses, and this records which of those
+ * happened. It is a separate vocabulary from `ReadStatus` on purpose: a read
+ * that succeeded but showed a stale answer is `ok` and `timed-out` at once, and
+ * overloading one field to say both would lose exactly the distinction this
+ * issue exists to draw.
+ *
+ *   settled     the after-state was observed carrying the intended values
+ *   timed-out   reads succeeded, but never showed intent within the bound
+ *   failed      the final read did not complete
+ */
+export type ObservationStatus = "settled" | "timed-out" | "failed";
+
+export interface ObservationRecord {
+  status: ObservationStatus;
+  /** How many times the after-state was read. Always at least one. */
+  polls: number;
+  /** Wall-clock spent observing, so a slow convergence is visible as a cost. */
+  elapsedMs: number;
+  /** The bound that was applied, so a timeout can be read against it. */
+  timeoutMs: number;
+  /** The read error, when the final read failed. */
+  lastError: string | null;
 }
 
 /**
@@ -84,16 +152,24 @@ export interface WritebackReceipt {
   attemptedAt: string;
   /** Revision the enrichment was derived from. */
   revision: { repository: string | null; commit: string | null };
+  /** What the write was for. Null only when there was nothing to write. */
+  intended: WritebackIntent | null;
   before: CatalogState;
   after: CatalogState;
   attempts: MutationAttempt[];
-  /** True only when every attempt succeeded. */
+  /** How the after-state was observed. Null when nothing was applied. */
+  observation: ObservationRecord | null;
+  /**
+   * True only when every mutation succeeded AND the after-state was observed
+   * carrying the intended link and tier. Mutations returning cleanly is not
+   * evidence that the write is visible.
+   */
   succeeded: boolean;
-  /** Set when the write was skipped because the state already matched. */
+  /** True when the before-state already matched intent, and still does. */
   noop: boolean;
   /**
-   * True when both states were read. A write whose effect could not be observed
-   * is not a verified write, however cleanly its mutations returned.
+   * True when both states were read. This says the observations exist — it says
+   * nothing about whether they show what was intended. That is `succeeded`.
    */
   verified: boolean;
   /** Why the writeback did not proceed, when it did not. */
@@ -101,19 +177,82 @@ export interface WritebackReceipt {
 }
 
 /**
- * Whether the write changed nothing because the state already matched.
- *
- * Never true on an unreadable state: "nothing changed" and "we could not tell
- * whether anything changed" are different claims, and only the first is
- * evidence of idempotency.
+ * What this event asks the catalog to hold. Null when there is nothing to write,
+ * which is the same condition `refusalReason` reports in prose.
  */
-export function isNoop(before: CatalogState, after: CatalogState): boolean {
-  if (before.read !== "ok" || after.read !== "ok") return false;
-  return (
-    before.linkUrl !== null &&
-    before.linkUrl === after.linkUrl &&
-    before.evidenceTier === after.evidenceTier
-  );
+export function intendedState(event: ChangeImpactEvent): WritebackIntent | null {
+  if (!event.code.sourceUrl) return null;
+  return { linkUrl: event.code.sourceUrl, evidenceTier: event.evidence.tier };
+}
+
+/**
+ * Whether an observed state carries what the writeback set out to establish.
+ *
+ * False on any state that is not `read: "ok"` — a state nobody read cannot
+ * match anything, and treating its nulls as a comparison would turn an
+ * unobserved write into a confident verdict either way.
+ */
+export function matchesIntent(state: CatalogState, intent: WritebackIntent): boolean {
+  if (state.read !== "ok") return false;
+  return state.linkUrl === intent.linkUrl && state.evidenceTier === intent.evidenceTier;
+}
+
+/**
+ * Whether the write changed nothing because the state was already correct.
+ *
+ * Intent-relative rather than a before/after equality check: comparing the two
+ * observations to each other cannot tell "already correct" from "unchanged and
+ * wrong", and only the first is evidence of idempotency. Never true on a state
+ * that was not read — "nothing changed" and "we could not tell whether anything
+ * changed" are different claims.
+ */
+export function isNoop(
+  before: CatalogState,
+  after: CatalogState,
+  intent: WritebackIntent,
+): boolean {
+  return matchesIntent(before, intent) && matchesIntent(after, intent);
+}
+
+/** Everything the receipt's verdict is derived from. */
+export interface OutcomeInput {
+  refusedBecause: string | null;
+  intent: WritebackIntent | null;
+  before: CatalogState;
+  after: CatalogState;
+  attempts: MutationAttempt[];
+}
+
+export interface WritebackOutcome {
+  succeeded: boolean;
+  noop: boolean;
+  verified: boolean;
+}
+
+/**
+ * Derive the receipt's three verdicts from the evidence, in one place.
+ *
+ * This lives here rather than inline in the runner script because it is the
+ * only part of the writeback that makes a *claim*, and a claim that cannot be
+ * tested without a live catalog is a claim nobody checks.
+ */
+export function deriveOutcome({
+  refusedBecause,
+  intent,
+  before,
+  after,
+  attempts,
+}: OutcomeInput): WritebackOutcome {
+  const verified = before.read === "ok" && after.read === "ok";
+  if (refusedBecause !== null || intent === null) {
+    return { succeeded: false, noop: false, verified };
+  }
+  return {
+    succeeded:
+      attempts.length > 0 && attempts.every((a) => a.succeeded) && matchesIntent(after, intent),
+    noop: isNoop(before, after, intent),
+    verified,
+  };
 }
 
 export const LINK_LABEL = "Producing source (workspace.json)" as const;

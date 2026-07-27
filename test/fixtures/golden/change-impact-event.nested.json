@@ -126,10 +126,14 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T11:58:51.496Z",
+    "attemptedAt": "2026-07-27T12:53:33.290Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+    },
+    "intended": {
+      "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+      "evidenceTier": "VERIFIED"
     },
     "before": {
       "linkUrl": null,
@@ -187,6 +191,13 @@
         "response": "{\"upsertStructuredProperties\":{\"properties\":[{\"structuredProperty\":{\"urn\":\"urn:li:structuredProperty:workspacejson_evidence_tier\"}}]}}"
       }
     ],
+    "observation": {
+      "status": "settled",
+      "polls": 1,
+      "elapsedMs": 11,
+      "timeoutMs": 120000,
+      "lastError": null
+    },
     "succeeded": true,
     "noop": false,
     "verified": true,
