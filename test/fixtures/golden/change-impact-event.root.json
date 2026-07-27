@@ -1,0 +1,143 @@
+{
+  "eventVersion": "1.0",
+  "provenance": {
+    "producedAt": "2026-07-27T10:42:59.289Z",
+    "producer": {
+      "name": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "datahub": {
+      "gmsUrl": "http://localhost:8080",
+      "gmsVersion": "v1.5.0.6"
+    },
+    "corpus": {
+      "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+      "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+    },
+    "workspaceArtifact": {
+      "producedBy": "@workspacejson/cli",
+      "fileIndexKeys": 36
+    }
+  },
+  "subject": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)"
+  },
+  "datahub": {
+    "name": "customers",
+    "platform": "dbt",
+    "description": "This table has basic information about a customer, as well as some derived facts based on a customer's orders",
+    "upstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_customers,PROD)",
+        "name": "raw_customers",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_orders,PROD)",
+        "name": "raw_orders",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_payments,PROD)",
+        "name": "raw_payments",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_customers,PROD)",
+        "name": "stg_customers",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_orders,PROD)",
+        "name": "stg_orders",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_payments,PROD)",
+        "name": "stg_payments",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_customers,PROD)",
+        "name": null,
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_orders,PROD)",
+        "name": null,
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_payments,PROD)",
+        "name": null,
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_customers,PROD)",
+        "name": null,
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_orders,PROD)",
+        "name": null,
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_payments,PROD)",
+        "name": null,
+        "degree": 1
+      }
+    ],
+    "downstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.customers,PROD)",
+        "name": null,
+        "degree": 1
+      }
+    ],
+    "schemaFieldCount": 7,
+    "owners": [],
+    "domain": null
+  },
+  "code": {
+    "dbtUniqueId": "model.jaffle_shop.customers",
+    "dbtFilePath": "models/customers.sql",
+    "repositoryRelativePath": "models/customers.sql",
+    "projectPrefix": "",
+    "method": "external-url",
+    "sourceUrl": "https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql"
+  },
+  "partners": [],
+  "evidence": {
+    "records": [
+      {
+        "claim": "producing file models/customers.sql is tracked in the workspace.json artifact",
+        "observation": "key present in generated.fileIndex (36 keys)",
+        "source": "workspacejson",
+        "verified": true
+      },
+      {
+        "claim": "the producing file is addressable at an immutable commit",
+        "observation": "https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql",
+        "source": "datahub",
+        "verified": true
+      }
+    ],
+    "tier": "VERIFIED"
+  },
+  "accounting": {
+    "datasetsRequested": 1,
+    "datasetsResolved": 1,
+    "datasetsUnresolved": 0,
+    "nodesDropped": 0,
+    "nodesExcluded": {}
+  },
+  "unavailable": [
+    {
+      "field": "partners",
+      "source": "workspacejson",
+      "reason": "absent",
+      "detail": "The artifact carries file-index keys but no behavioral co-change values, so no partners are asserted."
+    }
+  ]
+}
