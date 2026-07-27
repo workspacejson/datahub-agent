@@ -1,96 +1,87 @@
 # MCP field coverage — what DataHub holds vs what an agent receives
 
-Measured 2026-07-27 against a clean local DataHub OSS quickstart, GMS `v1.5.0.6`,
-with the frozen proof corpus ingested.
-
-Reproduce:
+Measured against a clean local DataHub OSS quickstart, GMS `v1.5.0.6`, with two
+dbt projects ingested.
 
 ```bash
 node scripts/probe-mcp-dataset-fields.mjs
-node scripts/probe-mcp-dataset-fields.mjs 'urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)'
 ```
 
-## Why this was measured at all
+## Finding
 
-An agent consuming the MCP server sees that a field is absent and **cannot tell
-why**. Either the catalog never held it, or the projection dropped it on the way
-out. Those two situations call for opposite fixes — change how you ingest, or
-change the projection — so distinguishing them is the entire finding.
-
-The probe issues two GraphQL queries against the *same* GMS and the *same* URN:
-one for the fields DataHub can serve, one transcribing the MCP server's own
-`entityPreview → Dataset → properties` block. Like-for-like, rather than a claim
-about MCP's behavior.
-
-## Result
+DataHub computes a commit-pinned source URL for every dbt dataset at ingestion
+time. **The MCP server does not project it to the agent.**
 
 ```text
-urn   urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)
-
-DataHub holds:
-  name           customers
-  description    This table has basic information about a customer...
-  externalUrl    https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cb.../models/customers.sql
-
-MCP projects to the agent:
-  name           customers
-  description    This table has basic information about a customer...
-
-Reachable via customProperties (already projected):
-  dbt_file_path  models/customers.sql
-  dbt_unique_id  model.jaffle_shop.customers
+DataHub holds:              externalUrl  https://github.com/dbt-labs/jaffle_shop_duckdb
+                                         /blob/36bde6cb…/models/customers.sql
+MCP projects to the agent:  (absent)
 
 DROPPED AT THE MCP BOUNDARY: externalUrl
 ```
 
-Same result on a **nested** dbt project, where the difference is sharper:
+`externalUrl` is requested for `CorpGroup`, `Dashboard`, `Chart`, `Assertion`
+and `Document` in the same GraphQL document. `Dataset` is the omission.
+
+## Why it cannot be worked around
+
+An agent still receives the file path through `customProperties.dbt_file_path` —
+but that path is **relative to the dbt project**, and nothing else in the
+projection anchors it.
+
+Every property MCP returns for a dbt dataset whose project sits at `dbt/`:
 
 ```text
-urn   urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)
-
-  dbt_file_path  models/curated/game_events.sql                          <- project-relative
-  externalUrl    .../blob/59fa295c.../dbt/models/curated/game_events.sql <- repo-relative
-
-DROPPED AT THE MCP BOUNDARY: externalUrl
+dbt_file_path      models/curated/game_events.sql
+dbt_package_name   transfermarkt_datasets
+dbt_unique_id      model.transfermarkt_datasets.game_events
+language           sql
+manifest_adapter   duckdb
+manifest_schema    https://schemas.getdbt.com/dbt/manifest/v12.json
+manifest_version   1.12.0
+materialization    table
+node_type          model
 ```
 
-## What this establishes
+| Required to reach the source | Available without `externalUrl` |
+| -- | -- |
+| Repository | **No.** `dbt_package_name` is `transfermarkt_datasets`; the repository is `dcaribou/transfermarkt-datasets`. Not derivable from one another |
+| Commit SHA | **No** |
+| Project offset from repository root | **No** |
 
-**The catalog is not the problem.** DataHub computes a commit-pinned source URL
-at ingestion time, derived from the dbt source's `git_info`. It is correct, it is
-present, and for nested projects `url_subdir` has already resolved the prefix.
+So the agent holds a relative path with nothing to resolve it against. It cannot
+construct a link, and it cannot determine the repository-root-relative path
+either — the ingestion source's `url_subdir` appears nowhere else in the
+projection.
 
-**The projection is where it is lost.** `externalUrl` is requested for
-`CorpGroup`, `Dashboard`, `Chart`, `Assertion` and `Document` in the same
-GraphQL document, and not for `Dataset`.
+`externalUrl` is the only field carrying all three.
 
-**The path is reachable, but not as a link.** `customProperties.dbt_file_path`
-*is* projected — an earlier draft of `docs/feedback-evidence.md` wrongly claimed
-dbt ingestion discarded the source path, and this probe is what disproved it.
-But that value is relative to the dbt project. Turning it into a link requires an
-agent to also know the repository, the commit, and the project's offset from the
-repository root, and to reassemble the URL itself. `externalUrl` is that answer,
-already assembled.
+## The nested case makes the difference visible
 
-That last distinction is the whole argument, and it is narrower and more honest
-than "DataHub loses the source path."
+For a dbt project at the repository root, the project-relative and
+repository-relative paths coincide, and the gap looks cosmetic. It is not:
 
-## Why it matters to this project specifically
+```text
+dbt_file_path   models/curated/game_events.sql                          project-relative
+externalUrl     …/blob/59fa295c…/dbt/models/curated/game_events.sql     repository-relative
+```
 
-The offset between those two values — `models/curated/game_events.sql` versus
-`dbt/models/curated/game_events.sql` — is exactly what
-`src/adapters/workspacejson/normalize.ts` exists to compute. DataHub's
-`url_subdir` and our `projectPrefix` are the same idea, arrived at independently.
+The `dbt/` prefix is the whole difference, and it exists only inside
+`externalUrl`.
 
-So the upstream fix would make our own normalization largely unnecessary for
-DataHub consumers. We filed it anyway. A workaround that only we can operate is
-worth less than a fix everyone gets, and the join is not where the value of this
-project lives.
+## Scope of the impact
 
-## Upstream
+The operator who configured ingestion already knows the repository, the commit
+and the prefix — they wrote them into the recipe. This gap does not affect them.
 
-One line in `entity_details.gql`, matching how `Dashboard` and `Chart` already
-request the field in the same fragment:
+It affects **any agent consuming a DataHub instance it did not configure**, which
+is the premise of the MCP server. For that agent the source link is unreachable
+despite DataHub having already computed it.
+
+## Upstream fix
+
+One line, matching how `Dashboard` and `Chart` request the field in the same
+fragment:
 
 ```diff
  fragment entityPreview on Entity {
@@ -101,24 +92,33 @@ request the field in the same fragment:
              customProperties {
 ```
 
-Verified: the field flows through MCP after the change, for both the root-level
-and nested corpora. Regression test asserts against the GraphQL document rather
-than a live instance, so it needs no credentials — confirmed red before the
-change and green after.
+Verified end to end: the field flows through MCP after the change, for both a
+root-level and a nested dbt project. The regression test asserts against the
+GraphQL document rather than a live instance, so it requires no credentials —
+confirmed failing before the change and passing after.
 
-Tracked as [HAC-156](https://linear.app/marcelle-labs/issue/HAC-156).
+Filed upstream against `acryldata/mcp-server-datahub`.
 
-## When this record goes stale
+## Honest limits
 
-`scripts/probe-mcp-dataset-fields.mjs` **exits 1 if the gap closes** — that is,
-if a future MCP release projects every field DataHub holds. That is the good
-outcome, and it means this document should be updated rather than the probe
-deleted. A record that cannot detect its own obsolescence quietly becomes a
-false claim.
+- Recovering a *path* from `externalUrl` means parsing the segment after
+  `/blob/<sha>/`, and that template differs between GitHub and GitLab. Usable,
+  not elegant. A discrete repository/commit/subdirectory field would be cleaner
+  than a URL, but the URL is what exists.
+- This is a one-line projection fix, not an architectural contribution. It closes
+  a real hole cheaply.
 
-## Environment caveat
+## Keeping this record honest
 
-The DataHub CLI used for ingestion was `1.6.0.15` against GMS `v1.5.0.6`, and the
-client warns about that skew. It did not affect this result — `externalUrl` is
-populated and served correctly by GMS, and the probe reads GMS directly — but the
-versions are recorded so the measurement can be reproduced exactly.
+`scripts/probe-mcp-dataset-fields.mjs` exits non-zero when the gap closes, so a
+future MCP release that projects the field will fail this record rather than
+silently leave it stating something untrue. It refuses to report a result at all
+when pointed at a dataset that carries no `externalUrl` to drop, so a mistyped
+URN cannot be read as a fix.
+
+## Reproduction environment
+
+DataHub CLI `1.6.0.15` against GMS `v1.5.0.6`. The client warns about that skew;
+it does not affect this measurement, which reads GMS directly. Corpora:
+`dbt-labs/jaffle_shop_duckdb@36bde6cb` (root-level) and
+`dcaribou/transfermarkt-datasets@59fa295c` (nested at `dbt/`).

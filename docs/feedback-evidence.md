@@ -126,33 +126,22 @@ checked before reporting it as one. Recorded because it is the kind of thing
 that reads as a broken package when it is actually a caller using CJS resolution
 against an ESM-only export map.
 
-### Highest-value DataHub improvement — SUPERSEDED, see the 2026-07-27 entry
+### On the URN → source-file chain
 
-> **This candidate was measured and found wrong on 2026-07-27.** dbt ingestion
-> **does** preserve the source path — as `customProperties.dbt_file_path`, and it
-> *is* projected through MCP. It also emits a commit-pinned `externalUrl`. The
-> claim below overstates the gap. It is left in place because this log is
-> append-only and a corrected record is worth more than a tidy one; the accurate
-> version is in the 2026-07-27 session entry.
-
-*Candidate, not final — to be revised as DataHub surfaces are actually used.*
-
-**dbt ingestion should preserve `original_file_path` on the dataset entity.**
-The whole `URN → dbt model → source file` chain exists only because the source
-file location is not directly retrievable from DataHub — it requires re-reading
+Before a DataHub instance was available, this chain was built by reading
 `manifest.json` out of band and reconstructing `database.schema.alias` to match
-back. If the dbt source attached `original_file_path` (and the dbt `unique_id`)
-as a dataset property or a custom aspect, every consumer wanting to connect a
-dataset to the code that produces it would get it in one hop, and the entire
-normalization shim in `src/adapters/workspacejson/normalize.ts` — which exists
-purely to bridge dbt-project-relative and repo-root-relative paths — would
-become unnecessary for DataHub consumers.
+a dataset URN back to a dbt node.
 
-Evidence this is a real gap and not a preference: a naive join silently returns
+Measured against a live instance, that is more work than necessary: dbt
+ingestion already attaches `dbt_file_path` and `dbt_unique_id` as dataset
+properties, and both are projected through MCP. The remaining gap is narrower
+and is recorded in the session entry below.
+
+Worth keeping regardless of how the path is obtained: a naive join returns
 **zero rows** when the dbt project is nested under the repository root, with no
-error. Reproduced 5/5 at root, 0/5 nested. A silent zero is the worst possible
-failure shape for a metadata join, and it is a direct consequence of the file
-path having to be reconstructed rather than carried.
+error — reproduced 5/5 at root, 0/5 nested. A silent zero is the worst failure
+shape for a metadata join, and any consumer resolving datasets to files needs to
+handle the project-relative vs repository-relative distinction explicitly.
 
 ---
 
@@ -181,20 +170,15 @@ git_info:
 it produced `.../blob/<sha>/dbt/models/curated/game_events.sql` — the repo-root
 prefix applied exactly as needed.
 
-### Correction to our own earlier claim
+### What dbt ingestion already carries
 
-Session 1 recorded the top improvement as *"dbt ingestion should preserve
-`original_file_path` on the dataset entity."* **That was wrong**, and measuring
-it is what showed us:
+More than expected, and worth stating for anyone planning a similar integration:
 
-* `customProperties.dbt_file_path` is populated **and** projected through MCP;
-* `customProperties.dbt_unique_id` likewise;
-* `properties.externalUrl` is populated, commit-pinned.
+* `customProperties.dbt_file_path` — populated and projected through MCP;
+* `customProperties.dbt_unique_id` — likewise;
+* `properties.externalUrl` — populated and commit-pinned.
 
-Recorded rather than quietly edited, because a log that revises its own history
-is not evidence. The superseded entry above is annotated in place.
-
-### The actual gap, narrower and better
+### The gap
 
 `externalUrl` is held by DataHub and **dropped by the MCP projection**. It is
 requested for `CorpGroup`, `Dashboard`, `Chart`, `Assertion` and `Document` in
