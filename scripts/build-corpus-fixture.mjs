@@ -122,26 +122,23 @@ if (Object.keys(fileIndex).length === 0) {
   process.exit(2);
 }
 
-const workspace = {
-  _provenance: {
-    corpus: `https://github.com/${CORPUS}`,
-    commit: PINNED_SHA,
-    producer: `@workspacejson/cli@${producerVersion}`,
-    generated_by: "scripts/build-corpus-fixture.mjs",
-    note: "A real producer run — `workspacejson generate` from the published package against the pinned corpus. Per-file values are empty because the producer withholds behavioral values by design, not because this fixture omits them.",
-    file_count: Object.keys(fileIndex).length,
-  },
-  generated: {
-    specVersion: produced.generated?.specVersion,
-    by: produced.generated?.by,
-    fileIndex,
-    frameworkManifest: produced.generated?.frameworkManifest ?? [],
-  },
+// Do not reshape the producer artifact. The standard has an exact root schema;
+// adding `_provenance` or dropping required sections turns a valid producer
+// result into an invalid fixture. Provenance belongs beside the raw artifact.
+const workspaceProvenance = {
+  corpus: `https://github.com/${CORPUS}`,
+  commit: PINNED_SHA,
+  producer: `@workspacejson/cli@${producerVersion}`,
+  generated_by: "scripts/build-corpus-fixture.mjs",
+  command: `node ${cliEntry} generate ${resolve(checkout)}`,
+  file_count: Object.keys(fileIndex).length,
+  note: "workspace.json is the unmodified raw producer output. Per-file values are producer-owned; this sidecar carries fixture provenance without changing the standard artifact.",
 };
 
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify(fixture, null, 2)}\n`);
-writeFileSync(join(outDir, "workspace.json"), `${JSON.stringify(workspace, null, 2)}\n`);
+writeFileSync(join(outDir, "workspace.json"), `${JSON.stringify(produced, null, 2)}\n`);
+writeFileSync(join(outDir, "workspace-provenance.json"), `${JSON.stringify(workspaceProvenance, null, 2)}\n`);
 
 console.log(`corpus:      ${CORPUS}@${PINNED_SHA}`);
 console.log(`dbt:         ${manifest.metadata?.dbt_version} / ${manifest.metadata?.adapter_type}`);
