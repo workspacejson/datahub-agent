@@ -51,6 +51,12 @@ interface StubBehavior {
   neverConverges?: boolean;
   /** Answer every read with a non-JSON error body. */
   failReads?: boolean;
+  /**
+   * Accept post-mutation reads and never answer them. This is the case a
+   * between-reads deadline cannot bound: the request is in flight, so nothing
+   * re-checks the clock until the socket resolves.
+   */
+  hangReadsAfterMutation?: boolean;
 }
 
 interface Stub {
@@ -102,6 +108,9 @@ async function startStub(behavior: StubBehavior = {}): Promise<Stub> {
       if (isRead) {
         if (behavior.failReads) return send(502, "upstream is down, and this is not JSON", true);
         if (!mutationsApplied) return send(200, emptyDataset);
+        // Deliberately never respond: the socket stays open until the client
+        // gives up or the stub is torn down.
+        if (behavior.hangReadsAfterMutation) return;
         readsAfterMutation += 1;
         const stillStale =
           behavior.neverConverges === true || readsAfterMutation <= (behavior.staleReads ?? 0);
@@ -119,13 +128,25 @@ async function startStub(behavior: StubBehavior = {}): Promise<Stub> {
     });
   });
 
+  // A hung request holds its socket open, and server.close() waits for every
+  // connection. Track them so teardown cannot stall the suite.
+  const sockets = new Set<import("node:net").Socket>();
+  server.on("connection", (socket) => {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+  });
+
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
 
   return {
     url: `http://127.0.0.1:${port}`,
     requests,
-    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    close: () =>
+      new Promise<void>((resolve) => {
+        for (const socket of sockets) socket.destroy();
+        server.close(() => resolve());
+      }),
   };
 }
 
@@ -227,6 +248,57 @@ describe("a write that never becomes visible", () => {
     expect(receipt.observation?.polls).toBeGreaterThan(1);
     expect(receipt.observation?.elapsedMs).toBeLessThanOrEqual(TIMEOUT_MS);
   }, 20_000);
+});
+
+describe("an instance that accepts a read and never answers", () => {
+  // The case a between-reads deadline cannot bound. `gql` gives every request
+  // its own 30s ceiling, so before this was fixed a 900ms bound would sit on a
+  // hung socket for thirty seconds and then report an elapsedMs thirty times
+  // the bound it claimed to have applied. A deadline that only takes effect
+  // between reads is not a deadline.
+
+  it("gives up at the bound rather than at the request timeout", async () => {
+    stub = await startStub({ hangReadsAfterMutation: true });
+    const startedAt = Date.now();
+    const result = await runCli(bounded(stub));
+    const wallClockMs = Date.now() - startedAt;
+
+    // Generous enough to absorb process spawn, strict enough that the old
+    // fixed 30s request ceiling could not pass it.
+    expect(wallClockMs).toBeLessThan(10_000);
+    expect(result.code).not.toBe(0);
+  }, 60_000);
+
+  it("reports an elapsed time inside the bound it advertises", async () => {
+    // The receipt's own arithmetic has to hold. An elapsedMs above timeoutMs
+    // is the receipt admitting it did not apply the bound it names.
+    stub = await startStub({ hangReadsAfterMutation: true });
+    const receipt = receiptFrom(await runCli(bounded(stub)));
+
+    expect(receipt.observation?.timeoutMs).toBe(TIMEOUT_MS);
+    expect(receipt.observation?.elapsedMs).toBeLessThanOrEqual(TIMEOUT_MS * 2);
+  }, 60_000);
+
+  it("records the cancelled read as failed, with the cause preserved", async () => {
+    // The read did not complete. That is `failed`, not `timed-out` — the
+    // latter would claim the catalog answered and showed the wrong thing.
+    stub = await startStub({ hangReadsAfterMutation: true });
+    const receipt = receiptFrom(await runCli(bounded(stub)));
+
+    expect(receipt.after.read).toBe("failed");
+    expect(receipt.observation?.status).toBe("failed");
+    expect(receipt.observation?.lastError).toMatch(/Timeout|Abort/i);
+    expect(receipt.succeeded).toBe(false);
+    expect(receipt.verified).toBe(false);
+  }, 60_000);
+
+  it("still emits a complete receipt, because a hang must not swallow one", async () => {
+    stub = await startStub({ hangReadsAfterMutation: true });
+    const result = await runCli(bounded(stub));
+
+    expect(() => JSON.parse(result.stdout)).not.toThrow();
+    expect(receiptFrom(result).attempts.every((a) => a.succeeded)).toBe(true);
+  }, 60_000);
 });
 
 describe("an instance that stops answering", () => {

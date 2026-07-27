@@ -78,13 +78,16 @@ const event = JSON.parse(readFileSync(resolve(eventPath), "utf8"));
  * Transport failure, a non-JSON body and a GraphQL error all come back as
  * `ok: false` with the detail preserved, so every caller reaches the receipt.
  */
-async function gql(query, variables = {}) {
+/** Default ceiling for any single request that is not inside an observation budget. */
+const REQUEST_TIMEOUT_MS = 30_000;
+
+async function gql(query, variables = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   try {
     const response = await fetch(`${GMS}/api/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     const text = await response.text();
     let body;
@@ -117,13 +120,13 @@ async function gql(query, variables = {}) {
  * instance as an empty one would manufacture a clean before/after pair for a
  * write that never landed.
  */
-async function readState(urn) {
+async function readState(urn, timeoutMs = REQUEST_TIMEOUT_MS) {
   const { ok, body, error } = await gql(`query($urn: String!) {
     dataset(urn: $urn) {
       institutionalMemory { elements { url label } }
       structuredProperties { properties { structuredProperty { urn } values { ... on StringValue { stringValue } } } }
     }
-  }`, { urn });
+  }`, { urn }, timeoutMs);
 
   if (!ok) return unreadableState(error ?? "unknown read failure");
 
@@ -150,6 +153,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  * than the first thing it said. A stale read is not a failure to observe — the
  * read succeeded — so `status` and the state's own `read` say different things
  * and both are kept.
+ *
+ * The bound governs the whole phase, not just the gaps between reads. Each poll
+ * is given only the budget that remains, because an instance that accepts a
+ * request and never answers would otherwise hold the loop for a full request
+ * timeout — and the receipt would report an `elapsedMs` far above the bound it
+ * claims to have applied. A deadline that only takes effect between reads is
+ * not a deadline.
  */
 async function observeUntilIntent(urn, intent, timeoutMs, intervalMs) {
   const startedAt = Date.now();
@@ -157,7 +167,8 @@ async function observeUntilIntent(urn, intent, timeoutMs, intervalMs) {
   let state;
 
   for (;;) {
-    state = await readState(urn);
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    state = await readState(urn, Math.max(1, Math.min(REQUEST_TIMEOUT_MS, remainingMs)));
     polls += 1;
     const elapsedMs = Date.now() - startedAt;
 
