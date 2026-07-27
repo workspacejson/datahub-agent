@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root { color: #eff4f7; background: #101a22; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button { font: inherit; }
+button:focus-visible { outline: 3px solid #91e7d6; outline-offset: 3px; }
+.cockpit-shell { min-height: 100vh; padding: 32px clamp(20px, 5vw, 80px); background: radial-gradient(circle at top right, #183548, #101a22 56%); }
+.placeholder-banner { margin: -32px clamp(-80px, -5vw, -20px) 28px; padding: 11px; text-align: center; background: #f7c85b; color: #1b2228; font-weight: 800; letter-spacing: .08em; }
+.product-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid #466172; padding-bottom: 24px; }
+.eyebrow { margin: 0; color: #91e7d6; font-size: .75rem; font-weight: 800; letter-spacing: .12em; }
+nav { display: flex; gap: 8px; } nav button { border: 1px solid transparent; border-radius: 999px; background: transparent; color: #c6d4dc; padding: 9px 14px; cursor: pointer; } nav button.active, nav button:hover { border-color: #91e7d6; color: #fff; }
+.state-strip { display: flex; flex-wrap: wrap; gap: 8px; padding: 24px 0; } .state-strip span { border: 1px dashed #6d8796; border-radius: 999px; padding: 5px 9px; color: #dbe5ea; font-size: .8rem; }
+.route-slot { max-width: 900px; border: 1px solid #466172; border-radius: 18px; padding: clamp(28px, 6vw, 72px); background: rgba(19, 35, 46, .82); } h1 { max-width: 18ch; margin: 16px 0; font-size: clamp(2.2rem, 7vw, 5rem); line-height: 1; } .route-slot > p:not(.eyebrow) { max-width: 55ch; color: #c6d4dc; font-size: 1.1rem; line-height: 1.6; }.deferred-surface { margin: 30px 0; border: 1px dashed #6d8796; border-radius: 12px; padding: 20px; color: #c6d4dc; }.cta { border: 0; border-radius: 8px; background: #91e7d6; color: #10202b; padding: 13px 18px; font-weight: 800; cursor: pointer; }
+@media (max-width: 640px) { .product-header { align-items: flex-start; flex-direction: column; } .cockpit-shell { padding-top: 24px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
