@@ -7,6 +7,7 @@ import {
   validateEvent,
   type ChangeImpactEvent,
   type EvidenceRecord,
+  type Unavailable,
 } from "../../src/integration/change-impact-event.js";
 
 /** A minimal event that passes validation — every test mutates one thing from here. */
@@ -82,6 +83,84 @@ describe("deriveTier", () => {
     // The tier is the whole trust signal. If it accepted a threshold or an
     // override, it would become an opinion rather than a function of evidence.
     expect(deriveTier.length).toBe(1);
+  });
+});
+
+describe("completeness as an axis of its own", () => {
+  /** An event whose lineage is empty, with one unavailable entry to describe it. */
+  const withLineageEntry = (entry: Partial<Unavailable>): ChangeImpactEvent => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.unavailable = [
+      {
+        field: "datahub.upstreams",
+        source: "datahub",
+        reason: "indeterminate",
+        detail: "the lineage query succeeded; whether it is complete is unknown",
+        completeness: "unverified",
+        observedCount: 0,
+        ...entry,
+      },
+    ];
+    return event;
+  };
+
+  it("accepts a zero result reported as indeterminate and unverified", () => {
+    // The shape this issue exists to make sayable: asked, answered, and the
+    // answer cannot be trusted to be whole.
+    expect(validateEvent(withLineageEntry({}))).toEqual([]);
+  });
+
+  it("rejects an absent claim resting on an unverified answer", () => {
+    // A partially converged index returning zero satisfies "asked and got
+    // nothing" while being no evidence at all about the data. This is the
+    // defect, expressed as a contract rule.
+    const problems = validateEvent(
+      withLineageEntry({ reason: "absent", completeness: "unverified" }),
+    );
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/absent.*unverified.*use indeterminate/);
+  });
+
+  it("accepts an absent claim once completeness is verified", () => {
+    // `absent` is not banned — it is earned. With an external attestation
+    // behind it, "the catalog holds no upstreams" is a claim the evidence
+    // supports.
+    expect(
+      validateEvent(withLineageEntry({ reason: "absent", completeness: "verified" })),
+    ).toEqual([]);
+  });
+
+  it("rejects indeterminate on an answer that was verified", () => {
+    // The converse guard, so the two words cannot drift into synonyms.
+    const problems = validateEvent(
+      withLineageEntry({ reason: "indeterminate", completeness: "verified" }),
+    );
+    expect(problems[0]).toMatch(/indeterminate.*verified/);
+  });
+
+  it("keeps completeness independent of why the context is missing", () => {
+    // Not derived from `reason`, in either direction. A failed read and a
+    // not-queried one carry no completeness at all, because neither produced
+    // an answer whose completeness could be a question.
+    for (const reason of ["failed", "not-queried"] as const) {
+      const event = withLineageEntry({ reason });
+      delete event.unavailable[0]!.completeness;
+      delete event.unavailable[0]!.observedCount;
+      expect(validateEvent(event)).toEqual([]);
+    }
+  });
+
+  it("treats a zero observedCount as a real observation, not a missing one", () => {
+    // Zero is what the query returned. It is `completeness` that decides
+    // whether it may be read as absence, which is the whole separation.
+    const entry = withLineageEntry({ observedCount: 0 }).unavailable[0]!;
+    expect(entry.observedCount).toBe(0);
+    expect(entry.completeness).toBe("unverified");
+  });
+
+  it("rejects a negative observedCount", () => {
+    expect(validateEvent(withLineageEntry({ observedCount: -1 }))[0]).toMatch(/negative/);
   });
 });
 

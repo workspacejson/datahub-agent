@@ -29,12 +29,41 @@ export type ContextSource = "datahub" | "workspacejson";
  * `absent` is a positive claim: the system was asked and reported nothing.
  * `not-queried` and `failed` are not claims about the data at all. Collapsing
  * them is precisely the error this type exists to prevent.
+ *
+ * `indeterminate` is the fourth case, and it exists because the other three
+ * could not express it. The system was asked, it answered, and the answer
+ * cannot be trusted to be complete — a search-backed lineage read against an
+ * index that may still be converging is the case that forced it. Calling that
+ * `absent` asserts the catalog has no edges; calling it `failed` asserts the
+ * query did not work. Both are false. The query succeeded, returned what it
+ * returned, and completeness is unknown.
+ *
+ * `indeterminate` is therefore about the *standing* of an answer, not its
+ * content: an empty result and a partial one can both be indeterminate, and
+ * whatever edges were returned remain evidence either way.
  */
 export type UnavailableReason =
   | "absent"
   | "not-queried"
   | "failed"
+  | "indeterminate"
   | "not-exposed-by-source";
+
+/**
+ * Whether an answer's completeness was established, as an axis of its own.
+ *
+ * Kept separate from whether the read succeeded, for the same reason the
+ * writeback receipt keeps its observation status separate from `read`: a query
+ * that succeeded while returning a possibly-partial answer is `ok` and
+ * `unverified` at once, and one field cannot say both without losing the
+ * distinction.
+ *
+ * `verified` requires an external attestation — an expected result the answer
+ * was checked against. Repetition is not attestation: two identical samples do
+ * not prove convergence, and neither does a long wait at zero. Nothing in a
+ * general read path can upgrade `unverified` on its own.
+ */
+export type Completeness = "verified" | "unverified";
 
 export interface Unavailable {
   /** Dotted path of what is missing, e.g. `datahub.lineage.downstreams`. */
@@ -43,6 +72,22 @@ export interface Unavailable {
   reason: UnavailableReason;
   /** Human-readable detail — shown to a reviewer, so it must stand alone. */
   detail: string;
+  /**
+   * Whether the answer behind this entry was established as complete.
+   *
+   * Carried alongside `reason` rather than folded into it, because the two say
+   * different things: `reason` is why the context is not present, and this is
+   * how far the answer can be trusted. Omitted where completeness is not a
+   * meaningful question — a field the source does not expose was never an
+   * answer to begin with.
+   */
+  completeness?: Completeness;
+  /**
+   * What the query did return, when it returned something that is not being
+   * presented as the whole answer. Zero is a real observation and is recorded
+   * as one; it is `completeness` that says whether it can be read as absence.
+   */
+  observedCount?: number;
 }
 
 /** How the dataset's producing file was determined. */
@@ -250,6 +295,27 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
 
   if (event.code.method === "unresolved" && event.code.repositoryRelativePath !== null) {
     problems.push("code.method is unresolved but a repositoryRelativePath is present");
+  }
+
+  // An `absent` claim asserts the source was asked and holds nothing. That is
+  // only sayable on an answer known to be complete. A partially-converged index
+  // returning zero edges is the case this exists for: it satisfies "asked and
+  // got nothing" while being no evidence at all about the data.
+  for (const entry of event.unavailable) {
+    if (entry.reason === "absent" && entry.completeness === "unverified") {
+      problems.push(
+        `${entry.field} claims absent on an answer whose completeness is unverified — use indeterminate`,
+      );
+    }
+    // The converse guard, so the two words cannot drift apart in use.
+    if (entry.reason === "indeterminate" && entry.completeness === "verified") {
+      problems.push(
+        `${entry.field} claims indeterminate on a verified answer — say what the answer was`,
+      );
+    }
+    if (entry.observedCount !== undefined && entry.observedCount < 0) {
+      problems.push(`${entry.field} has a negative observedCount`);
+    }
   }
 
   return problems;
