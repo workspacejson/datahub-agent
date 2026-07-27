@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.0",
   "provenance": {
-    "producedAt": "2026-07-27T10:42:58.455Z",
+    "producedAt": "2026-07-27T11:58:49.888Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -119,5 +119,77 @@
       "reason": "absent",
       "detail": "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it."
     }
-  ]
+  ],
+  "writeback": {
+    "targetUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+    "actor": {
+      "tool": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "attemptedAt": "2026-07-27T11:58:51.496Z",
+    "revision": {
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+    },
+    "before": {
+      "linkUrl": null,
+      "evidenceTier": null,
+      "read": "ok",
+      "readError": null
+    },
+    "after": {
+      "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+      "evidenceTier": "VERIFIED",
+      "read": "ok",
+      "readError": null
+    },
+    "attempts": [
+      {
+        "mutation": "createStructuredProperty",
+        "variables": {
+          "input": {
+            "id": "workspacejson_evidence_tier"
+          }
+        },
+        "succeeded": true,
+        "response": "already defined"
+      },
+      {
+        "mutation": "upsertLink",
+        "variables": {
+          "input": {
+            "resourceUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+            "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+            "label": "Producing source (workspace.json)"
+          }
+        },
+        "succeeded": true,
+        "response": "{\"upsertLink\":true}"
+      },
+      {
+        "mutation": "upsertStructuredProperties",
+        "variables": {
+          "input": {
+            "assetUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+            "structuredPropertyInputParams": [
+              {
+                "structuredPropertyUrn": "urn:li:structuredProperty:workspacejson_evidence_tier",
+                "values": [
+                  {
+                    "stringValue": "VERIFIED"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "succeeded": true,
+        "response": "{\"upsertStructuredProperties\":{\"properties\":[{\"structuredProperty\":{\"urn\":\"urn:li:structuredProperty:workspacejson_evidence_tier\"}}]}}"
+      }
+    ],
+    "succeeded": true,
+    "noop": false,
+    "verified": true,
+    "refusedBecause": null
+  }
 }
