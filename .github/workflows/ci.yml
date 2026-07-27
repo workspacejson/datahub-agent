@@ -14,16 +14,24 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The declared floor, tested as a floor. package.json says >=22.18.0
+        # because scripts/run-writeback.mjs imports a .ts module directly and
+        # relies on native type stripping — on 20.19.5 it fails outright with
+        # ERR_UNKNOWN_FILE_EXTENSION. Running only a later 22 would leave that
+        # floor asserted rather than evidenced, which is the habit this
+        # repository is trying to break. The CLI tests spawn this same binary,
+        # so the version under test is the version that runs.
+        node: ["22.18.0", "22.x"]
+    name: verify (node ${{ matrix.node }})
     steps:
       - uses: actions/checkout@v4
 
-      # 22.18+ specifically: scripts/run-writeback.mjs imports a .ts module
-      # directly and relies on native type stripping, which older lines do not
-      # have. The CLI tests spawn this same binary, so the version that runs
-      # here is the version under test.
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.19.0
+          node-version: ${{ matrix.node }}
           cache: npm
 
       - run: npm ci
