@@ -16,13 +16,13 @@ import {
   CHANGE_IMPACT_EVENT_VERSION,
   toDataHubOnly,
   validateEvent,
-  type ChangeImpactEvent,
 } from "../../src/integration/change-impact-event.js";
+import { LINK_LABEL, type EnrichedChangeImpactEvent } from "../../src/integration/writeback.js";
 
 const goldenDir = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/golden");
 
-const load = (name: string): ChangeImpactEvent =>
-  JSON.parse(readFileSync(join(goldenDir, name), "utf8")) as ChangeImpactEvent;
+const load = (name: string): EnrichedChangeImpactEvent =>
+  JSON.parse(readFileSync(join(goldenDir, name), "utf8")) as EnrichedChangeImpactEvent;
 
 const FIXTURES = {
   root: load("change-impact-event.root.json"),
@@ -69,6 +69,67 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
 
   it("reduces to a DataHub-only view that still satisfies the contract", () => {
     expect(validateEvent(toDataHubOnly(event))).toEqual([]);
+  });
+
+  describe("the attached writeback receipt", () => {
+    it("is present, so the fixture carries the write and not only the read", () => {
+      expect(event.writeback).not.toBeNull();
+    });
+
+    it("records a write that succeeded without refusal", () => {
+      expect(event.writeback?.refusedBecause).toBeNull();
+      expect(event.writeback?.succeeded).toBe(true);
+      expect(event.writeback?.attempts.every((a) => a.succeeded)).toBe(true);
+    });
+
+    it("was captured against a clean instance — nothing was there before", () => {
+      // This is what makes the fixture a first-run transcript rather than an
+      // exploratory one. Re-running the writeback against an already-enriched
+      // instance yields noop=true and before === after, which is a correct
+      // result but a misleading thing to commit as the demonstration.
+      expect(event.writeback?.before).toEqual({ linkUrl: null, evidenceTier: null });
+      expect(event.writeback?.noop).toBe(false);
+    });
+
+    it("moved the dataset to the commit-pinned link and the derived tier", () => {
+      expect(event.writeback?.after.linkUrl).toBe(event.code.sourceUrl);
+      expect(event.writeback?.after.evidenceTier).toBe(event.evidence.tier);
+    });
+
+    it("targets the subject it was derived from, at the same revision", () => {
+      expect(event.writeback?.targetUrn).toBe(event.subject.urn);
+      expect(event.writeback?.revision.commit).toBe(event.provenance.corpus.commit);
+    });
+
+    it("attributes the write to a named actor and a timestamp", () => {
+      expect(event.writeback?.actor.tool).toBeTruthy();
+      expect(event.writeback?.attemptedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
+
+    it("used only the two upsert mutations, both core OSS", () => {
+      const mutations = event.writeback?.attempts.map((a) => a.mutation) ?? [];
+      expect(mutations).toContain("upsertLink");
+      expect(mutations).toContain("upsertStructuredProperties");
+      expect(mutations.some((m) => /assertion/i.test(m))).toBe(false);
+    });
+
+    it("wrote nothing human-authored, as recorded in the attempts themselves", () => {
+      // The plan-level test asserts the same policy. This asserts it against
+      // what was actually sent to a live catalog.
+      const sent = JSON.stringify(event.writeback?.attempts.map((a) => a.variables));
+      expect(sent).not.toMatch(/editableProperties|"description"/i);
+      expect(sent).not.toMatch(/fragility|riskScore/i);
+    });
+
+    it("carries no credential, since the fixture is committed", () => {
+      const receipt = JSON.stringify(event.writeback);
+      expect(receipt).not.toMatch(/"(token|password|secret|authorization)":\s*"(?!\[redacted\])/i);
+    });
+
+    it("labels the link so a re-run upserts the same one", () => {
+      const linkAttempt = event.writeback?.attempts.find((a) => a.mutation === "upsertLink");
+      expect((linkAttempt?.variables.input as { label?: string })?.label).toBe(LINK_LABEL);
+    });
   });
 });
 
