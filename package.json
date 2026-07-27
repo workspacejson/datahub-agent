@@ -14,7 +14,7 @@
     "url": "https://github.com/workspacejson/datahub-agent/issues"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.18.0"
   },
   "type": "module",
   "scripts": {

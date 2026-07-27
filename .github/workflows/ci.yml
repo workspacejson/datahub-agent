@@ -1,0 +1,38 @@
+# The repository's thesis is that a claim needs observable evidence. Until this
+# existed, every "206 tests pass" in a pull request was the author's word — the
+# exact shape of assertion this project refuses to accept from a catalog.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 22.18+ specifically: scripts/run-writeback.mjs imports a .ts module
+      # directly and relies on native type stripping, which older lines do not
+      # have. The CLI tests spawn this same binary, so the version that runs
+      # here is the version under test.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Clean-room audit
+        run: npm run check:clean-room
+
+      - name: Tests
+        run: npm test
