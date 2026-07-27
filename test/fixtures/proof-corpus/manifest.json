@@ -1,0 +1,339 @@
+{
+  "_provenance": {
+    "corpus": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+    "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+    "dbt_version": "1.12.0",
+    "adapter_type": "duckdb",
+    "project_name": "jaffle_shop",
+    "generated_by": "scripts/build-corpus-fixture.mjs",
+    "note": "Node payload trimmed to the fields the join reads (resource_type, unique_id, original_file_path, database, schema, alias, name, language, relation_name). Values are verbatim; none are rewritten. Regenerate with the script above."
+  },
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.12.0",
+    "generated_at": "2026-07-26T18:16:29.191482Z",
+    "invocation_id": "aed6eab5-7091-4d87-8f76-e4b97193bc47",
+    "invocation_started_at": "2026-07-26T18:16:23.759606+00:00",
+    "env": {},
+    "project_name": "jaffle_shop",
+    "project_id": "06e5b98c2db46f8a72cc4f66410e9b3b",
+    "user_id": "e35c6eb5-3d85-47a7-abe9-1985021aedae",
+    "send_anonymous_usage_stats": true,
+    "adapter_type": "duckdb",
+    "quoting": {
+      "database": true,
+      "schema": true,
+      "identifier": true,
+      "column": null
+    },
+    "run_started_at": "2026-07-26T18:16:23.759792+00:00"
+  },
+  "nodes": {
+    "model.jaffle_shop.customers": {
+      "resource_type": "model",
+      "unique_id": "model.jaffle_shop.customers",
+      "original_file_path": "models/customers.sql",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "customers",
+      "name": "customers",
+      "language": "sql",
+      "relation_name": "\"jaffle_shop\".\"main\".\"customers\""
+    },
+    "model.jaffle_shop.orders": {
+      "resource_type": "model",
+      "unique_id": "model.jaffle_shop.orders",
+      "original_file_path": "models/orders.sql",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "orders",
+      "name": "orders",
+      "language": "sql",
+      "relation_name": "\"jaffle_shop\".\"main\".\"orders\""
+    },
+    "model.jaffle_shop.stg_customers": {
+      "resource_type": "model",
+      "unique_id": "model.jaffle_shop.stg_customers",
+      "original_file_path": "models/staging/stg_customers.sql",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "stg_customers",
+      "name": "stg_customers",
+      "language": "sql",
+      "relation_name": "\"jaffle_shop\".\"main\".\"stg_customers\""
+    },
+    "model.jaffle_shop.stg_payments": {
+      "resource_type": "model",
+      "unique_id": "model.jaffle_shop.stg_payments",
+      "original_file_path": "models/staging/stg_payments.sql",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "stg_payments",
+      "name": "stg_payments",
+      "language": "sql",
+      "relation_name": "\"jaffle_shop\".\"main\".\"stg_payments\""
+    },
+    "model.jaffle_shop.stg_orders": {
+      "resource_type": "model",
+      "unique_id": "model.jaffle_shop.stg_orders",
+      "original_file_path": "models/staging/stg_orders.sql",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "stg_orders",
+      "name": "stg_orders",
+      "language": "sql",
+      "relation_name": "\"jaffle_shop\".\"main\".\"stg_orders\""
+    },
+    "seed.jaffle_shop.raw_customers": {
+      "resource_type": "seed",
+      "unique_id": "seed.jaffle_shop.raw_customers",
+      "original_file_path": "seeds/raw_customers.csv",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "raw_customers",
+      "name": "raw_customers",
+      "relation_name": "\"jaffle_shop\".\"main\".\"raw_customers\""
+    },
+    "seed.jaffle_shop.raw_orders": {
+      "resource_type": "seed",
+      "unique_id": "seed.jaffle_shop.raw_orders",
+      "original_file_path": "seeds/raw_orders.csv",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "raw_orders",
+      "name": "raw_orders",
+      "relation_name": "\"jaffle_shop\".\"main\".\"raw_orders\""
+    },
+    "seed.jaffle_shop.raw_payments": {
+      "resource_type": "seed",
+      "unique_id": "seed.jaffle_shop.raw_payments",
+      "original_file_path": "seeds/raw_payments.csv",
+      "database": "jaffle_shop",
+      "schema": "main",
+      "alias": "raw_payments",
+      "name": "raw_payments",
+      "relation_name": "\"jaffle_shop\".\"main\".\"raw_payments\""
+    },
+    "test.jaffle_shop.unique_customers_customer_id.c5af1ff4b1": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.unique_customers_customer_id.c5af1ff4b1",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "unique_customers_customer_id",
+      "name": "unique_customers_customer_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_customers_customer_id.5c9bf9911d": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_customers_customer_id.5c9bf9911d",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_customers_customer_id",
+      "name": "not_null_customers_customer_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.unique_orders_order_id.fed79b3a6e": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.unique_orders_order_id.fed79b3a6e",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "unique_orders_order_id",
+      "name": "unique_orders_order_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_order_id.cf6c17daed": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_order_id.cf6c17daed",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_order_id",
+      "name": "not_null_orders_order_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_customer_id.c5f02694af": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_customer_id.c5f02694af",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_customer_id",
+      "name": "not_null_orders_customer_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.relationships_orders_customer_id__customer_id__ref_customers_.c6ec7f58f2": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.relationships_orders_customer_id__customer_id__ref_customers_.c6ec7f58f2",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "relationships_orders_customer_id__customer_id__ref_customers_",
+      "name": "relationships_orders_customer_id__customer_id__ref_customers_",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.accepted_values_orders_status__placed__shipped__completed__return_pending__returned.be6b5b5ec3": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.accepted_values_orders_status__placed__shipped__completed__return_pending__returned.be6b5b5ec3",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "accepted_values_orders_1ce6ab157c285f7cd2ac656013faf758",
+      "name": "accepted_values_orders_status__placed__shipped__completed__return_pending__returned",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_amount.106140f9fd": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_amount.106140f9fd",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_amount",
+      "name": "not_null_orders_amount",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_credit_card_amount.d3ca593b59": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_credit_card_amount.d3ca593b59",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_credit_card_amount",
+      "name": "not_null_orders_credit_card_amount",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_coupon_amount.ab90c90625": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_coupon_amount.ab90c90625",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_coupon_amount",
+      "name": "not_null_orders_coupon_amount",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_bank_transfer_amount.7743500c49": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_bank_transfer_amount.7743500c49",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_bank_transfer_amount",
+      "name": "not_null_orders_bank_transfer_amount",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_orders_gift_card_amount.413a0d2d7a": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_orders_gift_card_amount.413a0d2d7a",
+      "original_file_path": "models/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_orders_gift_card_amount",
+      "name": "not_null_orders_gift_card_amount",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.unique_stg_customers_customer_id.c7614daada": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.unique_stg_customers_customer_id.c7614daada",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "unique_stg_customers_customer_id",
+      "name": "unique_stg_customers_customer_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_stg_customers_customer_id.e2cfb1f9aa": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_stg_customers_customer_id.e2cfb1f9aa",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_stg_customers_customer_id",
+      "name": "not_null_stg_customers_customer_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.unique_stg_orders_order_id.e3b841c71a": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.unique_stg_orders_order_id.e3b841c71a",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "unique_stg_orders_order_id",
+      "name": "unique_stg_orders_order_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_stg_orders_order_id.81cfe2fe64": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_stg_orders_order_id.81cfe2fe64",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_stg_orders_order_id",
+      "name": "not_null_stg_orders_order_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.accepted_values_stg_orders_status__placed__shipped__completed__return_pending__returned.080fb20aad": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.accepted_values_stg_orders_status__placed__shipped__completed__return_pending__returned.080fb20aad",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "accepted_values_stg_orders_4f514bf94b77b7ea437830eec4421c58",
+      "name": "accepted_values_stg_orders_status__placed__shipped__completed__return_pending__returned",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.unique_stg_payments_payment_id.3744510712": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.unique_stg_payments_payment_id.3744510712",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "unique_stg_payments_payment_id",
+      "name": "unique_stg_payments_payment_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.not_null_stg_payments_payment_id.c19cc50075": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.not_null_stg_payments_payment_id.c19cc50075",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "not_null_stg_payments_payment_id",
+      "name": "not_null_stg_payments_payment_id",
+      "language": "sql",
+      "relation_name": null
+    },
+    "test.jaffle_shop.accepted_values_stg_payments_payment_method__credit_card__coupon__bank_transfer__gift_card.3c3820f278": {
+      "resource_type": "test",
+      "unique_id": "test.jaffle_shop.accepted_values_stg_payments_payment_method__credit_card__coupon__bank_transfer__gift_card.3c3820f278",
+      "original_file_path": "models/staging/schema.yml",
+      "database": "jaffle_shop",
+      "schema": "main_dbt_test__audit",
+      "alias": "accepted_values_stg_payments_c7909fb19b1f0177c2bf99c7912f06ef",
+      "name": "accepted_values_stg_payments_payment_method__credit_card__coupon__bank_transfer__gift_card",
+      "language": "sql",
+      "relation_name": null
+    }
+  },
+  "sources": {}
+}

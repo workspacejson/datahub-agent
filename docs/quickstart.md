@@ -26,7 +26,36 @@ datahub docker nuke
 
 This application consumes DataHub via the official DataHub MCP server, not direct GMS calls. Configuration for the MCP endpoint and any local credentials will live in this application's own config once the agent implementation (tracked under [HAC-148](https://linear.app/marcelle-labs/issue/HAC-148)) lands.
 
-## 3. Run the examples
+## 3. Produce a workspace.json for any repository
+
+The producer is on the public registry, so this needs no checkout of this
+project and no credentials:
+
+```bash
+npm install @workspacejson/cli
+npx workspacejson generate .
+```
+
+That writes `.agents/workspace.json`, whose `generated.fileIndex` is keyed by
+repository-root-relative POSIX path — the key this application joins DataHub
+dataset URNs against.
+
+Two properties worth checking yourself, because the join depends on both:
+
+```bash
+# the artifact converges — a second run is byte-identical
+npx workspacejson generate . && shasum -a 256 .agents/workspace.json
+npx workspacejson generate . && shasum -a 256 .agents/workspace.json
+
+# it does not index its own output
+jq '.generated.fileIndex | has(".agents/workspace.json")' .agents/workspace.json   # false
+```
+
+Per-file values are intentionally empty. `FileIndexEntry` declares them
+optional, and the producer withholds behavioral values by design — the join is
+key membership, not value reading.
+
+## 4. Run the examples
 
 See [`examples/`](../examples) for runnable, judge-visible usage once available.
 

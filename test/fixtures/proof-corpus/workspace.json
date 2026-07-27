@@ -1,0 +1,56 @@
+{
+  "_provenance": {
+    "corpus": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+    "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+    "producer": "@workspacejson/cli@0.5.0",
+    "generated_by": "scripts/build-corpus-fixture.mjs",
+    "note": "A real producer run — `workspacejson generate` from the published package against the pinned corpus. Per-file values are empty because the producer withholds behavioral values by design, not because this fixture omits them.",
+    "file_count": 36
+  },
+  "generated": {
+    "specVersion": "0.4",
+    "by": {
+      "name": "@workspacejson/cli",
+      "version": "0.5.0"
+    },
+    "fileIndex": {
+      ".devcontainer.json": {},
+      ".github/CODEOWNERS": {},
+      ".github/workflows/validate_on_platforms.yml": {},
+      ".gitignore": {},
+      ".python-version": {},
+      ".sqlfluff": {},
+      ".sqlfluffignore": {},
+      ".vscode/extensions.json": {},
+      "Dockerfile": {},
+      "LICENSE": {},
+      "README.md": {},
+      "RELEASE.md": {},
+      "dbt-completion.bash": {},
+      "dbt_project.yml": {},
+      "etc/dbdiagram_definition.txt": {},
+      "etc/jaffle_shop_erd.png": {},
+      "images/dbt_full_deploy_commands.png": {},
+      "images/dbt_performance.png": {},
+      "images/open_in_codespaces.png": {},
+      "models/customers.sql": {},
+      "models/docs.md": {},
+      "models/orders.sql": {},
+      "models/overview.md": {},
+      "models/schema.yml": {},
+      "models/staging/schema.yml": {},
+      "models/staging/stg_customers.sql": {},
+      "models/staging/stg_orders.sql": {},
+      "models/staging/stg_payments.sql": {},
+      "profiles.yml": {},
+      "pyproject.toml": {},
+      "requirements.txt": {},
+      "seeds/.gitkeep": {},
+      "seeds/raw_customers.csv": {},
+      "seeds/raw_orders.csv": {},
+      "seeds/raw_payments.csv": {},
+      "uv.lock": {}
+    },
+    "frameworkManifest": []
+  }
+}
