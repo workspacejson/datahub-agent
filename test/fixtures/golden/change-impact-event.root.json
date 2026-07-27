@@ -146,10 +146,14 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T11:58:50.727Z",
+    "attemptedAt": "2026-07-27T12:53:33.042Z",
     "revision": {
       "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
       "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+    },
+    "intended": {
+      "linkUrl": "https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql",
+      "evidenceTier": "VERIFIED"
     },
     "before": {
       "linkUrl": null,
@@ -207,6 +211,13 @@
         "response": "{\"upsertStructuredProperties\":{\"properties\":[{\"structuredProperty\":{\"urn\":\"urn:li:structuredProperty:workspacejson_evidence_tier\"}}]}}"
       }
     ],
+    "observation": {
+      "status": "settled",
+      "polls": 1,
+      "elapsedMs": 11,
+      "timeoutMs": 120000,
+      "lastError": null
+    },
     "succeeded": true,
     "noop": false,
     "verified": true,

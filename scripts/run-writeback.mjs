@@ -3,17 +3,26 @@
  * Execute the OSS-safe enrichment writeback against a live DataHub and emit a
  * receipt.
  *
- * Reads before-state, plans the mutations, applies them, reads after-state, and
- * records every attempt. A receipt is produced whether or not the write
- * succeeded — a silent failure is the outcome this is built to prevent. That
- * promise is why no transport error is allowed to escape: an exception thrown
- * past the receipt would be exactly the silent failure this exists to avoid.
+ * Reads before-state, plans the mutations, applies them, observes the
+ * after-state until it carries what was intended, and records every attempt. A
+ * receipt is produced whether or not the write succeeded — a silent failure is
+ * the outcome this is built to prevent. That promise is why no transport error
+ * is allowed to escape: an exception thrown past the receipt would be exactly
+ * the silent failure this exists to avoid.
+ *
+ * The after-state is polled rather than read once because DataHub applies a
+ * mutation and serves a stale read for some time afterwards — minutes, on the
+ * convergence measured in HAC-221. A single read would make an honest receipt
+ * flaky: correct writes reported as failures. Polling to a bound keeps the
+ * claim honest without making it noise, and the bound itself is recorded so a
+ * timeout can be read against it.
  *
  * The enriched event goes to stdout unless --out names a file, so the default
  * invocation can be piped or retained. Diagnostics stay on stderr.
  *
  * Usage:
  *   node scripts/run-writeback.mjs <event.json> [--gms URL] [--dry-run] [--out FILE]
+ *                                  [--observe-timeout MS] [--observe-interval MS]
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -31,6 +40,18 @@ const flag = (n, d) => {
 const DRY = argv.includes("--dry-run");
 const GMS = flag("gms", "http://localhost:8080");
 const OUT = flag("out", null);
+// A non-numeric bound would make the observation loop unbounded, which is the
+// one way this script could hang instead of emitting a receipt.
+const duration = (name, fallback) => {
+  const value = Number(flag(name, fallback));
+  if (!Number.isFinite(value) || value <= 0) {
+    console.error(`--${name} must be a positive number of milliseconds; using ${fallback}`);
+    return fallback;
+  }
+  return value;
+};
+const OBSERVE_TIMEOUT_MS = duration("observe-timeout", 120_000);
+const OBSERVE_INTERVAL_MS = duration("observe-interval", 3_000);
 const eventPath =
   argv.find((a) => a.endsWith(".json")) ??
   join(repoRoot, "test/fixtures/golden/change-impact-event.nested.json");
@@ -40,7 +61,10 @@ const {
   refusalReason,
   redact,
   attachReceipt,
-  isNoop,
+  deriveOutcome,
+  intendedState,
+  matchesIntent,
+  notQueriedState,
   unreadableState,
   LINK_LABEL,
   EVIDENCE_TIER_PROPERTY_ID,
@@ -116,8 +140,47 @@ async function readState(urn) {
   return { linkUrl: link, evidenceTier: tier, read: "ok", readError: null };
 }
 
-/** A state we deliberately did not read, because a dry run changes nothing. */
-const notRead = (why) => unreadableState(why);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Read the after-state until it carries what was intended, or the bound elapses.
+ *
+ * Returns the *final* observation together with the record of how it was
+ * reached, so a receipt reports what the catalog last actually showed rather
+ * than the first thing it said. A stale read is not a failure to observe — the
+ * read succeeded — so `status` and the state's own `read` say different things
+ * and both are kept.
+ */
+async function observeUntilIntent(urn, intent, timeoutMs, intervalMs) {
+  const startedAt = Date.now();
+  let polls = 0;
+  let state;
+
+  for (;;) {
+    state = await readState(urn);
+    polls += 1;
+    const elapsedMs = Date.now() - startedAt;
+
+    if (matchesIntent(state, intent)) {
+      return { state, record: { status: "settled", polls, elapsedMs, timeoutMs, lastError: null } };
+    }
+    if (elapsedMs + intervalMs >= timeoutMs) {
+      // A read that never completed and a read that completed showing the wrong
+      // thing are different failures, and the receipt has to say which.
+      return {
+        state,
+        record: {
+          status: state.read === "ok" ? "timed-out" : "failed",
+          polls,
+          elapsedMs,
+          timeoutMs,
+          lastError: state.readError,
+        },
+      };
+    }
+    await sleep(intervalMs);
+  }
+}
 
 /** Define the structured property once. Safe to repeat — an existing id is not an error we propagate. */
 async function ensureProperty() {
@@ -150,8 +213,12 @@ async function ensureProperty() {
 }
 
 const refused = refusalReason(event);
+const intent = intendedState(event);
+// A dry run *chose* not to read. Recording that as a failed read would report a
+// deliberate decision as a fault — the same collapse of a non-claim into a
+// claim that the change-impact contract exists to prevent.
 const before = DRY
-  ? notRead("dry run: the catalog was not read")
+  ? notQueriedState("dry run: the catalog was not read")
   : await readState(event.subject.urn);
 const plan = planWriteback(event);
 const attempts = [];
@@ -180,28 +247,31 @@ if (!refused && !DRY) {
   }
 }
 
-const after =
-  DRY || refused
-    ? before
-    : await readState(event.subject.urn);
+// Nothing was applied, so there is nothing to observe. `after` repeats `before`
+// rather than inventing a second reading nobody took.
+const observed =
+  DRY || refused || intent === null
+    ? { state: before, record: null }
+    : await observeUntilIntent(event.subject.urn, intent, OBSERVE_TIMEOUT_MS, OBSERVE_INTERVAL_MS);
 
-const verified = before.read === "ok" && after.read === "ok";
+const after = observed.state;
+
+// The verdicts are derived in src/integration/writeback.ts, where they are
+// testable without a live catalog. This script gathers evidence; it does not
+// decide what the evidence means.
+const outcome = deriveOutcome({ refusedBecause: refused, intent, before, after, attempts });
 
 const receipt = {
   targetUrn: event.subject.urn,
   actor: { tool: "@workspacejson/datahub-agent", version: "0.0.1" },
   attemptedAt: new Date().toISOString(),
   revision: { repository: event.provenance.corpus.repository, commit: event.provenance.corpus.commit },
+  intended: intent,
   before,
   after,
   attempts,
-  // A write is only claimed successful when its mutations landed AND the result
-  // was observable. Mutations returning cleanly against an unreadable instance
-  // is not the same as a verified write.
-  succeeded:
-    !refused && attempts.length > 0 && attempts.every((a) => a.succeeded) && verified,
-  noop: !refused && isNoop(before, after),
-  verified,
+  observation: observed.record,
+  ...outcome,
   refusedBecause: refused,
 };
 
@@ -217,10 +287,11 @@ if (OUT) {
   process.stdout.write(json);
 }
 
-const describe = (s) =>
-  s.read === "failed"
-    ? `UNREADABLE (${s.readError})`
-    : `link=${s.linkUrl ? "present" : "absent"} tier=${s.evidenceTier ?? "unset"}`;
+const describe = (s) => {
+  if (s.read === "failed") return `UNREADABLE (${s.readError})`;
+  if (s.read === "not-queried") return `NOT QUERIED (${s.readError})`;
+  return `link=${s.linkUrl ? "present" : "absent"} tier=${s.evidenceTier ?? "unset"}`;
+};
 
 console.error(`\ntarget       ${receipt.targetUrn}`);
 console.error(`mode         ${DRY ? "dry-run" : "applied"}`);
@@ -228,6 +299,10 @@ console.error(`refused      ${refused ?? "no"}`);
 console.error(`before       ${describe(before)}`);
 console.error(`after        ${describe(after)}`);
 for (const a of attempts) console.error(`  ${a.succeeded ? "ok  " : "FAIL"} ${a.mutation}  ${a.response.slice(0, 110)}`);
+if (observed.record) {
+  const { status, polls, elapsedMs, timeoutMs } = observed.record;
+  console.error(`observation  ${status} after ${polls} read(s) in ${elapsedMs}ms (bound ${timeoutMs}ms)`);
+}
 console.error(`succeeded    ${receipt.succeeded}   noop=${receipt.noop}   verified=${receipt.verified}`);
 
 // A refusal is a legitimate outcome, not a failure. A dry run asserts nothing.

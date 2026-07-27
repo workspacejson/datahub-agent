@@ -91,6 +91,36 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       expect(event.writeback?.after.read).toBe("ok");
     });
 
+    it("states what it was trying to write, not only what it sent", () => {
+      // Without a recorded intent the receipt can only compare its two
+      // observations to each other, and a before/after pair has no opinion
+      // about whether either one is correct.
+      expect(event.writeback?.intended).toEqual({
+        linkUrl: event.code.sourceUrl,
+        evidenceTier: event.evidence.tier,
+      });
+    });
+
+    it("claims success against that intent rather than against the reads alone", () => {
+      // The receipt's own claim, checked from inside the receipt. Previously
+      // `succeeded` only meant "mutations returned and both reads completed",
+      // which is true of a write that never became visible.
+      const { intended, after, succeeded } = event.writeback!;
+      expect(succeeded).toBe(true);
+      expect(after.linkUrl).toBe(intended?.linkUrl);
+      expect(after.evidenceTier).toBe(intended?.evidenceTier);
+    });
+
+    it("records how the after-state was reached, and that it settled", () => {
+      // A write is observed to a bound, not read once, because DataHub serves
+      // stale reads after a successful mutation. The bound is recorded so a
+      // timeout could be read against it.
+      expect(event.writeback?.observation?.status).toBe("settled");
+      expect(event.writeback?.observation?.polls).toBeGreaterThanOrEqual(1);
+      expect(event.writeback?.observation?.timeoutMs).toBeGreaterThan(0);
+      expect(event.writeback?.observation?.lastError).toBeNull();
+    });
+
     it("was captured against a clean instance — nothing was there before", () => {
       // This is what makes the fixture a first-run transcript rather than an
       // exploratory one. Re-running the writeback against an already-enriched

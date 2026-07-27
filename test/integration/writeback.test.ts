@@ -21,12 +21,18 @@ import {
   EVIDENCE_TIER_PROPERTY_ID,
   LINK_LABEL,
   attachReceipt,
+  deriveOutcome,
+  intendedState,
   isNoop,
+  matchesIntent,
+  notQueriedState,
   planWriteback,
   redact,
   refusalReason,
   unreadableState,
   type CatalogState,
+  type MutationAttempt,
+  type WritebackIntent,
   type WritebackReceipt,
 } from "../../src/integration/writeback.js";
 
@@ -285,28 +291,202 @@ describe("unreadableState", () => {
   });
 });
 
+describe("notQueriedState", () => {
+  it("records a deliberate non-read as its own thing, not as a failure", () => {
+    // A dry run chose not to ask. Calling that `failed` reports a decision as a
+    // fault, which is the same collapse of a non-claim into a claim that the
+    // change-impact contract's `not-queried` exists to prevent.
+    const state = notQueriedState("dry run: the catalog was not read");
+    expect(state.read).toBe("not-queried");
+    expect(state.read).not.toBe("failed");
+    expect(state.readError).toMatch(/dry run/);
+  });
+
+  it("is not an assertion about the catalog either", () => {
+    // The nulls are still not claims. `not-queried` says less than `failed`,
+    // not more.
+    const state = notQueriedState("dry run");
+    expect(state.linkUrl).toBeNull();
+    expect(state.evidenceTier).toBeNull();
+  });
+});
+
+/** What the fixture event asks the catalog to end up holding. */
+const INTENT: WritebackIntent = { linkUrl: SOURCE_URL, evidenceTier: "VERIFIED" };
+
+describe("intendedState", () => {
+  it("carries the commit-pinned link and the derived tier", () => {
+    expect(intendedState(resolvedEvent())).toEqual(INTENT);
+  });
+
+  it("is null when there is nothing to write, matching the refusal", () => {
+    const event = resolvedEvent();
+    event.code.sourceUrl = null;
+    expect(intendedState(event)).toBeNull();
+    expect(refusalReason(event)).not.toBeNull();
+  });
+
+  it("follows the event's tier rather than assuming one", () => {
+    const event = resolvedEvent();
+    event.evidence.tier = "OBSERVED";
+    expect(intendedState(event)?.evidenceTier).toBe("OBSERVED");
+  });
+});
+
+describe("matchesIntent", () => {
+  it("is true only when both the link and the tier are the intended ones", () => {
+    expect(matchesIntent(readState(SOURCE_URL, "VERIFIED"), INTENT)).toBe(true);
+  });
+
+  it("is false when the link is there but the tier is not the intended one", () => {
+    expect(matchesIntent(readState(SOURCE_URL, "OBSERVED"), INTENT)).toBe(false);
+  });
+
+  it("is false when the catalog holds a different link under the same label", () => {
+    expect(matchesIntent(readState("https://example.com/other.sql", "VERIFIED"), INTENT)).toBe(false);
+  });
+
+  it.each([
+    ["failed", unreadableState("boom")],
+    ["not-queried", notQueriedState("dry run")],
+  ])("is false on a %s state, whose nulls are not an answer", (_label, state) => {
+    expect(matchesIntent(state, INTENT)).toBe(false);
+  });
+});
+
 describe("isNoop", () => {
-  it("is true when the state already matched and both sides were read", () => {
-    expect(isNoop(readState(SOURCE_URL, "VERIFIED"), readState(SOURCE_URL, "VERIFIED"))).toBe(true);
+  it("is true when the state already matched intent and still does", () => {
+    expect(isNoop(readState(SOURCE_URL, "VERIFIED"), readState(SOURCE_URL, "VERIFIED"), INTENT)).toBe(
+      true,
+    );
   });
 
   it("is false when the link was absent before, which is a real write", () => {
-    expect(isNoop(readState(null), readState(SOURCE_URL, "VERIFIED"))).toBe(false);
+    expect(isNoop(readState(null), readState(SOURCE_URL, "VERIFIED"), INTENT)).toBe(false);
   });
 
   it("is false when the tier changed even though the link did not", () => {
-    expect(isNoop(readState(SOURCE_URL, "OBSERVED"), readState(SOURCE_URL, "VERIFIED"))).toBe(false);
+    expect(isNoop(readState(SOURCE_URL, "OBSERVED"), readState(SOURCE_URL, "VERIFIED"), INTENT)).toBe(
+      false,
+    );
+  });
+
+  it("is false when nothing changed but the state was never what was intended", () => {
+    // The reason this is intent-relative. A before/after equality check cannot
+    // tell "already correct" from "unchanged and wrong" — it calls both a noop,
+    // and only the first is evidence of idempotency.
+    const stuck = readState("https://example.com/stale.sql", "OBSERVED");
+    expect(isNoop(stuck, stuck, INTENT)).toBe(false);
   });
 
   it.each([
     ["the before state", unreadableState("boom"), readState(SOURCE_URL, "VERIFIED")],
     ["the after state", readState(SOURCE_URL, "VERIFIED"), unreadableState("boom")],
     ["both states", unreadableState("boom"), unreadableState("boom")],
-  ])("is never true when %s could not be read", (_label, before, after) => {
+    ["neither state, on a dry run", notQueriedState("dry run"), notQueriedState("dry run")],
+  ])("is never true when %s was not read", (_label, before, after) => {
     // "nothing changed" and "we could not tell whether anything changed" are
     // different claims, and only the first is evidence of idempotency. Two
-    // unreadable states are equal to each other, which is exactly the trap.
-    expect(isNoop(before, after)).toBe(false);
+    // unread states are equal to each other, which is exactly the trap.
+    expect(isNoop(before, after, INTENT)).toBe(false);
+  });
+});
+
+describe("deriveOutcome", () => {
+  const landed: MutationAttempt[] = [
+    { mutation: "upsertLink", variables: {}, succeeded: true, response: "true" },
+    { mutation: "upsertStructuredProperties", variables: {}, succeeded: true, response: "{}" },
+  ];
+
+  const outcome = (over: Partial<Parameters<typeof deriveOutcome>[0]> = {}) =>
+    deriveOutcome({
+      refusedBecause: null,
+      intent: INTENT,
+      before: readState(null),
+      after: readState(SOURCE_URL, "VERIFIED"),
+      attempts: landed,
+      ...over,
+    });
+
+  it("claims success when the mutations landed and the after-state shows intent", () => {
+    expect(outcome()).toEqual({ succeeded: true, noop: false, verified: true });
+  });
+
+  it("does not claim success on a stale read, however cleanly the mutations returned", () => {
+    // The defect this issue exists for. Every mutation returns 200, both reads
+    // complete, and the write is simply not visible yet. `verified` stays true
+    // because both observations exist — that is all it ever meant.
+    const stale = outcome({ after: readState(null) });
+    expect(stale.succeeded).toBe(false);
+    expect(stale.verified).toBe(true);
+  });
+
+  it("does not claim success when the catalog holds a different link", () => {
+    expect(outcome({ after: readState("https://example.com/other.sql", "VERIFIED") }).succeeded).toBe(
+      false,
+    );
+  });
+
+  it("does not claim success when the link landed but the tier did not", () => {
+    // A partially applied write is not a successful one. Two mutations means
+    // two ways to half-succeed.
+    expect(outcome({ after: readState(SOURCE_URL, "OBSERVED") }).succeeded).toBe(false);
+  });
+
+  it("does not claim success when a mutation failed, even if the state matches", () => {
+    // A pre-existing correct state does not launder a failed mutation into a
+    // successful write.
+    const failed = [{ ...landed[0]!, succeeded: false, response: "connection refused" }, landed[1]!];
+    expect(outcome({ attempts: failed }).succeeded).toBe(false);
+  });
+
+  it("does not claim success with no attempts at all", () => {
+    expect(outcome({ attempts: [] }).succeeded).toBe(false);
+  });
+
+  it("does not claim success when the after-state could not be read", () => {
+    const unread = outcome({ after: unreadableState("TypeError: fetch failed") });
+    expect(unread.succeeded).toBe(false);
+    expect(unread.verified).toBe(false);
+  });
+
+  it("reports a noop when the state already matched intent before the write", () => {
+    const already = outcome({
+      before: readState(SOURCE_URL, "VERIFIED"),
+      after: readState(SOURCE_URL, "VERIFIED"),
+    });
+    expect(already).toEqual({ succeeded: true, noop: true, verified: true });
+  });
+
+  it("claims nothing at all when the writeback refused", () => {
+    const refused = outcome({
+      refusedBecause: "no commit-pinned source URL is available",
+      intent: null,
+      attempts: [],
+      after: readState(null),
+    });
+    expect(refused.succeeded).toBe(false);
+    expect(refused.noop).toBe(false);
+  });
+
+  it("treats a dry run as unverified rather than as a failure", () => {
+    // Nothing was read and nothing was written. The only honest verdict is that
+    // there is no verdict — and `verified: false` here means "not observed",
+    // which is exactly what happened.
+    const dry = outcome({
+      before: notQueriedState("dry run: the catalog was not read"),
+      after: notQueriedState("dry run: the catalog was not read"),
+      attempts: [],
+    });
+    expect(dry).toEqual({ succeeded: false, noop: false, verified: false });
+  });
+
+  it("keeps verified independent of success, so it stops implying one", () => {
+    // Both states read, intent not met. `verified` describes the observations;
+    // `succeeded` describes what they show. Conflating them is the original bug.
+    const seen = outcome({ after: readState(null) });
+    expect(seen.verified).toBe(true);
+    expect(seen.succeeded).toBe(false);
   });
 });
 
@@ -316,11 +496,13 @@ describe("attachReceipt", () => {
     actor: { tool: "@workspacejson/datahub-agent", version: "0.0.1" },
     attemptedAt: "2026-07-27T00:00:00.000Z",
     revision: { repository: "https://github.com/dcaribou/transfermarkt-datasets", commit: COMMIT },
+    intended: INTENT,
     before: readState(null),
     after: readState(SOURCE_URL, "VERIFIED"),
     attempts: [
       { mutation: "upsertLink", variables: {}, succeeded: true, response: "true" },
     ],
+    observation: { status: "settled", polls: 1, elapsedMs: 42, timeoutMs: 120_000, lastError: null },
     succeeded: true,
     noop: false,
     verified: true,
