@@ -78,8 +78,19 @@ async function gql(query) {
 }
 
 const catalog = await gql(propsQuery(CATALOG_FIELDS));
-if (!catalog.dataset) {
-  console.error(`\nNo dataset at ${URN}. Ingest a dbt project first.\n`);
+
+// DataHub returns a soft entity — non-null, with null properties — for a URN it
+// has never seen. Treating that as "nothing was dropped" would report GAP
+// CLOSED for a typo, which is the exact false claim this probe exists to
+// prevent. Refuse to measure instead.
+if (!catalog.dataset || catalog.dataset.properties == null) {
+  console.error(`\nNo usable dataset at ${URN}.`);
+  console.error(
+    catalog.dataset
+      ? "The URN resolves but carries no properties — it was never ingested.\n"
+      : "The URN does not resolve at all.\n",
+  );
+  console.error("Ingest a dbt project first, then re-run.\n");
   process.exit(2);
 }
 
@@ -119,6 +130,20 @@ for (const k of ["dbt_file_path", "dbt_unique_id"]) {
 }
 
 if (dropped.length === 0) {
+  // Distinguish "the projection now carries everything" from "this dataset had
+  // nothing to carry". Only the first means the gap closed; the second means
+  // the fixture is wrong for this measurement.
+  const hasSomethingToDrop = CATALOG_FIELDS.some(
+    (f) => !MCP_PROJECTION_FIELDS.includes(f) && held[f] != null,
+  );
+  if (!hasSomethingToDrop) {
+    console.error(
+      "\nINCONCLUSIVE — this dataset carries none of the fields under test, so\n" +
+        "there is nothing for the projection to drop. Use a dataset ingested with\n" +
+        "git_info set, or the gap cannot be observed here.",
+    );
+    process.exit(2);
+  }
   console.log("\nGAP CLOSED — every field DataHub holds is projected through MCP.");
   console.log("This record is stale. Update evaluation/mcp-field-coverage.md.");
   process.exit(1);
