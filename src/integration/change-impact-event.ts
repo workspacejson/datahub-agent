@@ -155,6 +155,32 @@ export interface LineageEdge {
   degree: number;
 }
 
+/**
+ * The standing of one direction of a lineage read.
+ *
+ * This lives beside the arrays rather than inside `unavailable`, and the
+ * distinction is load-bearing. An `unavailable` entry is only required when a
+ * collection is *empty*, so completeness carried there is unreachable in the
+ * case that actually caused this: a partially converged index returning one
+ * edge of twelve. The array is non-empty, nothing is "unavailable", and the
+ * event would carry no completeness state at all — the original defect,
+ * surviving inside its own fix.
+ *
+ * So every event states the standing of both directions, always, whether or not
+ * anything is missing. `unavailable` stays what it is: the human explanation for
+ * absent context, never the only machine-readable place completeness lives.
+ */
+export interface LineageObservation {
+  /** Whether the catalog answered. Unless "ok", `observedCount` is not a claim. */
+  read: "ok" | "failed" | "not-queried";
+  /** Whether the answer was established as whole. Never derived from `read`. */
+  completeness: Completeness;
+  /** What the query returned. Absent when no query ran. */
+  observedCount?: number;
+  /** Required whenever `completeness` is `verified`. */
+  verification?: VerificationEvidence;
+}
+
 export interface DataHubContext {
   name: string | null;
   platform: string | null;
@@ -162,6 +188,14 @@ export interface DataHubContext {
   /** Declared dependencies from the catalog — NOT behavioral coupling. */
   upstreams: LineageEdge[];
   downstreams: LineageEdge[];
+  /**
+   * The standing of each lineage read, stated on every event. Mandatory
+   * precisely because a partial answer looks like a complete one.
+   */
+  lineageObservation: {
+    upstreams: LineageObservation;
+    downstreams: LineageObservation;
+  };
   schemaFieldCount: number | null;
   owners: string[];
   domain: string | null;
@@ -293,8 +327,65 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
  * emitted — silently dropping it would be the failure mode this contract is
  * built to avoid.
  */
+/**
+ * A second axis with nothing behind it is just a new place to assert the word.
+ * `verified` has to name what it was checked against, wherever it is claimed.
+ */
+function verifiedEvidenceProblems(
+  holder: { completeness?: Completeness; verification?: VerificationEvidence },
+  label: string,
+): string[] {
+  if (holder.completeness !== "verified") return [];
+  const v = holder.verification;
+  const missing = !v
+    ? ["verification"]
+    : (["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const).filter((k) => !v[k]);
+  if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
+    return [
+      `${label} claims verified completeness without evidence (${missing.join(", ") || "queryParameters"})`,
+    ];
+  }
+  return [];
+}
+
 export function validateEvent(event: ChangeImpactEvent): string[] {
   const problems: string[] = [];
+
+  // Stated on every event, in both directions, whether or not anything is
+  // missing — a partial answer is the case that looks like a complete one.
+  for (const [direction, edges] of [
+    ["upstreams", event.datahub.upstreams],
+    ["downstreams", event.datahub.downstreams],
+  ] as const) {
+    const label = `datahub.lineageObservation.${direction}`;
+    const observation = event.datahub.lineageObservation?.[direction];
+    if (!observation) {
+      problems.push(`${label} is missing — every event must state the standing of both directions`);
+      continue;
+    }
+
+    problems.push(...verifiedEvidenceProblems(observation, label));
+
+    if (observation.read === "ok") {
+      if (observation.observedCount === undefined) {
+        problems.push(`${label} read ok without an observedCount`);
+      } else if (observation.observedCount !== edges.length) {
+        problems.push(
+          `${label} reports observedCount ${observation.observedCount} but carries ${edges.length} edges`,
+        );
+      }
+    } else {
+      if (observation.observedCount !== undefined) {
+        problems.push(`${label} is ${observation.read} but carries an observedCount`);
+      }
+      if (edges.length > 0) {
+        problems.push(`${label} is ${observation.read} but ${edges.length} edges are present`);
+      }
+      if (observation.completeness === "verified") {
+        problems.push(`${label} claims verified completeness on a read that did not happen`);
+      }
+    }
+  }
 
   if (event.eventVersion !== CHANGE_IMPACT_EVENT_VERSION) {
     problems.push(`unknown eventVersion ${event.eventVersion}`);
@@ -355,21 +446,7 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
       problems.push(`${entry.field} is indeterminate without stating completeness`);
     }
 
-    // A second axis with nothing behind it is just a new place to assert the
-    // word. `verified` has to name what it was checked against.
-    if (entry.completeness === "verified") {
-      const v = entry.verification;
-      const missing = !v
-        ? ["verification"]
-        : (["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const).filter(
-            (k) => !v[k],
-          );
-      if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
-        problems.push(
-          `${entry.field} claims verified completeness without evidence (${missing.join(", ") || "queryParameters"})`,
-        );
-      }
-    }
+    problems.push(...verifiedEvidenceProblems(entry, entry.field));
 
     // A read that did not happen has no count. Manufacturing a zero for one
     // recreates the collapse this contract prevents, in arithmetic rather than

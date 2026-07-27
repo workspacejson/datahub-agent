@@ -62,6 +62,10 @@ function resolvedEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpact
       downstreams: [
         { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.appearances,PROD)", name: "appearances", degree: 1 },
       ],
+      lineageObservation: {
+        upstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+        downstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+      },
       schemaFieldCount: 12,
       owners: [],
       domain: null,

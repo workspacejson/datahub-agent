@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.0",
   "provenance": {
-    "producedAt": "2026-07-27T11:58:49.888Z",
+    "producedAt": "2026-07-27T15:59:35.265Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -75,6 +75,18 @@
         "degree": 1
       }
     ],
+    "lineageObservation": {
+      "upstreams": {
+        "read": "ok",
+        "completeness": "unverified",
+        "observedCount": 8
+      },
+      "downstreams": {
+        "read": "ok",
+        "completeness": "unverified",
+        "observedCount": 1
+      }
+    },
     "schemaFieldCount": 2,
     "owners": [],
     "domain": null
@@ -126,7 +138,7 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T12:53:33.290Z",
+    "attemptedAt": "2026-07-27T15:59:50.525Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -194,7 +206,7 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 11,
+      "elapsedMs": 10,
       "timeoutMs": 120000,
       "lastError": null
     },

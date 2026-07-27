@@ -29,6 +29,10 @@ function validEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpactEve
       description: null,
       upstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.up,PROD)", name: "up", degree: 1 }],
       downstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.down,PROD)", name: "down", degree: 1 }],
+      lineageObservation: {
+        upstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+        downstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+      },
       schemaFieldCount: 4,
       owners: [],
       domain: null,
@@ -92,6 +96,11 @@ describe("completeness as an axis of its own", () => {
   const withLineageEntry = (entry: Partial<Unavailable>): ChangeImpactEvent => {
     const event = validEvent();
     event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "unverified",
+      observedCount: 0,
+    };
     event.unavailable = [
       {
         field: "datahub.upstreams",
@@ -201,6 +210,11 @@ describe("verified completeness must carry its evidence", () => {
   const verifiedAbsence = (verification?: Partial<VerificationEvidence>): ChangeImpactEvent => {
     const event = validEvent();
     event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "unverified",
+      observedCount: 0,
+    };
     event.unavailable = [
       {
         field: "datahub.upstreams",

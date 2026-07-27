@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.0",
   "provenance": {
-    "producedAt": "2026-07-27T11:58:49.146Z",
+    "producedAt": "2026-07-27T15:59:34.654Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -95,6 +95,18 @@
         "degree": 1
       }
     ],
+    "lineageObservation": {
+      "upstreams": {
+        "read": "ok",
+        "completeness": "unverified",
+        "observedCount": 12
+      },
+      "downstreams": {
+        "read": "ok",
+        "completeness": "unverified",
+        "observedCount": 1
+      }
+    },
     "schemaFieldCount": 7,
     "owners": [],
     "domain": null
@@ -146,7 +158,7 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T12:53:33.042Z",
+    "attemptedAt": "2026-07-27T15:59:50.279Z",
     "revision": {
       "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
       "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
@@ -214,7 +226,7 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 11,
+      "elapsedMs": 12,
       "timeoutMs": 120000,
       "lastError": null
     },
