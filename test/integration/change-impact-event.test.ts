@@ -5,6 +5,7 @@ import {
   deriveTier,
   toDataHubOnly,
   validateEvent,
+  SUPERSEDED_EVENT_VERSIONS,
   type ChangeImpactEvent,
   type EvidenceRecord,
   type Unavailable,
@@ -88,6 +89,41 @@ describe("deriveTier", () => {
     // The tier is the whole trust signal. If it accepted a threshold or an
     // override, it would become an opinion rather than a function of evidence.
     expect(deriveTier.length).toBe(1);
+  });
+});
+
+describe("the version a consumer compiles against", () => {
+  it("names a superseded version and says to re-emit, not what field is missing", () => {
+    // A 1.0 artifact predates lineageObservation. Reporting "missing field"
+    // would send a reviewer looking for a bug in a file that was correct under
+    // the contract it was written for.
+    const event = { ...validEvent(), eventVersion: "1.0" } as unknown as ChangeImpactEvent;
+    const problems = validateEvent(event);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/1\.0 is superseded by 1\.1/);
+    expect(problems[0]).toMatch(/re-emit/);
+  });
+
+  it("does not report shape problems against a version whose shape differed", () => {
+    // Running current-shape checks over an older event produces noise about
+    // fields that were never meant to be there.
+    const stale = { ...validEvent(), eventVersion: "1.0" } as unknown as ChangeImpactEvent;
+    delete (stale.datahub as { lineageObservation?: unknown }).lineageObservation;
+    expect(validateEvent(stale)).toHaveLength(1);
+  });
+
+  it("still rejects a version it has never heard of", () => {
+    const event = { ...validEvent(), eventVersion: "9.9" } as unknown as ChangeImpactEvent;
+    expect(validateEvent(event)[0]).toMatch(/unknown eventVersion 9\.9/);
+  });
+
+  it("offers no in-place upgrade from 1.0, deliberately", () => {
+    // The added field records whether a lineage read was complete. A 1.0 event
+    // does not carry that, so any value synthesised for it would be invented
+    // rather than observed — manufacturing an observation nobody made, on the
+    // exact axis the field exists to keep honest.
+    expect(SUPERSEDED_EVENT_VERSIONS["1.0"]).toMatch(/re-emit/);
+    expect(Object.keys(SUPERSEDED_EVENT_VERSIONS)).toEqual(["1.0"]);
   });
 });
 

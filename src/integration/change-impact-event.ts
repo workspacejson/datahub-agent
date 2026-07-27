@@ -252,7 +252,33 @@ export interface Provenance {
   workspaceArtifact: { producedBy: string | null; fileIndexKeys: number } | null;
 }
 
-export const CHANGE_IMPACT_EVENT_VERSION = "1.0" as const;
+/**
+ * The contract version consumers compile against.
+ *
+ * 1.1 added `datahub.lineageObservation` as a **required** field. That is a
+ * breaking change, and it gets a version because leaving it at 1.0 would let
+ * two incompatible shapes both claim the same identity — an artifact asserting
+ * something about itself that is not true, which is the defect class this whole
+ * contract exists to prevent. A consumer must be able to tell the shapes apart
+ * by reading the event, not by probing for a field.
+ *
+ * Migration from 1.0: **re-emit.** There is no in-place upgrade, and offering
+ * one would be dishonest. The added field records whether a lineage read was
+ * complete; a 1.0 event does not carry that information, so any value
+ * synthesised for it would be invented rather than observed. A migration that
+ * defaults `completeness` to `unverified` looks harmless and is not — it would
+ * manufacture an observation nobody made, on the exact axis the field exists to
+ * keep honest.
+ *
+ * `validateEvent` therefore rejects 1.0 events by name and says to re-emit,
+ * rather than reporting a confusing missing-field error.
+ */
+export const CHANGE_IMPACT_EVENT_VERSION = "1.1" as const;
+
+/** Versions this contract knows about but can no longer validate. */
+export const SUPERSEDED_EVENT_VERSIONS: Record<string, string> = {
+  "1.0": "1.1 requires datahub.lineageObservation, which a 1.0 event does not carry — re-emit the event rather than upgrading it in place",
+};
 
 export interface ChangeImpactEvent {
   eventVersion: typeof CHANGE_IMPACT_EVENT_VERSION;
@@ -351,6 +377,22 @@ function verifiedEvidenceProblems(
 export function validateEvent(event: ChangeImpactEvent): string[] {
   const problems: string[] = [];
 
+  if (event.eventVersion !== CHANGE_IMPACT_EVENT_VERSION) {
+    // A superseded version gets named, so a reviewer holding an old artifact
+    // reads why it no longer validates instead of a missing-field error that
+    // does not explain itself.
+    const superseded = SUPERSEDED_EVENT_VERSIONS[event.eventVersion as string];
+    problems.push(
+      superseded
+        ? `eventVersion ${event.eventVersion} is superseded by ${CHANGE_IMPACT_EVENT_VERSION}: ${superseded}`
+        : `unknown eventVersion ${event.eventVersion}`,
+    );
+    // The remaining checks assume the current shape. Running them against an
+    // older one produces noise about fields that were never meant to be there.
+    return problems;
+  }
+
+
   // Stated on every event, in both directions, whether or not anything is
   // missing — a partial answer is the case that looks like a complete one.
   for (const [direction, edges] of [
@@ -385,10 +427,6 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
         problems.push(`${label} claims verified completeness on a read that did not happen`);
       }
     }
-  }
-
-  if (event.eventVersion !== CHANGE_IMPACT_EVENT_VERSION) {
-    problems.push(`unknown eventVersion ${event.eventVersion}`);
   }
 
   const { datasetsRequested, datasetsResolved, datasetsUnresolved } = event.accounting;

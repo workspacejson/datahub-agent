@@ -1,7 +1,7 @@
 {
-  "eventVersion": "1.0",
+  "eventVersion": "1.1",
   "provenance": {
-    "producedAt": "2026-07-27T15:59:35.265Z",
+    "producedAt": "2026-07-27T17:08:07.570Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -138,7 +138,7 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T15:59:50.525Z",
+    "attemptedAt": "2026-07-27T17:08:08.616Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -206,7 +206,7 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 10,
+      "elapsedMs": 20,
       "timeoutMs": 120000,
       "lastError": null
     },

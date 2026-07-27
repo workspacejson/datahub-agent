@@ -1,7 +1,7 @@
 {
-  "eventVersion": "1.0",
+  "eventVersion": "1.1",
   "provenance": {
-    "producedAt": "2026-07-27T15:59:34.654Z",
+    "producedAt": "2026-07-27T17:08:07.162Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -158,7 +158,7 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T15:59:50.279Z",
+    "attemptedAt": "2026-07-27T17:08:08.369Z",
     "revision": {
       "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
       "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
@@ -226,7 +226,7 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 12,
+      "elapsedMs": 11,
       "timeoutMs": 120000,
       "lastError": null
     },
