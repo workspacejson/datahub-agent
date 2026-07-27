@@ -10,6 +10,8 @@
  *
  * Usage:
  *   node scripts/emit-change-impact-event.mjs [urn] [--gms URL] [--out FILE]
+ *     --subject-repository URL --subject-revision SHA
+ *     --workspace-artifact FILE --workspace-repository URL --workspace-revision SHA
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -26,6 +28,11 @@ const flag = (name, fallback) => {
 };
 const GMS = flag("gms", "http://localhost:8080");
 const OUT = flag("out", null);
+const SUBJECT_REPOSITORY = flag("subject-repository", null);
+const SUBJECT_REVISION = flag("subject-revision", null);
+const WORKSPACE_ARTIFACT = flag("workspace-artifact", null);
+const WORKSPACE_REPOSITORY = flag("workspace-repository", null);
+const WORKSPACE_REVISION = flag("workspace-revision", null);
 const URN =
   argv.find((a) => a.startsWith("urn:")) ??
   "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)";
@@ -91,7 +98,7 @@ const entity = await gql(`{
   dataset(urn: ${JSON.stringify(URN)}) {
     urn
     platform { name }
-    properties { name description externalUrl customProperties { key value } }
+    properties { name description customProperties { key value } }
     ownership { owners { owner { ... on CorpUser { urn } ... on CorpGroup { urn } } } }
     domain { domain { urn } }
     schemaMetadata { fields { fieldPath } }
@@ -185,81 +192,50 @@ for (const [field, side] of [
 // Code resolution
 // ---------------------------------------------------------------------------
 const dbtFilePath = customProperties.dbt_file_path ?? null;
-const sourceUrl = props.externalUrl ?? null;
+// `externalUrl`, repository and commit are direct GraphQL fields, not part of
+// the official DataHub MCP projection. Do not smuggle them into this event.
+const sourceUrl = null;
 
 let repositoryRelativePath = null;
 let projectPrefix = null;
 let method = "unresolved";
 
-if (sourceUrl && dbtFilePath) {
-  // The catalog's URL is repository-relative; the dbt path is project-relative.
-  // The difference between them IS the project prefix — no configuration
-  // needed, and no guessing.
-  const afterBlob = sourceUrl.match(/\/blob\/[^/]+\/(.+)$/)?.[1] ?? null;
-  if (afterBlob && afterBlob.endsWith(dbtFilePath)) {
-    repositoryRelativePath = afterBlob;
-    projectPrefix = afterBlob.slice(0, afterBlob.length - dbtFilePath.length).replace(/\/$/, "");
-    method = "external-url";
-  }
-}
-
-if (method === "unresolved" && dbtFilePath) {
-  // Without a source URL the prefix is unknowable from the catalog alone. Say
-  // so rather than assuming the project sits at the repository root — that
-  // assumption is exactly what makes a nested project silently return nothing.
-  note("code.repositoryRelativePath", "datahub", "not-exposed-by-source",
-    "The catalog exposes a project-relative dbt path but no source URL, so the project's offset from the repository root cannot be derived.");
-}
+if (dbtFilePath) note("code.repositoryRelativePath", "datahub", "not-exposed-by-source",
+  "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact.");
 
 // ---------------------------------------------------------------------------
 // workspace.json evidence
 // ---------------------------------------------------------------------------
+const { assessWorkspaceEvidence } = await import(join(repoRoot, "src/integration/workspace-evidence.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
+  api.register();
+  return import(join(repoRoot, "src/integration/workspace-evidence.ts"));
+}));
 let workspaceArtifact = null;
 let partners = [];
 const records = [];
-
-try {
-  const ws = JSON.parse(
-    readFileSync(join(repoRoot, "test/fixtures/proof-corpus/workspace.json"), "utf8"),
-  );
-  const fileIndex = ws.generated?.fileIndex ?? {};
-  workspaceArtifact = {
-    producedBy: ws.generated?.by?.name ?? null,
-    fileIndexKeys: Object.keys(fileIndex).length,
-  };
-
-  if (repositoryRelativePath) {
-    const hit = Object.hasOwn(fileIndex, repositoryRelativePath);
-    records.push({
-      claim: `producing file ${repositoryRelativePath} is tracked in the workspace.json artifact`,
-      observation: hit
-        ? `key present in generated.fileIndex (${workspaceArtifact.fileIndexKeys} keys)`
-        : `key absent from generated.fileIndex (${workspaceArtifact.fileIndexKeys} keys)`,
-      source: "workspacejson",
-      verified: true,
-    });
-    if (!hit) {
-      note("partners", "workspacejson", "absent",
-        "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it.");
-    }
-  }
-} catch {
-  note("partners", "workspacejson", "not-queried",
-    "No workspace.json artifact was read, so repository evidence is unavailable.");
+let ws = null;
+if (WORKSPACE_ARTIFACT) {
+  try { ws = JSON.parse(readFileSync(resolve(WORKSPACE_ARTIFACT), "utf8")); }
+  catch { note("partners", "workspacejson", "failed", "The supplied workspace.json artifact could not be parsed."); }
 }
-
-if (partners.length === 0 && !unavailable.some((u) => u.field === "partners")) {
-  note("partners", "workspacejson", "absent",
-    "The artifact carries file-index keys but no behavioral co-change values, so no partners are asserted.");
-}
-
-if (sourceUrl) {
-  records.push({
-    claim: "the producing file is addressable at an immutable commit",
-    observation: sourceUrl,
-    source: "datahub",
-    verified: true,
-  });
+const integrity = assessWorkspaceEvidence(
+  { repository: SUBJECT_REPOSITORY, revision: SUBJECT_REVISION },
+  ws ? { repository: WORKSPACE_REPOSITORY, revision: WORKSPACE_REVISION } : null,
+  ws?.generated?.fileIndex ?? null,
+  dbtFilePath,
+);
+workspaceArtifact = {
+  producedBy: ws?.generated?.by?.name ?? null, fileIndexKeys: integrity.fileIndexKeys,
+  repository: WORKSPACE_REPOSITORY, revision: WORKSPACE_REVISION, integrity: integrity.integrity,
+};
+if (integrity.integrity === "exact-match") {
+  repositoryRelativePath = integrity.repositoryRelativePath;
+  projectPrefix = repositoryRelativePath.slice(0, repositoryRelativePath.length - dbtFilePath.length).replace(/\/$/, "");
+  method = "manifest-join";
+  records.push({ claim: `producing file ${repositoryRelativePath} is tracked in the corpus-matched workspace.json artifact`, observation: integrity.detail, source: "workspacejson", verified: true });
+  note("partners", "workspacejson", "indeterminate", "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.", { completeness: "unverified", observedCount: 0 });
+} else if (!unavailable.some((u) => u.field === "partners")) {
+  note("partners", "workspacejson", integrity.integrity === "artifact-unavailable" ? "not-queried" : "indeterminate", integrity.detail, integrity.integrity === "artifact-unavailable" ? {} : { completeness: "unverified", observedCount: 0 });
 }
 
 // ---------------------------------------------------------------------------
@@ -278,10 +254,7 @@ const event = {
     producedAt: new Date().toISOString(),
     producer: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
     datahub: { gmsUrl: GMS, gmsVersion: gmsVersionData?.appConfig?.appVersion ?? null },
-    corpus: {
-      repository: sourceUrl?.match(/^(https:\/\/[^/]+\/[^/]+\/[^/]+)/)?.[1] ?? null,
-      commit: sourceUrl?.match(/\/blob\/([^/]+)\//)?.[1] ?? null,
-    },
+    corpus: { repository: SUBJECT_REPOSITORY, commit: SUBJECT_REVISION },
     workspaceArtifact,
   },
   subject: { urn: URN },

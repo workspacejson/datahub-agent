@@ -248,8 +248,14 @@ export interface Provenance {
   producer: { name: string; version: string };
   datahub: { gmsUrl: string; gmsVersion: string | null };
   corpus: { repository: string | null; commit: string | null };
-  /** Producer identity from the workspace.json artifact, when one was read. */
-  workspaceArtifact: { producedBy: string | null; fileIndexKeys: number } | null;
+  /** Identity and integrity disposition of the workspace artifact, when supplied. */
+  workspaceArtifact: {
+    producedBy: string | null;
+    fileIndexKeys: number | null;
+    repository?: string | null;
+    revision?: string | null;
+    integrity?: "exact-match" | "artifact-unavailable" | "repository-mismatch" | "revision-mismatch" | "path-unresolved" | "path-ambiguous";
+  } | null;
 }
 
 /**
