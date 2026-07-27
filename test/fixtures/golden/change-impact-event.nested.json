@@ -1,0 +1,123 @@
+{
+  "eventVersion": "1.0",
+  "provenance": {
+    "producedAt": "2026-07-27T10:42:58.455Z",
+    "producer": {
+      "name": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "datahub": {
+      "gmsUrl": "http://localhost:8080",
+      "gmsVersion": "v1.5.0.6"
+    },
+    "corpus": {
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+    },
+    "workspaceArtifact": {
+      "producedBy": "@workspacejson/cli",
+      "fileIndexKeys": 36
+    }
+  },
+  "subject": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)"
+  },
+  "datahub": {
+    "name": "game_events",
+    "platform": "dbt",
+    "description": "",
+    "upstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+        "name": "base_game_events",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+        "name": "base_games",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "game_lineups",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+        "name": "games",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+        "name": null,
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+        "name": null,
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": null,
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)",
+        "name": null,
+        "degree": 4
+      }
+    ],
+    "downstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.game_events,PROD)",
+        "name": null,
+        "degree": 1
+      }
+    ],
+    "schemaFieldCount": 2,
+    "owners": [],
+    "domain": null
+  },
+  "code": {
+    "dbtUniqueId": "model.transfermarkt_datasets.game_events",
+    "dbtFilePath": "models/curated/game_events.sql",
+    "repositoryRelativePath": "dbt/models/curated/game_events.sql",
+    "projectPrefix": "dbt",
+    "method": "external-url",
+    "sourceUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql"
+  },
+  "partners": [],
+  "evidence": {
+    "records": [
+      {
+        "claim": "producing file dbt/models/curated/game_events.sql is tracked in the workspace.json artifact",
+        "observation": "key absent from generated.fileIndex (36 keys)",
+        "source": "workspacejson",
+        "verified": true
+      },
+      {
+        "claim": "the producing file is addressable at an immutable commit",
+        "observation": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+        "source": "datahub",
+        "verified": true
+      }
+    ],
+    "tier": "VERIFIED"
+  },
+  "accounting": {
+    "datasetsRequested": 1,
+    "datasetsResolved": 1,
+    "datasetsUnresolved": 0,
+    "nodesDropped": 0,
+    "nodesExcluded": {}
+  },
+  "unavailable": [
+    {
+      "field": "partners",
+      "source": "workspacejson",
+      "reason": "absent",
+      "detail": "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it."
+    }
+  ]
+}
