@@ -89,7 +89,7 @@ claims end-to-end. `@workspacejson/cli` returned `E404`, and
 `docs/clean-room.md` forbids consuming an unpublished package from source, so
 the fixture carried a synthesized file list with empty values.
 
-**`@workspacejson/cli@0.5.0` is now published.** The fixture is a genuine
+**`@workspacejson/cli` is now published.** The fixture is a genuine
 producer run, verified against the published artifact rather than a local
 build:
 
@@ -125,6 +125,44 @@ Cost: two failed attempts. **Not a defect** — it is correct ESM packaging, and
 checked before reporting it as one. Recorded because it is the kind of thing
 that reads as a broken package when it is actually a caller using CJS resolution
 against an ESM-only export map.
+
+### Producer bumped 0.5.0 -> 0.5.1 — verified, not assumed
+
+The 0.5.0 line above is left as written; it is what was measured at the time.
+
+`0.5.1` fixes the CLI exiting **non-zero from `--help` and `--version`**:
+
+```console
+# 0.5.0
+$ npx workspacejson --help     ; echo $?   -> 1
+$ npx workspacejson --version  ; echo $?   -> 1
+
+# 0.5.1
+$ npx workspacejson --help     ; echo $?   -> 0
+$ npx workspacejson --version  ; echo $?   -> 0
+```
+
+Worth recording as a papercut class, not just a fixed bug: `--help` is the
+first thing anyone runs against an unfamiliar CLI, and a non-zero exit there
+breaks shell pipelines, CI smoke checks and `set -e` scripts before the tool
+has done anything. It is invisible to interactive use, which is why it survived
+a release.
+
+Before bumping the pin, the four-path conformance suite was run against the
+newly published artifact, and `generate` output was diffed between versions:
+
+```console
+conformance vs 0.5.1 published artifact   28 passed, 0 failed
+
+diff of generate output (timestamps removed):
+<       "version": "0.5.0"
+>       "version": "0.5.1"
+```
+
+The only difference is `generated.by.version`, which is excluded from the
+material projection — so the patch is genuinely scoped to exit codes and does
+not touch producer output. Pin bumped and the fixture regenerated on that
+evidence rather than on the changelog.
 
 ### Highest-value DataHub improvement (running candidate)
 

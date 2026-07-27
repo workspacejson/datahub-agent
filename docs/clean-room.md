@@ -27,7 +27,7 @@ Why it is not a clean-room breach:
 - It creates **no ongoing dependency** on a `workspacejson` checkout. Every
   `workspacejson`-origin dependency resolves from the public registry at an
   exact version: `@workspacejson/spec@0.4.4` at runtime, and
-  `@workspacejson/cli@0.5.0` as a development dependency used to regenerate the
+  `@workspacejson/cli@0.5.1` as a development dependency used to regenerate the
   proof-corpus fixture. Neither is a path, link, or git reference.
 - The transfer is **fully attributed**. Judge-facing legibility is the point of
   the rule, and it is served better by a recorded provenance trail than by

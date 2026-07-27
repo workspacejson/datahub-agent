@@ -2,7 +2,7 @@
   "_provenance": {
     "corpus": "https://github.com/dbt-labs/jaffle_shop_duckdb",
     "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
-    "producer": "@workspacejson/cli@0.5.0",
+    "producer": "@workspacejson/cli@0.5.1",
     "generated_by": "scripts/build-corpus-fixture.mjs",
     "note": "A real producer run — `workspacejson generate` from the published package against the pinned corpus. Per-file values are empty because the producer withholds behavioral values by design, not because this fixture omits them.",
     "file_count": 36
@@ -11,7 +11,7 @@
     "specVersion": "0.4",
     "by": {
       "name": "@workspacejson/cli",
-      "version": "0.5.0"
+      "version": "0.5.1"
     },
     "fileIndex": {
       ".devcontainer.json": {},

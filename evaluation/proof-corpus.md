@@ -123,7 +123,7 @@ overstates what it supports.
    public command:
 
    ```json
-   "producer": "@workspacejson/cli@0.5.0",
+   "producer": "@workspacejson/cli@0.5.1",
    "file_count": 36
    ```
 
