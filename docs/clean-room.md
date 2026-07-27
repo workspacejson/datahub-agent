@@ -24,10 +24,11 @@ Why it is not a clean-room breach:
   preserve it somewhere while its permanent owner was decided. It was never
   neutral producer logic. `workspacejson/cli` **removes** it — the two
   repositories do not both hold it.
-- It creates **no ongoing dependency** on a `workspacejson` checkout. Nothing
-  in this repository imports `@workspacejson/cli`, which is in any case
-  unpublished. The only `workspacejson`-origin runtime dependency remains
-  `@workspacejson/spec`, pinned to the published `0.4.4`.
+- It creates **no ongoing dependency** on a `workspacejson` checkout. Every
+  `workspacejson`-origin dependency resolves from the public registry at an
+  exact version: `@workspacejson/spec@0.4.4` at runtime, and
+  `@workspacejson/cli@0.5.0` as a development dependency used to regenerate the
+  proof-corpus fixture. Neither is a path, link, or git reference.
 - The transfer is **fully attributed**. Judge-facing legibility is the point of
   the rule, and it is served better by a recorded provenance trail than by
   silence: see [`provenance.md`](provenance.md) for the frozen baseline commit,
@@ -38,7 +39,11 @@ What this exception does **not** license:
 
 - copying any further source, types, or utilities out of `workspacejson/*`,
   Marcelle Labs, or Vreko repositories;
-- importing `@workspacejson/cli` at any level, released or otherwise;
+- consuming `@workspacejson/cli` from a checkout rather than the registry. It
+  is published now, so it is a normal dependency at an exact version — that is
+  precisely what the rule permits, and it is what closed the largest gap in the
+  proof-corpus evidence. What stays forbidden is a path or workspace reference
+  to a sibling clone, whether or not that clone is publicly visible;
 - carrying upstream build shims. The upstream `types/ambient.d.ts` was
   deliberately **not** adopted — see `provenance.md`.
 

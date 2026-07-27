@@ -36,6 +36,25 @@ describe("fixtures are the frozen corpus", () => {
     expect(workspace._provenance.commit).toBe(PINNED);
     expect(manifest._provenance.dbt_version).toBe("1.12.0");
   });
+
+  it("the workspace fixture is a real producer run, not a synthesized index", () => {
+    // Before @workspacejson/cli was published, this fixture was built from
+    // `git ls-files` with empty values, because the clean-room rule forbids
+    // consuming an unpublished producer from source. It is a genuine
+    // `workspacejson generate` run now, and must stay one — a synthesized
+    // index would let the join pass against keys no producer ever emitted.
+    expect(workspace._provenance.producer).toMatch(/^@workspacejson\/cli@\d+\.\d+\.\d+$/);
+    expect(workspace.generated.by.name).toBe("@workspacejson/cli");
+    expect(workspace.generated.specVersion).toBe("0.4");
+  });
+
+  it("the producer excludes its own artifact, so the index converges", () => {
+    // Regression cover for the defect the conformance suite caught upstream:
+    // a producer that indexed its own output made `generate --check` fail on a
+    // repository's first CI run. A fixture carrying that key would mean the
+    // pinned producer had regressed.
+    expect(Object.keys(fileIndex)).not.toContain(".agents/workspace.json");
+  });
 });
 
 describe("URN parsing", () => {

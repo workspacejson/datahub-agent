@@ -80,26 +80,51 @@ DataHub's — but it is the precise failure mode that makes metadata joins
 untrustworthy, so it is recorded as a pattern. Resolved by
 `extractDatasetNodes`; see `evaluation/dbt-node-coverage.md`.
 
-### Blocked / cannot proceed
+### Blocked / cannot proceed — RESOLVED 2026-07-26
 
-**No real `workspace.json` producer run is possible for the proof corpus.**
-`@workspacejson/cli` is unpublished:
+**~~No real `workspace.json` producer run is possible for the proof corpus.~~**
+
+Recorded as the largest gap between what was demonstrated and what the project
+claims end-to-end. `@workspacejson/cli` returned `E404`, and
+`docs/clean-room.md` forbids consuming an unpublished package from source, so
+the fixture carried a synthesized file list with empty values.
+
+**`@workspacejson/cli@0.5.0` is now published.** The fixture is a genuine
+producer run, verified against the published artifact rather than a local
+build:
+
+```console
+$ npm install @workspacejson/cli          # 0.5.0
+$ npx workspacejson generate .
+  run 1: keys=3 selfIncluded=false sha=373dc3999b12
+  run 2: keys=3 selfIncluded=false sha=373dc3999b12
+  run 3: keys=3 selfIncluded=false sha=373dc3999b12   # converges from run 1
+```
+
+The gap is closed, and the judge-facing path now resolves through a public
+install rather than a source checkout.
+
+### Where setup or documentation caused delay — second entry
+
+**The published package is ESM-only in its `exports` map, which is correct but
+worth knowing before you write resolution code.** `exports` declares a `.`
+entry with `import` and `types` conditions and no `require` condition, so:
 
 ```
-$ npm view @workspacejson/cli version
-npm error code E404
-npm error 404 Not Found - GET https://registry.npmjs.org/@workspacejson%2fcli - Not found
+createRequire(import.meta.url).resolve('@workspacejson/cli')
+  -> ERR_PACKAGE_PATH_NOT_EXPORTED: No "exports" main defined
+import.meta.resolve('@workspacejson/cli')
+  -> works
 ```
 
-and `docs/clean-room.md` forbids consuming it from source. The committed
-`workspace.json` fixture therefore carries the corpus's real tracked file list
-as `fileIndex` keys with **empty evidence values**. Key membership — which is
-what the join actually tests — is exercised faithfully. Evidence payloads are
-not exercised, and no claim is made about them.
+`./package.json` is likewise unexported, so the common trick of requiring a
+dependency's manifest to read its version fails too — read it by path after
+walking up from the resolved entry.
 
-This is the single largest gap between what is demonstrated and what the
-project claims end-to-end. It is not resolvable inside this repository; it needs
-the CLI published.
+Cost: two failed attempts. **Not a defect** — it is correct ESM packaging, and I
+checked before reporting it as one. Recorded because it is the kind of thing
+that reads as a broken package when it is actually a caller using CJS resolution
+against an ESM-only export map.
 
 ### Highest-value DataHub improvement (running candidate)
 

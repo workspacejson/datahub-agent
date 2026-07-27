@@ -116,13 +116,29 @@ overstates what it supports.
 3. **Shallow history.** Any co-change or fragility figure computed from 92
    commits should be presented as illustrative, not as a strong statistical
    claim.
-4. **No real `workspace.json` producer run exists for this corpus yet.**
-   `@workspacejson/cli` is unpublished (npm 404) and
-   [`docs/clean-room.md`](../docs/clean-room.md) forbids consuming it from
-   source. The committed `workspace.json` fixture therefore uses the corpus's
-   **real tracked file list** as `fileIndex` keys with empty evidence values. It
-   exercises key membership faithfully; it makes no claim about evidence
-   payloads.
+4. ~~**No real `workspace.json` producer run exists for this corpus yet.**~~
+   **RESOLVED 2026-07-26.** `@workspacejson/cli` is published, so the committed
+   `workspace.json` fixture is now a genuine `workspacejson generate` run
+   against the pinned corpus — the same artifact a judge gets from the same
+   public command:
 
-Limitation 4 is the one that most constrains what can be demonstrated, and it
-is not resolvable inside this repository.
+   ```json
+   "producer": "@workspacejson/cli@0.5.0",
+   "file_count": 36
+   ```
+
+   Per-file values remain empty, but that is now the **producer's own ratified
+   behavior** rather than a limitation of this fixture: `FileIndexEntry`
+   declares every value field optional, and the producer deliberately withholds
+   behavioral values. The distinction matters — the join exercises key
+   membership against keys a real producer emitted, not against a file list this
+   repository synthesized.
+
+   Two tests pin it so it cannot silently regress: one asserts the fixture
+   carries a real producer identity, the other that the producer excludes its
+   own artifact from the index.
+
+Limitation 1 is now the one that most constrains what this corpus demonstrates:
+it cannot exercise the nested-project normalization at all. See
+[`corpus-forge-screen.md`](corpus-forge-screen.md) for a measurement corpus that
+does.

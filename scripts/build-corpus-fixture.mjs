@@ -14,7 +14,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
+
+import { execFileSync, spawnSync } from "node:child_process";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..");
@@ -72,30 +73,70 @@ const fixture = {
   sources: manifest.sources ?? {},
 };
 
-// The fileIndex the workspace.json producer would key for this repository:
-// every tracked file, repository-root-relative POSIX (VR-640).
+// The workspace.json artifact, produced by the REAL published producer.
 //
-// LIMITATION, recorded deliberately: `@workspacejson/cli` is not published to
-// npm (404 at time of writing), and docs/clean-room.md forbids consuming it
-// from source. So this is NOT the output of a real producer run — it is the
-// real file list the producer keys on, with empty evidence values. The join
-// under test is key-membership, which this exercises faithfully; the evidence
-// payloads are not exercised and no claim is made about them.
-const tracked = execFileSync("git", ["-C", resolve(checkout), "ls-files"], { encoding: "utf8" })
-  .split("\n").map((s) => s.trim()).filter(Boolean);
+// This previously synthesized a fileIndex from `git ls-files` with empty
+// values, because `@workspacejson/cli` was unpublished (npm 404) and
+// docs/clean-room.md forbids consuming it from source. It is published now, so
+// the fixture is a genuine producer run against the pinned corpus — the same
+// artifact a judge gets from the same public command.
+//
+// Per-file values are still empty, and that is the producer's own ratified
+// behavior rather than a shortcut taken here: `FileIndexEntry` declares every
+// value field optional, and the producer deliberately withholds behavioral
+// values. The join under test is key membership, exercised exactly as a real
+// consumer would.
+// Resolved with `import.meta.resolve`, not `createRequire().resolve`. The
+// package's `exports` map declares only an `import` condition — correct for an
+// ESM package — so CJS resolution throws ERR_PACKAGE_PATH_NOT_EXPORTED. Its
+// `./package.json` subpath is likewise unexported, so the manifest is read by
+// path after walking up from the resolved entry rather than required.
+const cliMain = fileURLToPath(import.meta.resolve("@workspacejson/cli"));
+const cliPackageDir = dirname(dirname(cliMain));
+const cliEntry = join(cliPackageDir, "dist", "cli.js");
+const producerVersion = JSON.parse(readFileSync(join(cliPackageDir, "package.json"), "utf8")).version;
 
-const fileIndex = {};
-for (const f of tracked) fileIndex[f] = {};
+const generate = spawnSync(process.execPath, [cliEntry, "generate", resolve(checkout)], {
+  encoding: "utf8",
+  cwd: resolve(checkout),
+});
+if (generate.status !== 0) {
+  console.error(`The producer failed (exit ${generate.status}).`);
+  console.error(`${generate.stdout ?? ""}${generate.stderr ?? ""}`);
+  process.exit(2);
+}
+
+const artifactPath = join(resolve(checkout), ".agents", "workspace.json");
+if (!existsSync(artifactPath)) {
+  console.error(`The producer reported success but wrote no artifact at ${artifactPath}.`);
+  process.exit(2);
+}
+
+const produced = JSON.parse(readFileSync(artifactPath, "utf8"));
+const fileIndex = produced.generated?.fileIndex ?? {};
+
+// An empty index would make every join vacuously pass. Refuse rather than
+// commit a fixture that cannot fail.
+if (Object.keys(fileIndex).length === 0) {
+  console.error("The producer emitted an empty fileIndex. Refusing to write a fixture that would make every join vacuously pass.");
+  process.exit(2);
+}
 
 const workspace = {
   _provenance: {
     corpus: `https://github.com/${CORPUS}`,
     commit: PINNED_SHA,
+    producer: `@workspacejson/cli@${producerVersion}`,
     generated_by: "scripts/build-corpus-fixture.mjs",
-    note: "NOT a real @workspacejson/cli producer run — that package is unpublished and clean-room rules forbid source consumption. Keys are the corpus's real tracked file list (git ls-files); evidence values are intentionally empty. Exercises key membership only.",
-    file_count: tracked.length,
+    note: "A real producer run — `workspacejson generate` from the published package against the pinned corpus. Per-file values are empty because the producer withholds behavioral values by design, not because this fixture omits them.",
+    file_count: Object.keys(fileIndex).length,
   },
-  generated: { fileIndex },
+  generated: {
+    specVersion: produced.generated?.specVersion,
+    by: produced.generated?.by,
+    fileIndex,
+    frameworkManifest: produced.generated?.frameworkManifest ?? [],
+  },
 };
 
 mkdirSync(outDir, { recursive: true });
@@ -106,5 +147,6 @@ console.log(`corpus:      ${CORPUS}@${PINNED_SHA}`);
 console.log(`dbt:         ${manifest.metadata?.dbt_version} / ${manifest.metadata?.adapter_type}`);
 console.log(`nodes:       ${Object.keys(nodes).length}`);
 console.log(`sources:     ${Object.keys(manifest.sources ?? {}).length}`);
-console.log(`fileIndex:   ${tracked.length} tracked files`);
+console.log(`producer:    @workspacejson/cli@${producerVersion} (published)`);
+console.log(`fileIndex:   ${Object.keys(fileIndex).length} keys from a real producer run`);
 console.log(`written to:  ${outDir}`);
