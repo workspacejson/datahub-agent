@@ -8,6 +8,7 @@ import {
   type ChangeImpactEvent,
   type EvidenceRecord,
   type Unavailable,
+  type VerificationEvidence,
 } from "../../src/integration/change-impact-event.js";
 
 /** A minimal event that passes validation — every test mutates one thing from here. */
@@ -122,13 +123,14 @@ describe("completeness as an axis of its own", () => {
     expect(problems[0]).toMatch(/absent.*unverified.*use indeterminate/);
   });
 
-  it("accepts an absent claim once completeness is verified", () => {
-    // `absent` is not banned — it is earned. With an external attestation
-    // behind it, "the catalog holds no upstreams" is a claim the evidence
-    // supports.
+  it("does not let claiming verified completeness be enough to earn absent", () => {
+    // `absent` is not banned — it is earned, and the word alone does not earn
+    // it. Flipping completeness to `verified` without an attestation behind it
+    // would make the second axis a laundering step for the first. The
+    // acceptance case lives in the evidence suite below.
     expect(
-      validateEvent(withLineageEntry({ reason: "absent", completeness: "verified" })),
-    ).toEqual([]);
+      validateEvent(withLineageEntry({ reason: "absent", completeness: "verified" }))[0],
+    ).toMatch(/without evidence/);
   });
 
   it("rejects indeterminate on an answer that was verified", () => {
@@ -161,6 +163,87 @@ describe("completeness as an axis of its own", () => {
 
   it("rejects a negative observedCount", () => {
     expect(validateEvent(withLineageEntry({ observedCount: -1 }))[0]).toMatch(/negative/);
+  });
+
+  it("rejects an observedCount that disagrees with the edges carried", () => {
+    // The count is a summary of the set, not a second independent claim. If
+    // they can drift, the summary becomes the thing consumers trust.
+    expect(validateEvent(withLineageEntry({ observedCount: 3 }))[0]).toMatch(
+      /observedCount 3 but carries 0 entries/,
+    );
+  });
+
+  it.each(["failed", "not-queried"] as const)(
+    "rejects a manufactured zero count on a %s read",
+    (reason) => {
+      // No query produced that zero. Inventing one recreates the collapse in
+      // arithmetic instead of vocabulary.
+      const problems = validateEvent(withLineageEntry({ reason, observedCount: 0 }));
+      expect(problems.some((p) => /no query produced one/.test(p))).toBe(true);
+    },
+  );
+
+  it("rejects indeterminate that does not state completeness at all", () => {
+    const event = withLineageEntry({});
+    delete event.unavailable[0]!.completeness;
+    expect(validateEvent(event)[0]).toMatch(/without stating completeness/);
+  });
+});
+
+describe("verified completeness must carry its evidence", () => {
+  const EVIDENCE: VerificationEvidence = {
+    manifestDigest: "sha256:aaa",
+    expectedSetDigest: "sha256:bbb",
+    observedSetDigest: "sha256:bbb",
+    queryParameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", maxHops: 3 },
+  };
+
+  const verifiedAbsence = (verification?: Partial<VerificationEvidence>): ChangeImpactEvent => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.unavailable = [
+      {
+        field: "datahub.upstreams",
+        source: "datahub",
+        reason: "absent",
+        detail: "checked against the frozen readiness manifest; the catalog holds no upstreams",
+        completeness: "verified",
+        observedCount: 0,
+        ...(verification === undefined ? {} : { verification: { ...EVIDENCE, ...verification } }),
+      },
+    ];
+    return event;
+  };
+
+  it("accepts a verified absence backed by manifest and set digests", () => {
+    expect(validateEvent(verifiedAbsence({}))).toEqual([]);
+  });
+
+  it("rejects verified completeness with no evidence block at all", () => {
+    // Without this the second axis is just a new place to assert the word.
+    expect(validateEvent(verifiedAbsence())[0]).toMatch(/without evidence \(verification\)/);
+  });
+
+  it.each(["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const)(
+    "rejects verified completeness missing %s",
+    (field) => {
+      expect(validateEvent(verifiedAbsence({ [field]: "" }))[0]).toMatch(field);
+    },
+  );
+
+  it("rejects verified completeness with no query parameters", () => {
+    // Two sets are only comparable under the same parameters, so they are part
+    // of the evidence rather than commentary on it.
+    expect(validateEvent(verifiedAbsence({ queryParameters: {} }))[0]).toMatch(/queryParameters/);
+  });
+
+  it("does not require evidence for an unverified answer", () => {
+    // `unverified` is the honest default and must stay cheap to state.
+    const event = verifiedAbsence({});
+    event.unavailable[0]!.reason = "indeterminate";
+    event.unavailable[0]!.completeness = "unverified";
+    delete event.unavailable[0]!.verification;
+    expect(validateEvent(event)).toEqual([]);
   });
 });
 

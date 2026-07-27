@@ -65,6 +65,32 @@ export type UnavailableReason =
  */
 export type Completeness = "verified" | "unverified";
 
+/**
+ * What a `verified` completeness claim rests on.
+ *
+ * Required rather than optional, because a second axis with no evidence behind
+ * it is merely a new place to assert the word "verified". The point of the axis
+ * is to make completeness checkable; a bare enum would make it assertable.
+ *
+ * The digests are of sorted URN *sets*, not counts. Twelve edges can be the
+ * wrong twelve, and a count that matches while the members differ is exactly
+ * the failure a count-based oracle cannot see.
+ */
+export interface VerificationEvidence {
+  /** Digest of the readiness manifest the expectation came from. */
+  manifestDigest: string;
+  /** Digest of the sorted expected URN set. */
+  expectedSetDigest: string;
+  /** Digest of the sorted observed URN set. */
+  observedSetDigest: string;
+  /**
+   * Query surface, direction and hop parameters. Two sets are only comparable
+   * under the same parameters, so recording them is part of the evidence rather
+   * than commentary on it.
+   */
+  queryParameters: Record<string, string | number>;
+}
+
 export interface Unavailable {
   /** Dotted path of what is missing, e.g. `datahub.lineage.downstreams`. */
   field: string;
@@ -86,8 +112,14 @@ export interface Unavailable {
    * What the query did return, when it returned something that is not being
    * presented as the whole answer. Zero is a real observation and is recorded
    * as one; it is `completeness` that says whether it can be read as absence.
+   *
+   * Only meaningful where a query ran. A failed or unqueried read has no count,
+   * and manufacturing a zero for one would recreate the collapse this contract
+   * exists to prevent, in the arithmetic instead of the vocabulary.
    */
   observedCount?: number;
+  /** Required whenever `completeness` is `verified`. */
+  verification?: VerificationEvidence;
 }
 
 /** How the dataset's producing file was determined. */
@@ -301,6 +333,12 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
   // only sayable on an answer known to be complete. A partially-converged index
   // returning zero edges is the case this exists for: it satisfies "asked and
   // got nothing" while being no evidence at all about the data.
+  const observedCollections: Record<string, unknown[] | undefined> = {
+    "datahub.upstreams": event.datahub.upstreams,
+    "datahub.downstreams": event.datahub.downstreams,
+    partners: event.partners,
+  };
+
   for (const entry of event.unavailable) {
     if (entry.reason === "absent" && entry.completeness === "unverified") {
       problems.push(
@@ -313,8 +351,48 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
         `${entry.field} claims indeterminate on a verified answer — say what the answer was`,
       );
     }
-    if (entry.observedCount !== undefined && entry.observedCount < 0) {
-      problems.push(`${entry.field} has a negative observedCount`);
+    if (entry.reason === "indeterminate" && entry.completeness === undefined) {
+      problems.push(`${entry.field} is indeterminate without stating completeness`);
+    }
+
+    // A second axis with nothing behind it is just a new place to assert the
+    // word. `verified` has to name what it was checked against.
+    if (entry.completeness === "verified") {
+      const v = entry.verification;
+      const missing = !v
+        ? ["verification"]
+        : (["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const).filter(
+            (k) => !v[k],
+          );
+      if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
+        problems.push(
+          `${entry.field} claims verified completeness without evidence (${missing.join(", ") || "queryParameters"})`,
+        );
+      }
+    }
+
+    // A read that did not happen has no count. Manufacturing a zero for one
+    // recreates the collapse this contract prevents, in arithmetic rather than
+    // vocabulary.
+    if (
+      (entry.reason === "failed" || entry.reason === "not-queried") &&
+      entry.observedCount !== undefined
+    ) {
+      problems.push(
+        `${entry.field} is ${entry.reason} but carries an observedCount — no query produced one`,
+      );
+    }
+
+    if (entry.observedCount !== undefined) {
+      if (entry.observedCount < 0) {
+        problems.push(`${entry.field} has a negative observedCount`);
+      }
+      const collection = observedCollections[entry.field];
+      if (collection && entry.observedCount !== collection.length) {
+        problems.push(
+          `${entry.field} reports observedCount ${entry.observedCount} but carries ${collection.length} entries`,
+        );
+      }
     }
   }
 
