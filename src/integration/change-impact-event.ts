@@ -29,12 +29,67 @@ export type ContextSource = "datahub" | "workspacejson";
  * `absent` is a positive claim: the system was asked and reported nothing.
  * `not-queried` and `failed` are not claims about the data at all. Collapsing
  * them is precisely the error this type exists to prevent.
+ *
+ * `indeterminate` is the fourth case, and it exists because the other three
+ * could not express it. The system was asked, it answered, and the answer
+ * cannot be trusted to be complete — a search-backed lineage read against an
+ * index that may still be converging is the case that forced it. Calling that
+ * `absent` asserts the catalog has no edges; calling it `failed` asserts the
+ * query did not work. Both are false. The query succeeded, returned what it
+ * returned, and completeness is unknown.
+ *
+ * `indeterminate` is therefore about the *standing* of an answer, not its
+ * content: an empty result and a partial one can both be indeterminate, and
+ * whatever edges were returned remain evidence either way.
  */
 export type UnavailableReason =
   | "absent"
   | "not-queried"
   | "failed"
+  | "indeterminate"
   | "not-exposed-by-source";
+
+/**
+ * Whether an answer's completeness was established, as an axis of its own.
+ *
+ * Kept separate from whether the read succeeded, for the same reason the
+ * writeback receipt keeps its observation status separate from `read`: a query
+ * that succeeded while returning a possibly-partial answer is `ok` and
+ * `unverified` at once, and one field cannot say both without losing the
+ * distinction.
+ *
+ * `verified` requires an external attestation — an expected result the answer
+ * was checked against. Repetition is not attestation: two identical samples do
+ * not prove convergence, and neither does a long wait at zero. Nothing in a
+ * general read path can upgrade `unverified` on its own.
+ */
+export type Completeness = "verified" | "unverified";
+
+/**
+ * What a `verified` completeness claim rests on.
+ *
+ * Required rather than optional, because a second axis with no evidence behind
+ * it is merely a new place to assert the word "verified". The point of the axis
+ * is to make completeness checkable; a bare enum would make it assertable.
+ *
+ * The digests are of sorted URN *sets*, not counts. Twelve edges can be the
+ * wrong twelve, and a count that matches while the members differ is exactly
+ * the failure a count-based oracle cannot see.
+ */
+export interface VerificationEvidence {
+  /** Digest of the readiness manifest the expectation came from. */
+  manifestDigest: string;
+  /** Digest of the sorted expected URN set. */
+  expectedSetDigest: string;
+  /** Digest of the sorted observed URN set. */
+  observedSetDigest: string;
+  /**
+   * Query surface, direction and hop parameters. Two sets are only comparable
+   * under the same parameters, so recording them is part of the evidence rather
+   * than commentary on it.
+   */
+  queryParameters: Record<string, string | number>;
+}
 
 export interface Unavailable {
   /** Dotted path of what is missing, e.g. `datahub.lineage.downstreams`. */
@@ -43,6 +98,28 @@ export interface Unavailable {
   reason: UnavailableReason;
   /** Human-readable detail — shown to a reviewer, so it must stand alone. */
   detail: string;
+  /**
+   * Whether the answer behind this entry was established as complete.
+   *
+   * Carried alongside `reason` rather than folded into it, because the two say
+   * different things: `reason` is why the context is not present, and this is
+   * how far the answer can be trusted. Omitted where completeness is not a
+   * meaningful question — a field the source does not expose was never an
+   * answer to begin with.
+   */
+  completeness?: Completeness;
+  /**
+   * What the query did return, when it returned something that is not being
+   * presented as the whole answer. Zero is a real observation and is recorded
+   * as one; it is `completeness` that says whether it can be read as absence.
+   *
+   * Only meaningful where a query ran. A failed or unqueried read has no count,
+   * and manufacturing a zero for one would recreate the collapse this contract
+   * exists to prevent, in the arithmetic instead of the vocabulary.
+   */
+  observedCount?: number;
+  /** Required whenever `completeness` is `verified`. */
+  verification?: VerificationEvidence;
 }
 
 /** How the dataset's producing file was determined. */
@@ -78,6 +155,32 @@ export interface LineageEdge {
   degree: number;
 }
 
+/**
+ * The standing of one direction of a lineage read.
+ *
+ * This lives beside the arrays rather than inside `unavailable`, and the
+ * distinction is load-bearing. An `unavailable` entry is only required when a
+ * collection is *empty*, so completeness carried there is unreachable in the
+ * case that actually caused this: a partially converged index returning one
+ * edge of twelve. The array is non-empty, nothing is "unavailable", and the
+ * event would carry no completeness state at all — the original defect,
+ * surviving inside its own fix.
+ *
+ * So every event states the standing of both directions, always, whether or not
+ * anything is missing. `unavailable` stays what it is: the human explanation for
+ * absent context, never the only machine-readable place completeness lives.
+ */
+export interface LineageObservation {
+  /** Whether the catalog answered. Unless "ok", `observedCount` is not a claim. */
+  read: "ok" | "failed" | "not-queried";
+  /** Whether the answer was established as whole. Never derived from `read`. */
+  completeness: Completeness;
+  /** What the query returned. Absent when no query ran. */
+  observedCount?: number;
+  /** Required whenever `completeness` is `verified`. */
+  verification?: VerificationEvidence;
+}
+
 export interface DataHubContext {
   name: string | null;
   platform: string | null;
@@ -85,6 +188,14 @@ export interface DataHubContext {
   /** Declared dependencies from the catalog — NOT behavioral coupling. */
   upstreams: LineageEdge[];
   downstreams: LineageEdge[];
+  /**
+   * The standing of each lineage read, stated on every event. Mandatory
+   * precisely because a partial answer looks like a complete one.
+   */
+  lineageObservation: {
+    upstreams: LineageObservation;
+    downstreams: LineageObservation;
+  };
   schemaFieldCount: number | null;
   owners: string[];
   domain: string | null;
@@ -141,7 +252,33 @@ export interface Provenance {
   workspaceArtifact: { producedBy: string | null; fileIndexKeys: number } | null;
 }
 
-export const CHANGE_IMPACT_EVENT_VERSION = "1.0" as const;
+/**
+ * The contract version consumers compile against.
+ *
+ * 1.1 added `datahub.lineageObservation` as a **required** field. That is a
+ * breaking change, and it gets a version because leaving it at 1.0 would let
+ * two incompatible shapes both claim the same identity — an artifact asserting
+ * something about itself that is not true, which is the defect class this whole
+ * contract exists to prevent. A consumer must be able to tell the shapes apart
+ * by reading the event, not by probing for a field.
+ *
+ * Migration from 1.0: **re-emit.** There is no in-place upgrade, and offering
+ * one would be dishonest. The added field records whether a lineage read was
+ * complete; a 1.0 event does not carry that information, so any value
+ * synthesised for it would be invented rather than observed. A migration that
+ * defaults `completeness` to `unverified` looks harmless and is not — it would
+ * manufacture an observation nobody made, on the exact axis the field exists to
+ * keep honest.
+ *
+ * `validateEvent` therefore rejects 1.0 events by name and says to re-emit,
+ * rather than reporting a confusing missing-field error.
+ */
+export const CHANGE_IMPACT_EVENT_VERSION = "1.1" as const;
+
+/** Versions this contract knows about but can no longer validate. */
+export const SUPERSEDED_EVENT_VERSIONS: Record<string, string> = {
+  "1.0": "1.1 requires datahub.lineageObservation, which a 1.0 event does not carry — re-emit the event rather than upgrading it in place",
+};
 
 export interface ChangeImpactEvent {
   eventVersion: typeof CHANGE_IMPACT_EVENT_VERSION;
@@ -216,11 +353,80 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
  * emitted — silently dropping it would be the failure mode this contract is
  * built to avoid.
  */
+/**
+ * A second axis with nothing behind it is just a new place to assert the word.
+ * `verified` has to name what it was checked against, wherever it is claimed.
+ */
+function verifiedEvidenceProblems(
+  holder: { completeness?: Completeness; verification?: VerificationEvidence },
+  label: string,
+): string[] {
+  if (holder.completeness !== "verified") return [];
+  const v = holder.verification;
+  const missing = !v
+    ? ["verification"]
+    : (["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const).filter((k) => !v[k]);
+  if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
+    return [
+      `${label} claims verified completeness without evidence (${missing.join(", ") || "queryParameters"})`,
+    ];
+  }
+  return [];
+}
+
 export function validateEvent(event: ChangeImpactEvent): string[] {
   const problems: string[] = [];
 
   if (event.eventVersion !== CHANGE_IMPACT_EVENT_VERSION) {
-    problems.push(`unknown eventVersion ${event.eventVersion}`);
+    // A superseded version gets named, so a reviewer holding an old artifact
+    // reads why it no longer validates instead of a missing-field error that
+    // does not explain itself.
+    const superseded = SUPERSEDED_EVENT_VERSIONS[event.eventVersion as string];
+    problems.push(
+      superseded
+        ? `eventVersion ${event.eventVersion} is superseded by ${CHANGE_IMPACT_EVENT_VERSION}: ${superseded}`
+        : `unknown eventVersion ${event.eventVersion}`,
+    );
+    // The remaining checks assume the current shape. Running them against an
+    // older one produces noise about fields that were never meant to be there.
+    return problems;
+  }
+
+
+  // Stated on every event, in both directions, whether or not anything is
+  // missing — a partial answer is the case that looks like a complete one.
+  for (const [direction, edges] of [
+    ["upstreams", event.datahub.upstreams],
+    ["downstreams", event.datahub.downstreams],
+  ] as const) {
+    const label = `datahub.lineageObservation.${direction}`;
+    const observation = event.datahub.lineageObservation?.[direction];
+    if (!observation) {
+      problems.push(`${label} is missing — every event must state the standing of both directions`);
+      continue;
+    }
+
+    problems.push(...verifiedEvidenceProblems(observation, label));
+
+    if (observation.read === "ok") {
+      if (observation.observedCount === undefined) {
+        problems.push(`${label} read ok without an observedCount`);
+      } else if (observation.observedCount !== edges.length) {
+        problems.push(
+          `${label} reports observedCount ${observation.observedCount} but carries ${edges.length} edges`,
+        );
+      }
+    } else {
+      if (observation.observedCount !== undefined) {
+        problems.push(`${label} is ${observation.read} but carries an observedCount`);
+      }
+      if (edges.length > 0) {
+        problems.push(`${label} is ${observation.read} but ${edges.length} edges are present`);
+      }
+      if (observation.completeness === "verified") {
+        problems.push(`${label} claims verified completeness on a read that did not happen`);
+      }
+    }
   }
 
   const { datasetsRequested, datasetsResolved, datasetsUnresolved } = event.accounting;
@@ -250,6 +456,59 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
 
   if (event.code.method === "unresolved" && event.code.repositoryRelativePath !== null) {
     problems.push("code.method is unresolved but a repositoryRelativePath is present");
+  }
+
+  // An `absent` claim asserts the source was asked and holds nothing. That is
+  // only sayable on an answer known to be complete. A partially-converged index
+  // returning zero edges is the case this exists for: it satisfies "asked and
+  // got nothing" while being no evidence at all about the data.
+  const observedCollections: Record<string, unknown[] | undefined> = {
+    "datahub.upstreams": event.datahub.upstreams,
+    "datahub.downstreams": event.datahub.downstreams,
+    partners: event.partners,
+  };
+
+  for (const entry of event.unavailable) {
+    if (entry.reason === "absent" && entry.completeness === "unverified") {
+      problems.push(
+        `${entry.field} claims absent on an answer whose completeness is unverified — use indeterminate`,
+      );
+    }
+    // The converse guard, so the two words cannot drift apart in use.
+    if (entry.reason === "indeterminate" && entry.completeness === "verified") {
+      problems.push(
+        `${entry.field} claims indeterminate on a verified answer — say what the answer was`,
+      );
+    }
+    if (entry.reason === "indeterminate" && entry.completeness === undefined) {
+      problems.push(`${entry.field} is indeterminate without stating completeness`);
+    }
+
+    problems.push(...verifiedEvidenceProblems(entry, entry.field));
+
+    // A read that did not happen has no count. Manufacturing a zero for one
+    // recreates the collapse this contract prevents, in arithmetic rather than
+    // vocabulary.
+    if (
+      (entry.reason === "failed" || entry.reason === "not-queried") &&
+      entry.observedCount !== undefined
+    ) {
+      problems.push(
+        `${entry.field} is ${entry.reason} but carries an observedCount — no query produced one`,
+      );
+    }
+
+    if (entry.observedCount !== undefined) {
+      if (entry.observedCount < 0) {
+        problems.push(`${entry.field} has a negative observedCount`);
+      }
+      const collection = observedCollections[entry.field];
+      if (collection && entry.observedCount !== collection.length) {
+        problems.push(
+          `${entry.field} reports observedCount ${entry.observedCount} but carries ${collection.length} entries`,
+        );
+      }
+    }
   }
 
   return problems;

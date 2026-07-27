@@ -5,8 +5,11 @@ import {
   deriveTier,
   toDataHubOnly,
   validateEvent,
+  SUPERSEDED_EVENT_VERSIONS,
   type ChangeImpactEvent,
   type EvidenceRecord,
+  type Unavailable,
+  type VerificationEvidence,
 } from "../../src/integration/change-impact-event.js";
 
 /** A minimal event that passes validation — every test mutates one thing from here. */
@@ -27,6 +30,10 @@ function validEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpactEve
       description: null,
       upstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.up,PROD)", name: "up", degree: 1 }],
       downstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.down,PROD)", name: "down", degree: 1 }],
+      lineageObservation: {
+        upstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+        downstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+      },
       schemaFieldCount: 4,
       owners: [],
       domain: null,
@@ -82,6 +89,211 @@ describe("deriveTier", () => {
     // The tier is the whole trust signal. If it accepted a threshold or an
     // override, it would become an opinion rather than a function of evidence.
     expect(deriveTier.length).toBe(1);
+  });
+});
+
+describe("the version a consumer compiles against", () => {
+  it("names a superseded version and says to re-emit, not what field is missing", () => {
+    // A 1.0 artifact predates lineageObservation. Reporting "missing field"
+    // would send a reviewer looking for a bug in a file that was correct under
+    // the contract it was written for.
+    const event = { ...validEvent(), eventVersion: "1.0" } as unknown as ChangeImpactEvent;
+    const problems = validateEvent(event);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/1\.0 is superseded by 1\.1/);
+    expect(problems[0]).toMatch(/re-emit/);
+  });
+
+  it("does not report shape problems against a version whose shape differed", () => {
+    // Running current-shape checks over an older event produces noise about
+    // fields that were never meant to be there.
+    const stale = { ...validEvent(), eventVersion: "1.0" } as unknown as ChangeImpactEvent;
+    delete (stale.datahub as { lineageObservation?: unknown }).lineageObservation;
+    expect(validateEvent(stale)).toHaveLength(1);
+  });
+
+  it("still rejects a version it has never heard of", () => {
+    const event = { ...validEvent(), eventVersion: "9.9" } as unknown as ChangeImpactEvent;
+    expect(validateEvent(event)[0]).toMatch(/unknown eventVersion 9\.9/);
+  });
+
+  it("offers no in-place upgrade from 1.0, deliberately", () => {
+    // The added field records whether a lineage read was complete. A 1.0 event
+    // does not carry that, so any value synthesised for it would be invented
+    // rather than observed — manufacturing an observation nobody made, on the
+    // exact axis the field exists to keep honest.
+    expect(SUPERSEDED_EVENT_VERSIONS["1.0"]).toMatch(/re-emit/);
+    expect(Object.keys(SUPERSEDED_EVENT_VERSIONS)).toEqual(["1.0"]);
+  });
+});
+
+describe("completeness as an axis of its own", () => {
+  /** An event whose lineage is empty, with one unavailable entry to describe it. */
+  const withLineageEntry = (entry: Partial<Unavailable>): ChangeImpactEvent => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "unverified",
+      observedCount: 0,
+    };
+    event.unavailable = [
+      {
+        field: "datahub.upstreams",
+        source: "datahub",
+        reason: "indeterminate",
+        detail: "the lineage query succeeded; whether it is complete is unknown",
+        completeness: "unverified",
+        observedCount: 0,
+        ...entry,
+      },
+    ];
+    return event;
+  };
+
+  it("accepts a zero result reported as indeterminate and unverified", () => {
+    // The shape this issue exists to make sayable: asked, answered, and the
+    // answer cannot be trusted to be whole.
+    expect(validateEvent(withLineageEntry({}))).toEqual([]);
+  });
+
+  it("rejects an absent claim resting on an unverified answer", () => {
+    // A partially converged index returning zero satisfies "asked and got
+    // nothing" while being no evidence at all about the data. This is the
+    // defect, expressed as a contract rule.
+    const problems = validateEvent(
+      withLineageEntry({ reason: "absent", completeness: "unverified" }),
+    );
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/absent.*unverified.*use indeterminate/);
+  });
+
+  it("does not let claiming verified completeness be enough to earn absent", () => {
+    // `absent` is not banned — it is earned, and the word alone does not earn
+    // it. Flipping completeness to `verified` without an attestation behind it
+    // would make the second axis a laundering step for the first. The
+    // acceptance case lives in the evidence suite below.
+    expect(
+      validateEvent(withLineageEntry({ reason: "absent", completeness: "verified" }))[0],
+    ).toMatch(/without evidence/);
+  });
+
+  it("rejects indeterminate on an answer that was verified", () => {
+    // The converse guard, so the two words cannot drift into synonyms.
+    const problems = validateEvent(
+      withLineageEntry({ reason: "indeterminate", completeness: "verified" }),
+    );
+    expect(problems[0]).toMatch(/indeterminate.*verified/);
+  });
+
+  it("keeps completeness independent of why the context is missing", () => {
+    // Not derived from `reason`, in either direction. A failed read and a
+    // not-queried one carry no completeness at all, because neither produced
+    // an answer whose completeness could be a question.
+    for (const reason of ["failed", "not-queried"] as const) {
+      const event = withLineageEntry({ reason });
+      delete event.unavailable[0]!.completeness;
+      delete event.unavailable[0]!.observedCount;
+      expect(validateEvent(event)).toEqual([]);
+    }
+  });
+
+  it("treats a zero observedCount as a real observation, not a missing one", () => {
+    // Zero is what the query returned. It is `completeness` that decides
+    // whether it may be read as absence, which is the whole separation.
+    const entry = withLineageEntry({ observedCount: 0 }).unavailable[0]!;
+    expect(entry.observedCount).toBe(0);
+    expect(entry.completeness).toBe("unverified");
+  });
+
+  it("rejects a negative observedCount", () => {
+    expect(validateEvent(withLineageEntry({ observedCount: -1 }))[0]).toMatch(/negative/);
+  });
+
+  it("rejects an observedCount that disagrees with the edges carried", () => {
+    // The count is a summary of the set, not a second independent claim. If
+    // they can drift, the summary becomes the thing consumers trust.
+    expect(validateEvent(withLineageEntry({ observedCount: 3 }))[0]).toMatch(
+      /observedCount 3 but carries 0 entries/,
+    );
+  });
+
+  it.each(["failed", "not-queried"] as const)(
+    "rejects a manufactured zero count on a %s read",
+    (reason) => {
+      // No query produced that zero. Inventing one recreates the collapse in
+      // arithmetic instead of vocabulary.
+      const problems = validateEvent(withLineageEntry({ reason, observedCount: 0 }));
+      expect(problems.some((p) => /no query produced one/.test(p))).toBe(true);
+    },
+  );
+
+  it("rejects indeterminate that does not state completeness at all", () => {
+    const event = withLineageEntry({});
+    delete event.unavailable[0]!.completeness;
+    expect(validateEvent(event)[0]).toMatch(/without stating completeness/);
+  });
+});
+
+describe("verified completeness must carry its evidence", () => {
+  const EVIDENCE: VerificationEvidence = {
+    manifestDigest: "sha256:aaa",
+    expectedSetDigest: "sha256:bbb",
+    observedSetDigest: "sha256:bbb",
+    queryParameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", maxHops: 3 },
+  };
+
+  const verifiedAbsence = (verification?: Partial<VerificationEvidence>): ChangeImpactEvent => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "unverified",
+      observedCount: 0,
+    };
+    event.unavailable = [
+      {
+        field: "datahub.upstreams",
+        source: "datahub",
+        reason: "absent",
+        detail: "checked against the frozen readiness manifest; the catalog holds no upstreams",
+        completeness: "verified",
+        observedCount: 0,
+        ...(verification === undefined ? {} : { verification: { ...EVIDENCE, ...verification } }),
+      },
+    ];
+    return event;
+  };
+
+  it("accepts a verified absence backed by manifest and set digests", () => {
+    expect(validateEvent(verifiedAbsence({}))).toEqual([]);
+  });
+
+  it("rejects verified completeness with no evidence block at all", () => {
+    // Without this the second axis is just a new place to assert the word.
+    expect(validateEvent(verifiedAbsence())[0]).toMatch(/without evidence \(verification\)/);
+  });
+
+  it.each(["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const)(
+    "rejects verified completeness missing %s",
+    (field) => {
+      expect(validateEvent(verifiedAbsence({ [field]: "" }))[0]).toMatch(field);
+    },
+  );
+
+  it("rejects verified completeness with no query parameters", () => {
+    // Two sets are only comparable under the same parameters, so they are part
+    // of the evidence rather than commentary on it.
+    expect(validateEvent(verifiedAbsence({ queryParameters: {} }))[0]).toMatch(/queryParameters/);
+  });
+
+  it("does not require evidence for an unverified answer", () => {
+    // `unverified` is the honest default and must stay cheap to state.
+    const event = verifiedAbsence({});
+    event.unavailable[0]!.reason = "indeterminate";
+    event.unavailable[0]!.completeness = "unverified";
+    delete event.unavailable[0]!.verification;
+    expect(validateEvent(event)).toEqual([]);
   });
 });
 

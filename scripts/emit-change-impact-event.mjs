@@ -49,8 +49,40 @@ async function gql(query) {
 }
 
 const unavailable = [];
-const note = (field, source, reason, detail) =>
-  unavailable.push({ field, source, reason, detail });
+const note = (field, source, reason, detail, extra = {}) =>
+  unavailable.push({ field, source, reason, detail, ...extra });
+
+/**
+ * A GraphQL read that reports failure to its caller instead of ending the
+ * process. `gql` exits on error, which is right for the entity read the whole
+ * event depends on and wrong for lineage: terminating there would lose the
+ * event entirely, when the honest outcome is an event that says the lineage
+ * query failed.
+ */
+async function gqlSafe(query) {
+  try {
+    const response = await fetch(`${GMS}/api/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const text = await response.text();
+    let body;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      return { ok: false, data: null, error: `HTTP ${response.status}: non-JSON response` };
+    }
+    if (body.errors) {
+      return { ok: false, data: null, error: JSON.stringify(body.errors).slice(0, 200) };
+    }
+    if (!response.ok) return { ok: false, data: null, error: `HTTP ${response.status}` };
+    return { ok: true, data: body.data, error: null };
+  } catch (e) {
+    return { ok: false, data: null, error: `${e.name}: ${e.message}` };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // DataHub context
@@ -77,30 +109,76 @@ const customProperties = Object.fromEntries(
   (props.customProperties ?? []).map((c) => [c.key, c.value]),
 );
 
+/** Query parameters the observation is only comparable under. */
+const LINEAGE_QUERY = { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
+
+/**
+ * Read one direction of lineage, and report its standing rather than only its
+ * contents.
+ *
+ * `searchAcrossLineage` is search-backed, and the index converges after
+ * ingestion — measured at several minutes for the nested corpus. So a result of
+ * zero is not evidence the dataset has no edges, and a result of one is not
+ * evidence it has one. Nothing available to a general read path can tell a
+ * settled answer from a partial one, so this reports `unverified` and leaves
+ * the claim to a caller holding an external expectation.
+ *
+ * A failed query is `read: "failed"` and never an empty result set. The
+ * previous `.catch(() => null)` turned a transport or parse failure into zero
+ * edges, which then became a positive claim that the catalog holds none —
+ * the same collapse as index lag, with no convergence needed to trigger it.
+ */
 async function lineage(direction) {
-  const data = await gql(`{
+  const { ok, data, error } = await gqlSafe(`{
     searchAcrossLineage(input: {
-      urn: ${JSON.stringify(URN)}, direction: ${direction}, query: "*", start: 0, count: 50
+      urn: ${JSON.stringify(URN)}, direction: ${direction},
+      query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count}
     }) { total searchResults { degree entity { urn ... on Dataset { properties { name } } } } }
-  }`).catch(() => null);
+  }`);
+
+  if (!ok) {
+    return { edges: [], observation: { read: "failed", completeness: "unverified" }, error };
+  }
+
   const results = data?.searchAcrossLineage?.searchResults ?? [];
-  return results.map((r) => ({
+  const edges = results.map((r) => ({
     urn: r.entity.urn,
     name: r.entity.properties?.name ?? null,
     degree: r.degree ?? 1,
   }));
+
+  // `unverified` is not a hedge. It is the strongest claim the evidence
+  // supports, and it stays unverified however many times the query is repeated:
+  // repetition is not attestation.
+  return {
+    edges,
+    observation: { read: "ok", completeness: "unverified", observedCount: edges.length },
+    error: null,
+  };
 }
 
-const upstreams = await lineage("UPSTREAM");
-const downstreams = await lineage("DOWNSTREAM");
+const up = await lineage("UPSTREAM");
+const down = await lineage("DOWNSTREAM");
+const upstreams = up.edges;
+const downstreams = down.edges;
 
-if (upstreams.length === 0) {
-  note("datahub.upstreams", "datahub", "absent",
-    "The catalog reports no upstream edges. This is the catalog's answer, not a failure to ask.");
-}
-if (downstreams.length === 0) {
-  note("datahub.downstreams", "datahub", "absent",
-    "The catalog reports no downstream edges. This is the catalog's answer, not a failure to ask.");
+const lineageObservation = { upstreams: up.observation, downstreams: down.observation };
+
+for (const [field, side] of [
+  ["datahub.upstreams", up],
+  ["datahub.downstreams", down],
+]) {
+  const kind = field.endsWith("upstreams") ? "upstream" : "downstream";
+  if (side.observation.read === "failed") {
+    note(field, "datahub", "failed",
+      `The ${kind} lineage query did not complete (${side.error}). This is not a statement about the catalog's contents.`);
+  } else if (side.edges.length === 0) {
+    // Deliberately not `absent`. The query succeeded and returned nothing;
+    // whether that nothing is the whole answer is exactly what is unknown.
+    note(field, "datahub", "indeterminate",
+      `The catalog returned no ${kind} edges. The lineage index converges after ingestion, so this is not evidence that none exist.`,
+      { completeness: "unverified", observedCount: 0 });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -213,6 +291,7 @@ const event = {
     description: props.description ?? null,
     upstreams,
     downstreams,
+    lineageObservation,
     schemaFieldCount: ds.schemaMetadata?.fields?.length ?? null,
     owners: (ds.ownership?.owners ?? []).map((o) => o.owner?.urn).filter(Boolean),
     domain: ds.domain?.domain?.urn ?? null,
