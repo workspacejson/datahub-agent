@@ -38,6 +38,8 @@ export interface CleanRoomViolation {
 
 export interface PackageManifest {
   name?: string;
+  /** Native npm workspaces owned by this repository, not imported packages. */
+  workspaces?: string[];
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
@@ -50,6 +52,14 @@ export interface LockManifest {
 }
 
 export const isControlledPackage = (name: string): boolean => CONTROLLED.test(name);
+
+function isDeclaredWorkspacePath(path: string, workspaces: readonly string[]): boolean {
+  return workspaces.some((pattern) => {
+    if (!pattern.endsWith("/*")) return path === pattern;
+    const base = pattern.slice(0, -1);
+    return path.startsWith(base) && !path.slice(base.length).includes("/");
+  });
+}
 
 /**
  * Audit the manifests against the rule.
@@ -96,8 +106,13 @@ export function auditCleanRoom(pkg: PackageManifest, lock: LockManifest): CleanR
 
   for (const [path, entry] of Object.entries(lock.packages ?? {})) {
     if (path === "") continue; // the root project itself
+    const workspace = isDeclaredWorkspacePath(path, pkg.workspaces ?? []);
 
     if (entry.link) {
+      // npm represents a declared native workspace as a package entry and a
+      // node_modules link. This is application-owned source, not an imported
+      // package; every other link remains prohibited.
+      if (typeof entry.resolved === "string" && isDeclaredWorkspacePath(entry.resolved, pkg.workspaces ?? [])) continue;
       violations.push({
         where: `package-lock.json ${path}`,
         problem: "resolves to a linked local directory rather than a published package.",
@@ -108,6 +123,7 @@ export function auditCleanRoom(pkg: PackageManifest, lock: LockManifest): CleanR
     // A registry package always records where it came from. An entry with no
     // `resolved` is either the root or something resolved outside the registry.
     if (entry.resolved === undefined) {
+      if (workspace) continue;
       violations.push({
         where: `package-lock.json ${path}`,
         problem: "has no resolved source, so it cannot be shown to come from the registry.",
