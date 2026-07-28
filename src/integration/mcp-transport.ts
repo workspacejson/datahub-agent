@@ -38,6 +38,10 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 /** The protocol revision this client speaks. Sent in the handshake and checked. */
 export const MCP_PROTOCOL_VERSION = "2024-11-05" as const;
 
+/** Retained stderr, from both ends of the stream. See `#retainStderr`. */
+const HEAD_LINES = 100;
+const TAIL_LINES = 100;
+
 export interface McpServerCommand {
   command: string;
   args: readonly string[];
@@ -87,10 +91,16 @@ export class McpClient {
   #pending = new Map<number, PendingRequest>();
   #nextId = 1;
   #buffer = "";
-  #stderr: string[] = [];
+  /** The first lines the server produced. See `#retainStderr`. */
+  #stderrHead: string[] = [];
+  /** The most recent lines, as a ring. See `#retainStderr`. */
+  #stderrTail: string[] = [];
+  #stderrDropped = 0;
   #closed = false;
   /** Set when the process dies, so late callers get the cause and not a timeout. */
   #exitReason: string | null = null;
+  /** Registered on `process.exit` so an unhandled throw cannot orphan the child. */
+  #killOnExit: (() => void) | null = null;
 
   readonly #server: McpServerCommand;
   readonly #requestTimeoutMs: number;
@@ -102,9 +112,44 @@ export class McpClient {
     this.#onStderr = options.onStderr;
   }
 
+  /**
+   * Retain a stderr line, keeping both ends of the stream.
+   *
+   * A single head-only buffer was wrong in a way that only shows up on the runs
+   * that matter. The head is kept because the first failure explains the rest —
+   * but a server that logs its startup and then dies a thousand lines later has
+   * a traceback at the *end*, and a head-only buffer discards precisely that.
+   * Meanwhile `#die` reported the last three lines *of the retained head*, which
+   * with a chatty server is neither the first failure nor the crash: it is three
+   * arbitrary lines from startup, presented as the cause of death.
+   *
+   * So both ends are kept and the gap is counted, which is the only honest thing
+   * to show for a stream that was longer than the buffer.
+   */
+  #retainStderr(line: string): void {
+    if (this.#stderrHead.length < HEAD_LINES) {
+      this.#stderrHead.push(line);
+      return;
+    }
+    this.#stderrTail.push(line);
+    if (this.#stderrTail.length > TAIL_LINES) {
+      this.#stderrTail.shift();
+      this.#stderrDropped += 1;
+    }
+  }
+
   /** The server's stderr, retained so a failed handshake can say why. */
   get stderr(): string {
-    return this.#stderr.join("\n");
+    const parts = [...this.#stderrHead];
+    if (this.#stderrDropped > 0) parts.push(`… ${this.#stderrDropped} line(s) omitted …`);
+    parts.push(...this.#stderrTail);
+    return parts.join("\n");
+  }
+
+  /** The most recent lines, which is what a crash is explained by. */
+  #recentStderr(count: number): string[] {
+    const recent = this.#stderrTail.length > 0 ? this.#stderrTail : this.#stderrHead;
+    return recent.slice(-count);
   }
 
   /**
@@ -131,24 +176,39 @@ export class McpClient {
     child.stderr.on("data", (chunk: string) => {
       for (const line of chunk.split("\n")) {
         if (!line.trim()) continue;
-        // Bounded: a chatty server must not grow this without limit for the
-        // lifetime of a run. The head is kept rather than the tail because the
-        // first failure is what explains the rest.
-        if (this.#stderr.length < 200) this.#stderr.push(line);
+        this.#retainStderr(line);
         this.#onStderr?.(line);
       }
     });
+
+    // A write to a pipe whose reader has gone emits `error` on the stream, and
+    // an `error` with no listener is thrown. The child's own `error` event does
+    // not cover this: that one is about spawning, this one is about the pipe.
+    // Without a listener here, a server crashing in the window between answering
+    // `initialize` and receiving `notifications/initialized` takes the whole
+    // process down with an EPIPE instead of failing the run with its cause.
+    child.stdin.on("error", (error) => this.#die(`the MCP server's stdin closed: ${error.message}`));
 
     // A spawn that fails (missing binary) and one that exits (crash) are
     // different faults with the same consequence: every pending request must be
     // failed with the cause, not left to time out into a less informative error.
     child.on("error", (error) => this.#die(`could not start "${this.#server.command}": ${error.message}`));
-    child.on("exit", (code, signal) =>
+    child.on("exit", (code, signal) => {
+      const recent = this.#recentStderr(3);
       this.#die(
         `MCP server exited (${signal ? `signal ${signal}` : `code ${code}`})` +
-          (this.#stderr.length ? `: ${this.#stderr.slice(-3).join(" | ")}` : ""),
-      ),
-    );
+          (recent.length ? `: ${recent.join(" | ")}` : ""),
+      );
+    });
+
+    // The child outlives an unhandled throw in the parent otherwise. Closing
+    // stdin on exit usually ends it, but "usually" is doing real work in that
+    // sentence — a server blocked on a network call is not reading its stdin and
+    // will not notice. Registered here rather than at each call site so every
+    // consumer of this client gets it, and removed on `stop()` so a long-lived
+    // process spawning many clients does not accumulate handlers.
+    this.#killOnExit = () => child.kill("SIGKILL");
+    process.once("exit", this.#killOnExit);
 
     const initialized = (await this.#request("initialize", {
       protocolVersion: MCP_PROTOCOL_VERSION,
@@ -258,6 +318,10 @@ export class McpClient {
   async stop(): Promise<void> {
     if (!this.#child || this.#closed) return;
     this.#closed = true;
+    if (this.#killOnExit) {
+      process.removeListener("exit", this.#killOnExit);
+      this.#killOnExit = null;
+    }
     const child = this.#child;
     child.stdin.end();
     await new Promise<void>((resolve) => {
@@ -298,7 +362,7 @@ export class McpClient {
       // A frame this client cannot parse is not a request failure — it belongs
       // to nobody. Recording it keeps it diagnosable without failing a call that
       // may still be answered correctly.
-      this.#stderr.push(`unparseable frame from server: ${line.slice(0, 200)}`);
+      this.#retainStderr(`unparseable frame from server: ${line.slice(0, 200)}`);
       return;
     }
 
@@ -343,8 +407,18 @@ export class McpClient {
     });
   }
 
+  /**
+   * Fire-and-forget, but not fail-and-forget.
+   *
+   * A notification has no id and so no pending entry to reject, which is exactly
+   * why the failure has to be captured rather than dropped: nothing downstream
+   * would ever notice. The error goes into the retained stderr, where a failed
+   * handshake can quote it.
+   */
   #notify(method: string, params: Record<string, unknown>): void {
-    this.#child?.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`);
+    this.#child?.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`, (error) => {
+      if (error) this.#retainStderr(`could not send ${method}: ${error.message}`);
+    });
   }
 
   /** Fail everything outstanding with a shared cause, and remember it for later callers. */
