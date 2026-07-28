@@ -49,7 +49,15 @@ function resolvedEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpact
       producer: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
       datahub: { gmsUrl: "http://localhost:8080", gmsVersion: "v1.5.0.6" },
       corpus: { repository: "https://github.com/dcaribou/transfermarkt-datasets", commit: COMMIT },
-      workspaceArtifact: { producedBy: "@workspacejson/cli", fileIndexKeys: 36 },
+      workspaceArtifact: {
+        producedBy: "@workspacejson/cli",
+        fileIndexKeys: 131,
+        // Corpus-matched: this artifact describes the subject's repository at
+        // the subject's revision, so its claims are the subject's to make.
+        repository: "https://github.com/dcaribou/transfermarkt-datasets",
+        revision: COMMIT,
+        integrity: "exact-match",
+      },
     },
     subject: { urn: URN },
     datahub: {
@@ -278,6 +286,22 @@ describe("redact", () => {
     redact(variables);
     expect(variables.input.token).toBe("secret-value");
   });
+
+  it("passes through null and primitive values without error", () => {
+    expect(redact({ a: null, b: 42, c: "text", d: true })).toEqual({
+      a: null, b: 42, c: "text", d: true,
+    });
+  });
+
+  it("handles an empty object", () => {
+    expect(redact({})).toEqual({});
+  });
+
+  it("redacts a key nested inside an array of objects within an object", () => {
+    const out = redact({ outer: [{ inner: { secret: "s" } }] });
+    const arr = out.outer as Array<{ inner: { secret: string } }>;
+    expect(arr[0]?.inner.secret).toBe("[redacted]");
+  });
 });
 
 /** A state the catalog actually answered for. */
@@ -492,6 +516,20 @@ describe("deriveOutcome", () => {
     expect(seen.verified).toBe(true);
     expect(seen.succeeded).toBe(false);
   });
+
+  it("claims nothing when intent is null and nothing was refused", () => {
+    // The event had no source URL, so intent is null, but there was no refusal
+    // reason either (e.g. a dry run that chose not to compute one). This is
+    // not a success and not a noop — it is the absence of a write.
+    const noIntent = outcome({ intent: null, attempts: [] });
+    expect(noIntent.succeeded).toBe(false);
+    expect(noIntent.noop).toBe(false);
+  });
+
+  it("does not claim success when only one of two mutations succeeded", () => {
+    const half = [landed[0]!, { ...landed[1]!, succeeded: false, response: "timeout" }];
+    expect(outcome({ attempts: half }).succeeded).toBe(false);
+  });
 });
 
 describe("attachReceipt", () => {
@@ -587,5 +625,24 @@ describe("attachReceipt", () => {
     );
     expect(refused.writeback?.refusedBecause).toMatch(/commit-pinned/);
     expect(refused.writeback?.attempts).toEqual([]);
+  });
+
+  it("carries a null observation when no write was attempted", () => {
+    // A refused or dry-run writeback has no observation record. The receipt
+    // must carry the null explicitly, not omit the key — a missing key reads
+    // as "this consumer is old" while null reads as "nothing was observed".
+    const noObservation = attachReceipt(
+      resolvedEvent(),
+      receipt({
+        succeeded: false,
+        attempts: [],
+        observation: null,
+        refusedBecause: "no commit-pinned source URL is available",
+        after: notQueriedState("dry run"),
+        before: notQueriedState("dry run"),
+      }),
+    );
+    expect(noObservation.writeback?.observation).toBeNull();
+    expect(Object.hasOwn(noObservation.writeback as object, "observation")).toBe(true);
   });
 });

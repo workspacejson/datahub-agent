@@ -3,10 +3,25 @@
  * Emit a ChangeImpactEvent for one dataset, from a live DataHub plus the
  * workspace.json artifact.
  *
- * This is the read path the demo and the cockpit consume. It reads through the
- * catalog's GraphQL API — the same surface the official MCP server projects —
- * so the event reflects what an agent can actually obtain, not what a catalog
- * happens to store internally.
+ * This is the read path the demo and the cockpit consume.
+ *
+ * It reads the catalog's GraphQL API **directly**, and that is not the same
+ * thing as reading through the official MCP server. What makes the event
+ * MCP-faithful is a restriction, not the transport: this script requests only
+ * fields the official MCP server projects for `Dataset`, verified field by
+ * field in `evaluation/mcp-field-coverage.md`.
+ *
+ * The distinction matters because the earlier wording — "the same surface the
+ * official MCP server projects" — was false while this script read
+ * `externalUrl`, a field that measurement records as dropped at the MCP
+ * boundary for `Dataset`. The event then reflected a capability an MCP agent
+ * does not have. The read was removed; the claim outlived it by a merge, which
+ * is why it is spelled out here rather than summarised.
+ *
+ * The cost of the restriction is real and is stated rather than worked around:
+ * without `externalUrl` there is no commit-pinned source URL, so `code.sourceUrl`
+ * is null, no `external-url` resolution is possible, and the writeback refuses
+ * for want of a link it will not invent. HAC-156 is the upstream fix.
  *
  * Usage:
  *   node scripts/emit-change-impact-event.mjs [urn] [--gms URL] [--out FILE]
@@ -246,7 +261,7 @@ if (dbtFilePath) note("code.repositoryRelativePath", "datahub", "not-exposed-by-
 // ---------------------------------------------------------------------------
 // workspace.json evidence
 // ---------------------------------------------------------------------------
-const { assessWorkspaceEvidence } = await import(join(repoRoot, "src/integration/workspace-evidence.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
+const { assessWorkspaceEvidence, readArtifactIdentity } = await import(join(repoRoot, "src/integration/workspace-evidence.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
   api.register();
   return import(join(repoRoot, "src/integration/workspace-evidence.ts"));
 }));
@@ -256,17 +271,34 @@ const records = [];
 let ws = null;
 let artifactIdentity = null;
 if (WORKSPACE_ARTIFACT) {
+  const artifactPath = resolve(WORKSPACE_ARTIFACT);
+  let artifactBytes = null;
   try {
-    const artifactPath = resolve(WORKSPACE_ARTIFACT);
-    ws = JSON.parse(readFileSync(artifactPath, "utf8"));
-    const sidecarPath = join(dirname(artifactPath), "workspace-provenance.json");
-    if (!existsSync(sidecarPath)) {
-      note("partners", "workspacejson", "failed", "The supplied workspace.json has no provenance sidecar; artifact identity cannot be verified.");
+    artifactBytes = readFileSync(artifactPath);
+    ws = JSON.parse(artifactBytes.toString("utf8"));
+  } catch (e) {
+    note("partners", "workspacejson", "failed",
+      `The supplied workspace.json artifact could not be read (${e.message}).`);
+  }
+  if (ws) {
+    // Identity comes from the sidecar, and the sidecar must be bound to these
+    // exact bytes. An unbound sidecar can drift — provenance saying commit X
+    // while the artifact was regenerated at commit Y — which is the same defect
+    // class as the cross-corpus join it exists to prevent.
+    //
+    // The bytes just parsed are handed over rather than re-read, so the digest
+    // is computed over what this event was actually built from.
+    const identity = readArtifactIdentity(artifactPath, artifactBytes);
+    if (identity.status === "found") {
+      artifactIdentity = { repository: identity.repository, revision: identity.revision };
     } else {
-      const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8"));
-      artifactIdentity = { repository: sidecar.corpus ?? null, revision: sidecar.commit ?? null };
+      // `identity.detail` names the sidecar status in prose. Deliberately not
+      // attached as a structured field: `Unavailable` does not declare one, and
+      // this script is untyped, so an extra key would ship into the event with
+      // nothing to catch it — a field no consumer is documented to expect.
+      note("partners", "workspacejson", "failed", identity.detail);
     }
-  } catch { note("partners", "workspacejson", "failed", "The supplied workspace.json artifact or provenance sidecar could not be parsed."); }
+  }
 }
 const integrity = assessWorkspaceEvidence(
   { repository: SUBJECT_REPOSITORY, revision: SUBJECT_REVISION },

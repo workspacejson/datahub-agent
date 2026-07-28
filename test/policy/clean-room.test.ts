@@ -82,12 +82,36 @@ describe("auditCleanRoom", () => {
     expect(auditCleanRoom(pkg, cleanLock())[0]?.problem).toMatch(/no path references/);
   });
 
+  it("rejects a path reference in optionalDependencies", () => {
+    const pkg = cleanPkg();
+    pkg.optionalDependencies = { "@workspacejson/spec": "file:../spec" };
+    const problems = auditCleanRoom(pkg, cleanLock());
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.where).toBe("package.json optionalDependencies.@workspacejson/spec");
+  });
+
+  it("rejects a path reference in peerDependencies", () => {
+    const pkg = cleanPkg();
+    pkg.peerDependencies = { "@workspacejson/cli": "link:../cli" };
+    const problems = auditCleanRoom(pkg, cleanLock());
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.where).toBe("package.json peerDependencies.@workspacejson/cli");
+  });
+
   it("rejects a range on a controlled package, which would let provenance drift", () => {
     // provenance.md records an exact version. A caret would let the resolved
     // code change without the record changing.
     const pkg = cleanPkg();
     pkg.dependencies!["@workspacejson/spec"] = "^0.4.4";
     expect(auditCleanRoom(pkg, cleanLock())[0]?.problem).toMatch(/not an exact version/);
+  });
+
+  it("rejects a tarball URL for a controlled package", () => {
+    const pkg = cleanPkg();
+    pkg.dependencies!["@workspacejson/spec"] = "https://example.com/spec-0.4.4.tgz";
+    const problems = auditCleanRoom(pkg, cleanLock());
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.problem).toMatch(/published registry versions only/);
   });
 
   it("permits a range on a third-party devDependency", () => {
@@ -111,6 +135,15 @@ describe("auditCleanRoom", () => {
     expect(auditCleanRoom(cleanPkg(), lock)[0]?.problem).toMatch(/not the public npm registry/);
   });
 
+  it("rejects a lockfile entry with no resolved source that is not a declared workspace", () => {
+    const lock = cleanLock();
+    lock.packages!["node_modules/mystery-pkg"] = { version: "1.0.0" };
+    const problems = auditCleanRoom(cleanPkg(), lock);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.where).toBe("package-lock.json node_modules/mystery-pkg");
+    expect(problems[0]?.problem).toMatch(/no resolved source/);
+  });
+
   it("ignores the lockfile's root entry, which has no resolved source by design", () => {
     expect(auditCleanRoom(cleanPkg(), cleanLock())).toEqual([]);
   });
@@ -132,10 +165,12 @@ describe("auditCleanRoom", () => {
 
   it("reports every violation at once rather than stopping at the first", () => {
     // A reviewer fixing one path reference should see the rest in the same run.
+    // Exact count, not >= 2, so a regression that stops reporting all of them
+    // is caught.
     const pkg = cleanPkg();
     pkg.dependencies!["@workspacejson/spec"] = "file:../spec";
     pkg.devDependencies!["@workspacejson/cli"] = "link:../cli";
-    expect(auditCleanRoom(pkg, cleanLock()).length).toBeGreaterThanOrEqual(2);
+    expect(auditCleanRoom(pkg, cleanLock())).toHaveLength(2);
   });
 });
 
@@ -151,5 +186,9 @@ describe("this repository", () => {
       { name: "@workspacejson/cli", spec: "0.5.0" },
       { name: "@workspacejson/spec", spec: "0.4.4" },
     ]);
+  });
+
+  it("returns an empty list when no controlled packages are declared", () => {
+    expect(controlledDependencies({ name: "plain-app", dependencies: { express: "4.18.0" } })).toEqual([]);
   });
 });

@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 export interface ReadinessManifest { expectedUrns: string[]; queryParameters: Record<string, string | number>; }
 export interface ReadinessResult {
   expectedSetDigest: string; observedSetDigest: string | null; manifestDigest: string;
-  pollCount: number; elapsedMs: number; disposition: "ready" | "not-ready" | "deadline-exceeded" | "read-failed";
+  pollCount: number; elapsedMs: number; disposition: "ready" | "not-ready" | "deadline-exceeded" | "read-failed" | "no-expectation";
 }
 
 /** Equivalent query parameter maps must produce the same evidence digest. */
@@ -28,6 +28,31 @@ export async function observeReadiness(
   sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 ): Promise<ReadinessResult> {
   const started = now(); const expected = canonicalSet(manifest.expectedUrns);
+
+  // An empty expectation cannot attest to anything.
+  //
+  // Without this, a manifest declaring no expected URNs against an index
+  // returning nothing settles as `ready` — and the emitter turns `ready` into
+  // `completeness: "verified"`, the strongest word in the vocabulary. The
+  // resulting claim is "this dataset definitively has no lineage", earned by
+  // declining to say what lineage was expected.
+  //
+  // That is reachable in exactly the situation HAC-221 was opened for: a
+  // lineage index that has not finished converging returns zero, the empty
+  // manifest expects zero, the digests match, and index lag is recorded as a
+  // settled fact. `verified` requires an external attestation; an empty set is
+  // the absence of one, so it is refused here rather than at the call site,
+  // where a future second caller would have to remember.
+  if (expected.length === 0) {
+    return {
+      ...{ expectedSetDigest: digest(expected), manifestDigest: digest({ expectedUrns: expected, queryParameters: manifest.queryParameters }) },
+      observedSetDigest: null,
+      pollCount: 0,
+      elapsedMs: 0,
+      disposition: "no-expectation",
+    };
+  }
+
   const base = { expectedSetDigest: digest(expected), manifestDigest: digest({ expectedUrns: expected, queryParameters: manifest.queryParameters }) };
   let polls = 0; let last: string[] | null = null;
   while (now() - started < deadlineMs) {

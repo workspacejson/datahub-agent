@@ -62,7 +62,11 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       [event.partners, "partners"],
     ] as const) {
       if (collection.length === 0) {
-        expect(event.unavailable.some((u) => u.field === field)).toBe(true);
+        const entry = event.unavailable.find((u) => u.field === field);
+        expect(entry, `${field} is empty but has no unavailable entry`).toBeDefined();
+        expect(entry?.source).toMatch(/datahub|workspacejson/);
+        expect(entry?.reason).toMatch(/absent|not-queried|failed|indeterminate/);
+        expect(entry?.detail.length).toBeGreaterThan(0);
       }
     }
   });
@@ -161,6 +165,29 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       expect(mutations).toContain("upsertLink");
       expect(mutations).toContain("upsertStructuredProperties");
       expect(mutations.some((m) => /assertion/i.test(m))).toBe(false);
+    });
+
+    it("writes the link before the structured property, so the tier annotates an existing link", () => {
+      // Conditional on mutations having been attempted, deliberately.
+      //
+      // Asserting `linkIdx >= 0` unconditionally passes only while the fixtures
+      // carry a successful writeback. Under the MCP-only read path there is no
+      // commit-pinned URL, the writeback refuses, and `attempts` is empty — so
+      // the unconditional form would fail on the next re-emission for a reason
+      // that has nothing to do with ordering.
+      //
+      // A refusal is a real outcome, not a missing one, so it is asserted as
+      // such rather than skipped: if nothing was attempted, the receipt must say
+      // why.
+      const mutations = event.writeback?.attempts.map((a) => a.mutation) ?? [];
+      if (mutations.length === 0) {
+        expect(event.writeback?.refusedBecause ?? null).not.toBeNull();
+        return;
+      }
+      const linkIdx = mutations.indexOf("upsertLink");
+      const propIdx = mutations.indexOf("upsertStructuredProperties");
+      expect(linkIdx).toBeGreaterThanOrEqual(0);
+      expect(propIdx).toBeGreaterThan(linkIdx);
     });
 
     it("wrote nothing human-authored, as recorded in the attempts themselves", () => {
