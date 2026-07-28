@@ -428,6 +428,68 @@ describe("V-1c · `unavailable` disagreeing with the canonical lineage observati
     expect(problems).toContainEqual(expect.stringContaining("but datahub.lineageObservation.upstreams reports 0"));
   });
 
+  // The next two isolate guards that previously only ever fired together.
+  //
+  // In every earlier test, edges present implied a matching non-zero
+  // observedCount, so "absent but edges are carried" and "absent but the
+  // observation counted some" both fired on the same input. Mutation testing
+  // could kill neither: removing one left the other still failing the test.
+  //
+  // Two guards that can only be exercised as a pair are one guard as far as any
+  // evidence goes. These drive each independently by making the count and the
+  // carried edges disagree — which is itself refused elsewhere, and is the point:
+  // the input is doubly invalid, and each guard must name its own objection.
+
+  it("refuses `absent` while edges are carried, independently of the count", () => {
+    const event = validEvent();
+    event.datahub.upstreams = [
+      { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.up,PROD)", name: "up", degree: 1 },
+    ];
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: 0,
+      verification: ATTESTED,
+    } as ChangeImpactEvent["datahub"]["lineageObservation"]["upstreams"];
+    event.unavailable = [{
+      field: "datahub.upstreams",
+      source: "datahub",
+      reason: "absent",
+      detail: "the catalog reported no upstream lineage",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: 0,
+      verification: ATTESTED,
+    } as ChangeImpactEvent["unavailable"][number]];
+
+    expect(validateEvent(event)).toContainEqual(
+      expect.stringContaining("claims absent but 1 edge(s) are carried"),
+    );
+  });
+
+  it("refuses `absent` while the observation counted edges, independently of what is carried", () => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: 3,
+      verification: ATTESTED,
+    } as ChangeImpactEvent["datahub"]["lineageObservation"]["upstreams"];
+    event.unavailable = [{
+      field: "datahub.upstreams",
+      source: "datahub",
+      reason: "absent",
+      detail: "the catalog reported no upstream lineage",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: 3,
+      verification: ATTESTED,
+    } as ChangeImpactEvent["unavailable"][number]];
+
+    expect(validateEvent(event)).toContainEqual(
+      expect.stringContaining("claims absent but datahub.lineageObservation.upstreams observed 3 edge(s)"),
+    );
+  });
+
   it("refuses `absent` on a direction whose read never happened", () => {
     const problems = validateEvent(build(
       { reason: "absent", completeness: "complete-against-pinned-manifest", verification: ATTESTED },
