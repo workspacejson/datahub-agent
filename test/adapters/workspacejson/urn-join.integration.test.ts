@@ -10,6 +10,7 @@
  */
 
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,6 +26,8 @@ const fixtures = join(here, "../../fixtures/proof-corpus");
 
 const manifest = JSON.parse(readFileSync(join(fixtures, "manifest.json"), "utf8"));
 const workspace = JSON.parse(readFileSync(join(fixtures, "workspace.json"), "utf8"));
+const workspaceBytes = readFileSync(join(fixtures, "workspace.json"));
+const workspaceProvenance = JSON.parse(readFileSync(join(fixtures, "workspace-provenance.json"), "utf8"));
 const fileIndex: FileIndex = workspace.generated.fileIndex;
 
 const PINNED = "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb";
@@ -33,7 +36,7 @@ const urnFor = (name: string) => `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle
 describe("fixtures are the frozen corpus", () => {
   it("both fixtures pin the same immutable commit", () => {
     expect(manifest._provenance.commit).toBe(PINNED);
-    expect(workspace._provenance.commit).toBe(PINNED);
+    expect(workspaceProvenance.commit).toBe(PINNED);
     expect(manifest._provenance.dbt_version).toBe("1.12.0");
   });
 
@@ -43,9 +46,24 @@ describe("fixtures are the frozen corpus", () => {
     // consuming an unpublished producer from source. It is a genuine
     // `workspacejson generate` run now, and must stay one — a synthesized
     // index would let the join pass against keys no producer ever emitted.
-    expect(workspace._provenance.producer).toMatch(/^@workspacejson\/cli@\d+\.\d+\.\d+$/);
+    expect(workspaceProvenance.producer).toMatch(/^@workspacejson\/cli@\d+\.\d+\.\d+$/);
     expect(workspace.generated.by.name).toBe("@workspacejson/cli");
     expect(workspace.generated.specVersion).toBe("0.4");
+  });
+
+  it("is schema-valid and cryptographically bound to its external provenance", async () => {
+    const { validate, validateV4 } = await import("@workspacejson/spec");
+    expect(validate(workspace)).toBe(true);
+    expect(validateV4(workspace)).toBe(true);
+    expect(workspaceProvenance.workspace_sha256).toBe(
+      createHash("sha256").update(workspaceBytes).digest("hex"),
+    );
+  });
+
+  it("refuses a provenance digest after an artifact-byte violation", () => {
+    const tampered = Buffer.concat([workspaceBytes, Buffer.from(" ")]);
+    expect(createHash("sha256").update(tampered).digest("hex"))
+      .not.toBe(workspaceProvenance.workspace_sha256);
   });
 
   it("the producer excludes its own artifact, so the index converges", () => {

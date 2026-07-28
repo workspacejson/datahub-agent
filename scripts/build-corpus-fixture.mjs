@@ -12,6 +12,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -136,8 +137,15 @@ const workspaceProvenance = {
 };
 
 mkdirSync(outDir, { recursive: true });
+const workspaceContents = `${JSON.stringify(produced, null, 2)}\n`;
+// Bind the provenance to exactly the bytes committed as workspace.json. A
+// sidecar must never be able to relabel an arbitrary artifact as this producer
+// run; consumers verify this digest before using workspace-derived claims.
+workspaceProvenance.workspace_sha256 = createHash("sha256")
+  .update(workspaceContents)
+  .digest("hex");
 writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify(fixture, null, 2)}\n`);
-writeFileSync(join(outDir, "workspace.json"), `${JSON.stringify(produced, null, 2)}\n`);
+writeFileSync(join(outDir, "workspace.json"), workspaceContents);
 writeFileSync(join(outDir, "workspace-provenance.json"), `${JSON.stringify(workspaceProvenance, null, 2)}\n`);
 
 console.log(`corpus:      ${CORPUS}@${PINNED_SHA}`);

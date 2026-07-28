@@ -1,0 +1,10 @@
+{
+  "corpus": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+  "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+  "producer": "@workspacejson/cli@0.5.0",
+  "generated_by": "scripts/build-corpus-fixture.mjs",
+  "command": "workspacejson generate <pinned-checkout>",
+  "file_count": 36,
+  "note": "workspace.json is a schema-valid producer artifact. This external sidecar preserves corpus provenance without modifying the standard artifact.",
+  "workspace_sha256": "c1f4aa6adecf97d228152aa1171386dceef35540b917bea75b07c10e7e091900"
+}
