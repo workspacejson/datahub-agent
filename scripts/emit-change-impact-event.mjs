@@ -5,26 +5,41 @@
  *
  * This is the read path the demo and the cockpit consume.
  *
- * It reads the catalog's GraphQL API **directly**, and that is not the same
- * thing as reading through the official MCP server. What makes the event
- * MCP-faithful is a restriction, not the transport: this script requests only
- * fields the official MCP server projects for `Dataset`, verified field by
- * field in `evaluation/mcp-field-coverage.md`.
+ * ## Transport
  *
- * The distinction matters because the earlier wording — "the same surface the
- * official MCP server projects" — was false while this script read
- * `externalUrl`, a field that measurement records as dropped at the MCP
- * boundary for `Dataset`. The event then reflected a capability an MCP agent
- * does not have. The read was removed; the claim outlived it by a merge, which
- * is why it is spelled out here rather than summarised.
+ * By default this reads through the **official DataHub MCP server**
+ * (`acryldata/mcp-server-datahub`), spawned over stdio and called with its own
+ * `get_entities`, `get_lineage` and `list_schema_fields` tools. That is the
+ * transport, not a resemblance to one.
  *
- * The cost of the restriction is real and is stated rather than worked around:
- * without `externalUrl` there is no commit-pinned source URL, so `code.sourceUrl`
- * is null, no `external-url` resolution is possible, and the writeback refuses
- * for want of a link it will not invent. HAC-156 is the upstream fix.
+ * It previously read DataHub's GraphQL API directly while restricting itself to
+ * the fields the MCP server projects, and described the result as MCP-faithful.
+ * The restriction was real and measured, and it still was not MCP. "We ask for
+ * the same fields the MCP server would" is a claim about a request body; "we
+ * read through the official MCP server" is a claim about transport. This
+ * repository asserted the second and implemented the first.
+ *
+ * The difference is not pedantic. A self-imposed projection is enforced by
+ * whoever last edited the query string — add a field and nothing fails. Reading
+ * through the server makes the boundary structural: a field the projection drops
+ * cannot be asked for, because the process on the other end never sends it. That
+ * has already been the failure mode here once, when this script read
+ * `externalUrl` while claiming to sit behind a boundary that drops it.
+ *
+ * `--transport gms` keeps the direct GraphQL path, and is honest about being
+ * exactly that. It exists because the two reads are worth comparing — running
+ * both against one instance is what shows the MCP boundary costing something
+ * specific rather than being asserted to.
+ *
+ * The cost is real under either flag and is stated rather than worked around:
+ * the MCP `Dataset` projection carries no `externalUrl`, so `code.sourceUrl` is
+ * null, no `external-url` resolution is possible, and the writeback states a
+ * scoped link omission. HAC-156 is the upstream fix, and
+ * `evaluation/mcp-field-coverage.md` holds the measurement.
  *
  * Usage:
  *   node scripts/emit-change-impact-event.mjs [urn] [--gms URL] [--out FILE]
+ *     [--transport mcp|gms] [--mcp-command BIN]
  *     --subject-repository URL --subject-revision SHA
  *     --workspace-artifact FILE
  */
@@ -48,6 +63,12 @@ const SUBJECT_REVISION = flag("subject-revision", null);
 const WORKSPACE_ARTIFACT = flag("workspace-artifact", null);
 const READINESS_MANIFEST = flag("readiness-manifest", null);
 const READINESS_DEADLINE_MS = Number(flag("readiness-deadline-ms", "120000"));
+const TRANSPORT = flag("transport", "mcp");
+const MCP_COMMAND = flag("mcp-command", "mcp-server-datahub");
+if (TRANSPORT !== "mcp" && TRANSPORT !== "gms") {
+  console.error(`--transport must be "mcp" or "gms"; got ${JSON.stringify(TRANSPORT)}`);
+  process.exit(2);
+}
 const URN = argv.find((a) => a.startsWith("urn:")) ?? null;
 if (!URN) {
   console.error("usage: supply the DataHub dataset URN as the first positional argument");
@@ -110,31 +131,150 @@ async function gqlSafe(query) {
 
 // ---------------------------------------------------------------------------
 // DataHub context
+//
+// Two transports, one shape. Everything below this block reads the same
+// variables whichever flag was passed, so the difference between transports
+// stays in one place instead of branching through the whole emitter.
 // ---------------------------------------------------------------------------
-const entity = await gql(`{
-  dataset(urn: ${JSON.stringify(URN)}) {
-    urn
-    platform { name }
-    properties { name description customProperties { key value } }
-    ownership { owners { owner { ... on CorpUser { urn } ... on CorpGroup { urn } } } }
-    domain { domain { urn } }
-    schemaMetadata { fields { fieldPath } }
-  }
-}`);
-
-if (!entity.dataset) {
-  console.error(`No dataset at ${URN}`);
-  process.exit(2);
-}
-
-const ds = entity.dataset;
-const props = ds.properties ?? {};
-const customProperties = Object.fromEntries(
-  (props.customProperties ?? []).map((c) => [c.key, c.value]),
-);
 
 /** Query parameters the observation is only comparable under. */
-const LINEAGE_QUERY = { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
+const LINEAGE_QUERY =
+  TRANSPORT === "mcp"
+    ? { surface: "mcp:get_lineage", query: "*", maxHops: 3, maxResults: 50 }
+    : { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
+
+const load = async (specifier) =>
+  import(join(repoRoot, specifier)).catch(async () =>
+    import("tsx/esm/api").then(async (api) => {
+      api.register();
+      return import(join(repoRoot, specifier));
+    }),
+  );
+
+let dataset;
+let schemaFieldCount = null;
+let gmsVersion = null;
+let mcpServer = null;
+let mcpClient = null;
+/** Reads one direction of lineage under whichever transport is selected. */
+let lineage;
+
+if (TRANSPORT === "mcp") {
+  const { McpClient } = await load("src/integration/mcp-transport.ts");
+  const mcpRead = await load("src/integration/mcp-read.ts");
+
+  mcpClient = new McpClient(
+    {
+      command: MCP_COMMAND,
+      args: ["--transport", "stdio"],
+      env: {
+        DATAHUB_GMS_URL: GMS,
+        // The server blocks its own startup on an outbound telemetry POST, and
+        // a judge on a restricted network would otherwise watch the handshake
+        // spend forty seconds in connect-retry before answering.
+        DATAHUB_TELEMETRY_ENABLED: "false",
+      },
+    },
+    { requestTimeoutMs: 90_000 },
+  );
+
+  try {
+    mcpServer = await mcpClient.start();
+  } catch (error) {
+    console.error(`Could not start the DataHub MCP server (${MCP_COMMAND}): ${error.message}`);
+    console.error(`Install it with: pip install mcp-server-datahub`);
+    console.error(mcpClient.stderr.slice(0, 800));
+    process.exit(2);
+  }
+
+  // A missing tool is a property of the server version, not of this dataset.
+  // Finding out three calls in would produce an event that is partly a
+  // measurement and partly a version complaint, with no way to tell which
+  // fields are which.
+  const advertised = (await mcpClient.listTools()).map((tool) => tool.name);
+  const missing = mcpRead.missingTools(advertised);
+  if (missing.length) {
+    console.error(`The MCP server at ${MCP_COMMAND} does not advertise: ${missing.join(", ")}`);
+    console.error(`It advertises: ${advertised.join(", ")}`);
+    await mcpClient.stop();
+    process.exit(2);
+  }
+
+  const call = (name, args) => mcpClient.callTool(name, args);
+
+  dataset = await mcpRead.readDataset(call, URN);
+  if (dataset.read !== "ok") {
+    console.error(`No readable dataset at ${URN} over MCP: ${dataset.error}`);
+    await mcpClient.stop();
+    process.exit(2);
+  }
+
+  const schema = await mcpRead.readSchemaFieldCount(call, URN);
+  if (schema.read === "ok") {
+    schemaFieldCount = schema.totalFields;
+  } else {
+    note("datahub.schemaFieldCount", "datahub", "failed",
+      `The schema field count could not be read (${schema.error}). This is not a statement about the dataset's schema.`);
+  }
+
+  // The MCP surface exposes no tool reporting the server's own version. Left
+  // null and stated, rather than reached for over a second transport — an event
+  // that says it was produced over MCP should not carry a field only a direct
+  // GraphQL call could have supplied.
+  note("provenance.datahub.gmsVersion", "datahub", "not-exposed-by-source",
+    "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr.");
+
+  lineage = async (direction) => {
+    const read = await mcpRead.readLineage(call, URN, direction === "UPSTREAM");
+    if (read.read !== "ok") {
+      return { edges: [], observation: { read: "failed", completeness: "not-established" }, error: read.error };
+    }
+    return {
+      edges: read.edges,
+      observation: { read: "ok", completeness: "not-established", observedCount: read.edges.length },
+      error: null,
+    };
+  };
+} else {
+  const entity = await gql(`{
+    dataset(urn: ${JSON.stringify(URN)}) {
+      urn
+      platform { name }
+      properties { name description customProperties { key value } }
+      ownership { owners { owner { ... on CorpUser { urn } ... on CorpGroup { urn } } } }
+      domain { domain { urn } }
+      schemaMetadata { fields { fieldPath } }
+    }
+  }`);
+
+  if (!entity.dataset) {
+    console.error(`No dataset at ${URN}`);
+    process.exit(2);
+  }
+
+  const ds = entity.dataset;
+  const props = ds.properties ?? {};
+  dataset = {
+    name: props.name ?? null,
+    platform: ds.platform?.name ?? null,
+    description: props.description ?? null,
+    // `externalUrl`, repository and commit are direct GraphQL fields that the
+    // official MCP projection drops. They are not requested even here, so the
+    // two transports differ in how the boundary is enforced and not in what
+    // this event ends up carrying.
+    customProperties: Object.fromEntries((props.customProperties ?? []).map((c) => [c.key, c.value])),
+    owners: (ds.ownership?.owners ?? []).map((o) => o.owner?.urn).filter(Boolean),
+    domain: ds.domain?.domain?.urn ?? null,
+  };
+  schemaFieldCount = ds.schemaMetadata?.fields?.length ?? null;
+
+  const gmsVersionData = await gql("{ appConfig { appVersion } }").catch(() => null);
+  gmsVersion = gmsVersionData?.appConfig?.appVersion ?? null;
+
+  lineage = lineageOverGraphQl;
+}
+
+const customProperties = dataset.customProperties;
 
 /**
  * Read one direction of lineage, and report its standing rather than only its
@@ -151,8 +291,11 @@ const LINEAGE_QUERY = { surface: "searchAcrossLineage", query: "*", start: 0, co
  * previous `.catch(() => null)` turned a transport or parse failure into zero
  * edges, which then became a positive claim that the catalog holds none —
  * the same collapse as index lag, with no convergence needed to trigger it.
+ *
+ * This is the `--transport gms` reader. The MCP reader is assembled above and
+ * reports the same shape; both are reached through `lineage`.
  */
-async function lineage(direction) {
+async function lineageOverGraphQl(direction) {
   const { ok, data, error } = await gqlSafe(`{
     searchAcrossLineage(input: {
       urn: ${JSON.stringify(URN)}, direction: ${direction},
@@ -196,18 +339,30 @@ if (READINESS_MANIFEST) {
     const manifest = JSON.parse(readFileSync(resolve(READINESS_MANIFEST), "utf8"));
     const direction = manifest?.queryParameters?.direction;
     if (direction !== "UPSTREAM" && direction !== "DOWNSTREAM") throw new Error("queryParameters.direction must be UPSTREAM or DOWNSTREAM");
-    const { observeReadiness } = await import(join(repoRoot, "src/integration/readiness.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
-      api.register(); return import(join(repoRoot, "src/integration/readiness.ts"));
-    }));
-    const readiness = await observeReadiness(manifest, READINESS_DEADLINE_MS, async (signal) => {
-      const response = await fetch(`${GMS}/api/graphql`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, signal,
-        body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(URN)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count} }) { searchResults { entity { urn } } } }` }),
-      });
-      const body = await response.json();
-      if (!response.ok || body.errors) throw new Error("readiness GraphQL request failed");
-      return (body.data?.searchAcrossLineage?.searchResults ?? []).map((result) => result.entity.urn);
-    });
+    const { observeReadiness } = await load("src/integration/readiness.ts");
+
+    // The readiness poll must use the same transport as the event's own lineage
+    // read. Polling over GraphQL and then upgrading an MCP-read observation
+    // would attest to a set the event did not obtain — two surfaces with
+    // different hop semantics, one of them silently standing in for the other.
+    const pollUrns =
+      TRANSPORT === "mcp"
+        ? async () => {
+            const read = await lineage(direction);
+            if (read.observation.read !== "ok") throw new Error(read.error ?? "readiness MCP read failed");
+            return read.edges.map((edge) => edge.urn);
+          }
+        : async (signal) => {
+            const response = await fetch(`${GMS}/api/graphql`, {
+              method: "POST", headers: { "Content-Type": "application/json" }, signal,
+              body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(URN)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count} }) { searchResults { entity { urn } } } }` }),
+            });
+            const body = await response.json();
+            if (!response.ok || body.errors) throw new Error("readiness GraphQL request failed");
+            return (body.data?.searchAcrossLineage?.searchResults ?? []).map((result) => result.entity.urn);
+          };
+
+    const readiness = await observeReadiness(manifest, READINESS_DEADLINE_MS, pollUrns);
     if (readiness.disposition === "ready") {
       const key = direction === "UPSTREAM" ? "upstreams" : "downstreams";
       const observed = (key === "upstreams" ? upstreams : downstreams).map((edge) => edge.urn).sort();
@@ -261,10 +416,9 @@ if (dbtFilePath) note("code.repositoryRelativePath", "datahub", "not-exposed-by-
 // ---------------------------------------------------------------------------
 // workspace.json evidence
 // ---------------------------------------------------------------------------
-const { assessWorkspaceEvidence, readArtifactIdentity } = await import(join(repoRoot, "src/integration/workspace-evidence.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
-  api.register();
-  return import(join(repoRoot, "src/integration/workspace-evidence.ts"));
-}));
+const { assessWorkspaceEvidence, readArtifactIdentity } = await load(
+  "src/integration/workspace-evidence.ts",
+);
 let workspaceArtifact = null;
 let partners = [];
 const records = [];
@@ -331,35 +485,30 @@ if (integrity.integrity === "exact-match") {
 }
 
 // ---------------------------------------------------------------------------
-const { deriveTier, validateEvent, CHANGE_IMPACT_EVENT_VERSION } = await import(
-  join(repoRoot, "src/integration/change-impact-event.ts")
-).catch(async () => import("tsx/esm/api").then(async (api) => {
-  api.register();
-  return import(join(repoRoot, "src/integration/change-impact-event.ts"));
-}));
-
-const gmsVersionData = await gql("{ appConfig { appVersion } }").catch(() => null);
+const { deriveTier, validateEvent, CHANGE_IMPACT_EVENT_VERSION } = await load(
+  "src/integration/change-impact-event.ts",
+);
 
 const event = {
   eventVersion: CHANGE_IMPACT_EVENT_VERSION,
   provenance: {
     producedAt: new Date().toISOString(),
     producer: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
-    datahub: { gmsUrl: GMS, gmsVersion: gmsVersionData?.appConfig?.appVersion ?? null },
+    datahub: { gmsUrl: GMS, gmsVersion },
     corpus: { repository: SUBJECT_REPOSITORY, commit: SUBJECT_REVISION },
     workspaceArtifact,
   },
   subject: { urn: URN },
   datahub: {
-    name: props.name ?? null,
-    platform: ds.platform?.name ?? null,
-    description: props.description ?? null,
+    name: dataset.name,
+    platform: dataset.platform,
+    description: dataset.description,
     upstreams,
     downstreams,
     lineageObservation,
-    schemaFieldCount: ds.schemaMetadata?.fields?.length ?? null,
-    owners: (ds.ownership?.owners ?? []).map((o) => o.owner?.urn).filter(Boolean),
-    domain: ds.domain?.domain?.urn ?? null,
+    schemaFieldCount,
+    owners: dataset.owners,
+    domain: dataset.domain,
   },
   code: {
     dbtUniqueId: customProperties.dbt_unique_id ?? null,
@@ -392,10 +541,20 @@ if (OUT) {
 }
 
 console.error(`\nsubject      ${URN}`);
+console.error(
+  `transport    ${TRANSPORT === "mcp"
+    ? `official DataHub MCP server over stdio — ${mcpServer?.serverName ?? "?"} ${mcpServer?.serverVersion ?? "?"} (${MCP_COMMAND})`
+    : `direct DataHub GraphQL/GMS API at ${GMS}`}`,
+);
 console.error(`resolution   ${method}  ->  ${repositoryRelativePath ?? "(unresolved)"}`);
 console.error(`prefix       ${projectPrefix === "" ? "(repository root)" : projectPrefix ?? "(unknown)"}`);
 console.error(`lineage      ${upstreams.length} up / ${downstreams.length} down`);
 console.error(`evidence     ${event.evidence.tier} (${records.length} record(s))`);
 console.error(`unavailable  ${unavailable.length} stated`);
 console.error(problems.length ? `INVALID:\n  ${problems.join("\n  ")}` : "contract   valid");
+
+// The MCP server is a child process. Leaving it running would hold the emitter
+// open past the point it has produced its artifact.
+await mcpClient?.stop();
+
 process.exit(problems.length ? 1 : 0);
