@@ -44,6 +44,67 @@ describe("MCP stdio client", () => {
     await client.stop();
   });
 
+  it("refuses a server that negotiated a different protocol revision", async () => {
+    // The session would otherwise proceed with each end interpreting the other's
+    // frames under different rules, and every resulting failure would present as
+    // a fact about the catalog — a tool returning nothing, a field missing, a
+    // shape the reader refuses — rather than as a protocol mismatch.
+    const client = new McpClient(
+      server(`${RESPOND}
+      function handle(m) {
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2025-06-18", serverInfo: { name: "newer" } });
+        reply(m.id, { tools: [] });
+      }`),
+    );
+    await expect(client.start()).rejects.toThrow(/negotiation failed.*2024-11-05.*2025-06-18/s);
+    await client.stop();
+  });
+
+  it("refuses a server that answered with no protocol revision at all", async () => {
+    // Silence is not assent. A server that did not say which revision it
+    // selected has agreed to nothing, and reading an absent answer as a
+    // positive one is the defect this repository refuses everywhere else.
+    const client = new McpClient(
+      server(`${RESPOND}
+      function handle(m) {
+        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "silent" } });
+        reply(m.id, { tools: [] });
+      }`),
+    );
+    await expect(client.start()).rejects.toThrow(/negotiation failed.*no protocolVersion/s);
+    await client.stop();
+  });
+
+  it("does not declare the session open when negotiation failed", async () => {
+    // `notifications/initialized` is the client declaring the session open.
+    // Sending it and then objecting would announce agreement to a revision the
+    // client had already determined it does not speak. The stub records every
+    // method it saw and reports it on exit.
+    const client = new McpClient(
+      server(`
+      let buf = "";
+      const seen = [];
+      process.on("exit", () => process.stderr.write("SAW:" + seen.join(",") + "\\n"));
+      process.stdin.on("data", (c) => {
+        buf += c;
+        let i;
+        while ((i = buf.indexOf("\\n")) !== -1) {
+          const line = buf.slice(0, i); buf = buf.slice(i + 1);
+          if (!line.trim()) continue;
+          const m = JSON.parse(line);
+          seen.push(m.method);
+          if (m.method === "initialize") {
+            process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: m.id, result: { protocolVersion: "1999-01-01", serverInfo: { name: "ancient" } } }) + "\\n");
+          }
+        }
+      });`),
+    );
+    await expect(client.start()).rejects.toThrow(/negotiation failed/);
+    await client.stop();
+    expect(client.stderr).toContain("SAW:initialize");
+    expect(client.stderr).not.toContain("notifications/initialized");
+  });
+
   it("sends the initialized notification before any other request", async () => {
     // The stub records the order it received methods in, inside the single
     // parse loop, and hands that order back as the tools/list answer.
@@ -68,7 +129,7 @@ describe("MCP stdio client", () => {
           const m = JSON.parse(line);
           order.push(m.method);
           if (m.method === "initialize") {
-            process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: m.id, result: { serverInfo: { name: "ordered" } } }) + "\\n");
+            process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: m.id, result: { protocolVersion: "2024-11-05", serverInfo: { name: "ordered" } } }) + "\\n");
           } else if (m.id !== undefined) {
             process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: m.id, result: { tools: order.map((name) => ({ name })) } }) + "\\n");
           }
@@ -87,7 +148,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "slow" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "slow" } });
         const frame = JSON.stringify({ jsonrpc: "2.0", id: m.id, result: { tools: [{ name: "get_lineage" }] } }) + "\\n";
         let at = 0;
         const tick = setInterval(() => {
@@ -107,7 +168,7 @@ describe("MCP stdio client", () => {
       server(`${RESPOND}
       const held = [];
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "reorder" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "reorder" } });
         held.push(m);
         if (held.length < 2) return;
         // Answer the second request first.
@@ -130,7 +191,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "stub" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "stub" } });
         reply(m.id, { content: [{ type: "text", text: JSON.stringify({ totalFields: 7 }) }] });
       }`),
     );
@@ -147,7 +208,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "stub" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "stub" } });
         reply(m.id, { isError: true, content: [{ type: "text", text: "Entity not found" }] });
       }`),
     );
@@ -162,7 +223,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "stub" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "stub" } });
         reply(m.id, { content: [] });
       }`),
     );
@@ -177,7 +238,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "stub" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "stub" } });
         reply(m.id, { content: [{ type: "text", text: "not json, but a real answer" }] });
       }`),
     );
@@ -194,7 +255,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "stub" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "stub" } });
         fail(m.id, -32601, "Unknown tool: get_lineage");
       }`),
     );
@@ -211,7 +272,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "doomed" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "doomed" } });
         process.stderr.write("fatal: cannot reach DataHub\\n");
         process.exit(3);
       }`),
@@ -235,7 +296,7 @@ describe("MCP stdio client", () => {
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
-        if (m.method === "initialize") return reply(m.id, { serverInfo: { name: "mute" } });
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "mute" } });
         // Deliberately no reply.
       }`),
       { requestTimeoutMs: 150 },

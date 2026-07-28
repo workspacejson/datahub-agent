@@ -156,7 +156,7 @@ and the two places they differ.
 
 ## Local quickstart
 
-See [`docs/quickstart.md`](docs/quickstart.md) for running a local DataHub instance, installing the MCP server, and enriching and resetting a dataset.
+See [`docs/quickstart.md`](docs/quickstart.md) for running a local DataHub instance, installing the official MCP server, and enriching a dataset.
 
 ## Status
 

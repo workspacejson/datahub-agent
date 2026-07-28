@@ -154,7 +154,46 @@ export class McpClient {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: {},
       clientInfo: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
-    })) as { serverInfo?: { name?: string; version?: string } } | null;
+    })) as {
+      protocolVersion?: unknown;
+      serverInfo?: { name?: string; version?: string };
+    } | null;
+
+    // Version negotiation is a real step, not a formality, and it is checked
+    // before the session is declared open.
+    //
+    // `initialize` is where the two ends agree which revision they are speaking.
+    // The server answers with the revision it selected, and that answer is
+    // allowed to differ from the one proposed — which is precisely why it has to
+    // be read. This client implements exactly one revision, so anything other
+    // than that revision means the session would proceed with each side
+    // interpreting the other's frames under different rules. The failures that
+    // produces are downstream and misleading: a tool that "returns nothing", a
+    // field that is "missing", a shape the reader refuses — every one of them
+    // presenting as a fact about the catalog rather than as a protocol mismatch.
+    //
+    // A missing `protocolVersion` fails for the same reason and is not treated
+    // as assent. A server that did not say which revision it selected has not
+    // agreed to anything, and reading silence as agreement is the same defect
+    // this repository refuses everywhere else: an absent answer promoted to a
+    // positive one.
+    //
+    // This is checked *before* `notifications/initialized`, because that
+    // notification is the client declaring the session open. Sending it and then
+    // objecting would mean announcing agreement to a revision this client had
+    // already determined it does not speak.
+    const negotiated = initialized?.protocolVersion;
+    if (negotiated !== MCP_PROTOCOL_VERSION) {
+      const described =
+        negotiated === undefined
+          ? "no protocolVersion"
+          : `protocolVersion ${JSON.stringify(negotiated)}`;
+      await this.stop();
+      throw new Error(
+        `MCP protocol negotiation failed: this client speaks only ${MCP_PROTOCOL_VERSION}, ` +
+          `and the server answered with ${described}.`,
+      );
+    }
 
     // The spec requires this notification before any other request. Omitting it
     // works against permissive servers and fails against strict ones, which is

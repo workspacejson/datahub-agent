@@ -117,7 +117,7 @@ Per-file values are intentionally empty. `FileIndexEntry` declares them
 optional, and the producer withholds behavioral values by design — the join is
 key membership, not value reading.
 
-## 4. Enrich, and put the instance back
+## 4. Enrich
 
 The writeback annotates the dataset with the evidence tier, and with a
 commit-pinned link to the producing file when one is obtainable:
@@ -126,27 +126,7 @@ commit-pinned link to the producing file when one is obtainable:
 node scripts/run-writeback.mjs event.json            # --dry-run to plan only
 ```
 
-It is idempotent, which makes the second run a `noop` — the correct answer, and
-not the one that shows the tool working. `scripts/reset-writeback.mjs` removes
-the metadata this tool owns and nothing else, then reads back to confirm it is
-gone, so the demonstration is repeatable without `datahub docker nuke`:
-
-```bash
-node scripts/reset-writeback.mjs '<urn>' --dry-run   # show what would go
-node scripts/reset-writeback.mjs '<urn>'
-```
-
-It is permitted to touch exactly two things: the institutional-memory link
-labelled `Producing source (workspace.json)`, and the structured property
-`workspacejson_evidence_tier`. Both are constants shared with the writeback, and
-both are printed in the reset receipt so the boundary is checkable without
-reading the source. It has no vocabulary for descriptions, tags, terms,
-ownership or domain.
-
-Its `disposition` distinguishes `cleared` from `already-clean` — only the first
-is evidence the removal path works — and `incomplete` from `failed`, because a
-mutation the catalog accepted while the read still shows the old value is index
-lag, not a rejected write.
+It is idempotent, so the second run reports `noop`.
 
 ## 5. Run the examples
 
