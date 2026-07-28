@@ -23,6 +23,14 @@ it("offers an immutable View Source action and never tags unavailable as a sourc
   expect(screen.queryByText("unavailable", { selector: ".source-tag" })).toBeNull();
 });
 
+it("states the omission instead of offering a link when no commit-pinned URL exists", () => {
+  const model = provisionalStateAdapter("partial").read();
+  render(<CockpitShell model={{ ...model, immutableViewSourceUrl: null }} route="impact" onRouteChange={() => undefined} />);
+  expect(screen.queryByRole("link", { name: "View Source" })).toBeNull();
+  expect(screen.getByText(/View Source unavailable/).textContent).toContain("no link is offered rather than one that could drift");
+  expect(screen.getByText("unavailable", { selector: "code" })).toBeTruthy();
+});
+
 it("does not present a placeholder warning for non-placeholder models", () => {
   const placeholder = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={{ ...placeholder, sourceMode: "live" }} route="receipts" onRouteChange={() => undefined} />);

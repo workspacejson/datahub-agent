@@ -1,4 +1,5 @@
 import { provisionalSource, provisionalStates } from "./provisional-source";
+import { readChangeImpactEvent } from "../model/from-change-impact-event";
 import {
   cockpitViewModelSchema,
   type CockpitViewModel,
@@ -47,9 +48,28 @@ export function provisionalStateAdapter(state: CockpitStateName): CockpitSourceA
   };
 }
 
-/** Live integration will replace its event transport, not view fields. */
+/**
+ * Fixture and live events both enter here, and both are `ChangeImpactEvent`.
+ *
+ * This used to be `normalize(event as SourceEvent, sourceMode)`. The cast was
+ * the only thing standing where a contract belonged: nothing checked that a real
+ * event could produce a view model, and the two shapes could have diverged
+ * indefinitely without a single failure. Now the event is parsed against the
+ * frozen schema and projected, so an event the emitter can produce is an event
+ * the cockpit can render — or the mismatch is named.
+ *
+ * Throws only on a contract violation, and the message carries the offending
+ * paths. A cockpit that rendered a malformed event would be showing a judge
+ * claims nothing stands behind.
+ */
 export function createAdapter(event: unknown, sourceMode: Exclude<SourceMode, "placeholder">): CockpitSourceAdapter {
-  return { read: () => normalize(event as SourceEvent, sourceMode) };
+  const result = readChangeImpactEvent(event, "impact");
+  if (!result.ok) {
+    throw new Error(
+      `The supplied event does not satisfy the change-impact contract:\n  ${result.problems.join("\n  ")}`,
+    );
+  }
+  return { read: () => normalize(result.event, sourceMode) };
 }
 
 export function fixtureLiveParity(fixture: CockpitViewModel, live: CockpitViewModel): boolean {

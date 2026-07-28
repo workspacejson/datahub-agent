@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createAdapter, fixtureLiveParity, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
 import { cockpitViewModelSchema } from "../model/cockpit-view-model";
+import { contractEvent } from "../test/contract-event";
 
 describe("CockpitViewModel boundary", () => {
   it("marks the entire provisional model placeholder", () => expect(provisionalAdapter.read().sourceMode).toBe("placeholder"));
@@ -8,11 +9,22 @@ describe("CockpitViewModel boundary", () => {
     expect(() => cockpitViewModelSchema.parse({ ...provisionalAdapter.read(), sourceMode: "live", source: "verified" })).toThrow();
   });
   it("keeps fixture and live parity while excluding sourceMode", () => {
-    const event = provisionalStateAdapter("partial").read();
+    // Both modes now take a `ChangeImpactEvent`, not a view model. This test
+    // used to hand `createAdapter` the output of another adapter, which the
+    // `as SourceEvent` cast accepted — so it asserted parity between two
+    // projections of something that was never an event.
+    const event = contractEvent();
     const fixture = createAdapter(event, "fixture").read();
     const live = createAdapter(event, "live").read();
     expect(fixtureLiveParity(fixture, live)).toBe(true);
     expect(fixtureLiveParity(fixture, { ...live, read: "failed" })).toBe(false);
+  });
+
+  it("refuses a view model where an event belongs, instead of casting it", () => {
+    // The regression the cast permitted: anything shaped roughly right slid
+    // through, including a model that had already been projected once.
+    const alreadyProjected = provisionalStateAdapter("partial").read();
+    expect(() => createAdapter(alreadyProjected, "live")).toThrow(/does not satisfy the change-impact contract/);
   });
   it("refuses unsupported writeback success claims", () => {
     expect(() => cockpitViewModelSchema.parse({

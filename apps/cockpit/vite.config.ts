@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -9,6 +10,9 @@ if (process.env.NODE_ENV === "production" && sourceMode === "placeholder") {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+    resolve: {
+    alias: { "@contract": fileURLToPath(new URL("../../src/integration/change-impact-event.ts", import.meta.url)) },
+  },
+plugins: [react(), tailwindcss()],
   define: { __COCKPIT_SOURCE_MODE__: JSON.stringify(sourceMode) },
 });
