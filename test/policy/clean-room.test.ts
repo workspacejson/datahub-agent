@@ -115,6 +115,21 @@ describe("auditCleanRoom", () => {
     expect(auditCleanRoom(cleanPkg(), cleanLock())).toEqual([]);
   });
 
+  it("permits a declared native workspace and exactly its npm-generated link", () => {
+    const pkg: PackageManifest = { ...cleanPkg(), workspaces: ["apps/*"] };
+    const lock = cleanLock();
+    lock.packages!["apps/cockpit"] = { version: "0.0.1" };
+    lock.packages!["node_modules/@workspacejson/cockpit"] = { link: true, resolved: "apps/cockpit" };
+    expect(auditCleanRoom(pkg, lock)).toEqual([]);
+  });
+
+  it("rejects a link that only resembles a workspace", () => {
+    const pkg: PackageManifest = { ...cleanPkg(), workspaces: ["apps/*"] };
+    const lock = cleanLock();
+    lock.packages!["node_modules/escaped"] = { link: true, resolved: "outside/escaped" };
+    expect(auditCleanRoom(pkg, lock)[0]?.problem).toMatch(/linked local directory/);
+  });
+
   it("reports every violation at once rather than stopping at the first", () => {
     // A reviewer fixing one path reference should see the rest in the same run.
     const pkg = cleanPkg();
