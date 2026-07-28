@@ -48,5 +48,8 @@ jobs:
       - name: Cockpit production build
         run: npm run build
 
+      - name: Install Chromium for cockpit browser checks
+        run: npx playwright install --with-deps chromium
+
       - name: Cockpit browser and accessibility checks
         run: npm run e2e
