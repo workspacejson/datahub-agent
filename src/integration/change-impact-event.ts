@@ -587,7 +587,20 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
         ? { ...event.code, repositoryRelativePath: null, projectPrefix: null, method: "unresolved" }
         : event.code,
     unavailable: [
-      ...event.unavailable,
+      // Workspace-sourced entries are dropped, not carried.
+      //
+      // Appending to the full list left the reduced view holding two mutually
+      // exclusive claims about the same field: `absent` — asked and reported
+      // nothing — beside `not-queried`, never asked. Both marked
+      // `source: "workspacejson"`, in the one view whose premise is that no
+      // workspace evidence was consulted.
+      //
+      // A DataHub-only agent could not have made the first claim, so keeping it
+      // misrepresents the comparison in the direction that flatters this
+      // project: it shows the reduced mode reporting a finding it had no means
+      // to reach. The removal is the honest reduction; `not-queried` is the
+      // single accurate statement about what that mode knows.
+      ...event.unavailable.filter((u) => u.source !== "workspacejson"),
       {
         field: "partners",
         source: "workspacejson",

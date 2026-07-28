@@ -689,3 +689,39 @@ describe("the MCP restriction the emitter operates under", () => {
     expect(emitter).toMatch(/HAC-156/);
   });
 });
+
+describe("the DataHub-only reduction", () => {
+  it("drops workspace-sourced absences instead of carrying them alongside not-queried", () => {
+    // The reduced view previously held two mutually exclusive claims about one
+    // field: `absent` (asked, reported nothing) beside `not-queried` (never
+    // asked), both marked source workspacejson — in the one view whose premise
+    // is that no workspace evidence was consulted.
+    const event = validEvent({
+      partners: [],
+      evidence: { records: [{ claim: "c", observation: "o", source: "datahub", verified: true }], tier: "VERIFIED" },
+      unavailable: [{
+        field: "partners", source: "workspacejson", reason: "absent",
+        detail: "The artifact carries file-index keys but no behavioral co-change values.",
+      }],
+    });
+    const reduced = toDataHubOnly(event);
+    const partners = reduced.unavailable.filter((u) => u.field === "partners");
+    expect(partners).toHaveLength(1);
+    expect(partners[0]?.reason).toBe("not-queried");
+  });
+
+  it("retains DataHub-sourced absences, which that mode could genuinely observe", () => {
+    const event = validEvent({
+      unavailable: [{
+        field: "datahub.upstreams", source: "datahub", reason: "indeterminate",
+        detail: "the lineage query succeeded; completeness is unknown",
+        completeness: "unverified", observedCount: 0,
+      }],
+    });
+    expect(toDataHubOnly(event).unavailable.some((u) => u.field === "datahub.upstreams")).toBe(true);
+  });
+
+  it("still satisfies the contract after the reduction", () => {
+    expect(validateEvent(toDataHubOnly(validEvent()))).toEqual([]);
+  });
+});

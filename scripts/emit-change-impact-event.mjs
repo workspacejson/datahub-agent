@@ -307,7 +307,16 @@ const integrity = assessWorkspaceEvidence(
   dbtFilePath,
 );
 workspaceArtifact = {
-  producedBy: ws?.generated?.by?.name ?? null, fileIndexKeys: integrity.fileIndexKeys,
+  // `producedBy` is reported only alongside an established identity.
+  //
+  // Reading it straight from the artifact meant an event could name the producer
+  // of a file whose identity was refused — `producedBy: "@workspacejson/cli"`
+  // beside `fileIndexKeys: null` and a mismatch disposition. That is partial
+  // trust in an artifact this path declined to trust, and a reader has no way to
+  // tell which half to believe. Either the artifact was identified and both are
+  // reportable, or it was not and neither is.
+  producedBy: artifactIdentity ? (ws?.generated?.by?.name ?? null) : null,
+  fileIndexKeys: integrity.fileIndexKeys,
   repository: artifactIdentity?.repository ?? null, revision: artifactIdentity?.revision ?? null, integrity: integrity.integrity,
 };
 if (integrity.integrity === "exact-match") {
