@@ -31,6 +31,17 @@ it("states the omission instead of offering a link when no commit-pinned URL exi
   expect(screen.getByText("unavailable", { selector: "code" })).toBeTruthy();
 });
 
+it("announces evidence-state changes, which happen without a reload", () => {
+  // The attribute shipped once with no assertion. Under this project's own
+  // rule a claim carries the check that keeps it true, so this is that check:
+  // the strip is a polite live region, and it is the strip and not the shell.
+  const model = provisionalStateAdapter("partial").read();
+  render(<CockpitShell model={model} route="impact" onRouteChange={() => undefined} />);
+  const strip = screen.getByLabelText("Evidence state");
+  expect(strip.getAttribute("aria-live")).toBe("polite");
+  expect(strip.textContent).toContain(model.read);
+});
+
 it("does not present a placeholder warning for non-placeholder models", () => {
   const placeholder = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={{ ...placeholder, sourceMode: "live" }} route="receipts" onRouteChange={() => undefined} />);
