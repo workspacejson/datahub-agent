@@ -112,6 +112,17 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
  * a plan — the DataHub-only/joined comparison is HAC-218's surface, and
  * synthesising a delta here would put an invented claim on the one screen whose
  * job is to show a real one.
+ *
+ * There is no `receipt` here either, and its absence is a decision rather than
+ * an oversight. HAC-219 owns the receipt surface, and the projection it needs
+ * has to answer a question this function cannot: the receipt's accounting is the
+ * contract's `ResolutionAccounting` — `datasetsRequested`, `datasetsResolved`,
+ * `datasetsUnresolved`, `nodesDropped`, `nodesExcluded` — which is two
+ * denominators, datasets and dbt nodes, not one column that sums. A projection
+ * added here before that surface exists would have to pick a vocabulary for it,
+ * and the wrong pick is the defect it would be trying to prevent. HAC-219 lands
+ * the receipt projection alongside the schema that gives it a shape; HAC-226
+ * replaces its stated absences with observed evidence.
  */
 export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): SourceEvent {
   const upstream = event.datahub.lineageObservation.upstreams;
