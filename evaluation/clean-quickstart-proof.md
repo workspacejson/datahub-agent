@@ -9,17 +9,61 @@ scripts/clean-quickstart-proof.sh
 ```
 
 The script bootstraps its own toolchain and corpus, so it needs only Docker, a
-Python 3.11 and Node. It runs `datahub docker nuke` — point it at a throwaway
-instance.
+Python 3.11, Node, git and curl. It runs `datahub docker nuke` — point it at a
+throwaway instance.
+
+## It fails closed
+
+A proof that can report success on a run where something went wrong is not
+evidence, and the first version of this one could. It ran under `set -uo
+pipefail` with steps shaped as `cmd 2>&1 | tail`, which reports **tail's** exit
+status — so a failed ingest, a failed emit, or a failed writeback printed its
+error and the script carried on to the next step and finished cleanly.
+
+What changed:
+
+- `set -Eeuo pipefail` with an `ERR` trap that names the failing step. No `|| true`
+  anywhere in the file; where a failure is tolerable it is handled explicitly and
+  says why.
+- Nothing pipes into `tail`. Output goes to a per-step log and the exit status is
+  the command's own.
+- The run directory is **deleted** before each run. A step that fails must never
+  leave an earlier run's event where a later step can read it and pass.
+- Every version the proof states is **pinned and verified after install**, rather
+  than inferred from a binary being present. The `[dbt]` extra is checked by
+  importing `boto3` and `DBTCoreSource` — the exact import whose absence produced
+  the silent ingest failure that made an earlier run read pre-existing data and
+  call it fresh.
+- The dbt manifest and catalog are regenerated from a `git clean`ed checkout at
+  the pin, never accepted from a cached `target/`.
+- The eleven conditions below are hard failures, and every one of them is
+  asserted by `scripts/assert-proof.mjs` reading the **emitted JSON**, not this
+  script's console output. A proof that greps its own transcript is checking the
+  formatter.
+
+The assertions: nuke and quickstart succeed · GMS becomes ready · the instance
+carries none of this tool's metadata · ingestion finishes with zero failures ·
+the subject resolves · lineage reaches the settled condition · both emits produce
+**new** valid 1.3 events · the MCP/GMS comparison matches what this document
+claims · writeback is `succeeded=true, noop=false` · the repeat is `noop=true` ·
+reset is `cleared` · the repeat reset is `already-clean`.
+
+Events are checked to have been produced *during this run* by comparing
+`provenance.producedAt` against the run's start, so a stale artifact cannot
+satisfy them.
 
 ## Environment
+
+Pinned in the script and verified at run time:
 
 | | |
 | -- | -- |
 | GMS | `v1.5.0.6` (official `datahub docker quickstart`) |
-| DataHub CLI | `1.6.0.16` |
-| MCP server | `mcp-server-datahub` `0.6.0`, reporting itself as `datahub 3.4.5` |
-| Corpus | `dbt-labs/jaffle_shop_duckdb@36bde6cb`, built with `dbt-duckdb==1.10.1` |
+| DataHub CLI | `acryl-datahub[dbt]==1.6.0.16` |
+| MCP server | `mcp-server-datahub==0.6.0`, reporting itself as `datahub 3.4.5` |
+| dbt | `dbt-duckdb==1.10.1` |
+| Python | 3.11, asserted — not "whatever `python3` resolves to" |
+| Corpus | `dbt-labs/jaffle_shop_duckdb@36bde6cb`, manifest rebuilt every run |
 
 ## The instance was clean
 
@@ -96,7 +140,7 @@ downstream URN sets equal: true (1 edges)
 schemaFieldCount         : 7 / 7
 code.sourceUrl           : null / null
 gmsVersion               : null / "v1.5.0.6"
-edge names differing     : 6
+edge names only on MCP   : 7  (6 upstream, 1 downstream)
 ```
 
 Two differences, both intended:
@@ -104,10 +148,21 @@ Two differences, both intended:
 - **`gmsVersion`** is null over MCP. No MCP tool reports it. The event states
   `not-exposed-by-source` rather than reaching for a second transport to fill in
   a field an MCP agent could not have had.
-- **Six edge names** are populated over MCP and null over direct GraphQL. The
-  direct query reads `properties.name` through a `... on Dataset` fragment, and
-  the duckdb sibling datasets carry their name at the top level. The MCP read is
-  the better of the two here.
+- **Seven edge names** — six upstream, one downstream — are populated over MCP
+  and null over direct GraphQL. The direct query reads `properties.name` through
+  a `... on Dataset` fragment, and the duckdb sibling datasets carry their name
+  at the top level. The MCP read is the better of the two here.
+
+> **This number was wrong until the assertions checked it.** Every earlier
+> write-up of this proof said *six*, because it was counted from the upstream
+> direction alone. The count survived being written into the quickstart, the
+> evaluation document, a merged commit message and a Linear comment — read by a
+> reader each time, and never recompared against the artifact. It failed on the
+> first run where a machine compared the claim to the JSON instead of a person
+> comparing it to a previous sentence.
+>
+> That is the entire thesis of this repository happening to the document that
+> argues for it, so it is recorded here rather than quietly corrected.
 
 `code.sourceUrl` is null on **both**, and that is deliberate rather than a
 finding. Neither transport requests `externalUrl`: the MCP one cannot, and the

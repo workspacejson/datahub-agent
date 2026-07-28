@@ -83,10 +83,10 @@ places:
 - `provenance.datahub.gmsVersion` is null over MCP. No MCP tool reports the
   server version, and the event states that as `not-exposed-by-source` rather
   than reaching for a second transport to fill the field in.
-- Six upstream edge `name`s are populated over MCP and null over direct GraphQL.
-  The direct query reads `properties.name` through a `... on Dataset` fragment;
-  the duckdb sibling datasets carry their name at the top level. The MCP read
-  is the better of the two here.
+- Seven edge `name`s — six upstream and one downstream — are populated over MCP
+  and null over direct GraphQL. The direct query reads `properties.name` through
+  a `... on Dataset` fragment; the duckdb sibling datasets carry their name at
+  the top level. The MCP read is the better of the two here.
 
 ## 3. Produce a workspace.json for any repository
 
