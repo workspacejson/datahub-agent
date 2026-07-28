@@ -997,11 +997,20 @@ export function validateEvent(event: unknown): string[] {
     ["downstreams", valid.datahub.downstreams],
   ] as const) {
     const label = `datahub.lineageObservation.${direction}`;
-    const observation = valid.datahub.lineageObservation?.[direction];
-    if (!observation) {
-      problems.push(`${label} is missing — every event must state the standing of both directions`);
-      continue;
-    }
+    // Not optional-chained, and no missing-observation branch.
+    //
+    // `lineageObservation` is a required `strictObject` with both directions
+    // required, inside a required `dataHubContext`. Pass one rejects an event
+    // that omits any of them and returns before reaching here, so by this point
+    // the value is guaranteed.
+    //
+    // There was a `if (!observation) { ... continue; }` here, and mutation
+    // testing could not kill it: no input reaches it. It read as a safety net
+    // and was an unreachable branch, which is worse than nothing — it implies
+    // the absence is possible and handled, so the next reader assumes a
+    // guarantee is being defended rather than relied upon. The schema is the
+    // guarantee; this reads it.
+    const observation = valid.datahub.lineageObservation[direction];
 
     problems.push(...completenessEvidenceProblems(observation, label));
 
