@@ -32,7 +32,7 @@ describe("CockpitViewModel boundary", () => {
     })).toThrow();
   });
   it("normalizes every required harness state as a whole placeholder model", () => {
-    for (const state of ["loading", "unavailable", "partial", "indeterminate", "contradictory", "error", "accepted-not-observed", "success"] as const) {
+    for (const state of ["loading", "unavailable", "partial", "ambiguous", "indeterminate", "contradictory", "error", "accepted-not-observed", "success"] as const) {
       expect(provisionalStateAdapter(state).read().sourceMode).toBe("placeholder");
     }
   });
@@ -98,10 +98,17 @@ describe("CockpitViewModel boundary", () => {
     expect(() => cockpitViewModelSchema.parse({ ...model, source: "unavailable", resolutionDisposition: "resolved" })).toThrow();
   });
   it("models matched, mismatched, ambiguous, and unavailable resolution without inference", () => {
+    // This test was already named for `ambiguous` while asserting `partial` —
+    // the collapse, visible in the test's own title. All five ratified values
+    // are exercised now, so the axis cannot quietly shrink again.
     const model = provisionalStateAdapter("partial").read();
-    expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "resolved" }).resolutionDisposition).toBe("resolved");
-    expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "mismatch" }).resolutionDisposition).toBe("mismatch");
-    expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "partial" }).resolutionDisposition).toBe("partial");
+    for (const disposition of ["exact", "ambiguous", "mismatch", "indeterminate"] as const) {
+      expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: disposition }).resolutionDisposition).toBe(disposition);
+    }
     expect(cockpitViewModelSchema.parse({ ...model, source: "unavailable", read: "not-queried", resolutionDisposition: "unavailable" }).resolutionDisposition).toBe("unavailable");
+    // `partial` is gone. An event still carrying it is refused rather than
+    // silently coerced to the nearest surviving value.
+    expect(() => cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "partial" })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "resolved" })).toThrow();
   });
 });

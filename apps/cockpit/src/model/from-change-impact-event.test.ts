@@ -77,9 +77,12 @@ describe("projecting the frozen contract onto the cockpit", () => {
   it.each([
     ["repository-mismatch", "mismatch"],
     ["revision-mismatch", "mismatch"],
-    ["path-ambiguous", "partial"],
+    // Distinct, and they were not before: both arrived as `partial`, so "holds
+    // no candidate" and "holds several and cannot choose" read identically.
+    ["path-unresolved", "indeterminate"],
+    ["path-ambiguous", "ambiguous"],
     ["artifact-unavailable", "unavailable"],
-    ["exact-match", "resolved"],
+    ["exact-match", "exact"],
   ] as const)("maps artifact integrity %s to disposition %s", (integrity, expected) => {
     const event = contractEvent();
     event.provenance.workspaceArtifact = { ...event.provenance.workspaceArtifact!, integrity };

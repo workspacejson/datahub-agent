@@ -35,7 +35,7 @@ export const provisionalAdapter: CockpitSourceAdapter = {
     ...provisionalSource,
     read: "not-queried",
     completeness: "not-established",
-    resolutionDisposition: "partial",
+    resolutionDisposition: "indeterminate",
     mutationAcceptance: "not-attempted",
     intendedStateObservation: "not-attempted",
     terminalWritebackDisposition: "not-applicable",

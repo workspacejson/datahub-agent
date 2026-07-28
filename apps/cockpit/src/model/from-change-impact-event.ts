@@ -59,12 +59,17 @@ import type {
  * them would tell a reviewer only that something went wrong.
  */
 const DISPOSITION: Record<WorkspaceIntegrity, SourceEvent["resolutionDisposition"]> = {
-  "exact-match": "resolved",
+  "exact-match": "exact",
   "artifact-unavailable": "unavailable",
   "repository-mismatch": "mismatch",
   "revision-mismatch": "mismatch",
-  "path-unresolved": "partial",
-  "path-ambiguous": "partial",
+  // Distinct, and they were not before. `path-unresolved` means the artifact
+  // holds no candidate for the file; `path-ambiguous` means it holds several and
+  // the join cannot single one out. Both used to arrive as `partial`, which told
+  // a reviewer only that something went wrong — while the comment above claimed
+  // the opposite. Different findings, different fixes, different words.
+  "path-unresolved": "indeterminate",
+  "path-ambiguous": "ambiguous",
 } satisfies Record<WorkspaceIntegrity, SourceEvent["resolutionDisposition"]>;
 
 /** Whether the joined half of the thesis actually contributed anything. */
