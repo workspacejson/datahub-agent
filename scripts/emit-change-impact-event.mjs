@@ -144,7 +144,7 @@ const LINEAGE_QUERY = { surface: "searchAcrossLineage", query: "*", start: 0, co
  * ingestion — measured at several minutes for the nested corpus. So a result of
  * zero is not evidence the dataset has no edges, and a result of one is not
  * evidence it has one. Nothing available to a general read path can tell a
- * settled answer from a partial one, so this reports `unverified` and leaves
+ * settled answer from a partial one, so this reports `not-established` and leaves
  * the claim to a caller holding an external expectation.
  *
  * A failed query is `read: "failed"` and never an empty result set. The
@@ -161,7 +161,7 @@ async function lineage(direction) {
   }`);
 
   if (!ok) {
-    return { edges: [], observation: { read: "failed", completeness: "unverified" }, error };
+    return { edges: [], observation: { read: "failed", completeness: "not-established" }, error };
   }
 
   const results = data?.searchAcrossLineage?.searchResults ?? [];
@@ -171,12 +171,12 @@ async function lineage(direction) {
     degree: r.degree ?? 1,
   }));
 
-  // `unverified` is not a hedge. It is the strongest claim the evidence
-  // supports, and it stays unverified however many times the query is repeated:
+  // `not-established` is not a hedge. It is the strongest claim the evidence
+  // supports, and it stays not-established however many times the query is repeated:
   // repetition is not attestation.
   return {
     edges,
-    observation: { read: "ok", completeness: "unverified", observedCount: edges.length },
+    observation: { read: "ok", completeness: "not-established", observedCount: edges.length },
     error: null,
   };
 }
@@ -213,12 +213,12 @@ if (READINESS_MANIFEST) {
       const observed = (key === "upstreams" ? upstreams : downstreams).map((edge) => edge.urn).sort();
       const expected = [...new Set(manifest.expectedUrns)].sort();
       if (JSON.stringify(observed) === JSON.stringify(expected)) {
-        lineageObservation[key] = { read: "ok", completeness: "verified", observedCount: observed.length, verification: {
+        lineageObservation[key] = { read: "ok", completeness: "complete-against-pinned-manifest", observedCount: observed.length, verification: {
           manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
           observedSetDigest: readiness.observedSetDigest, queryParameters: manifest.queryParameters,
         } };
       } else {
-        note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "unverified", observedCount: observed.length });
+        note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "not-established", observedCount: observed.length });
       }
     }
   } catch (error) {
@@ -239,7 +239,7 @@ for (const [field, side] of [
     // whether that nothing is the whole answer is exactly what is unknown.
     note(field, "datahub", "indeterminate",
       `The catalog returned no ${kind} edges. The lineage index converges after ingestion, so this is not evidence that none exist.`,
-      { completeness: "unverified", observedCount: 0 });
+      { completeness: "not-established", observedCount: 0 });
   }
 }
 
@@ -323,8 +323,8 @@ if (integrity.integrity === "exact-match") {
   repositoryRelativePath = integrity.repositoryRelativePath;
   projectPrefix = repositoryRelativePath.slice(0, repositoryRelativePath.length - dbtFilePath.length).replace(/\/$/, "");
   method = "manifest-join";
-  records.push({ claim: `producing file ${repositoryRelativePath} is tracked in the corpus-matched workspace.json artifact`, observation: integrity.detail, source: "workspacejson", verified: true });
-  note("partners", "workspacejson", "indeterminate", "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.", { completeness: "unverified", observedCount: 0 });
+  records.push({ claim: `producing file ${repositoryRelativePath} is tracked in the corpus-matched workspace.json artifact`, observation: integrity.detail, source: "workspacejson", checkExecuted: true });
+  note("partners", "workspacejson", "indeterminate", "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.", { completeness: "not-established", observedCount: 0 });
 } else if (!unavailable.some((u) => u.field === "partners")) {
   // A refusal never observed an empty collection. Keep its count absent.
   note("partners", "workspacejson", integrity.integrity === "artifact-unavailable" ? "not-queried" : "indeterminate", integrity.detail);

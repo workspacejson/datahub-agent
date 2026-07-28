@@ -72,8 +72,8 @@ function resolvedEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpact
         { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.appearances,PROD)", name: "appearances", degree: 1 },
       ],
       lineageObservation: {
-        upstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
-        downstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+        upstreams: { read: "ok", completeness: "not-established", observedCount: 1 },
+        downstreams: { read: "ok", completeness: "not-established", observedCount: 1 },
       },
       schemaFieldCount: 12,
       owners: [],
@@ -94,7 +94,7 @@ function resolvedEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpact
           claim: "the producing file is addressable at an immutable commit",
           observation: SOURCE_URL,
           source: "datahub",
-          verified: true,
+          checkExecuted: true,
         },
       ],
       tier: "VERIFIED",
@@ -473,7 +473,7 @@ describe("deriveOutcome", () => {
     });
 
   it("claims success when the mutations landed and the after-state shows intent", () => {
-    expect(outcome()).toEqual({ succeeded: true, noop: false, verified: true });
+    expect(outcome()).toEqual({ succeeded: true, noop: false, bothStatesRead: true });
   });
 
   it("does not claim success on a stale read, however cleanly the mutations returned", () => {
@@ -482,7 +482,7 @@ describe("deriveOutcome", () => {
     // because both observations exist — that is all it ever meant.
     const stale = outcome({ after: readState(null) });
     expect(stale.succeeded).toBe(false);
-    expect(stale.verified).toBe(true);
+    expect(stale.bothStatesRead).toBe(true);
   });
 
   it("does not claim success when the catalog holds a different link", () => {
@@ -511,7 +511,7 @@ describe("deriveOutcome", () => {
   it("does not claim success when the after-state could not be read", () => {
     const unread = outcome({ after: unreadableState("TypeError: fetch failed") });
     expect(unread.succeeded).toBe(false);
-    expect(unread.verified).toBe(false);
+    expect(unread.bothStatesRead).toBe(false);
   });
 
   it("reports a noop when the state already matched intent before the write", () => {
@@ -519,7 +519,7 @@ describe("deriveOutcome", () => {
       before: readState(SOURCE_URL, "VERIFIED"),
       after: readState(SOURCE_URL, "VERIFIED"),
     });
-    expect(already).toEqual({ succeeded: true, noop: true, verified: true });
+    expect(already).toEqual({ succeeded: true, noop: true, bothStatesRead: true });
   });
 
   it("claims nothing at all when the writeback refused", () => {
@@ -542,14 +542,14 @@ describe("deriveOutcome", () => {
       after: notQueriedState("dry run: the catalog was not read"),
       attempts: [],
     });
-    expect(dry).toEqual({ succeeded: false, noop: false, verified: false });
+    expect(dry).toEqual({ succeeded: false, noop: false, bothStatesRead: false });
   });
 
   it("keeps verified independent of success, so it stops implying one", () => {
     // Both states read, intent not met. `verified` describes the observations;
     // `succeeded` describes what they show. Conflating them is the original bug.
     const seen = outcome({ after: readState(null) });
-    expect(seen.verified).toBe(true);
+    expect(seen.bothStatesRead).toBe(true);
     expect(seen.succeeded).toBe(false);
   });
 
@@ -584,7 +584,7 @@ describe("attachReceipt", () => {
     observation: { status: "settled", polls: 1, elapsedMs: 42, timeoutMs: 120_000, lastError: null },
     succeeded: true,
     noop: false,
-    verified: true,
+    bothStatesRead: true,
     refusedBecause: null,
     ...overrides,
   });
@@ -637,7 +637,7 @@ describe("attachReceipt", () => {
       resolvedEvent(),
       receipt({
         succeeded: false,
-        verified: false,
+        bothStatesRead: false,
         before: unreadableState("TypeError: fetch failed"),
         after: unreadableState("TypeError: fetch failed"),
         attempts: [
@@ -646,7 +646,7 @@ describe("attachReceipt", () => {
       }),
     );
     expect(unreachable.writeback?.before.read).toBe("failed");
-    expect(unreachable.writeback?.verified).toBe(false);
+    expect(unreachable.writeback?.bothStatesRead).toBe(false);
     expect(unreachable.writeback?.noop).toBe(false);
   });
 

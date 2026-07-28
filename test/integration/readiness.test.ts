@@ -69,7 +69,7 @@ describe("readiness observation", () => {
 
   it("refuses to attest from an empty expected URN set", async () => {
     // This previously asserted `ready`, which the emitter turns into
-    // `completeness: "verified"` — so a manifest that declared no expectation
+    // `completeness: "complete-against-pinned-manifest"` — so a manifest that declared no expectation
     // earned the strongest completeness claim in the vocabulary. Reachable in
     // exactly the HAC-221 case: an unconverged index returns zero, an empty
     // manifest expects zero, and index lag is recorded as a settled fact.

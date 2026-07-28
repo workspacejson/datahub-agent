@@ -50,7 +50,7 @@ describe("projecting the frozen contract onto the cockpit", () => {
     const event = contractEvent();
     event.datahub.lineageObservation.upstreams = {
       read: "ok",
-      completeness: "verified",
+      completeness: "complete-against-pinned-manifest",
       observedCount: 1,
       verification: {
         manifestDigest: "m", expectedSetDigest: "e", observedSetDigest: "e",
@@ -63,11 +63,11 @@ describe("projecting the frozen contract onto the cockpit", () => {
   it("shows zero edges as a stated reason, never as an empty finding", () => {
     const event = contractEvent();
     event.datahub.upstreams = [];
-    event.datahub.lineageObservation.upstreams = { read: "ok", completeness: "unverified", observedCount: 0 };
+    event.datahub.lineageObservation.upstreams = { read: "ok", completeness: "not-established", observedCount: 0 };
     event.unavailable = [{
       field: "datahub.upstreams", source: "datahub", reason: "indeterminate",
       detail: "The lineage index converges after ingestion, so this is not evidence that none exist.",
-      completeness: "unverified", observedCount: 0,
+      completeness: "not-established", observedCount: 0,
     }];
     const [edge] = projectEvent(event, "impact").impactEdges;
     expect(edge?.state).toBe("unresolved");

@@ -97,7 +97,7 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       // Mutations returning cleanly against an instance that could not be read
       // is not a verified write. A fixture is only a demonstration if the
       // before and after states were actually observed.
-      expect(event.writeback?.verified).toBe(true);
+      expect(event.writeback?.bothStatesRead).toBe(true);
       expect(event.writeback?.before.read).toBe("ok");
       expect(event.writeback?.after.read).toBe("ok");
     });

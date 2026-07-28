@@ -33,8 +33,8 @@ export function contractEvent(overrides: Partial<ChangeImpactEvent> = {}): Chang
       upstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.games,PROD)", name: "games", degree: 1 }],
       downstreams: [],
       lineageObservation: {
-        upstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
-        downstreams: { read: "ok", completeness: "unverified", observedCount: 0 },
+        upstreams: { read: "ok", completeness: "not-established", observedCount: 1 },
+        downstreams: { read: "ok", completeness: "not-established", observedCount: 0 },
       },
       schemaFieldCount: 12,
       owners: [],
@@ -50,14 +50,14 @@ export function contractEvent(overrides: Partial<ChangeImpactEvent> = {}): Chang
     },
     partners: [],
     evidence: {
-      records: [{ claim: "tracked", observation: "key present", source: "workspacejson", verified: true }],
+      records: [{ claim: "tracked", observation: "key present", source: "workspacejson", checkExecuted: true }],
       tier: "VERIFIED",
     },
     accounting: {
       datasetsRequested: 1, datasetsResolved: 1, datasetsUnresolved: 0, nodesDropped: 0, nodesExcluded: {},
     },
     unavailable: [
-      { field: "datahub.downstreams", source: "datahub", reason: "indeterminate", detail: "The catalog returned no downstream edges; completeness was not established.", completeness: "unverified", observedCount: 0 },
+      { field: "datahub.downstreams", source: "datahub", reason: "indeterminate", detail: "The catalog returned no downstream edges; completeness was not established.", completeness: "not-established", observedCount: 0 },
       { field: "partners", source: "workspacejson", reason: "absent", detail: "The artifact carries file-index keys but no behavioral co-change values." },
     ],
     ...overrides,

@@ -1,5 +1,5 @@
 {
-  "eventVersion": "1.2",
+  "eventVersion": "1.3",
   "provenance": {
     "producedAt": "2026-07-28T03:08:50.821Z",
     "producer": {
@@ -81,12 +81,12 @@
     "lineageObservation": {
       "upstreams": {
         "read": "ok",
-        "completeness": "unverified",
+        "completeness": "not-established",
         "observedCount": 8
       },
       "downstreams": {
         "read": "ok",
-        "completeness": "unverified",
+        "completeness": "not-established",
         "observedCount": 1
       }
     },
@@ -109,7 +109,7 @@
         "claim": "producing file dbt/models/curated/game_events.sql is tracked in the corpus-matched workspace.json artifact",
         "observation": "Artifact repository, revision, and repository-relative source path matched exactly.",
         "source": "workspacejson",
-        "verified": true
+        "checkExecuted": true
       }
     ],
     "tier": "VERIFIED"
@@ -133,7 +133,7 @@
       "source": "workspacejson",
       "reason": "indeterminate",
       "detail": "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.",
-      "completeness": "unverified",
+      "completeness": "not-established",
       "observedCount": 0
     }
   ],
@@ -205,7 +205,7 @@
     },
     "succeeded": true,
     "noop": true,
-    "verified": true,
+    "bothStatesRead": true,
     "refusedBecause": null,
     "linkOmittedBecause": "no commit-pinned source URL is available; an unpinned link would drift from the artifact it describes, so none was written"
   }

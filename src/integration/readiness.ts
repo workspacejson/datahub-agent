@@ -33,14 +33,15 @@ export async function observeReadiness(
   //
   // Without this, a manifest declaring no expected URNs against an index
   // returning nothing settles as `ready` — and the emitter turns `ready` into
-  // `completeness: "verified"`, the strongest word in the vocabulary. The
+  // `completeness: "complete-against-pinned-manifest"`, the strongest claim in
+  // the vocabulary. The
   // resulting claim is "this dataset definitively has no lineage", earned by
   // declining to say what lineage was expected.
   //
   // That is reachable in exactly the situation HAC-221 was opened for: a
   // lineage index that has not finished converging returns zero, the empty
   // manifest expects zero, the digests match, and index lag is recorded as a
-  // settled fact. `verified` requires an external attestation; an empty set is
+  // settled fact. That value requires an external attestation; an empty set is
   // the absence of one, so it is refused here rather than at the call site,
   // where a future second caller would have to remember.
   if (expected.length === 0) {
