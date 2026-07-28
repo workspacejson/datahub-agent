@@ -2,11 +2,13 @@
   "manual": {},
   "generated": {
     "specVersion": "0.4",
-    "generatedAt": "2026-07-26T22:40:00.000Z",
+    "generatedAt": "2026-07-28T10:33:31.550Z",
     "by": {
       "name": "@workspacejson/cli",
       "version": "0.5.0"
     },
+    "frameworkManifest": [],
+    "conventions": [],
     "fileIndex": {
       ".devcontainer.json": {},
       ".github/CODEOWNERS": {},
@@ -45,7 +47,21 @@
       "seeds/raw_payments.csv": {},
       "uv.lock": {}
     },
-    "frameworkManifest": []
+    "topology": {
+      "packageCount": 0,
+      "type": "single-package",
+      "ciProvider": "github-actions",
+      "agentFiles": {
+        "workspaceJson": ".agents/workspace.json"
+      }
+    },
+    "hygiene": {
+      "score": 100,
+      "grade": "A",
+      "failCount": 0,
+      "warnCount": 0,
+      "scannedAt": "2026-07-28T10:33:31.550Z"
+    }
   },
   "agents": {},
   "health": {
