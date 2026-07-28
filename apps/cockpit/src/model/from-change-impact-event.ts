@@ -21,14 +21,16 @@
  */
 
 import {
-  changeImpactEventSchema,
+  emittedEventSchema,
   type ChangeImpactEvent,
   type Completeness,
   type WorkspaceIntegrity,
 } from "@contract";
 
 import type {
+  ClaimSource,
   CockpitRoute,
+  EvidenceValue,
   SourceEvent,
 } from "./cockpit-view-model";
 
@@ -113,17 +115,118 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
  * synthesising a delta here would put an invented claim on the one screen whose
  * job is to show a real one.
  *
- * There is no `receipt` here either, and its absence is a decision rather than
- * an oversight. HAC-219 owns the receipt surface, and the projection it needs
- * has to answer a question this function cannot: the receipt's accounting is the
- * contract's `ResolutionAccounting` — `datasetsRequested`, `datasetsResolved`,
- * `datasetsUnresolved`, `nodesDropped`, `nodesExcluded` — which is two
- * denominators, datasets and dbt nodes, not one column that sums. A projection
- * added here before that surface exists would have to pick a vocabulary for it,
- * and the wrong pick is the defect it would be trying to prevent. HAC-219 lands
- * the receipt projection alongside the schema that gives it a shape; HAC-226
- * replaces its stated absences with observed evidence.
+ * The `receipt` is projected here, under the contract's own accounting
+ * vocabulary, and every field the event does not carry is `unavailable` with a
+ * reason rather than a plausible string. HAC-226 replaces those stated absences
+ * with observed evidence; nothing here needs to change for it to.
  */
+/** An observation, tagged with the system that made it. */
+const observed = (value: string, source: ClaimSource): EvidenceValue =>
+  ({ state: "observed", value, source });
+
+/** An absence, stating which absence it is. Never an empty string. */
+const missing = (reason: string): EvidenceValue => ({ state: "unavailable", reason });
+
+/** `observed` when the event carries the value, `unavailable` with the reason when it does not. */
+function fromNullable(value: string | null | undefined, source: ClaimSource, reason: string): EvidenceValue {
+  return value ? observed(value, source) : missing(reason);
+}
+
+/**
+ * The receipt, projected from the event under the contract's vocabulary.
+ *
+ * Nothing here is derived, summed across denominators, or filled in. Where the
+ * event does not carry a field, the receipt says so and says why — which is the
+ * only rendering of an absence a judge can act on, and the only one HAC-226 can
+ * later replace without a component change.
+ *
+ * Subject corpus identity is tagged `Joined`. It is not a claim either system
+ * made alone: it is the key the two are compared on, and every workspace-derived
+ * claim on the event is gated on it matching the artifact's own identity.
+ */
+function projectReceipt(event: ChangeImpactEvent): SourceEvent["receipt"] {
+  const artifact = event.provenance.workspaceArtifact;
+  const noArtifact = "No workspace.json artifact was supplied with this event, so the artifact side of the join has no identity to report.";
+  // Digests and query parameters live on `VerificationEvidence`, which the
+  // contract attaches only to a completeness claim it can back. An unverified
+  // read carries neither, and inventing one would be asserting an attestation
+  // that was never made.
+  const verification = event.datahub.lineageObservation.upstreams.verification
+    ?? event.datahub.lineageObservation.downstreams.verification;
+  const noVerification = "The lineage read did not establish completeness, so the contract carries no attestation digests for it.";
+
+  const capabilityLimits = event.unavailable
+    .filter((u) => u.reason === "not-exposed-by-source")
+    .map((u) => `${u.field}: ${u.detail}`);
+
+  return {
+    accounting: {
+      datasetsRequested: event.accounting.datasetsRequested,
+      datasetsResolved: event.accounting.datasetsResolved,
+      datasetsUnresolved: event.accounting.datasetsUnresolved,
+      nodesDropped: event.accounting.nodesDropped,
+      nodesExcluded: { ...event.accounting.nodesExcluded },
+    },
+    // The contract carries the count without the names. Zero unresolved is the
+    // one case where the empty list is the complete list.
+    unresolvedDatasets: event.accounting.datasetsUnresolved === 0
+      ? { state: "observed", names: [] }
+      : {
+        state: "unavailable",
+        reason: `${event.accounting.datasetsUnresolved} dataset(s) went unresolved. The event records the count; it does not carry per-dataset names, and none are invented here.`,
+      },
+    statedGaps: event.unavailable.map((u) => ({ field: u.field, reason: u.reason, detail: u.detail })),
+    provenance: {
+      subjectRepository: fromNullable(event.provenance.corpus.repository, "Joined", "The event states no subject repository, so no workspace claim on it can be checked."),
+      subjectRevision: fromNullable(event.provenance.corpus.commit, "Joined", "The event states no subject revision, so no claim about it is revision-bound."),
+      artifactRepository: fromNullable(artifact?.repository, "workspace.json", noArtifact),
+      artifactRevision: fromNullable(artifact?.revision, "workspace.json", noArtifact),
+      producerVersion: fromNullable(artifact?.producedBy, "workspace.json", noArtifact),
+      algorithmVersion: observed(`${event.provenance.producer.name}@${event.provenance.producer.version}`, "Joined"),
+      inputDigest: verification
+        ? observed(verification.expectedSetDigest, "Joined")
+        : missing(noVerification),
+      artifactDigest: verification
+        ? observed(verification.manifestDigest, "Joined")
+        : missing(noVerification),
+      dataHubReadParameters: verification
+        ? observed(JSON.stringify(verification.queryParameters), "DataHub")
+        : observed(`gms ${event.provenance.datahub.gmsUrl} (${event.provenance.datahub.gmsVersion ?? "version not reported"})`, "DataHub"),
+      producerPath: fromNullable(event.code.repositoryRelativePath, "workspace.json", `The producing file was not resolved to a repository path (method: ${event.code.method}).`),
+      immutableSourceUrl: fromNullable(event.code.sourceUrl, "DataHub", "The official DataHub MCP projection drops Dataset.externalUrl, so no commit-pinned URL is available. No link is offered rather than one that could drift."),
+      limitations: capabilityLimits.length > 0
+        ? observed(capabilityLimits.join(" · "), "Joined")
+        : missing("The event records no source-capability limitation."),
+    },
+    // The writeback receipt is produced by HAC-149 and attached to the event as
+    // the documented `writeback` extension; binding and rendering it is HAC-226.
+    // Until then this states that nothing was read rather than implying that
+    // nothing happened, and the axes stay `not-attempted` so no terminal
+    // disposition can be inferred from a surface that has not read one.
+    writeback: {
+      intent: missing("The writeback receipt is not bound into the cockpit yet, so no intent is shown."),
+      beforeState: missing("The writeback receipt is not bound into the cockpit yet, so no before-state is shown."),
+      mutationResponse: "not-attempted",
+      afterStateRead: "not-queried",
+      bothStatesRead: false,
+      afterStateFreshness: "not-read",
+      intendedStateObservation: "not-attempted",
+      terminalDisposition: "not-applicable",
+    },
+    evaluation: {
+      pairedSpread: missing("The paired DataHub-only vs joined evaluation has not been run."),
+      locBaseline: missing("No lines-of-code baseline has been measured."),
+      limitations: observed(
+        `${event.unavailable.length} stated gap(s); evidence tier ${event.evidence.tier} from ${event.evidence.records.length} record(s).`,
+        "Joined",
+      ),
+      // The event itself, verbatim. Not a summary and not a claim about it —
+      // the bytes a reviewer would check every other line of this receipt against.
+      rawEvidence: observed(JSON.stringify(event, null, 2), "Joined"),
+    },
+  };
+}
+
 export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): SourceEvent {
   const upstream = event.datahub.lineageObservation.upstreams;
   const artifact = event.provenance.workspaceArtifact;
@@ -160,6 +263,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     immutableViewSourceUrl: event.code.sourceUrl,
     impactEdges: impactEdges(event),
     planDeltas: [],
+    receipt: projectReceipt(event),
   };
 }
 
@@ -169,12 +273,20 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
  * Returns problems rather than throwing, and returns *the contract's* problems
  * — so a cockpit refusing to render says which field of which event was wrong,
  * in the same words the emitter and the receipt use.
+ *
+ * Parses `emittedEventSchema`, not `changeImpactEventSchema`. The pure contract
+ * is `.strict()` and rejects the documented `writeback` extension outright,
+ * which every golden fixture in this repository carries — so the cockpit
+ * refused, with `Unrecognized key: "writeback"`, exactly the events a fixture
+ * or live build exists to render. Measured, not inferred: parsing
+ * `test/fixtures/golden/change-impact-event.nested.json` against the strict
+ * schema fails on that key alone.
  */
 export function readChangeImpactEvent(
   input: unknown,
   route: CockpitRoute,
 ): { ok: true; event: SourceEvent } | { ok: false; problems: string[] } {
-  const parsed = changeImpactEventSchema.safeParse(input);
+  const parsed = emittedEventSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,

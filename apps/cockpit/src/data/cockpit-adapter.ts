@@ -18,33 +18,40 @@ function normalize(event: SourceEvent, sourceMode: SourceMode): CockpitViewModel
   return cockpitViewModelSchema.parse({ ...event, sourceMode });
 }
 
+/**
+ * `provisional-source` is `as const`, so every array and nested object in it is
+ * readonly and shared between frames. One deep copy per read keeps a caller from
+ * mutating the one module that is allowed to hold invented values — and replaces
+ * a hand-written per-field clone that had to be extended every time the receipt
+ * grew a section, which is a maintenance burden that fails silently.
+ */
+function detached(event: unknown): SourceEvent {
+  return structuredClone(event) as SourceEvent;
+}
+
 /** The sole importer of provisional-source. Replace this adapter as a whole. */
 export const provisionalAdapter: CockpitSourceAdapter = {
-  read: () => normalize({
+  read: () => normalize(detached({
     ...provisionalSource,
-    unresolvedItems: [...provisionalSource.unresolvedItems],
-    impactEdges: provisionalSource.impactEdges.map((edge) => ({ ...edge })),
-    planDeltas: provisionalSource.planDeltas.map((delta) => ({ ...delta })),
     read: "not-queried",
     completeness: "not-established",
     resolutionDisposition: "partial",
     mutationAcceptance: "not-attempted",
     intendedStateObservation: "not-attempted",
     terminalWritebackDisposition: "not-applicable",
-  }, "placeholder"),
+  }), "placeholder"),
 };
 
 /** The shell-only harness deliberately exposes normalized, whole-model states. */
 export function provisionalStateAdapter(state: CockpitStateName): CockpitSourceAdapter {
   const stateEvent = provisionalStates[state] as unknown as Partial<SourceEvent>;
   return {
-    read: () => normalize({
+    read: () => normalize(detached({
       ...stateEvent,
-      unresolvedItems: [...(stateEvent.unresolvedItems ?? [])],
       mutationAcceptance: stateEvent.mutationAcceptance ?? "not-attempted",
       intendedStateObservation: stateEvent.intendedStateObservation ?? "not-attempted",
       terminalWritebackDisposition: stateEvent.terminalWritebackDisposition ?? "not-applicable",
-    } as SourceEvent, "placeholder"),
+    }), "placeholder"),
   };
 }
 

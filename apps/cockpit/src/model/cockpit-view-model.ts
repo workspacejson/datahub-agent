@@ -6,7 +6,7 @@ export const completenessSchema = z.enum(["complete-against-pinned-manifest", "n
 export const resolutionDispositionSchema = z.enum(["resolved", "partial", "mismatch", "unavailable"]);
 export const mutationAcceptanceSchema = z.enum(["not-attempted", "accepted", "rejected"]);
 export const intendedStateObservationSchema = z.enum(["not-attempted", "observed", "not-observed"]);
-export const terminalWritebackDispositionSchema = z.enum(["not-applicable", "success", "accepted-not-observed", "failed"]);
+export const terminalWritebackDispositionSchema = z.enum(["not-applicable", "success", "accepted-not-observed", "failed", "noop", "indeterminate", "contradictory"]);
 export const sourceModeSchema = z.enum(["placeholder", "fixture", "live"]);
 export const cockpitRouteSchema = z.enum(["impact", "change-plan", "receipts"]);
 export const claimSourceSchema = z.enum(["DataHub", "workspace.json", "Joined"]);
@@ -14,8 +14,152 @@ export const sourceClaimSchema = z.object({ text: z.string().min(1), source: cla
 export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
 export const planDeltaSchema = z.object({ kind: z.enum(["added", "removed", "reordered", "constrained", "uncertainty-changed"]), label: z.string().min(1), reason: z.string().min(1), source: claimSourceSchema });
 export const cockpitStateNameSchema = z.enum([
-  "loading", "unavailable", "partial", "contradictory", "error", "accepted-not-observed", "success",
+  "loading", "unavailable", "partial", "indeterminate", "contradictory", "error", "accepted-not-observed", "success",
 ]);
+/**
+ * One receipt field, and the standing of the value in it.
+ *
+ * Every receipt slot was `z.string().min(1)`, which gave an angle-bracketed
+ * design placeholder and a real revision the same type. Three consequences
+ * followed, and all three are the defect class this project exists to refuse: a
+ * placeholder could not be distinguished from an observation by anything but the
+ * banner above it, an absence had to be spelled as prose inside a value slot,
+ * and a field the event genuinely does not carry had no representation except a
+ * plausible-looking string.
+ *
+ * So the state is the discriminator, not the text:
+ *
+ * - `observed` — read from a named system. Carries its source tag.
+ * - `unavailable` — not carried, and the reason says *which* absence it is.
+ * - `placeholder` — invented for layout. Rejected outside placeholder mode by
+ *   the model refinement below, so this is a parse-time refusal rather than a
+ *   render-time convention.
+ */
+export const evidenceValueSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("observed"), value: z.string().min(1), source: claimSourceSchema }),
+  z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
+  z.object({ state: z.literal("placeholder"), value: z.string().min(1) }),
+]);
+export type EvidenceValue = z.infer<typeof evidenceValueSchema>;
+
+const count = z.number().int().nonnegative();
+
+/**
+ * The contract's `ResolutionAccounting`, projected under the contract's own
+ * names.
+ *
+ * The cockpit previously invented `total / kept / dropped / excluded /
+ * unresolved` and required `total === kept + dropped + excluded + unresolved`.
+ * That equation cannot hold on real data, because it sums two different
+ * denominators: `datasetsRequested` counts **datasets** asked of the catalog,
+ * while `nodesDropped` and `nodesExcluded` count **dbt nodes** in the manifest.
+ * A projection would have had to fabricate a `total` to satisfy it — inventing
+ * a number on the one surface whose job is showing that no number was invented.
+ *
+ * One vocabulary, and the only arithmetic asserted is the arithmetic the
+ * contract itself enforces in `validateEvent`.
+ */
+export const resolutionAccountingSchema = z.object({
+  datasetsRequested: count,
+  datasetsResolved: count,
+  datasetsUnresolved: count,
+  nodesDropped: count,
+  nodesExcluded: z.record(z.string(), count),
+});
+
+/**
+ * Named unresolved datasets, or a stated reason there are no names.
+ *
+ * "Every unresolved count has a matching named list" is the rule, and the
+ * contract carries the count without the names. Synthesising names to satisfy
+ * the rule would satisfy it with fiction; leaving the list empty beside a
+ * non-zero count reads as a contradiction. Stating the absence is the third
+ * option, and the only honest one.
+ */
+export const unresolvedDatasetsSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("observed"), names: z.array(z.string().min(1)) }),
+  z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
+]);
+
+/** An absence the event stated. Always named — that is what `unavailable` is for. */
+export const statedGapSchema = z.object({
+  field: z.string().min(1),
+  reason: z.string().min(1),
+  detail: z.string().min(1),
+});
+
+export const receiptSchema = z.object({
+  accounting: resolutionAccountingSchema,
+  unresolvedDatasets: unresolvedDatasetsSchema,
+  statedGaps: z.array(statedGapSchema),
+  provenance: z.object({
+    subjectRepository: evidenceValueSchema,
+    subjectRevision: evidenceValueSchema,
+    artifactRepository: evidenceValueSchema,
+    artifactRevision: evidenceValueSchema,
+    producerVersion: evidenceValueSchema,
+    algorithmVersion: evidenceValueSchema,
+    inputDigest: evidenceValueSchema,
+    artifactDigest: evidenceValueSchema,
+    dataHubReadParameters: evidenceValueSchema,
+    producerPath: evidenceValueSchema,
+    immutableSourceUrl: evidenceValueSchema,
+    limitations: evidenceValueSchema,
+  }),
+  writeback: z.object({
+    intent: evidenceValueSchema,
+    beforeState: evidenceValueSchema,
+    mutationResponse: mutationAcceptanceSchema,
+    afterStateRead: readSchema,
+    bothStatesRead: z.boolean(),
+    afterStateFreshness: z.enum(["fresh", "stale", "not-read"]),
+    intendedStateObservation: intendedStateObservationSchema,
+    terminalDisposition: terminalWritebackDispositionSchema,
+  }),
+  evaluation: z.object({
+    pairedSpread: evidenceValueSchema,
+    locBaseline: evidenceValueSchema,
+    limitations: evidenceValueSchema,
+    rawEvidence: evidenceValueSchema,
+  }),
+}).superRefine((receipt, context) => {
+  const a = receipt.accounting;
+  if (a.datasetsResolved + a.datasetsUnresolved !== a.datasetsRequested) {
+    context.addIssue({ code: "custom", path: ["accounting"], message: "Dataset accounting must reconcile: resolved + unresolved = requested." });
+  }
+  if (receipt.unresolvedDatasets.state === "observed" && receipt.unresolvedDatasets.names.length !== a.datasetsUnresolved) {
+    context.addIssue({ code: "custom", path: ["unresolvedDatasets"], message: "Every unresolved count needs a matching named list." });
+  }
+  if (receipt.writeback.bothStatesRead !== (receipt.writeback.afterStateRead === "ok")) {
+    context.addIssue({ code: "custom", path: ["writeback", "bothStatesRead"], message: "bothStatesRead must exactly reflect a readable after-state." });
+  }
+  if (receipt.writeback.afterStateFreshness === "stale" && receipt.writeback.terminalDisposition === "success") {
+    context.addIssue({ code: "custom", path: ["writeback", "terminalDisposition"], message: "A stale after-state is not success." });
+  }
+  if (receipt.writeback.terminalDisposition === "success" && receipt.writeback.intendedStateObservation !== "observed") {
+    context.addIssue({ code: "custom", path: ["writeback", "terminalDisposition"], message: "Success requires observed intended state." });
+  }
+  // `noop` is intent-relative: nothing was written because the catalog already
+  // held what was intended. That is only sayable when the before-state and the
+  // intent are the same observation.
+  if (receipt.writeback.terminalDisposition === "noop"
+      && JSON.stringify(receipt.writeback.beforeState) !== JSON.stringify(receipt.writeback.intent)) {
+    context.addIssue({ code: "custom", path: ["writeback", "terminalDisposition"], message: "Noop is valid only when before-state already matched intent." });
+  }
+});
+
+/**
+ * Every evidence value in a receipt, in one place, so the placeholder refinement
+ * cannot silently miss a field someone adds later.
+ */
+function evidenceValues(receipt: z.infer<typeof receiptSchema>): EvidenceValue[] {
+  return [
+    ...Object.values(receipt.provenance),
+    ...Object.values(receipt.evaluation),
+    receipt.writeback.intent,
+    receipt.writeback.beforeState,
+  ];
+}
 
 const cockpitViewModelBaseSchema = z.object({
   sourceMode: sourceModeSchema,
@@ -45,6 +189,7 @@ const cockpitViewModelBaseSchema = z.object({
   immutableViewSourceUrl: z.string().url().nullable(),
   impactEdges: z.array(impactEdgeSchema),
   planDeltas: z.array(planDeltaSchema),
+  receipt: receiptSchema,
 });
 
 export const cockpitViewModelSchema = cockpitViewModelBaseSchema.superRefine((model, context) => {
@@ -68,12 +213,41 @@ export const cockpitViewModelSchema = cockpitViewModelBaseSchema.superRefine((mo
       (model.mutationAcceptance !== "accepted" || model.intendedStateObservation !== "not-observed")) {
     context.addIssue({ code: "custom", path: ["terminalWritebackDisposition"], message: "Accepted-not-observed requires accepted but unobserved intent." });
   }
+  // The state strip and the receipt are two renderings of one set of stated
+  // gaps. If they can drift, a judge reading the strip and a judge reading the
+  // receipt are looking at different claims.
+  if (model.unresolvedItems.length !== model.receipt.statedGaps.length
+      || model.unresolvedItems.some((item, index) => {
+        const gap = model.receipt.statedGaps[index];
+        return !gap || item !== `${gap.field}: ${gap.reason}`;
+      })) {
+    context.addIssue({ code: "custom", path: ["unresolvedItems"], message: "Receipt stated gaps and cockpit unresolved items must match exactly." });
+  }
+  if (model.mutationAcceptance !== model.receipt.writeback.mutationResponse || model.intendedStateObservation !== model.receipt.writeback.intendedStateObservation || model.terminalWritebackDisposition !== model.receipt.writeback.terminalDisposition) {
+    context.addIssue({ code: "custom", path: ["receipt", "writeback"], message: "Writeback axes must exactly match the receipt." });
+  }
+  // Placeholder evidence is refused at the boundary, not merely labelled above
+  // it. `selectCockpitAdapter` already refuses to *select* the provisional
+  // adapter outside placeholder mode; this refuses a model that carries
+  // invented values regardless of which adapter produced it, so a fixture or
+  // live build cannot show a judge a value nobody observed.
+  if (model.sourceMode !== "placeholder") {
+    const invented = evidenceValues(model.receipt).filter((value) => value.state === "placeholder");
+    if (invented.length > 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["receipt"],
+        message: `A ${model.sourceMode} model carries ${invented.length} placeholder receipt value(s); only a placeholder build may render invented evidence.`,
+      });
+    }
+  }
 });
 
 export type CockpitViewModel = z.infer<typeof cockpitViewModelSchema>;
 export type CockpitRoute = z.infer<typeof cockpitRouteSchema>;
 export type SourceMode = z.infer<typeof sourceModeSchema>;
 export type CockpitStateName = z.infer<typeof cockpitStateNameSchema>;
+export type ClaimSource = z.infer<typeof claimSourceSchema>;
 
 export const sourceEventSchema = cockpitViewModelBaseSchema.omit({ sourceMode: true });
 export type SourceEvent = z.infer<typeof sourceEventSchema>;

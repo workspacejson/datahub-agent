@@ -32,9 +32,64 @@ describe("CockpitViewModel boundary", () => {
     })).toThrow();
   });
   it("normalizes every required harness state as a whole placeholder model", () => {
-    for (const state of ["loading", "unavailable", "partial", "contradictory", "error", "accepted-not-observed", "success"] as const) {
+    for (const state of ["loading", "unavailable", "partial", "indeterminate", "contradictory", "error", "accepted-not-observed", "success"] as const) {
       expect(provisionalStateAdapter(state).read().sourceMode).toBe("placeholder");
     }
+  });
+  it("rejects accounting, unresolved-list, stale-read, noop, and cross-field writeback violations", () => {
+    const model = provisionalStateAdapter("partial").read();
+    const withReceipt = (receipt: Record<string, unknown>, rest: Record<string, unknown> = {}) =>
+      ({ ...model, receipt: { ...model.receipt, ...receipt }, ...rest });
+
+    // R-3 — the dataset denominator must reconcile on its own terms. Node
+    // counts are a different denominator and are never folded in.
+    expect(() => cockpitViewModelSchema.parse(withReceipt({
+      accounting: { ...model.receipt.accounting, datasetsRequested: 2 },
+    }))).toThrow();
+    // Adding a dropped node cannot repair a dataset imbalance, because the two
+    // are not the same count — this is the mixed-vocabulary defect, asserted.
+    expect(() => cockpitViewModelSchema.parse(withReceipt({
+      accounting: { ...model.receipt.accounting, datasetsRequested: 2, nodesDropped: 1 },
+    }))).toThrow();
+
+    // R-5 — an unresolved count with no matching named list.
+    expect(() => cockpitViewModelSchema.parse(withReceipt({
+      unresolvedDatasets: { state: "observed", names: [] },
+    }))).toThrow();
+
+    // A stated gap that no longer matches what the strip shows.
+    expect(() => cockpitViewModelSchema.parse(withReceipt({ statedGaps: [] }))).toThrow();
+
+    // R-6 — a stale after-state is not success, even with every other axis set.
+    expect(() => cockpitViewModelSchema.parse(withReceipt(
+      { writeback: { ...model.receipt.writeback, mutationResponse: "accepted", terminalDisposition: "success", intendedStateObservation: "observed", afterStateRead: "ok", bothStatesRead: true, afterStateFreshness: "stale" } },
+      { mutationAcceptance: "accepted", intendedStateObservation: "observed", terminalWritebackDisposition: "success" },
+    ))).toThrow();
+
+    // `noop` is intent-relative: it is only sayable when the before-state and
+    // the intent are the same observation.
+    expect(() => cockpitViewModelSchema.parse(withReceipt(
+      { writeback: { ...model.receipt.writeback, terminalDisposition: "noop", intent: { state: "observed", value: "tier VERIFIED", source: "Joined" }, beforeState: { state: "observed", value: "tier OBSERVED", source: "DataHub" } } },
+      { terminalWritebackDisposition: "noop" },
+    ))).toThrow();
+
+    // The writeback axes on the strip and in the receipt cannot disagree.
+    expect(() => cockpitViewModelSchema.parse({ ...model, mutationAcceptance: "accepted" })).toThrow();
+  });
+
+  it("refuses placeholder evidence in any build that is not a placeholder build", () => {
+    // R-4. The placeholder banner is a render convention; this is the boundary.
+    // A fixture or live model carrying an invented value is rejected by name,
+    // regardless of which adapter produced it.
+    const placeholder = provisionalStateAdapter("partial").read();
+    expect(placeholder.receipt.provenance.subjectRepository.state).toBe("placeholder");
+
+    for (const sourceMode of ["fixture", "live"] as const) {
+      expect(() => cockpitViewModelSchema.parse({ ...placeholder, sourceMode }))
+        .toThrow(/placeholder receipt value/);
+    }
+    // And the same model is accepted in the mode that is allowed to hold it.
+    expect(cockpitViewModelSchema.parse(placeholder).sourceMode).toBe("placeholder");
   });
   it("rejects impossible read, completeness, and resolution combinations", () => {
     const model = provisionalStateAdapter("partial").read();

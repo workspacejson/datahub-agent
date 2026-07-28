@@ -521,8 +521,14 @@ export const changeImpactEventSchema = z.strictObject({
  * consumer of it. Naming it explicitly is the point: `.strict()` still rejects
  * every key that is not this one, so the extension is a decision rather than a
  * hole.
+ *
+ * Exported, because it is the shape events are actually *emitted* in and
+ * therefore the shape every consumer reads. `changeImpactEventSchema` is the
+ * pure contract and rejects `writeback` outright — a consumer that parsed the
+ * golden fixtures against it would refuse every enriched event this repository
+ * produces, which is what the cockpit did before HAC-219 measured it.
  */
-const validatableEventSchema = changeImpactEventSchema.extend({
+export const emittedEventSchema = changeImpactEventSchema.extend({
   writeback: z.unknown().optional(),
 });
 
@@ -685,7 +691,7 @@ export function validateEvent(event: unknown): string[] {
     ];
   }
 
-  const parsed = validatableEventSchema.safeParse(event);
+  const parsed = emittedEventSchema.safeParse(event);
   if (!parsed.success) {
     // One line per issue, path-prefixed, so a receipt names the field rather
     // than showing a reviewer a nested error object.
