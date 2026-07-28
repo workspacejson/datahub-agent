@@ -130,9 +130,33 @@ visible — DataHub serves stale reads for some seconds afterwards.
 The full contract, including what each invariant refuses, is
 [`src/integration/change-impact-event.ts`](src/integration/change-impact-event.ts).
 
+## How this reads DataHub
+
+Through the official DataHub MCP server (`acryldata/mcp-server-datahub`), spawned
+over stdio and called with its own `get_entities`, `get_lineage` and
+`list_schema_fields` tools.
+
+That sentence was here before the transport was. The read path issued GraphQL
+directly to GMS while restricting itself to the fields the MCP server projects,
+and called the result MCP-faithful. The restriction was real and measured field
+by field — and it was a different claim. "We ask for the fields MCP would"
+describes a request body; "we read through the official MCP server" describes a
+transport, and only one of them was true.
+
+The difference is structural rather than pedantic. A self-imposed projection is
+enforced by whoever last edited the query string; reading through the server
+means a dropped field cannot be asked for, because the process on the other end
+never sends it. That had already failed here once, when this repository read
+`externalUrl` while claiming to sit behind a boundary that drops it.
+
+`--transport gms` keeps the direct read and is honest about being exactly that.
+It stays because the comparison is the evidence — see
+[`docs/quickstart.md`](docs/quickstart.md) for what the two transports agree on
+and the two places they differ.
+
 ## Local quickstart
 
-See [`docs/quickstart.md`](docs/quickstart.md) for running a local DataHub instance and pointing this application at it.
+See [`docs/quickstart.md`](docs/quickstart.md) for running a local DataHub instance, installing the MCP server, and enriching and resetting a dataset.
 
 ## Status
 

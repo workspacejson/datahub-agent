@@ -116,6 +116,41 @@ silently leave it stating something untrue. It refuses to report a result at all
 when pointed at a dataset that carries no `externalUrl` to drop, so a mistyped
 URN cannot be read as a fix.
 
+## Confirmed through the server, not only against a transcription
+
+The probe measures the gap by mirroring the MCP server's `entity_details.gql`
+`entityPreview` fragment in a second GraphQL query and diffing the two. That is a
+transcription, and it is only as good as whoever kept it in step with upstream —
+the probe's own header says as much.
+
+Since HAC-148 the read path speaks to the official MCP server over stdio, so the
+same finding is now available first-hand. Calling `get_entities` on the pinned
+jaffle_shop dataset and searching the decoded payload:
+
+```text
+raw get_entities (externalUrl present?)  -> externalUrl ABSENT
+```
+
+against a catalog that demonstrably holds it:
+
+```text
+externalUrl: https://github.com/dbt-labs/jaffle_shop_duckdb
+             /blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql
+```
+
+Both statements come from one instance in one run. The transcription and the
+server agree, which is the outcome that makes the transcription trustworthy
+rather than the outcome that makes it unnecessary — the probe stays, because it
+runs without an MCP client and is the cheaper of the two checks.
+
+Server observed: `datahub` MCP server `3.4.5`, advertising `search`,
+`get_entities`, `get_lineage`, `get_lineage_paths_between`, `list_schema_fields`
+and `get_dataset_queries`. Mutation tools are **not** advertised — the OSS server
+registers them only behind `TOOLS_IS_MUTATION_ENABLED`, and none of them cover
+`upsertLink` in any case. That is why the enrichment writeback uses DataHub's
+GraphQL mutation API directly and says so, rather than claiming an MCP write path
+that does not exist.
+
 ## Reproduction environment
 
 DataHub CLI `1.6.0.15` against GMS `v1.5.0.6`. The client warns about that skew;
