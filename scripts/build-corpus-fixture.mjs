@@ -126,12 +126,17 @@ if (Object.keys(fileIndex).length === 0) {
 // Do not reshape the producer artifact. The standard has an exact root schema;
 // adding `_provenance` or dropping required sections turns a valid producer
 // result into an invalid fixture. Provenance belongs beside the raw artifact.
+//
+// The command is recorded portably. It was previously the absolute path of the
+// resolved CLI entry on whatever machine ran the build, which is not a command
+// anyone else can run — and a derivation command a reader cannot execute is not
+// preserved provenance, it is a note that looks like one.
 const workspaceProvenance = {
   corpus: `https://github.com/${CORPUS}`,
   commit: PINNED_SHA,
   producer: `@workspacejson/cli@${producerVersion}`,
   generated_by: "scripts/build-corpus-fixture.mjs",
-  command: `node ${cliEntry} generate ${resolve(checkout)}`,
+  command: "node scripts/build-corpus-fixture.mjs <checkout-at-the-pinned-commit>",
   file_count: Object.keys(fileIndex).length,
   note: "workspace.json is the unmodified raw producer output. Per-file values are producer-owned; this sidecar carries fixture provenance without changing the standard artifact.",
 };
