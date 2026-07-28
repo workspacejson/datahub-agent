@@ -13,10 +13,10 @@ describe("provisional boundary", () => {
       .filter((file) => readFileSync(file, "utf8").includes("provisional-source"));
     expect(importers.map((file) => file.replace(sourceRoot, ""))).toEqual(["/data/cockpit-adapter.ts"]);
   });
-  it("rejects invented fixture tokens outside their isolated module", () => {
+  it("rejects arbitrary placeholder tokens outside the single provisional module", () => {
     const offenders = files(sourceRoot).filter((file) => (file.endsWith(".ts") || file.endsWith(".tsx")) && !file.includes(".test."))
       .filter((file) => !file.endsWith("data/provisional-source.ts"))
-      .filter((file) => readFileSync(file, "utf8").includes("<catalogued asset>"));
+      .filter((file) => /["'`]<(?:[^>\n])+>["'`]/.test(readFileSync(file, "utf8")));
     expect(offenders).toEqual([]);
   });
 });

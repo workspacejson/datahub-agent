@@ -1,14 +1,17 @@
-import { provisionalSource } from "./provisional-source";
+import { provisionalSource, provisionalStates } from "./provisional-source";
 import {
   cockpitViewModelSchema,
   type CockpitViewModel,
   type SourceEvent,
   type SourceMode,
+  type CockpitStateName,
 } from "../model/cockpit-view-model";
 
 export interface CockpitSourceAdapter {
   read(): CockpitViewModel;
 }
+
+export type { CockpitStateName } from "../model/cockpit-view-model";
 
 function normalize(event: SourceEvent, sourceMode: SourceMode): CockpitViewModel {
   return cockpitViewModelSchema.parse({ ...event, sourceMode });
@@ -27,6 +30,20 @@ export const provisionalAdapter: CockpitSourceAdapter = {
     terminalWritebackDisposition: "not-applicable",
   }, "placeholder"),
 };
+
+/** The shell-only harness deliberately exposes normalized, whole-model states. */
+export function provisionalStateAdapter(state: CockpitStateName): CockpitSourceAdapter {
+  const stateEvent = provisionalStates[state] as unknown as Partial<SourceEvent>;
+  return {
+    read: () => normalize({
+      ...stateEvent,
+      unresolvedItems: [...(stateEvent.unresolvedItems ?? [])],
+      mutationAcceptance: stateEvent.mutationAcceptance ?? "not-attempted",
+      intendedStateObservation: stateEvent.intendedStateObservation ?? "not-attempted",
+      terminalWritebackDisposition: stateEvent.terminalWritebackDisposition ?? "not-applicable",
+    } as SourceEvent, "placeholder"),
+  };
+}
 
 /** Live integration will replace its event transport, not view fields. */
 export function createAdapter(event: unknown, sourceMode: Exclude<SourceMode, "placeholder">): CockpitSourceAdapter {

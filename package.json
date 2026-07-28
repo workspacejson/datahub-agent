@@ -21,8 +21,8 @@
     "apps/*"
   ],
   "scripts": {
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "test": "vitest run && npm run test:cockpit",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace=@workspacejson/cockpit",
     "dev": "npm run dev --workspace=@workspacejson/cockpit",
     "build": "npm run build --workspace=@workspacejson/cockpit",
     "test:cockpit": "npm run test --workspace=@workspacejson/cockpit",

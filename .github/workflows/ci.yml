@@ -44,3 +44,9 @@ jobs:
 
       - name: Tests
         run: npm test
+
+      - name: Cockpit production build
+        run: npm run build
+
+      - name: Cockpit browser and accessibility checks
+        run: npm run e2e
