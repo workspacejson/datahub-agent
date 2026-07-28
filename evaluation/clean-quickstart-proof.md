@@ -67,7 +67,7 @@ Pinned in the script and verified at run time:
 
 ## The instance was clean
 
-The reset command's dry run, before anything was written:
+The reset command's dry run, after ingestion and before anything was written:
 
 ```text
 owns         link "Producing source (workspace.json)" + property workspacejson_evidence_tier
@@ -79,6 +79,19 @@ disposition  dry-run
 That is the check, not an assertion about a fresh container. It reports on the
 two things this tool can write, which is the only sense in which "clean" is
 this tool's to claim.
+
+**The ordering is load-bearing, and it was wrong.** This step originally ran
+*before* ingestion, when the subject did not exist. "Nothing owned by this tool
+is present" was then trivially true and unverifiable — there was no entity to
+hold anything — and the step read as though it had established something. It
+only looked like a check because the reset command answered a never-ingested URN
+with a clean bill of health; the moment that was fixed, this step failed on the
+first run, which is how the vacuous assertion surfaced at all.
+
+After ingestion the claim is real and checkable: the subject exists, it is
+readable, and it carries none of this tool's metadata — which is exactly the
+precondition the writeback needs. The gate also requires `read === "ok"` before
+believing the two nulls, because an unreadable state has null fields too.
 
 ## The index converges, and the read waits for it
 
