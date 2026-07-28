@@ -23,6 +23,7 @@ export const provisionalAdapter: CockpitSourceAdapter = {
   read: () => normalize({
     ...provisionalSource,
     unresolvedItems: [...provisionalSource.unresolvedItems],
+    receipt: { ...provisionalSource.receipt, unresolvedItems: [...provisionalSource.receipt.unresolvedItems], accounting: { ...provisionalSource.receipt.accounting }, provenance: { ...provisionalSource.receipt.provenance }, writeback: { ...provisionalSource.receipt.writeback }, evaluation: { ...provisionalSource.receipt.evaluation } },
     impactEdges: provisionalSource.impactEdges.map((edge) => ({ ...edge })),
     planDeltas: provisionalSource.planDeltas.map((delta) => ({ ...delta })),
     read: "not-queried",
@@ -41,6 +42,7 @@ export function provisionalStateAdapter(state: CockpitStateName): CockpitSourceA
     read: () => normalize({
       ...stateEvent,
       unresolvedItems: [...(stateEvent.unresolvedItems ?? [])],
+      receipt: stateEvent.receipt ? { ...(stateEvent.receipt as SourceEvent["receipt"]), unresolvedItems: [...(stateEvent.receipt as SourceEvent["receipt"]).unresolvedItems] } : undefined,
       mutationAcceptance: stateEvent.mutationAcceptance ?? "not-attempted",
       intendedStateObservation: stateEvent.intendedStateObservation ?? "not-attempted",
       terminalWritebackDisposition: stateEvent.terminalWritebackDisposition ?? "not-applicable",

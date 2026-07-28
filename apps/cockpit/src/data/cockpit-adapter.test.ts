@@ -32,9 +32,17 @@ describe("CockpitViewModel boundary", () => {
     })).toThrow();
   });
   it("normalizes every required harness state as a whole placeholder model", () => {
-    for (const state of ["loading", "unavailable", "partial", "contradictory", "error", "accepted-not-observed", "success"] as const) {
+    for (const state of ["loading", "unavailable", "partial", "indeterminate", "contradictory", "error", "accepted-not-observed", "success"] as const) {
       expect(provisionalStateAdapter(state).read().sourceMode).toBe("placeholder");
     }
+  });
+  it("rejects accounting, unresolved-list, stale-read, noop, and cross-field writeback violations", () => {
+    const model = provisionalStateAdapter("partial").read();
+    expect(() => cockpitViewModelSchema.parse({ ...model, receipt: { ...model.receipt, accounting: { ...model.receipt.accounting, total: 2 } } })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, receipt: { ...model.receipt, unresolvedItems: [] } })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, receipt: { ...model.receipt, writeback: { ...model.receipt.writeback, terminalDisposition: "success", intendedStateObservation: "observed", afterStateRead: "ok", bothStatesRead: true, afterStateFreshness: "stale" } }, intendedStateObservation: "observed", terminalWritebackDisposition: "success" })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, receipt: { ...model.receipt, writeback: { ...model.receipt.writeback, terminalDisposition: "noop" } }, terminalWritebackDisposition: "noop" })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, mutationAcceptance: "accepted" })).toThrow();
   });
   it("rejects impossible read, completeness, and resolution combinations", () => {
     const model = provisionalStateAdapter("partial").read();
