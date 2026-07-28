@@ -246,7 +246,20 @@ describe("a write that never becomes visible", () => {
 
     expect(receipt.observation?.timeoutMs).toBe(TIMEOUT_MS);
     expect(receipt.observation?.polls).toBeGreaterThan(1);
-    expect(receipt.observation?.elapsedMs).toBeLessThanOrEqual(TIMEOUT_MS);
+    // One poll interval of slack, deliberately.
+    //
+    // `elapsedMs` is sampled after the final read returns, and the final read
+    // is itself budget-bounded — so under CPU contention the abort handling and
+    // the measurement can land a few milliseconds past the deadline. Asserting
+    // `<= TIMEOUT_MS` exactly was asserting zero scheduling overhead, and it
+    // failed intermittently under full-suite load while passing in isolation.
+    //
+    // The slack does not weaken what this test is for. The defect it guards
+    // (HAC-223) produced elapsedMs ≈ 30003 against a 1800ms bound, because each
+    // request carried its own 30s ceiling instead of the remaining observation
+    // budget. A 150ms tolerance on a 900ms bound still discriminates that by
+    // more than an order of magnitude.
+    expect(receipt.observation?.elapsedMs).toBeLessThanOrEqual(TIMEOUT_MS + INTERVAL_MS);
   }, 20_000);
 });
 
