@@ -54,10 +54,81 @@ evaluation/                   proof corpus, node-type coverage, measurement
 
 ```bash
 npm install
-npm test                        # 27 tests, incl. the URN -> evidence integration test
+npm test                        # contract, writeback, join, and cockpit suites
 npm run typecheck
+npm run check:clean-room        # every dependency resolves to a published version
 npm run parity:datahub-adapter  # 35/35 against the frozen migration baseline
 ```
+
+This used to claim a test count. It said "27" long after the real number had
+passed 400, which is the failure this project is built to refuse — a number
+asserted once and never re-checked, on the page a reader trusts most. The
+command reports its own count, and that count cannot go stale.
+
+The parity figure stays because it is a fixed baseline: 35 checks against a
+frozen artifact, where a change in the number *is* the finding.
+
+## Reading the evidence
+
+Every claim this tool emits carries the standing of the evidence behind it, on
+axes that are deliberately kept apart. The words are narrow on purpose.
+
+**Did the catalog answer?** — `read`
+
+| value | meaning |
+| -- | -- |
+| `ok` | the catalog answered; the values beside this are its answer |
+| `failed` | it was asked and did not answer |
+| `not-queried` | it was not asked |
+
+`failed` and `not-queried` are not claims about the data. Collapsing them into
+"no data" is the error the whole contract exists to prevent.
+
+**Was the answer whole?** — `completeness`
+
+| value | meaning |
+| -- | -- |
+| `complete-against-pinned-manifest` | compared against a named, pinned expected set and found equal to it |
+| `not-established` | nothing determined whether the answer is whole |
+
+A read can succeed and still be partial. DataHub's lineage is search-index
+backed, and that index converges after ingest — so a query can return four edges
+of twelve, succeed, and look identical to a complete answer.
+
+**`not-established` is the honest and usually correct state, not a shortfall.**
+It does not mean the answer is wrong or that someone forgot to check. It means
+no attestation exists, which is true of every lineage read this repository
+currently emits. The stronger value requires a pinned manifest of expected URNs
+and matching digests; deriving those is tracked under
+[HAC-231](https://linear.app/marcelle-labs/issue/HAC-231), and until it lands
+nothing here claims it.
+
+**Why is something missing?** — `unavailable[].reason`
+
+`absent` is the strongest of these: asked, and reported nothing. It is only
+sayable about an answer established complete against a pinned manifest, because
+a converging index returning zero satisfies "asked and got nothing" while being
+no evidence at all. When completeness is unknown, the honest word is
+`indeterminate`.
+
+**What backs a claim?** — `evidence.records[].checkExecuted` and the derived tier
+
+`checkExecuted` records that this harness *ran* a check. It does not say the
+claim is true — that is what the adjacent `observation` field records and what a
+reviewer judges. The tier is a mechanical function of the records and is never
+rendered alone: `VERIFIED` is a fact about records that reads as a warrant about
+claims, so every surface shows it with the counts that produced it.
+
+**Did the writeback land?** — the receipt
+
+`bothStatesRead` says the before and after states were both read. It says
+nothing about whether they show what was intended; `succeeded` says that, and
+requires the mutations to have been accepted *and* the intended state to have
+been observed. A mutation returning cleanly is not evidence that the write is
+visible — DataHub serves stale reads for some seconds afterwards.
+
+The full contract, including what each invariant refuses, is
+[`src/integration/change-impact-event.ts`](src/integration/change-impact-event.ts).
 
 ## Local quickstart
 
