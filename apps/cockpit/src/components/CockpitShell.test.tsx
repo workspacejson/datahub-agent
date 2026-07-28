@@ -12,13 +12,20 @@ it("automatically warns for every placeholder frame and switches routes", async 
   let route = placeholder.route;
   render(<CockpitShell model={placeholder} route={route} onRouteChange={(next) => { route = next; }} />);
   expect(screen.getByRole("status").textContent).toContain("DESIGN PLACEHOLDER · NOT OBSERVED DATA");
-  await user.click(screen.getByRole("button", { name: "Change plan" }));
+  await user.click(screen.getByRole("button", { name: "Review changed plan" }));
   expect(route).toBe("change-plan");
+});
+
+it("offers an immutable View Source action and never tags unavailable as a source", () => {
+  const model = provisionalStateAdapter("partial").read();
+  render(<CockpitShell model={model} route="impact" onRouteChange={() => undefined} />);
+  expect(screen.getByRole("link", { name: "View Source" }).getAttribute("href")).toBe(model.immutableViewSourceUrl);
+  expect(screen.queryByText("unavailable", { selector: ".source-tag" })).toBeNull();
 });
 
 it("does not present a placeholder warning for non-placeholder models", () => {
   const placeholder = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={{ ...placeholder, sourceMode: "live" }} route="receipts" onRouteChange={() => undefined} />);
   expect(screen.queryByRole("status")).toBeNull();
-  expect(screen.queryByText("Review changed plan")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Review changed plan" })).toBeNull();
 });

@@ -1,4 +1,6 @@
 import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model";
+import { ChangePlanView } from "./ChangePlanView";
+import { ImpactView } from "./ImpactView";
 
 const routes: Array<{ route: CockpitRoute; label: string }> = [
   { route: "impact", label: "Impact" },
@@ -23,9 +25,8 @@ export function CockpitShell({ model, route, onRouteChange }: {
     </section>
     <section className="route-slot" aria-labelledby="route-title">
       <p className="eyebrow">{routes.find((item) => item.route === route)?.label}</p>
-      <h1 id="route-title">{model.title}</h1><p>{model.summary}</p>
-      <div className="deferred-surface">Structure owned by the corresponding delivery lane.</div>
-      {route === "impact" && <button className="cta" type="button">Review changed plan</button>}
+      <h1 id="route-title">{route === "impact" ? model.title : "Review changed plan"}</h1><p>{route === "impact" ? model.summary : "Compare evidence-bounded plan changes without treating unavailable evidence as a result."}</p>
+      {route === "impact" ? <ImpactView model={model} onReviewPlan={() => onRouteChange("change-plan")} /> : route === "change-plan" ? <ChangePlanView model={model} /> : <div className="deferred-surface">Structure owned by the corresponding delivery lane.</div>}
     </section>
   </main>;
 }

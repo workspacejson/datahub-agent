@@ -24,4 +24,17 @@ describe("CockpitViewModel boundary", () => {
       expect(provisionalStateAdapter(state).read().sourceMode).toBe("placeholder");
     }
   });
+  it("rejects impossible read, completeness, and resolution combinations", () => {
+    const model = provisionalStateAdapter("partial").read();
+    expect(() => cockpitViewModelSchema.parse({ ...model, read: "failed", completeness: "complete-against-pinned-manifest" })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, read: "failed", resolutionDisposition: "resolved" })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...model, source: "unavailable", resolutionDisposition: "resolved" })).toThrow();
+  });
+  it("models matched, mismatched, ambiguous, and unavailable resolution without inference", () => {
+    const model = provisionalStateAdapter("partial").read();
+    expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "resolved" }).resolutionDisposition).toBe("resolved");
+    expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "mismatch" }).resolutionDisposition).toBe("mismatch");
+    expect(cockpitViewModelSchema.parse({ ...model, resolutionDisposition: "partial" }).resolutionDisposition).toBe("partial");
+    expect(cockpitViewModelSchema.parse({ ...model, source: "unavailable", read: "not-queried", resolutionDisposition: "unavailable" }).resolutionDisposition).toBe("unavailable");
+  });
 });

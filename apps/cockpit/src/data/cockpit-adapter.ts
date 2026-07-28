@@ -22,6 +22,8 @@ export const provisionalAdapter: CockpitSourceAdapter = {
   read: () => normalize({
     ...provisionalSource,
     unresolvedItems: [...provisionalSource.unresolvedItems],
+    impactEdges: provisionalSource.impactEdges.map((edge) => ({ ...edge })),
+    planDeltas: provisionalSource.planDeltas.map((delta) => ({ ...delta })),
     read: "not-queried",
     completeness: "not-established",
     resolutionDisposition: "partial",
