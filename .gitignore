@@ -11,3 +11,7 @@ __pycache__/
 
 # parity harness cache — the pre-migration side, fetched on demand
 .parity-cache/
+
+# Working directory for scripts/clean-quickstart-proof.sh (corpus checkout,
+# DataHub venv, emitted proof artifacts). Regenerable; never committed.
+.proof/
