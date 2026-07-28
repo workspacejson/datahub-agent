@@ -11,10 +11,10 @@
  * Usage:
  *   node scripts/emit-change-impact-event.mjs [urn] [--gms URL] [--out FILE]
  *     --subject-repository URL --subject-revision SHA
- *     --workspace-artifact FILE --workspace-repository URL --workspace-revision SHA
+ *     --workspace-artifact FILE
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,11 +31,13 @@ const OUT = flag("out", null);
 const SUBJECT_REPOSITORY = flag("subject-repository", null);
 const SUBJECT_REVISION = flag("subject-revision", null);
 const WORKSPACE_ARTIFACT = flag("workspace-artifact", null);
-const WORKSPACE_REPOSITORY = flag("workspace-repository", null);
-const WORKSPACE_REVISION = flag("workspace-revision", null);
-const URN =
-  argv.find((a) => a.startsWith("urn:")) ??
-  "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)";
+const READINESS_MANIFEST = flag("readiness-manifest", null);
+const READINESS_DEADLINE_MS = Number(flag("readiness-deadline-ms", "120000"));
+const URN = argv.find((a) => a.startsWith("urn:")) ?? null;
+if (!URN) {
+  console.error("usage: supply the DataHub dataset URN as the first positional argument");
+  process.exit(2);
+}
 
 async function gql(query) {
   const response = await fetch(`${GMS}/api/graphql`, {
@@ -171,6 +173,44 @@ const downstreams = down.edges;
 
 const lineageObservation = { upstreams: up.observation, downstreams: down.observation };
 
+// A readiness manifest is optional evidence supplied by the corpus owner, not
+// something this generic emitter invents. When present, it can upgrade exactly
+// one direction only after two bounded, set-equal live reads.
+if (READINESS_MANIFEST) {
+  try {
+    const manifest = JSON.parse(readFileSync(resolve(READINESS_MANIFEST), "utf8"));
+    const direction = manifest?.queryParameters?.direction;
+    if (direction !== "UPSTREAM" && direction !== "DOWNSTREAM") throw new Error("queryParameters.direction must be UPSTREAM or DOWNSTREAM");
+    const { observeReadiness } = await import(join(repoRoot, "src/integration/readiness.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
+      api.register(); return import(join(repoRoot, "src/integration/readiness.ts"));
+    }));
+    const readiness = await observeReadiness(manifest, READINESS_DEADLINE_MS, async (signal) => {
+      const response = await fetch(`${GMS}/api/graphql`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, signal,
+        body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(URN)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count} }) { searchResults { entity { urn } } } }` }),
+      });
+      const body = await response.json();
+      if (!response.ok || body.errors) throw new Error("readiness GraphQL request failed");
+      return (body.data?.searchAcrossLineage?.searchResults ?? []).map((result) => result.entity.urn);
+    });
+    if (readiness.disposition === "ready") {
+      const key = direction === "UPSTREAM" ? "upstreams" : "downstreams";
+      const observed = (key === "upstreams" ? upstreams : downstreams).map((edge) => edge.urn).sort();
+      const expected = [...new Set(manifest.expectedUrns)].sort();
+      if (JSON.stringify(observed) === JSON.stringify(expected)) {
+        lineageObservation[key] = { read: "ok", completeness: "verified", observedCount: observed.length, verification: {
+          manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
+          observedSetDigest: readiness.observedSetDigest, queryParameters: manifest.queryParameters,
+        } };
+      } else {
+        note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "unverified", observedCount: observed.length });
+      }
+    }
+  } catch (error) {
+    note("datahub.readiness", "datahub", "failed", `Readiness manifest was not usable: ${error.message}`);
+  }
+}
+
 for (const [field, side] of [
   ["datahub.upstreams", up],
   ["datahub.downstreams", down],
@@ -214,19 +254,29 @@ let workspaceArtifact = null;
 let partners = [];
 const records = [];
 let ws = null;
+let artifactIdentity = null;
 if (WORKSPACE_ARTIFACT) {
-  try { ws = JSON.parse(readFileSync(resolve(WORKSPACE_ARTIFACT), "utf8")); }
-  catch { note("partners", "workspacejson", "failed", "The supplied workspace.json artifact could not be parsed."); }
+  try {
+    const artifactPath = resolve(WORKSPACE_ARTIFACT);
+    ws = JSON.parse(readFileSync(artifactPath, "utf8"));
+    const sidecarPath = join(dirname(artifactPath), "workspace-provenance.json");
+    if (!existsSync(sidecarPath)) {
+      note("partners", "workspacejson", "failed", "The supplied workspace.json has no provenance sidecar; artifact identity cannot be verified.");
+    } else {
+      const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8"));
+      artifactIdentity = { repository: sidecar.corpus ?? null, revision: sidecar.commit ?? null };
+    }
+  } catch { note("partners", "workspacejson", "failed", "The supplied workspace.json artifact or provenance sidecar could not be parsed."); }
 }
 const integrity = assessWorkspaceEvidence(
   { repository: SUBJECT_REPOSITORY, revision: SUBJECT_REVISION },
-  ws ? { repository: WORKSPACE_REPOSITORY, revision: WORKSPACE_REVISION } : null,
+  ws && artifactIdentity ? artifactIdentity : null,
   ws?.generated?.fileIndex ?? null,
   dbtFilePath,
 );
 workspaceArtifact = {
   producedBy: ws?.generated?.by?.name ?? null, fileIndexKeys: integrity.fileIndexKeys,
-  repository: WORKSPACE_REPOSITORY, revision: WORKSPACE_REVISION, integrity: integrity.integrity,
+  repository: artifactIdentity?.repository ?? null, revision: artifactIdentity?.revision ?? null, integrity: integrity.integrity,
 };
 if (integrity.integrity === "exact-match") {
   repositoryRelativePath = integrity.repositoryRelativePath;
@@ -235,7 +285,8 @@ if (integrity.integrity === "exact-match") {
   records.push({ claim: `producing file ${repositoryRelativePath} is tracked in the corpus-matched workspace.json artifact`, observation: integrity.detail, source: "workspacejson", verified: true });
   note("partners", "workspacejson", "indeterminate", "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.", { completeness: "unverified", observedCount: 0 });
 } else if (!unavailable.some((u) => u.field === "partners")) {
-  note("partners", "workspacejson", integrity.integrity === "artifact-unavailable" ? "not-queried" : "indeterminate", integrity.detail, integrity.integrity === "artifact-unavailable" ? {} : { completeness: "unverified", observedCount: 0 });
+  // A refusal never observed an empty collection. Keep its count absent.
+  note("partners", "workspacejson", integrity.integrity === "artifact-unavailable" ? "not-queried" : "indeterminate", integrity.detail);
 }
 
 // ---------------------------------------------------------------------------

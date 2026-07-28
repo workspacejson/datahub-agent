@@ -20,4 +20,16 @@ describe("readiness observation", () => {
     const result = await observeReadiness(manifest, 100, async () => { throw new Error("non-JSON GraphQL response"); });
     expect(result).toMatchObject({ disposition: "read-failed", observedSetDigest: null, pollCount: 1 });
   });
+  it("canonicalizes query-parameter key order in the manifest digest", async () => {
+    const a = await observeReadiness({ expectedUrns: ["urn:a"], queryParameters: { count: 50, surface: "lineage" } }, 100, async () => ["urn:a"]);
+    const b = await observeReadiness({ expectedUrns: ["urn:a"], queryParameters: { surface: "lineage", count: 50 } }, 100, async () => ["urn:a"]);
+    expect(a.manifestDigest).toBe(b.manifestDigest);
+  });
+  it("waits between unsuccessful polls instead of hot-looping", async () => {
+    let sleeps = 0;
+    let current = 0;
+    const result = await observeReadiness(manifest, 30, async () => ["urn:a"], () => current, 10, async (ms) => { sleeps += 1; current += ms; });
+    expect(result.disposition).toBe("not-ready");
+    expect(sleeps).toBeGreaterThan(0);
+  });
 });

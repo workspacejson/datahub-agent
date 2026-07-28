@@ -6,7 +6,16 @@ export interface ReadinessResult {
   pollCount: number; elapsedMs: number; disposition: "ready" | "not-ready" | "deadline-exceeded" | "read-failed";
 }
 
-const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+/** Equivalent query parameter maps must produce the same evidence digest. */
+const canonicalJson = (value: unknown): string => {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+};
+const digest = (value: unknown) => createHash("sha256").update(canonicalJson(value)).digest("hex");
 const canonicalSet = (values: readonly string[]) => [...new Set(values)].sort();
 
 /** Every poll is bounded by the overall observation deadline, including a hung reader. */
@@ -15,6 +24,8 @@ export async function observeReadiness(
   deadlineMs: number,
   read: (signal: AbortSignal) => Promise<string[]>,
   now: () => number = Date.now,
+  pollIntervalMs = 25,
+  sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 ): Promise<ReadinessResult> {
   const started = now(); const expected = canonicalSet(manifest.expectedUrns);
   const base = { expectedSetDigest: digest(expected), manifestDigest: digest({ expectedUrns: expected, queryParameters: manifest.queryParameters }) };
@@ -35,6 +46,8 @@ export async function observeReadiness(
         last = second;
       } catch { clearTimeout(timer2); return { ...base, observedSetDigest: last ? digest(last) : null, pollCount: polls + 1, elapsedMs: now() - started, disposition: controller2.signal.aborted ? "deadline-exceeded" : "read-failed" }; }
     }
+    const wait = Math.min(pollIntervalMs, Math.max(0, deadlineMs - (now() - started)));
+    if (wait > 0) await sleep(wait);
   }
   return { ...base, observedSetDigest: last ? digest(last) : null, pollCount: polls, elapsedMs: now() - started, disposition: "not-ready" };
 }
