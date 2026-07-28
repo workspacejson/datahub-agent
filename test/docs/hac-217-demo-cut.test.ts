@@ -17,10 +17,12 @@ describe("HAC-217 ratification ledger", () => {
       "Receipts / accounting, provenance, writeback, limitations",
       "No declared lineage returned",
       "Not queried / unavailable",
+      "Contradictory DataHub and workspace.json evidence",
       "Source or revision cannot be safely anchored / repository revision mismatch",
       "Partial resolution with every unresolved item named",
       "Mutation accepted; intended state not observed",
       "Failed / blocking evidence state",
+      "Connection lost mid-run",
       "Source found without workspace.json",
       "Lineage found without an actionable repository source",
     ]) {
@@ -29,6 +31,26 @@ describe("HAC-217 ratification ledger", () => {
 
     expect(ledger).toContain(
       "| Source or revision cannot be safely anchored / repository revision mismatch | No | Yes | **Explicit defer decision:**",
+    );
+
+    for (const explicitlyDeferredState of [
+      "Contradictory DataHub and workspace.json evidence",
+      "Connection lost mid-run",
+    ]) {
+      expect(ledger).toContain(`| ${explicitlyDeferredState} | No | Yes |`);
+    }
+
+    expect(ledger).toContain(
+      "HAC-225 establishes the evidence disposition; HAC-224 renders the blocked state",
+    );
+    expect(ledger).toContain(
+      "records the conflicting fields, withholds the joined claim, and provides a reconciliation path",
+    );
+    expect(ledger).toContain(
+      "HAC-224 renders run state; HAC-225 owns evidence-scope recovery",
+    );
+    expect(ledger).toContain(
+      "marks subsequent results indeterminate, names any unresolved scope, and provides an explicit retry or recovery path",
     );
   });
 
