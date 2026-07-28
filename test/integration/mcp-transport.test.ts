@@ -286,6 +286,87 @@ describe("MCP stdio client", () => {
     await client.stop();
   });
 
+  it("explains a crash with the most recent stderr, not with three lines of startup chatter", async () => {
+    // The head-only buffer reported `slice(-3)` of the retained head. Against a
+    // server that logs more than the buffer holds, those are three arbitrary
+    // startup lines presented as the cause of death — while the traceback, which
+    // arrives at the end, was discarded entirely.
+    const client = new McpClient(
+      server(`${RESPOND}
+      function handle(m) {
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "chatty" } });
+        for (let i = 0; i < 250; i++) process.stderr.write("INFO startup line " + i + "\\n");
+        process.stderr.write("Traceback: the actual cause\\n");
+        process.exit(7);
+      }`),
+    );
+    await client.start();
+    const result = await client.callTool("get_entities", { urns: ["urn:x"] });
+    expect(result.ok).toBe(false);
+    // The cause, which the head-only buffer discarded entirely.
+    expect(result.error).toContain("Traceback: the actual cause");
+    // And not the early lines the old `slice(-3)`-of-the-head reported instead.
+    // The two lines immediately before the traceback are legitimately included —
+    // they are the recent tail. Lines from the start of the run are not.
+    expect(result.error).not.toMatch(/INFO startup line [0-9]\b/);
+    expect(result.error).not.toMatch(/INFO startup line 19[0-9]\b/);
+    await client.stop();
+  });
+
+  it("retains both ends of a long stderr stream and says how much it dropped", async () => {
+    const client = new McpClient(
+      server(`${RESPOND}
+      function handle(m) {
+        if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "chatty" } });
+        for (let i = 0; i < 500; i++) process.stderr.write("line " + i + "\\n");
+        process.stderr.write("LAST\\n");
+        process.exit(1);
+      }`),
+    );
+    await client.start();
+    await client.callTool("get_entities", { urns: ["urn:x"] });
+    expect(client.stderr).toContain("line 0");
+    expect(client.stderr).toContain("LAST");
+    expect(client.stderr).toMatch(/line\(s\) omitted/);
+    await client.stop();
+  });
+
+  it("does not throw when the server dies before the initialized notification lands", async () => {
+    // `#notify` wrote to stdin with no callback and the stream had no `error`
+    // listener, so an EPIPE in this window was an uncaught exception that took
+    // the whole process down instead of failing the run with a cause.
+    const client = new McpClient(
+      server(`${RESPOND}
+      function handle(m) {
+        if (m.method !== "initialize") return;
+        reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "vanishing" } });
+        // Answer, then leave immediately — the notification arrives at a closed pipe.
+        setTimeout(() => process.exit(0), 5);
+      }`),
+      { requestTimeoutMs: 2_000 },
+    );
+    await expect(client.start()).resolves.toMatchObject({ serverName: "vanishing" });
+    const result = await client.callTool("get_entities", { urns: ["urn:x"] });
+    expect(result.ok).toBe(false);
+    await client.stop();
+  });
+
+  it("removes its exit handler on stop, so repeated clients do not accumulate them", async () => {
+    const before = process.listenerCount("exit");
+    for (let i = 0; i < 3; i += 1) {
+      const client = new McpClient(
+        server(`${RESPOND}
+        function handle(m) {
+          if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "s" } });
+          reply(m.id, {});
+        }`),
+      );
+      await client.start();
+      await client.stop();
+    }
+    expect(process.listenerCount("exit")).toBe(before);
+  });
+
   it("fails to start when the server command does not exist", async () => {
     const client = new McpClient({ command: "definitely-not-a-real-binary-xyzzy", args: [] });
     await expect(client.start()).rejects.toThrow(/could not start|exited/);
