@@ -228,22 +228,7 @@ done
 [ "$ready" -eq 1 ] || die "GMS did not become ready within 900s"
 
 # ---------------------------------------------------------------------------
-step "8-instance-is-clean"
-# Scoped to the two things this tool can write, which is the only sense in which
-# "clean" is this tool's to claim.
-run reset-dry node "$REPO/scripts/reset-writeback.mjs" "$URN" --dry-run \
-  --out "$RUN/proof-precheck.json"
-node -e '
-const receipt = require(process.argv[1]);
-if (receipt.before.linkUrl !== null || receipt.before.evidenceTier !== null) {
-  console.error("the rebuilt instance already carries this tool metadata: " + JSON.stringify(receipt.before));
-  process.exit(1);
-}
-console.log("nothing owned by this tool is present");
-' "$RUN/proof-precheck.json"
-
-# ---------------------------------------------------------------------------
-step "9-ingest"
+step "8-ingest"
 # `git_info` is what makes DataHub compute the commit-pinned externalUrl.
 # Without it the catalog holds no source URL and the MCP-boundary finding cannot
 # be observed at all.
@@ -272,11 +257,45 @@ fi
 grep -qE "produced [0-9]+ events" "$LOG/ingest.log" || die "ingestion produced no events"
 
 # ---------------------------------------------------------------------------
-step "10-subject-exists"
+step "9-subject-exists"
 subject_check="$(gql '{"query":"{ dataset(urn:\"'"$URN"'\"){ urn properties { name } } }"}')"
 echo "$subject_check"
 echo "$subject_check" | grep -q '"urn"'  || die "the subject URN does not resolve after ingestion"
 echo "$subject_check" | grep -q '"name"' || die "the subject resolves but carries no properties"
+
+# ---------------------------------------------------------------------------
+step "10-instance-is-clean"
+# Checked *after* ingestion, and the ordering is the point.
+#
+# This ran before ingest, when the subject did not exist yet. "Nothing owned by
+# this tool is present" was then trivially true and unverifiable — there was no
+# entity to hold anything — and the step read as though it had established
+# something. It only looked like a check because the reset used to answer a
+# never-ingested URN with a clean bill of health; once that was fixed, this step
+# failed on the first run, which is how the vacuous assertion surfaced.
+#
+# After ingest the claim is real and checkable: the subject exists, it is
+# readable, and it carries none of this tool's metadata. That is precisely the
+# precondition the writeback below needs, and the only sense in which "clean" is
+# this tool's to claim — it is scoped to the two things this tool can write, and
+# says nothing about the rest of the catalog.
+run reset-dry node "$REPO/scripts/reset-writeback.mjs" "$URN" --dry-run \
+  --out "$RUN/proof-precheck.json"
+node -e '
+const receipt = require(process.argv[1]);
+// The read must have succeeded before its nulls mean anything. Checking only
+// the two fields let an unreadable state satisfy this gate, and an unreadable
+// state is exactly what a URN the catalog does not have produces.
+if (receipt.before.read !== "ok") {
+  console.error("the owned state could not be read: " + receipt.before.readError);
+  process.exit(1);
+}
+if (receipt.before.linkUrl !== null || receipt.before.evidenceTier !== null) {
+  console.error("the rebuilt instance already carries this tool metadata: " + JSON.stringify(receipt.before));
+  process.exit(1);
+}
+console.log("the subject exists, was read, and carries nothing owned by this tool");
+' "$RUN/proof-precheck.json"
 
 # ---------------------------------------------------------------------------
 step "11-lineage-settles"
