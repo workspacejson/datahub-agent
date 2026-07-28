@@ -8,7 +8,13 @@ export const provisionalSource = {
   state: "partial",
   title: "<catalogued asset>",
   summary: "<evidence binding pending>",
-  unresolvedItems: ["<unresolved item>"]
+  unresolvedItems: ["<unresolved item>"],
+  datasetIdentity: { text: "<dataset identity unavailable>", source: "DataHub" },
+  producerPath: { text: "<producer path unavailable>", source: "workspace.json" },
+  repositoryEvidence: { text: "<repository evidence unavailable>", source: "workspace.json" },
+  immutableViewSourceUrl: "https://example.invalid/evidence-binding-pending",
+  impactEdges: [{ label: "<lineage read not observed>", state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
+  planDeltas: [{ kind: "uncertainty-changed", label: "<joined plan unavailable>", reason: "Evidence binding is pending; no semantic plan change is claimed.", source: "Joined" }],
 } as const;
 
 /**

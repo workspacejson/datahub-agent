@@ -9,6 +9,10 @@ export const intendedStateObservationSchema = z.enum(["not-attempted", "observed
 export const terminalWritebackDispositionSchema = z.enum(["not-applicable", "success", "accepted-not-observed", "failed"]);
 export const sourceModeSchema = z.enum(["placeholder", "fixture", "live"]);
 export const cockpitRouteSchema = z.enum(["impact", "change-plan", "receipts"]);
+export const claimSourceSchema = z.enum(["DataHub", "workspace.json", "Joined"]);
+export const sourceClaimSchema = z.object({ text: z.string().min(1), source: claimSourceSchema });
+export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
+export const planDeltaSchema = z.object({ kind: z.enum(["added", "removed", "reordered", "constrained", "uncertainty-changed"]), label: z.string().min(1), reason: z.string().min(1), source: claimSourceSchema });
 export const cockpitStateNameSchema = z.enum([
   "loading", "unavailable", "partial", "contradictory", "error", "accepted-not-observed", "success",
 ]);
@@ -26,6 +30,12 @@ const cockpitViewModelBaseSchema = z.object({
   title: z.string().min(1),
   summary: z.string().min(1),
   unresolvedItems: z.array(z.string()),
+  datasetIdentity: sourceClaimSchema,
+  producerPath: sourceClaimSchema,
+  repositoryEvidence: sourceClaimSchema,
+  immutableViewSourceUrl: z.string().url(),
+  impactEdges: z.array(impactEdgeSchema),
+  planDeltas: z.array(planDeltaSchema),
 });
 
 export const cockpitViewModelSchema = cockpitViewModelBaseSchema.superRefine((model, context) => {
@@ -34,6 +44,12 @@ export const cockpitViewModelSchema = cockpitViewModelBaseSchema.superRefine((mo
   }
   if (model.source === "unavailable" && model.read === "ok") {
     context.addIssue({ code: "custom", path: ["read"], message: "An unavailable source cannot report a successful read." });
+  }
+  if (model.read === "failed" && model.resolutionDisposition === "resolved") {
+    context.addIssue({ code: "custom", path: ["resolutionDisposition"], message: "A failed read cannot resolve a source." });
+  }
+  if (model.resolutionDisposition === "resolved" && model.source === "unavailable") {
+    context.addIssue({ code: "custom", path: ["source"], message: "An unavailable source cannot be resolved." });
   }
   if (model.terminalWritebackDisposition === "success" &&
       (model.mutationAcceptance !== "accepted" || model.intendedStateObservation !== "observed")) {
