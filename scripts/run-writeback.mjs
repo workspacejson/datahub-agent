@@ -314,7 +314,7 @@ if (observed.record) {
   const { status, polls, elapsedMs, timeoutMs } = observed.record;
   console.error(`observation  ${status} after ${polls} read(s) in ${elapsedMs}ms (bound ${timeoutMs}ms)`);
 }
-console.error(`succeeded    ${receipt.succeeded}   noop=${receipt.noop}   verified=${receipt.verified}`);
+console.error(`succeeded    ${receipt.succeeded}   noop=${receipt.noop}   bothStatesRead=${receipt.bothStatesRead}`);
 
 // A refusal is a legitimate outcome, not a failure. A dry run asserts nothing.
 process.exit(DRY || refused || receipt.succeeded ? 0 : 1);

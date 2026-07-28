@@ -57,22 +57,42 @@ export type UnavailableReason =
  * Kept separate from whether the read succeeded, for the same reason the
  * writeback receipt keeps its observation status separate from `read`: a query
  * that succeeded while returning a possibly-partial answer is `ok` and
- * `unverified` at once, and one field cannot say both without losing the
+ * `not-established` at once, and one field cannot say both without losing the
  * distinction.
  *
- * `verified` requires an external attestation — an expected result the answer
- * was checked against. Repetition is not attestation: two identical samples do
- * not prove convergence, and neither does a long wait at zero. Nothing in a
- * general read path can upgrade `unverified` on its own.
+ * Both words name what was actually determined, rather than grading it:
+ *
+ *   complete-against-pinned-manifest  checked against a named, pinned expected
+ *                                     set, and found equal to it
+ *   not-established                   completeness was not determined
+ *
+ * The earlier pair was `verified | unverified`, and the rename is the point of
+ * this vocabulary rather than cosmetics on it. `verified` is a grade — it says
+ * an answer passed without saying what it passed against, so it reads as a
+ * general warrant of correctness and invites exactly one question the value
+ * cannot answer: verified how? `complete-against-pinned-manifest` carries its
+ * own scope, so the claim and its bound cannot be separated in a reader's head,
+ * and `VerificationEvidence` names the specific manifest.
+ *
+ * `not-established` replaces `unverified` for the mirror-image reason.
+ * `unverified` describes a process that did not happen and reads as a soft
+ * failure — as though the answer is probably fine but nobody got round to
+ * confirming it. The answer may be complete, partial, or empty; what is being
+ * stated is that nothing determined which. That is the honest and usually
+ * correct state of a search-backed read, not a defect.
+ *
+ * Nothing in a general read path can upgrade `not-established` on its own.
+ * Repetition is not attestation: two identical samples do not prove
+ * convergence, and neither does a long wait at zero.
  */
-export type Completeness = "verified" | "unverified";
+export type Completeness = "complete-against-pinned-manifest" | "not-established";
 
 /**
- * What a `verified` completeness claim rests on.
+ * What a `complete-against-pinned-manifest` claim rests on.
  *
  * Required rather than optional, because a second axis with no evidence behind
- * it is merely a new place to assert the word "verified". The point of the axis
- * is to make completeness checkable; a bare enum would make it assertable.
+ * it is merely a new place to assert completeness. The point of the axis is to
+ * make completeness checkable; a bare enum would make it assertable.
  *
  * The digests are of sorted URN *sets*, not counts. Twelve edges can be the
  * wrong twelve, and a count that matches while the members differ is exactly
@@ -120,7 +140,7 @@ export interface Unavailable {
    * exists to prevent, in the arithmetic instead of the vocabulary.
    */
   observedCount?: number;
-  /** Required whenever `completeness` is `verified`. */
+  /** Required whenever `completeness` is `complete-against-pinned-manifest`. */
   verification?: VerificationEvidence;
 }
 
@@ -214,7 +234,7 @@ export interface LineageObservation {
   completeness: Completeness;
   /** What the query returned. Absent when no query ran. */
   observedCount?: number;
-  /** Required whenever `completeness` is `verified`. */
+  /** Required whenever `completeness` is `complete-against-pinned-manifest`. */
   verification?: VerificationEvidence;
 }
 
@@ -256,7 +276,13 @@ export interface CodePartner {
 /**
  * Evidence tier, a mechanical function of the records present — never a tuned
  * score. ASSERTED: claimed with no supporting record. OBSERVED: at least one
- * record. VERIFIED: at least one record whose check was actually executed.
+ * record. VERIFIED: at least one record whose check this harness executed.
+ *
+ * The token is a machine value, not a caption. `VERIFIED` says a check ran; it
+ * does not say the claim is true, and the two are close enough in English that
+ * the bare word will be read as the second. It must therefore never reach a
+ * surface on its own — `describeTier` is the only sanctioned rendering, and it
+ * carries the record count that produced the tier. See the note there.
  */
 export type EvidenceTier = "ASSERTED" | "OBSERVED" | "VERIFIED";
 
@@ -265,8 +291,22 @@ export interface EvidenceRecord {
   /** What was actually run or read to support the claim. */
   observation: string;
   source: ContextSource;
-  /** True only when this harness executed the check itself. */
-  verified: boolean;
+  /**
+   * True only when this harness executed the check itself.
+   *
+   * Named for the act, not the verdict. As `verified` it was the most
+   * over-readable field in the contract: it says a check *ran*, and every
+   * reader — including this project's own emitter — took it to mean the claim
+   * was *confirmed*. The nested fixture asserted a producing file absent from
+   * an index built from a different repository and marked it `verified: true`
+   * (HAC-225); the field was accurate about execution and the word invited the
+   * stronger reading.
+   *
+   * `checkExecuted` cannot be misread that way, because it does not describe
+   * the claim at all. Whether the claim holds is what `observation` records and
+   * what a reviewer judges.
+   */
+  checkExecuted: boolean;
 }
 
 /** Counts that must reconcile, so a reviewer can check the arithmetic. */
@@ -344,17 +384,38 @@ export interface Provenance {
  * against is not recoverable from the event, and inferring it from the subject
  * would assume exactly the thing the field exists to check.
  *
+ * 1.3 froze the vocabulary (HAC-146). `EvidenceRecord.verified` became
+ * `checkExecuted`, the writeback receipt's `verified` became `bothStatesRead`,
+ * and `Completeness` became `complete-against-pinned-manifest | not-established`.
+ *
+ * This one is a pure rename, and it is the only version here that *could* have
+ * shipped a mechanical in-place migration — the values map one-to-one and no
+ * information is missing. It deliberately does not, for two reasons.
+ *
+ * First, the renames exist because the old words were being *misread*, and a
+ * translation layer would keep both readings alive in the codebase at once:
+ * every consumer would still see `verified` somewhere, which is the condition
+ * the rename was meant to end. A dual vocabulary is not a gentler migration, it
+ * is the defect with a compatibility shim around it.
+ *
+ * Second, a 1.2 event's `verified: true` is only trustworthy to the extent the
+ * producer meant "a check ran" rather than "the claim holds" — and the reason
+ * for the rename is that this project's own emitter did not reliably mean the
+ * first. Mapping it silently onto `checkExecuted` would launder that ambiguity
+ * into the new vocabulary and call it migrated.
+ *
  * Note on the number: this project does not claim semver for this contract, and
- * 1.0 → 1.1 already established that a breaking change takes a minor. **Both
- * bumps are breaking.** The version string distinguishes shapes; it is not a
- * compatibility promise, and `SUPERSEDED_EVENT_VERSIONS` is the signal to read.
+ * 1.0 → 1.1 already established that a breaking change takes a minor. **All
+ * three bumps are breaking.** The version string distinguishes shapes; it is not
+ * a compatibility promise, and `SUPERSEDED_EVENT_VERSIONS` is the signal to read.
  */
-export const CHANGE_IMPACT_EVENT_VERSION = "1.2" as const;
+export const CHANGE_IMPACT_EVENT_VERSION = "1.3" as const;
 
 /** Versions this contract knows about but can no longer validate. */
 export const SUPERSEDED_EVENT_VERSIONS: Record<string, string> = {
   "1.0": "1.1 requires datahub.lineageObservation, which a 1.0 event does not carry — re-emit the event rather than upgrading it in place",
   "1.1": "1.2 requires provenance.workspaceArtifact.repository, .revision and .integrity, which a 1.1 event does not carry — re-emit the event rather than upgrading it in place",
+  "1.2": "1.3 renames evidence.records[].verified to checkExecuted, writeback.verified to bothStatesRead, and completeness to complete-against-pinned-manifest | not-established — re-emit the event; the rename is not applied in place because a 1.2 `verified` may have meant either 'a check ran' or 'the claim holds', and only the producer knows which",
 };
 
 export interface ChangeImpactEvent {
@@ -396,7 +457,7 @@ export interface ChangeImpactEvent {
 // ---------------------------------------------------------------------------
 
 const contextSourceSchema = z.enum(["datahub", "workspacejson"]);
-const completenessSchema = z.enum(["verified", "unverified"]);
+const completenessSchema = z.enum(["complete-against-pinned-manifest", "not-established"]);
 
 const verificationEvidenceSchema = z.strictObject({
   manifestDigest: z.string(),
@@ -462,7 +523,7 @@ const evidenceRecordSchema = z.strictObject({
   claim: z.string(),
   observation: z.string(),
   source: contextSourceSchema,
-  verified: z.boolean(),
+  checkExecuted: z.boolean(),
 });
 
 const corpusIdentitySchema = z.strictObject({
@@ -568,7 +629,37 @@ void _drift;
  */
 export function deriveTier(records: readonly EvidenceRecord[]): EvidenceTier {
   if (records.length === 0) return "ASSERTED";
-  return records.some((r) => r.verified) ? "VERIFIED" : "OBSERVED";
+  return records.some((r) => r.checkExecuted) ? "VERIFIED" : "OBSERVED";
+}
+
+/**
+ * The tier as a phrase a reader cannot over-read, for any surface a human sees.
+ *
+ * `VERIFIED` alone is the contract's most dangerous string. It is a mechanical
+ * fact about *records* — at least one check was executed by this harness — and
+ * in English it reads as a warrant about *claims*. A judge who sees "VERIFIED
+ * evidence" on a screen has been told something this project cannot support, by
+ * a token that is individually accurate.
+ *
+ * That is the same defect as `absent` standing in for a converging index, and
+ * `succeeded` standing in for an unobserved mutation: a strong word doing
+ * unearned work because the thing that would bound it lives somewhere else. The
+ * fix is the same one applied there — keep the claim and its bound in a single
+ * value, so no caller has to remember to pair them.
+ *
+ * So the tier is never formatted for display anywhere else. Rendering
+ * `event.evidence.tier` directly is the violation, and a test asserts no
+ * judge-facing string contains a bare tier token.
+ */
+export function describeTier(records: readonly EvidenceRecord[]): string {
+  const tier = deriveTier(records);
+  if (tier === "ASSERTED") {
+    return "ASSERTED — no supporting record was captured";
+  }
+  const executed = records.filter((r) => r.checkExecuted).length;
+  return tier === "VERIFIED"
+    ? `VERIFIED — ${executed} of ${records.length} record(s) carry a check this harness executed`
+    : `OBSERVED — ${records.length} record(s), none of them a check this harness executed`;
 }
 
 /**
@@ -630,23 +721,24 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
  */
 /**
  * A second axis with nothing behind it is just a new place to assert the word.
- * `verified` has to name what it was checked against, wherever it is claimed.
+ * `complete-against-pinned-manifest` names a manifest, so it has to produce one
+ * — wherever it is claimed. This is the only path to that value.
  */
-function verifiedEvidenceProblems(
+function completenessEvidenceProblems(
   // Explicit `| undefined` rather than bare `?:`. Under
   // `exactOptionalPropertyTypes` those differ, and this reads values that came
   // out of a schema parse, where an absent optional surfaces as `undefined`.
   holder: { completeness?: Completeness | undefined; verification?: VerificationEvidence | undefined },
   label: string,
 ): string[] {
-  if (holder.completeness !== "verified") return [];
+  if (holder.completeness !== "complete-against-pinned-manifest") return [];
   const v = holder.verification;
   const missing = !v
     ? ["verification"]
     : (["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const).filter((k) => !v[k]);
   if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
     return [
-      `${label} claims verified completeness without evidence (${missing.join(", ") || "queryParameters"})`,
+      `${label} claims complete-against-pinned-manifest without naming the manifest (${missing.join(", ") || "queryParameters"})`,
     ];
   }
   return [];
@@ -727,7 +819,7 @@ export function validateEvent(event: unknown): string[] {
       continue;
     }
 
-    problems.push(...verifiedEvidenceProblems(observation, label));
+    problems.push(...completenessEvidenceProblems(observation, label));
 
     if (observation.read === "ok") {
       if (observation.observedCount === undefined) {
@@ -744,8 +836,8 @@ export function validateEvent(event: unknown): string[] {
       if (edges.length > 0) {
         problems.push(`${label} is ${observation.read} but ${edges.length} edges are present`);
       }
-      if (observation.completeness === "verified") {
-        problems.push(`${label} claims verified completeness on a read that did not happen`);
+      if (observation.completeness === "complete-against-pinned-manifest") {
+        problems.push(`${label} claims complete-against-pinned-manifest on a read that did not happen`);
       }
     }
   }
@@ -777,12 +869,12 @@ export function validateEvent(event: unknown): string[] {
   // fields became compile-time-only to begin with.
   const artifact = valid.provenance.workspaceArtifact;
   if (artifact && artifact.integrity !== "exact-match") {
-    const verifiedClaims = valid.evidence.records.filter(
-      (r) => r.source === "workspacejson" && r.verified,
+    const executedClaims = valid.evidence.records.filter(
+      (r) => r.source === "workspacejson" && r.checkExecuted,
     );
-    if (verifiedClaims.length > 0) {
+    if (executedClaims.length > 0) {
       problems.push(
-        `evidence carries ${verifiedClaims.length} verified workspacejson claim(s), but workspaceArtifact.integrity is ${artifact.integrity} — an artifact that was refused verifies nothing`,
+        `evidence carries ${executedClaims.length} workspacejson record(s) marked checkExecuted, but workspaceArtifact.integrity is ${artifact.integrity} — a check run against a refused artifact establishes nothing about this subject`,
       );
     }
     // `absent` is the vocabulary's strongest word: asked, and reported nothing.
@@ -827,22 +919,22 @@ export function validateEvent(event: unknown): string[] {
   };
 
   for (const entry of valid.unavailable) {
-    if (entry.reason === "absent" && entry.completeness === "unverified") {
+    if (entry.reason === "absent" && entry.completeness === "not-established") {
       problems.push(
-        `${entry.field} claims absent on an answer whose completeness is unverified — use indeterminate`,
+        `${entry.field} claims absent on an answer whose completeness is not-established — use indeterminate`,
       );
     }
     // The converse guard, so the two words cannot drift apart in use.
-    if (entry.reason === "indeterminate" && entry.completeness === "verified") {
+    if (entry.reason === "indeterminate" && entry.completeness === "complete-against-pinned-manifest") {
       problems.push(
-        `${entry.field} claims indeterminate on a verified answer — say what the answer was`,
+        `${entry.field} claims indeterminate on an answer established complete against a pinned manifest — say what the answer was`,
       );
     }
     if (entry.reason === "indeterminate" && entry.completeness === undefined) {
       problems.push(`${entry.field} is indeterminate without stating completeness`);
     }
 
-    problems.push(...verifiedEvidenceProblems(entry, entry.field));
+    problems.push(...completenessEvidenceProblems(entry, entry.field));
 
     // A read that did not happen has no count. Manufacturing a zero for one
     // recreates the collapse this contract prevents, in arithmetic rather than

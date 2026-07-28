@@ -21,9 +21,9 @@
  */
 
 import {
+  describeTier,
   emittedEventSchema,
   type ChangeImpactEvent,
-  type Completeness,
   type WorkspaceIntegrity,
 } from "@contract";
 
@@ -35,17 +35,21 @@ import type {
 } from "./cockpit-view-model";
 
 /**
- * Contract completeness in the cockpit's words.
+ * Contract completeness needs no translation, and that is the point.
  *
- * The two vocabularies differ deliberately: `verified` is what the evidence
- * layer calls it, and a judge reading the screen is better served by naming
- * *what* it was verified against. They are the same axis, so the table is
- * exhaustive and a new contract value breaks the build here.
+ * A `COMPLETENESS` table used to live here, mapping the contract's
+ * `verified | unverified` onto the cockpit's
+ * `complete-against-pinned-manifest | not-established`. The cockpit's words were
+ * the better ones — they name what the claim was checked against instead of
+ * grading it — but keeping them on one side of a seam meant the codebase held
+ * two vocabularies for one axis, and the weaker pair stayed in the artifact a
+ * judge actually receives.
+ *
+ * HAC-146 moved the better words into the contract itself, so the mapping became
+ * the identity function and was deleted rather than left as a no-op. The types
+ * are now the same type; drift is a compile error at the assignment, which is
+ * strictly stronger than a table that would have happily kept translating.
  */
-const COMPLETENESS: Record<Completeness, SourceEvent["completeness"]> = {
-  verified: "complete-against-pinned-manifest",
-  unverified: "not-established",
-} satisfies Record<Completeness, SourceEvent["completeness"]>;
 
 /**
  * How far the workspace artifact got, as a resolution disposition.
@@ -217,7 +221,7 @@ function projectReceipt(event: ChangeImpactEvent): SourceEvent["receipt"] {
       pairedSpread: missing("The paired DataHub-only vs joined evaluation has not been run."),
       locBaseline: missing("No lines-of-code baseline has been measured."),
       limitations: observed(
-        `${event.unavailable.length} stated gap(s); evidence tier ${event.evidence.tier} from ${event.evidence.records.length} record(s).`,
+        `${event.unavailable.length} stated gap(s); ${describeTier(event.evidence.records)}.`,
         "Joined",
       ),
       // The event itself, verbatim. Not a summary and not a claim about it —
@@ -241,7 +245,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     route,
     source: attribution(event),
     read: upstream.read,
-    completeness: COMPLETENESS[upstream.completeness],
+    completeness: upstream.completeness,
     resolutionDisposition: artifact ? DISPOSITION[artifact.integrity] : "unavailable",
     // The writeback axes are owned by HAC-219, which binds the receipt. Until
     // then this states that nothing was attempted rather than implying success.
@@ -249,7 +253,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     intendedStateObservation: "not-attempted",
     terminalWritebackDisposition: "not-applicable",
     title: event.datahub.name ?? event.subject.urn,
-    summary: `${event.evidence.tier} evidence from ${event.evidence.records.length} record(s); ${event.unavailable.length} stated gap(s).`,
+    summary: `${describeTier(event.evidence.records)}; ${event.unavailable.length} stated gap(s).`,
     unresolvedItems: event.unavailable.map((u) => `${u.field}: ${u.reason}`),
     datasetIdentity: { text: event.subject.urn, source: "DataHub" },
     producerPath: {

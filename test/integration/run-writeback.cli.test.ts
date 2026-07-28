@@ -237,7 +237,7 @@ describe("a write that never becomes visible", () => {
     expect(receipt.observation?.status).not.toBe("failed");
     expect(receipt.after.read).toBe("ok");
     expect(receipt.observation?.lastError).toBeNull();
-    expect(receipt.verified).toBe(true);
+    expect(receipt.bothStatesRead).toBe(true);
   }, 20_000);
 
   it("records the bound it applied, so the timeout can be read against it", async () => {
@@ -289,7 +289,7 @@ describe("an instance that accepts a read and never answers", () => {
     expect(receipt.observation?.status).toBe("failed");
     expect(receipt.observation?.lastError).toMatch(/Timeout|Abort/i);
     expect(receipt.succeeded).toBe(false);
-    expect(receipt.verified).toBe(false);
+    expect(receipt.bothStatesRead).toBe(false);
   }, 60_000);
 
   it("still emits a complete receipt, because a hang must not swallow one", async () => {
@@ -313,7 +313,7 @@ describe("an instance that stops answering", () => {
     expect(receipt.after.read).toBe("failed");
     expect(receipt.observation?.status).toBe("failed");
     expect(receipt.succeeded).toBe(false);
-    expect(receipt.verified).toBe(false);
+    expect(receipt.bothStatesRead).toBe(false);
     expect(result.code).not.toBe(0);
   }, 20_000);
 
@@ -362,7 +362,7 @@ describe("a dry run", () => {
 
     expect(receipt.succeeded).toBe(false);
     expect(receipt.noop).toBe(false);
-    expect(receipt.verified).toBe(false);
+    expect(receipt.bothStatesRead).toBe(false);
   }, 20_000);
 });
 

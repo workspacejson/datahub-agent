@@ -41,8 +41,8 @@ function validEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpactEve
       upstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.up,PROD)", name: "up", degree: 1 }],
       downstreams: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.down,PROD)", name: "down", degree: 1 }],
       lineageObservation: {
-        upstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
-        downstreams: { read: "ok", completeness: "unverified", observedCount: 1 },
+        upstreams: { read: "ok", completeness: "not-established", observedCount: 1 },
+        downstreams: { read: "ok", completeness: "not-established", observedCount: 1 },
       },
       schemaFieldCount: 4,
       owners: [],
@@ -60,7 +60,7 @@ function validEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpactEve
       { repositoryRelativePath: "dbt/models/other.sql", reason: "changes alongside", source: "workspacejson" },
     ],
     evidence: {
-      records: [{ claim: "tracked", observation: "key present", source: "workspacejson", verified: true }],
+      records: [{ claim: "tracked", observation: "key present", source: "workspacejson", checkExecuted: true }],
       tier: "VERIFIED",
     },
     accounting: {
@@ -76,11 +76,11 @@ function validEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpactEve
 }
 
 describe("deriveTier", () => {
-  const record = (verified: boolean): EvidenceRecord => ({
+  const record = (checkExecuted: boolean): EvidenceRecord => ({
     claim: "c",
     observation: "o",
     source: "datahub",
-    verified,
+    checkExecuted,
   });
 
   it("is ASSERTED with no records — a claim with nothing behind it", () => {
@@ -136,8 +136,15 @@ describe("the version a consumer compiles against", () => {
     // 1.0 lacked lineageObservation; 1.1 lacked the workspace artifact's corpus
     // identity. In both cases a synthesised value would be invented rather than
     // observed — manufacturing an observation nobody made, on the exact axis the
-    // field exists to keep honest. So every entry says re-emit.
-    expect(Object.keys(SUPERSEDED_EVENT_VERSIONS)).toEqual(["1.0", "1.1"]);
+    // field exists to keep honest.
+    //
+    // 1.2 is the interesting one: it is a pure rename whose values map one to
+    // one, so a mechanical upgrade was available and was still declined. A 1.2
+    // `verified: true` may have meant "a check ran" or "the claim holds", and
+    // this project's own emitter did not reliably mean the first — mapping it
+    // silently onto `checkExecuted` would launder that ambiguity and call it
+    // migrated. So every entry says re-emit, including the easy one.
+    expect(Object.keys(SUPERSEDED_EVENT_VERSIONS)).toEqual(["1.0", "1.1", "1.2"]);
     for (const [version, guidance] of Object.entries(SUPERSEDED_EVENT_VERSIONS)) {
       expect(guidance, `${version} must direct the reader to re-emit`).toMatch(/re-emit/);
     }
@@ -159,7 +166,7 @@ describe("completeness as an axis of its own", () => {
     event.datahub.upstreams = [];
     event.datahub.lineageObservation.upstreams = {
       read: "ok",
-      completeness: "unverified",
+      completeness: "not-established",
       observedCount: 0,
     };
     event.unavailable = [
@@ -168,7 +175,7 @@ describe("completeness as an axis of its own", () => {
         source: "datahub",
         reason: "indeterminate",
         detail: "the lineage query succeeded; whether it is complete is unknown",
-        completeness: "unverified",
+        completeness: "not-established",
         observedCount: 0,
         ...entry,
       },
@@ -182,33 +189,33 @@ describe("completeness as an axis of its own", () => {
     expect(validateEvent(withLineageEntry({}))).toEqual([]);
   });
 
-  it("rejects an absent claim resting on an unverified answer", () => {
+  it("rejects an absent claim resting on an answer whose completeness was never established", () => {
     // A partially converged index returning zero satisfies "asked and got
     // nothing" while being no evidence at all about the data. This is the
     // defect, expressed as a contract rule.
     const problems = validateEvent(
-      withLineageEntry({ reason: "absent", completeness: "unverified" }),
+      withLineageEntry({ reason: "absent", completeness: "not-established" }),
     );
     expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/absent.*unverified.*use indeterminate/);
+    expect(problems[0]).toMatch(/absent.*not-established.*use indeterminate/);
   });
 
-  it("does not let claiming verified completeness be enough to earn absent", () => {
+  it("does not let claiming complete-against-pinned-manifest be enough to earn absent", () => {
     // `absent` is not banned — it is earned, and the word alone does not earn
     // it. Flipping completeness to `verified` without an attestation behind it
     // would make the second axis a laundering step for the first. The
     // acceptance case lives in the evidence suite below.
     expect(
-      validateEvent(withLineageEntry({ reason: "absent", completeness: "verified" }))[0],
-    ).toMatch(/without evidence/);
+      validateEvent(withLineageEntry({ reason: "absent", completeness: "complete-against-pinned-manifest" }))[0],
+    ).toMatch(/without naming the manifest/);
   });
 
-  it("rejects indeterminate on an answer that was verified", () => {
+  it("rejects indeterminate on an answer established complete against a pinned manifest", () => {
     // The converse guard, so the two words cannot drift into synonyms.
     const problems = validateEvent(
-      withLineageEntry({ reason: "indeterminate", completeness: "verified" }),
+      withLineageEntry({ reason: "indeterminate", completeness: "complete-against-pinned-manifest" }),
     );
-    expect(problems[0]).toMatch(/indeterminate.*verified/);
+    expect(problems[0]).toMatch(/indeterminate on an answer established complete against a pinned manifest/);
   });
 
   it("keeps completeness independent of why the context is missing", () => {
@@ -228,7 +235,7 @@ describe("completeness as an axis of its own", () => {
     // whether it may be read as absence, which is the whole separation.
     const entry = withLineageEntry({ observedCount: 0 }).unavailable[0]!;
     expect(entry.observedCount).toBe(0);
-    expect(entry.completeness).toBe("unverified");
+    expect(entry.completeness).toBe("not-established");
   });
 
   it("rejects a negative observedCount", () => {
@@ -260,7 +267,7 @@ describe("completeness as an axis of its own", () => {
   });
 });
 
-describe("verified completeness must carry its evidence", () => {
+describe("complete-against-pinned-manifest must carry its evidence", () => {
   const EVIDENCE: VerificationEvidence = {
     manifestDigest: "sha256:aaa",
     expectedSetDigest: "sha256:bbb",
@@ -273,7 +280,7 @@ describe("verified completeness must carry its evidence", () => {
     event.datahub.upstreams = [];
     event.datahub.lineageObservation.upstreams = {
       read: "ok",
-      completeness: "unverified",
+      completeness: "not-established",
       observedCount: 0,
     };
     event.unavailable = [
@@ -282,7 +289,7 @@ describe("verified completeness must carry its evidence", () => {
         source: "datahub",
         reason: "absent",
         detail: "checked against the frozen readiness manifest; the catalog holds no upstreams",
-        completeness: "verified",
+        completeness: "complete-against-pinned-manifest",
         observedCount: 0,
         ...(verification === undefined ? {} : { verification: { ...EVIDENCE, ...verification } }),
       },
@@ -294,29 +301,29 @@ describe("verified completeness must carry its evidence", () => {
     expect(validateEvent(verifiedAbsence({}))).toEqual([]);
   });
 
-  it("rejects verified completeness with no evidence block at all", () => {
+  it("rejects complete-against-pinned-manifest with no evidence block at all", () => {
     // Without this the second axis is just a new place to assert the word.
-    expect(validateEvent(verifiedAbsence())[0]).toMatch(/without evidence \(verification\)/);
+    expect(validateEvent(verifiedAbsence())[0]).toMatch(/without naming the manifest \(verification\)/);
   });
 
   it.each(["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const)(
-    "rejects verified completeness missing %s",
+    "rejects complete-against-pinned-manifest missing %s",
     (field) => {
       expect(validateEvent(verifiedAbsence({ [field]: "" }))[0]).toMatch(field);
     },
   );
 
-  it("rejects verified completeness with no query parameters", () => {
+  it("rejects complete-against-pinned-manifest with no query parameters", () => {
     // Two sets are only comparable under the same parameters, so they are part
     // of the evidence rather than commentary on it.
     expect(validateEvent(verifiedAbsence({ queryParameters: {} }))[0]).toMatch(/queryParameters/);
   });
 
-  it("does not require evidence for an unverified answer", () => {
+  it("does not require evidence when completeness was not established", () => {
     // `unverified` is the honest default and must stay cheap to state.
     const event = verifiedAbsence({});
     event.unavailable[0]!.reason = "indeterminate";
-    event.unavailable[0]!.completeness = "unverified";
+    event.unavailable[0]!.completeness = "not-established";
     delete event.unavailable[0]!.verification;
     expect(validateEvent(event)).toEqual([]);
   });
@@ -354,9 +361,9 @@ describe("a workspace claim the artifact could not support", () => {
     };
   }
 
-  it.each(refusals)("cannot carry a verified workspacejson claim when integrity is %s", (integrity) => {
+  it.each(refusals)("cannot carry a checkExecuted workspacejson record when integrity is %s", (integrity) => {
     const problems = validateEvent(withIntegrity(integrity));
-    expect(problems.some((p) => p.includes("verified workspacejson claim"))).toBe(true);
+    expect(problems.some((p) => p.includes("record(s) marked checkExecuted"))).toBe(true);
     expect(problems.some((p) => p.includes(integrity))).toBe(true);
   });
 
@@ -383,7 +390,7 @@ describe("a workspace claim the artifact could not support", () => {
           claim: "producing file dbt/models/curated/game_events.sql is tracked in the workspace.json artifact",
           observation: "key absent from generated.fileIndex (36 keys)",
           source: "workspacejson",
-          verified: true,
+          checkExecuted: true,
         }],
         tier: "VERIFIED",
       },
@@ -406,7 +413,7 @@ describe("a workspace claim the artifact could not support", () => {
           claim: "the producing file is addressable at an immutable commit",
           observation: "https://github.com/example/repo/blob/abc/dbt/models/model.sql",
           source: "datahub",
-          verified: true,
+          checkExecuted: true,
         }],
         tier: "VERIFIED",
       },
@@ -439,8 +446,8 @@ describe("a workspace claim the artifact could not support", () => {
     "reports %s by path, not as a side effect of another check",
     (key) => {
       // An earlier version of this test asserted only `not.toEqual([])`, and
-      // passed for the wrong reason: the helper happened to carry a verified
-      // workspacejson record, so the refusal branch fired and the absent field
+      // passed for the wrong reason: the helper happened to carry a
+      // workspacejson record marked checkExecuted, so the refusal branch fired and the absent field
       // was never actually noticed. Naming the path is what makes this a test
       // about presence.
       const problems = validateEvent(withoutIdentity(key));
@@ -449,7 +456,7 @@ describe("a workspace claim the artifact could not support", () => {
   );
 
   it("catches an artifact with no identity even when nothing claims anything from it", () => {
-    // The gap the schema closes. With no verified workspacejson record and no
+    // The gap the schema closes. With no checkExecuted workspacejson record and no
     // `absent` assertion, every relationship check has nothing to disagree
     // with, so the event would previously validate clean while carrying an
     // artifact whose corpus was never established.
@@ -458,7 +465,7 @@ describe("a workspace claim the artifact could not support", () => {
       ...stripped,
       partners: [],
       evidence: {
-        records: [{ claim: "c", observation: "o", source: "datahub", verified: true }],
+        records: [{ claim: "c", observation: "o", source: "datahub", checkExecuted: true }],
         tier: "VERIFIED",
       },
       unavailable: [{
@@ -561,14 +568,14 @@ describe("validateEvent", () => {
 
   it("rejects read:ok without an observedCount on upstreams", () => {
     const event = validEvent();
-    event.datahub.lineageObservation.upstreams = { read: "ok", completeness: "unverified" };
+    event.datahub.lineageObservation.upstreams = { read: "ok", completeness: "not-established" };
     const problems = validateEvent(event);
     expect(problems.some((p) => p.includes("read ok without an observedCount"))).toBe(true);
   });
 
   it("rejects read:failed with edges present", () => {
     const event = validEvent();
-    event.datahub.lineageObservation.upstreams = { read: "failed", completeness: "unverified" };
+    event.datahub.lineageObservation.upstreams = { read: "failed", completeness: "not-established" };
     const problems = validateEvent(event);
     expect(problems.some((p) => p.includes("failed") && p.includes("edges are present"))).toBe(true);
   });
@@ -576,15 +583,15 @@ describe("validateEvent", () => {
   it("rejects read:failed that claims verified completeness", () => {
     const event = validEvent();
     event.datahub.upstreams = [];
-    event.datahub.lineageObservation.upstreams = { read: "failed", completeness: "verified" };
+    event.datahub.lineageObservation.upstreams = { read: "failed", completeness: "complete-against-pinned-manifest" };
     const problems = validateEvent(event);
-    expect(problems.some((p) => p.includes("verified completeness on a read that did not happen"))).toBe(true);
+    expect(problems.some((p) => p.includes("complete-against-pinned-manifest on a read that did not happen"))).toBe(true);
   });
 
   it("rejects read:not-queried with an observedCount", () => {
     const event = validEvent();
     event.datahub.upstreams = [];
-    event.datahub.lineageObservation.upstreams = { read: "not-queried", completeness: "unverified", observedCount: 0 };
+    event.datahub.lineageObservation.upstreams = { read: "not-queried", completeness: "not-established", observedCount: 0 };
     const problems = validateEvent(event);
     expect(problems.some((p) => p.includes("not-queried") && p.includes("observedCount"))).toBe(true);
   });
@@ -599,8 +606,8 @@ describe("toDataHubOnly", () => {
     const event = validEvent({
       evidence: {
         records: [
-          { claim: "a", observation: "o", source: "workspacejson", verified: true },
-          { claim: "b", observation: "o", source: "datahub", verified: false },
+          { claim: "a", observation: "o", source: "workspacejson", checkExecuted: true },
+          { claim: "b", observation: "o", source: "datahub", checkExecuted: false },
         ],
         tier: "VERIFIED",
       },
@@ -698,7 +705,7 @@ describe("the DataHub-only reduction", () => {
     // is that no workspace evidence was consulted.
     const event = validEvent({
       partners: [],
-      evidence: { records: [{ claim: "c", observation: "o", source: "datahub", verified: true }], tier: "VERIFIED" },
+      evidence: { records: [{ claim: "c", observation: "o", source: "datahub", checkExecuted: true }], tier: "VERIFIED" },
       unavailable: [{
         field: "partners", source: "workspacejson", reason: "absent",
         detail: "The artifact carries file-index keys but no behavioral co-change values.",
@@ -715,7 +722,7 @@ describe("the DataHub-only reduction", () => {
       unavailable: [{
         field: "datahub.upstreams", source: "datahub", reason: "indeterminate",
         detail: "the lineage query succeeded; completeness is unknown",
-        completeness: "unverified", observedCount: 0,
+        completeness: "not-established", observedCount: 0,
       }],
     });
     expect(toDataHubOnly(event).unavailable.some((u) => u.field === "datahub.upstreams")).toBe(true);

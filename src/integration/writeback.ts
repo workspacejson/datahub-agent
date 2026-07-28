@@ -176,8 +176,16 @@ export interface WritebackReceipt {
   /**
    * True when both states were read. This says the observations exist — it says
    * nothing about whether they show what was intended. That is `succeeded`.
+   *
+   * Named for the reads rather than graded, because as `verified` it was
+   * routinely read as the receipt's verdict when it is merely the precondition
+   * for having one. A receipt showing `verified: true` beside `succeeded: false`
+   * looks self-contradictory and is not: both states were read, and they did not
+   * show intent. `bothStatesRead: true, succeeded: false` states the same pair of
+   * facts without the appearance of conflict — and, unlike `verified`, it cannot
+   * be quoted on its own as though it settled anything.
    */
-  verified: boolean;
+  bothStatesRead: boolean;
   /** Why the writeback did not proceed, when it did not. */
   refusedBecause: string | null;
   /**
@@ -254,7 +262,7 @@ export interface OutcomeInput {
 export interface WritebackOutcome {
   succeeded: boolean;
   noop: boolean;
-  verified: boolean;
+  bothStatesRead: boolean;
 }
 
 /**
@@ -271,15 +279,15 @@ export function deriveOutcome({
   after,
   attempts,
 }: OutcomeInput): WritebackOutcome {
-  const verified = before.read === "ok" && after.read === "ok";
+  const bothStatesRead = before.read === "ok" && after.read === "ok";
   if (refusedBecause !== null || intent === null) {
-    return { succeeded: false, noop: false, verified };
+    return { succeeded: false, noop: false, bothStatesRead };
   }
   return {
     succeeded:
       attempts.length > 0 && attempts.every((a) => a.succeeded) && matchesIntent(after, intent),
     noop: isNoop(before, after, intent),
-    verified,
+    bothStatesRead,
   };
 }
 
