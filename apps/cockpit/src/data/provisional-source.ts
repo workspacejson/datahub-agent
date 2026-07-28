@@ -51,18 +51,23 @@ export const provisionalSource = {
  * values before a component can receive them; views never select raw fields.
  */
 export const provisionalStates = {
-  loading: { ...provisionalSource, read: "not-queried", completeness: "not-established", resolutionDisposition: "partial" },
+  loading: { ...provisionalSource, read: "not-queried", completeness: "not-established", resolutionDisposition: "indeterminate" },
   unavailable: { ...provisionalSource, source: "unavailable", read: "not-queried", completeness: "not-established", resolutionDisposition: "unavailable" },
-  partial: { ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "partial" },
-  indeterminate: { ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "partial", terminalWritebackDisposition: "indeterminate", receipt: { ...provisionalSource.receipt, writeback: { ...provisionalSource.receipt.writeback, terminalDisposition: "indeterminate" } } },
+  partial: { ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "indeterminate" },
+  // The artifact describes the file more than once and the join cannot single
+  // it out. Unreachable before the ratified axis existed: it collapsed into
+  // `partial` alongside "no candidate at all". HAC-218 requires an ambiguous
+  // source among its rendered states.
+  ambiguous: { ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "ambiguous" },
+  indeterminate: { ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "indeterminate", terminalWritebackDisposition: "indeterminate", receipt: { ...provisionalSource.receipt, writeback: { ...provisionalSource.receipt.writeback, terminalDisposition: "indeterminate" } } },
   contradictory: { ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "mismatch", terminalWritebackDisposition: "contradictory", receipt: { ...provisionalSource.receipt, writeback: { ...provisionalSource.receipt.writeback, terminalDisposition: "contradictory" } } },
   error: { ...provisionalSource, source: "DataHub", read: "failed", completeness: "not-established", resolutionDisposition: "unavailable" },
   "accepted-not-observed": {
-    ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "resolved",
+    ...provisionalSource, read: "ok", completeness: "not-established", resolutionDisposition: "exact",
     mutationAcceptance: "accepted", intendedStateObservation: "not-observed", terminalWritebackDisposition: "accepted-not-observed", receipt: { ...provisionalSource.receipt, writeback: { ...provisionalSource.receipt.writeback, mutationResponse: "accepted", intendedStateObservation: "not-observed", terminalDisposition: "accepted-not-observed" } },
   },
   success: {
-    ...provisionalSource, read: "ok", completeness: "complete-against-pinned-manifest", resolutionDisposition: "resolved",
+    ...provisionalSource, read: "ok", completeness: "complete-against-pinned-manifest", resolutionDisposition: "exact",
     mutationAcceptance: "accepted", intendedStateObservation: "observed", terminalWritebackDisposition: "success", receipt: { ...provisionalSource.receipt, writeback: { ...provisionalSource.receipt.writeback, mutationResponse: "accepted", afterStateRead: "ok", bothStatesRead: true, afterStateFreshness: "fresh", intendedStateObservation: "observed", terminalDisposition: "success" } },
   },
 } as const satisfies Record<import("../model/cockpit-view-model").CockpitStateName, Record<string, unknown>>;

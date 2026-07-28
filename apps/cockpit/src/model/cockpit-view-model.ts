@@ -3,7 +3,24 @@ import { z } from "zod";
 export const sourceSchema = z.enum(["DataHub", "workspace.json", "Joined", "unavailable"]);
 export const readSchema = z.enum(["ok", "failed", "not-queried"]);
 export const completenessSchema = z.enum(["complete-against-pinned-manifest", "not-established"]);
-export const resolutionDispositionSchema = z.enum(["resolved", "partial", "mismatch", "unavailable"]);
+/**
+ * How far the workspace artifact got at resolving the subject's producing file.
+ *
+ * These are the five values HAC-146 ratified, and the axis previously carried
+ * four different ones (`resolved | partial | mismatch | unavailable`). The gap
+ * was not cosmetic: `path-unresolved` and `path-ambiguous` both collapsed into
+ * `partial`, so "the index holds no candidate" and "the index holds several and
+ * cannot choose" reached a reviewer as the same word — while the comment above
+ * the mapping table claimed refusals were kept distinct.
+ *
+ * They are different findings with different fixes. An unresolved path means the
+ * artifact does not describe the file; an ambiguous one means it describes it
+ * more than once and the join cannot single it out. Telling a reviewer only that
+ * "something was partial" costs them the diagnosis.
+ */
+export const resolutionDispositionSchema = z.enum([
+  "exact", "ambiguous", "unavailable", "mismatch", "indeterminate",
+]);
 export const mutationAcceptanceSchema = z.enum(["not-attempted", "accepted", "rejected"]);
 export const intendedStateObservationSchema = z.enum(["not-attempted", "observed", "not-observed"]);
 export const terminalWritebackDispositionSchema = z.enum(["not-applicable", "success", "accepted-not-observed", "failed", "noop", "indeterminate", "contradictory"]);
@@ -14,7 +31,7 @@ export const sourceClaimSchema = z.object({ text: z.string().min(1), source: cla
 export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
 export const planDeltaSchema = z.object({ kind: z.enum(["added", "removed", "reordered", "constrained", "uncertainty-changed"]), label: z.string().min(1), reason: z.string().min(1), source: claimSourceSchema });
 export const cockpitStateNameSchema = z.enum([
-  "loading", "unavailable", "partial", "indeterminate", "contradictory", "error", "accepted-not-observed", "success",
+  "loading", "unavailable", "partial", "ambiguous", "indeterminate", "contradictory", "error", "accepted-not-observed", "success",
 ]);
 /**
  * One receipt field, and the standing of the value in it.
@@ -199,10 +216,10 @@ export const cockpitViewModelSchema = cockpitViewModelBaseSchema.superRefine((mo
   if (model.source === "unavailable" && model.read === "ok") {
     context.addIssue({ code: "custom", path: ["read"], message: "An unavailable source cannot report a successful read." });
   }
-  if (model.read === "failed" && model.resolutionDisposition === "resolved") {
+  if (model.read === "failed" && model.resolutionDisposition === "exact") {
     context.addIssue({ code: "custom", path: ["resolutionDisposition"], message: "A failed read cannot resolve a source." });
   }
-  if (model.resolutionDisposition === "resolved" && model.source === "unavailable") {
+  if (model.resolutionDisposition === "exact" && model.source === "unavailable") {
     context.addIssue({ code: "custom", path: ["source"], message: "An unavailable source cannot be resolved." });
   }
   if (model.terminalWritebackDisposition === "success" &&
