@@ -94,8 +94,65 @@ describe("CockpitViewModel boundary", () => {
   it("rejects impossible read, completeness, and resolution combinations", () => {
     const model = provisionalStateAdapter("partial").read();
     expect(() => cockpitViewModelSchema.parse({ ...model, read: "failed", completeness: "complete-against-pinned-manifest" })).toThrow();
-    expect(() => cockpitViewModelSchema.parse({ ...model, read: "failed", resolutionDisposition: "resolved" })).toThrow();
-    expect(() => cockpitViewModelSchema.parse({ ...model, source: "unavailable", resolutionDisposition: "resolved" })).toThrow();
+    // `exact`, not the retired `resolved`.
+    //
+    // These two assert cross-field refinements — a failed read cannot resolve a
+    // source, an unavailable source cannot be resolved. When the axis was
+    // renamed they kept saying `resolved`, so they still threw, but at the enum
+    // stage: the value was simply no longer a member. Both refinements went
+    // untested and neither could be killed by mutation, while the tests named
+    // for them stayed green.
+    //
+    // A test that passes for a different reason than the one it was written for
+    // is worse than a missing test, because it reports coverage that is not
+    // there. The refusal messages are asserted here so this cannot recur
+    // silently — a rule that stops firing now changes the message, not just the
+    // fact of throwing.
+    expect(() => cockpitViewModelSchema.parse({ ...model, read: "failed", resolutionDisposition: "exact" }))
+      .toThrow(/A failed read cannot resolve a source/);
+    expect(() => cockpitViewModelSchema.parse({ ...model, source: "unavailable", resolutionDisposition: "exact" }))
+      .toThrow(/An unavailable source cannot be resolved/);
+    // A source that could not be consulted cannot report that it answered.
+    expect(() => cockpitViewModelSchema.parse({ ...model, source: "unavailable", read: "ok" }))
+      .toThrow(/An unavailable source cannot report a successful read/);
+  });
+
+  it("refuses a receipt whose bothStatesRead contradicts the after-state it read", () => {
+    // A HAC-146 invariant that was enforced in code and killed by no test — so
+    // a refactor could have removed it silently. Found by mutation-sweeping
+    // every refinement in this schema during the HAC-146 closure read-back.
+    //
+    // Both directions, because the field is a claim either way: asserting the
+    // states were read when the after-state was not, and denying it when it was.
+    const model = provisionalStateAdapter("partial").read();
+    const writeback = model.receipt.writeback;
+
+    expect(() => cockpitViewModelSchema.parse({
+      ...model,
+      receipt: { ...model.receipt, writeback: { ...writeback, afterStateRead: "failed", bothStatesRead: true } },
+    })).toThrow(/bothStatesRead must exactly reflect a readable after-state/);
+
+    expect(() => cockpitViewModelSchema.parse({
+      ...model,
+      receipt: { ...model.receipt, writeback: { ...writeback, afterStateRead: "ok", bothStatesRead: false } },
+    })).toThrow(/bothStatesRead must exactly reflect a readable after-state/);
+  });
+
+  it("refuses a receipt claiming success without observing the intended state", () => {
+    // The other unkilled HAC-146 invariant. `succeeded` requires the intended
+    // state to have been observed — mutations returning cleanly is not evidence
+    // that the write became visible, which is the defect HAC-223 fixed one
+    // layer down and this rule mirrors at the surface.
+    const model = provisionalStateAdapter("success").read();
+    const writeback = model.receipt.writeback;
+
+    expect(() => cockpitViewModelSchema.parse({
+      ...model,
+      receipt: {
+        ...model.receipt,
+        writeback: { ...writeback, intendedStateObservation: "not-observed", terminalDisposition: "success" },
+      },
+    })).toThrow(/Success requires observed intended state/);
   });
   it("models matched, mismatched, ambiguous, and unavailable resolution without inference", () => {
     // This test was already named for `ambiguous` while asserting `partial` —
