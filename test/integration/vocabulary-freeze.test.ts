@@ -178,12 +178,272 @@ describe("V-1 · completeness without the manifest it names", () => {
       observedCount: 1,
       verification: {
         manifestDigest: "m",
-        expectedSetDigest: "e",
-        observedSetDigest: "o",
+        // Expected and observed must be the *same* digest. An earlier version of
+        // this control used "e" and "o", which meant the positive case asserted
+        // that a comparison coming out unequal supports a completeness claim.
+        expectedSetDigest: "set-digest",
+        observedSetDigest: "set-digest",
         queryParameters: { direction: "UPSTREAM", degree: 1 },
       },
     };
     expect(validateEvent(event)).toEqual([]);
+  });
+
+  it("refuses the claim when the expected and observed digests disagree", () => {
+    // Unequal digests are the record of a comparison that came out unequal, so
+    // an event carrying them asserts completeness on evidence that disproves it
+    // — with the disproof in the adjacent field.
+    const event = validEvent();
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: 1,
+      verification: {
+        manifestDigest: "m",
+        expectedSetDigest: "expected",
+        observedSetDigest: "observed",
+        queryParameters: { direction: "UPSTREAM", degree: 1 },
+      },
+    };
+    expect(validateEvent(event)).toContainEqual(
+      expect.stringContaining("expected and observed set digests differ"),
+    );
+  });
+});
+
+describe("V-1b · `absent` claimed without the evidence that alone permits it", () => {
+  // HAC-146 requires that `absent` rest on `VerificationEvidence`. It is the
+  // vocabulary's strongest word — asked, and reported nothing — and a
+  // partially-converged index returning zero satisfies "asked and got nothing"
+  // while being no evidence at all about the data.
+  //
+  // The gate is a chain: `absent` requires completeness
+  // `complete-against-pinned-manifest`, which requires the evidence block. These
+  // tests hold every link, including the one that was missing.
+
+  /**
+   * An event whose upstream lineage is empty, with one entry describing it.
+   *
+   * The observation is overridable, and it has to be. An earlier version of this
+   * helper pinned it at `not-established` while letting the `unavailable` entry
+   * claim `complete-against-pinned-manifest` — so the positive control asserted
+   * that one answer could be simultaneously established and not, and
+   * `validateEvent` agreed. V-1c now refuses exactly that.
+   */
+  const withUpstreamEntry = (
+    entry: Record<string, unknown>,
+    observation: Record<string, unknown> = { read: "ok", completeness: "not-established", observedCount: 0 },
+  ): ChangeImpactEvent => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams =
+      observation as unknown as ChangeImpactEvent["datahub"]["lineageObservation"]["upstreams"];
+    event.unavailable = [{
+      field: "datahub.upstreams",
+      source: "datahub",
+      detail: "the catalog reported no upstream lineage",
+      ...entry,
+    } as ChangeImpactEvent["unavailable"][number]];
+    return event;
+  };
+
+  /** One attestation, referenced by both representations so they agree by construction. */
+  const ATTESTED = {
+    manifestDigest: "manifest-digest",
+    expectedSetDigest: "set-digest",
+    observedSetDigest: "set-digest",
+    queryParameters: { direction: "UPSTREAM", degree: 1 },
+  } as const;
+
+  /** The observation that permits `absent`: read, empty, and established complete. */
+  const attestedEmpty = {
+    read: "ok",
+    completeness: "complete-against-pinned-manifest",
+    observedCount: 0,
+    verification: ATTESTED,
+  };
+
+  it("refuses `absent` that states no completeness at all", () => {
+    // The case that escaped. Only the explicit `absent` + `not-established`
+    // pairing was rejected, so omitting the field entirely validated clean —
+    // the missing field read as permission, inside the check written to stop
+    // absence being read as safety.
+    expect(validateEvent(withUpstreamEntry({ reason: "absent" }))).toContainEqual(
+      expect.stringContaining("claims absent without stating completeness"),
+    );
+  });
+
+  it("refuses `absent` on an answer whose completeness was never established", () => {
+    const problems = validateEvent(
+      withUpstreamEntry({ reason: "absent", completeness: "not-established", observedCount: 0 }),
+    );
+    expect(problems).toContainEqual(expect.stringContaining("use indeterminate"));
+  });
+
+  it("refuses `absent` that claims the strong completeness without producing the manifest", () => {
+    const problems = validateEvent(
+      withUpstreamEntry({
+        reason: "absent",
+        completeness: "complete-against-pinned-manifest",
+        observedCount: 0,
+      }),
+    );
+    expect(problems).toContainEqual(
+      expect.stringContaining("without naming the manifest"),
+    );
+  });
+
+  it("permits `absent` once both representations agree and the manifest is named", () => {
+    // The full chain, satisfied: the read happened, the collection is empty, the
+    // count is zero, the canonical observation says complete against a pinned
+    // manifest, the digests are equal, and the entry carries the same
+    // attestation. Every one of those is checked, and each was individually
+    // escapable before V-1b and V-1c.
+    const problems = validateEvent(
+      withUpstreamEntry(
+        {
+          reason: "absent",
+          completeness: "complete-against-pinned-manifest",
+          observedCount: 0,
+          verification: ATTESTED,
+        },
+        attestedEmpty,
+      ),
+    );
+    expect(problems).toEqual([]);
+  });
+
+  it("still accepts `indeterminate` as the honest word for the same observation", () => {
+    // The value of refusing `absent` is that a producer has somewhere correct
+    // to go. If `indeterminate` were also refused, the gate would just push
+    // producers back toward the stronger word.
+    expect(
+      validateEvent(
+        withUpstreamEntry({
+          reason: "indeterminate",
+          completeness: "not-established",
+          observedCount: 0,
+        }),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("V-1c · `unavailable` disagreeing with the canonical lineage observation", () => {
+  // `unavailable` and `lineageObservation` are two representations of one fact.
+  // The observation is canonical — mandatory on every event, in both directions.
+  // Until these checks existed an event could say both things at once, and the
+  // contradiction was only visible to a reader who thought to compare them.
+
+  const ATTESTED = {
+    manifestDigest: "manifest-digest",
+    expectedSetDigest: "set-digest",
+    observedSetDigest: "set-digest",
+    queryParameters: { direction: "UPSTREAM", degree: 1 },
+  } as const;
+
+  const build = (
+    entry: Record<string, unknown>,
+    observation: Record<string, unknown>,
+  ): ChangeImpactEvent => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams =
+      observation as unknown as ChangeImpactEvent["datahub"]["lineageObservation"]["upstreams"];
+    event.unavailable = [{
+      field: "datahub.upstreams",
+      source: "datahub",
+      detail: "the catalog reported no upstream lineage",
+      ...entry,
+    } as ChangeImpactEvent["unavailable"][number]];
+    return event;
+  };
+
+  it("refuses `unavailable` claiming complete while the observation says not-established", () => {
+    const problems = validateEvent(build(
+      { reason: "indeterminate", completeness: "complete-against-pinned-manifest", observedCount: 0, verification: ATTESTED },
+      { read: "ok", completeness: "not-established", observedCount: 0 },
+    ));
+    expect(problems).toContainEqual(expect.stringContaining("one answer cannot be both"));
+  });
+
+  it("refuses the observation claiming complete while `unavailable` says not-established", () => {
+    // The same contradiction from the other side. Checking only one direction
+    // would leave the mirror image reachable.
+    const problems = validateEvent(build(
+      { reason: "indeterminate", completeness: "not-established", observedCount: 0 },
+      { read: "ok", completeness: "complete-against-pinned-manifest", observedCount: 0, verification: ATTESTED },
+    ));
+    expect(problems).toContainEqual(expect.stringContaining("one answer cannot be both"));
+  });
+
+  it("refuses unequal expected and observed set digests", () => {
+    const problems = validateEvent(build(
+      { reason: "indeterminate", completeness: "not-established", observedCount: 0 },
+      {
+        read: "ok",
+        completeness: "complete-against-pinned-manifest",
+        observedCount: 0,
+        verification: { ...ATTESTED, expectedSetDigest: "expected", observedSetDigest: "observed" },
+      },
+    ));
+    expect(problems).toContainEqual(expect.stringContaining("expected and observed set digests differ"));
+  });
+
+  it("refuses a manifest queried in the wrong direction for the field it evidences", () => {
+    // Upstream and downstream closures are different sets. An answer compared
+    // against the wrong one passes or fails for reasons unrelated to the field.
+    const problems = validateEvent(build(
+      { reason: "indeterminate", completeness: "not-established", observedCount: 0 },
+      {
+        read: "ok",
+        completeness: "complete-against-pinned-manifest",
+        observedCount: 0,
+        verification: { ...ATTESTED, queryParameters: { direction: "DOWNSTREAM", degree: 1 } },
+      },
+    ));
+    expect(problems).toContainEqual(expect.stringContaining("describes UPSTREAM lineage"));
+  });
+
+  it("refuses two different attestations for the same read", () => {
+    const problems = validateEvent(build(
+      {
+        reason: "indeterminate",
+        completeness: "complete-against-pinned-manifest",
+        observedCount: 0,
+        verification: { ...ATTESTED, manifestDigest: "a-different-manifest" },
+      },
+      { read: "ok", completeness: "complete-against-pinned-manifest", observedCount: 0, verification: ATTESTED },
+    ));
+    expect(problems).toContainEqual(
+      expect.stringContaining("the same read cannot have two attestations"),
+    );
+  });
+
+  it("refuses an observedCount that disagrees across the two representations", () => {
+    const problems = validateEvent(build(
+      { reason: "indeterminate", completeness: "not-established", observedCount: 3 },
+      { read: "ok", completeness: "not-established", observedCount: 0 },
+    ));
+    expect(problems).toContainEqual(expect.stringContaining("but datahub.lineageObservation.upstreams reports 0"));
+  });
+
+  it("refuses `absent` on a direction whose read never happened", () => {
+    const problems = validateEvent(build(
+      { reason: "absent", completeness: "complete-against-pinned-manifest", verification: ATTESTED },
+      { read: "not-queried", completeness: "complete-against-pinned-manifest", verification: ATTESTED },
+    ));
+    expect(problems).toContainEqual(
+      expect.stringContaining("a read that did not happen found nothing to report"),
+    );
+  });
+
+  it("accepts agreeing representations, so the guard is not simply always-refuse", () => {
+    const problems = validateEvent(build(
+      { reason: "indeterminate", completeness: "not-established", observedCount: 0 },
+      { read: "ok", completeness: "not-established", observedCount: 0 },
+    ));
+    expect(problems).toEqual([]);
   });
 });
 

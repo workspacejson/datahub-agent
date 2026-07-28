@@ -110,7 +110,15 @@ function resolvedEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpact
       {
         field: "partners",
         source: "workspacejson",
-        reason: "absent",
+        // `indeterminate`, not `absent`, and this is what the emitter actually
+        // produces. `absent` asserts the source was asked and holds nothing,
+        // which is only sayable about an answer established complete against a
+        // pinned manifest — so it now requires VerificationEvidence. An
+        // artifact that carries index keys but no co-change values has not
+        // established that no co-change exists.
+        reason: "indeterminate",
+        completeness: "not-established",
+        observedCount: 0,
         detail: "the artifact carries file-index keys but no behavioral co-change values",
       },
     ],
