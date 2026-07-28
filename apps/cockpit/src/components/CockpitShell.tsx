@@ -21,7 +21,13 @@ export function CockpitShell({ model, route, onRouteChange }: {
       <nav aria-label="Cockpit views">{routes.map(({ route: itemRoute, label }) =>
         <button key={itemRoute} className={route === itemRoute ? "active" : ""} aria-current={route === itemRoute ? "page" : undefined} onClick={() => onRouteChange(itemRoute)}>{label}</button>)}</nav>
     </header>
-    <section className="state-strip" aria-label="Evidence state">
+    {/*
+      The strip changes when the route or the model changes, and neither
+      reloads the page. Without a live region a screen-reader user is told the
+      route changed and not that the evidence state under it did — which is the
+      half that says whether anything on screen can be trusted.
+    */}
+    <section className="state-strip" aria-label="Evidence state" aria-live="polite">
       <span>{model.source}</span><span>{model.read}</span><span>{model.completeness}</span><span>{model.resolutionDisposition}</span>
     </section>
     <section className="route-slot" aria-labelledby="route-title">
