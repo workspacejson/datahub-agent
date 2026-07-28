@@ -33,7 +33,16 @@ const cockpitViewModelBaseSchema = z.object({
   datasetIdentity: sourceClaimSchema,
   producerPath: sourceClaimSchema,
   repositoryEvidence: sourceClaimSchema,
-  immutableViewSourceUrl: z.string().url(),
+  /**
+   * Null when the catalog exposes no commit-pinned URL for the producing file.
+   *
+   * This was required, and requiring it was a mistake: `externalUrl` is dropped
+   * at the official MCP boundary (`evaluation/mcp-field-coverage.md`), so an
+   * MCP-honest read path cannot always produce one. A required URL leaves a
+   * projection two options, and both are worse than admitting absence —
+   * fabricate a link, or refuse to render an event that is otherwise sound.
+   */
+  immutableViewSourceUrl: z.string().url().nullable(),
   impactEdges: z.array(impactEdgeSchema),
   planDeltas: z.array(planDeltaSchema),
 });
