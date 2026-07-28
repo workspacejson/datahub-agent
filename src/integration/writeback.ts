@@ -108,7 +108,13 @@ export function notQueriedState(why: string): CatalogState {
  * Every claim the receipt makes is relative to this.
  */
 export interface WritebackIntent {
-  linkUrl: string;
+  /**
+   * Null when no commit-pinned URL was obtainable and the writeback proceeded
+   * on the evidence tier alone. It means "this operation made no claim about
+   * the link", so `matchesIntent` does not compare it — requiring the catalog
+   * to hold no link would assert the opposite of what was intended.
+   */
+  linkUrl: string | null;
   evidenceTier: EvidenceTier;
 }
 
@@ -174,6 +180,15 @@ export interface WritebackReceipt {
   verified: boolean;
   /** Why the writeback did not proceed, when it did not. */
   refusedBecause: string | null;
+  /**
+   * Why no source link was written, when the enrichment proceeded without one.
+   *
+   * Distinct from `refusedBecause`: that says nothing happened, this says
+   * something happened with one part deliberately left out. A receipt showing a
+   * landed enrichment and no link would otherwise leave a reader unable to tell
+   * a declined link from a forgotten one.
+   */
+  linkOmittedBecause: string | null;
 }
 
 /**
@@ -181,7 +196,11 @@ export interface WritebackReceipt {
  * which is the same condition `refusalReason` reports in prose.
  */
 export function intendedState(event: ChangeImpactEvent): WritebackIntent | null {
-  if (!event.code.sourceUrl) return null;
+  // Null only when the writeback is refused outright. A missing source URL is
+  // not that: the tier is still being written, so there is still an intended
+  // state to observe against — and returning null here would leave a real
+  // mutation with nothing to verify it landed.
+  if (refusalReason(event) !== null) return null;
   return { linkUrl: event.code.sourceUrl, evidenceTier: event.evidence.tier };
 }
 
@@ -194,7 +213,16 @@ export function intendedState(event: ChangeImpactEvent): WritebackIntent | null 
  */
 export function matchesIntent(state: CatalogState, intent: WritebackIntent): boolean {
   if (state.read !== "ok") return false;
-  return state.linkUrl === intent.linkUrl && state.evidenceTier === intent.evidenceTier;
+  // A null `linkUrl` intent means no link was written, not that the catalog
+  // must hold none. Comparing it as a value made the observation demand the
+  // absence of a link the writeback never touched — so an enrichment that
+  // landed cleanly could never be observed as settled, and a live run polled to
+  // its bound and reported `timed-out` on a write that had already succeeded.
+  //
+  // That is the same overreach in the opposite direction: asserting something
+  // about a field this operation made no claim on.
+  const linkMatches = intent.linkUrl === null || state.linkUrl === intent.linkUrl;
+  return linkMatches && state.evidenceTier === intent.evidenceTier;
 }
 
 /**
@@ -265,15 +293,37 @@ export const LINK_LABEL = "Producing source (workspace.json)" as const;
  */
 export function refusalReason(event: ChangeImpactEvent): string | null {
   if (event.code.method === "unresolved") {
-    return "the producing file could not be resolved, so there is no link to write";
-  }
-  if (!event.code.sourceUrl) {
-    return "no commit-pinned source URL is available; an unpinned link would drift from the artifact it describes";
+    return "the producing file could not be resolved, so there is no enrichment to attach";
   }
   if (!event.provenance.corpus.commit) {
     return "the source revision is unknown, so the enrichment could not be attributed to a commit";
   }
+  // A missing source URL is deliberately *not* here.
+  //
+  // It used to refuse the whole writeback, which suppressed the evidence-tier
+  // mutation as well — a mutation that reads only the subject URN and the
+  // derived tier, and never touches the URL. So an optional field's absence was
+  // escalating into refusal of an operation it has no bearing on, and the half
+  // being dropped was the half carrying the actual evidence.
+  //
+  // That is the same absence-collapse this contract exists to prevent, one
+  // layer up: "cannot do all of it" read as "cannot do any of it". The link is
+  // what lets a human click through to an exact file; it is not what makes the
+  // annotation worth writing. `linkOmission` states why it was left out, so the
+  // receipt shows a scoped omission rather than a silent one.
   return null;
+}
+
+/**
+ * Why no source link accompanies an otherwise-permitted writeback.
+ *
+ * Null when a link is being written. A string here is a stated omission, and it
+ * belongs in the receipt: a judge seeing an enrichment land without a link is
+ * entitled to know the link was declined rather than forgotten.
+ */
+export function linkOmission(event: ChangeImpactEvent): string | null {
+  if (event.code.sourceUrl) return null;
+  return "no commit-pinned source URL is available; an unpinned link would drift from the artifact it describes, so none was written";
 }
 
 /**
@@ -287,19 +337,23 @@ export function planWriteback(
   event: ChangeImpactEvent,
 ): Array<Pick<MutationAttempt, "mutation" | "variables">> {
   const sourceUrl = event.code.sourceUrl;
-  if (!sourceUrl) return [];
 
   return [
-    {
-      mutation: "upsertLink",
-      variables: {
-        input: {
-          resourceUrn: event.subject.urn,
-          linkUrl: sourceUrl,
-          label: LINK_LABEL,
-        },
-      },
-    },
+    // The link is conditional; the evidence tier is not. Returning `[]` for both
+    // when the URL is missing dropped a mutation that depends on neither the URL
+    // nor anything derived from it.
+    ...(sourceUrl
+      ? [{
+          mutation: "upsertLink" as const,
+          variables: {
+            input: {
+              resourceUrn: event.subject.urn,
+              linkUrl: sourceUrl,
+              label: LINK_LABEL,
+            },
+          },
+        }]
+      : []),
     {
       mutation: "upsertStructuredProperties",
       variables: {

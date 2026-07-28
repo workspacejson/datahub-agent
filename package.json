@@ -31,16 +31,17 @@
     "parity:datahub-adapter": "tsx migration/parity-datahub-shim.mjs"
   },
   "dependencies": {
-    "@workspacejson/spec": "0.4.4"
+    "@workspacejson/spec": "0.4.4",
+    "zod": "4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.55.0",
     "@types/node": "22.19.17",
     "@workspacejson/cli": "0.5.0",
+    "axe-core": "^4.10.3",
     "tsx": "4.19.2",
     "typescript": "^5.4.0",
-    "vitest": "^1.6.0",
-    "@playwright/test": "^1.55.0",
-    "@axe-core/playwright": "^4.10.2",
-    "axe-core": "^4.10.3"
+    "vitest": "^1.6.0"
   }
 }

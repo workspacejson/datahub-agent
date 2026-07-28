@@ -29,6 +29,7 @@ import {
   planWriteback,
   redact,
   refusalReason,
+  linkOmission,
   unreadableState,
   type CatalogState,
   type MutationAttempt,
@@ -49,7 +50,15 @@ function resolvedEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpact
       producer: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
       datahub: { gmsUrl: "http://localhost:8080", gmsVersion: "v1.5.0.6" },
       corpus: { repository: "https://github.com/dcaribou/transfermarkt-datasets", commit: COMMIT },
-      workspaceArtifact: { producedBy: "@workspacejson/cli", fileIndexKeys: 36 },
+      workspaceArtifact: {
+        producedBy: "@workspacejson/cli",
+        fileIndexKeys: 131,
+        // Corpus-matched: this artifact describes the subject's repository at
+        // the subject's revision, so its claims are the subject's to make.
+        repository: "https://github.com/dcaribou/transfermarkt-datasets",
+        revision: COMMIT,
+        integrity: "exact-match",
+      },
     },
     subject: { urn: URN },
     datahub: {
@@ -121,12 +130,27 @@ describe("refusalReason", () => {
     expect(refusalReason(event)).toMatch(/could not be resolved/);
   });
 
-  it("refuses an unpinned link rather than writing one that drifts", () => {
-    // A branch-relative URL would silently start pointing at different content
-    // than the artifact describes. Refusing is the honest outcome.
+  it("declines the link without refusing the whole enrichment", () => {
+    // A branch-relative URL would drift from the artifact it describes, so no
+    // link is written. That is an omission, not a refusal: the evidence tier
+    // reads neither the URL nor anything derived from it, and suppressing it
+    // would let a missing optional field cancel an unrelated mutation.
     const event = resolvedEvent();
     event.code.sourceUrl = null;
-    expect(refusalReason(event)).toMatch(/commit-pinned/);
+    expect(refusalReason(event)).toBeNull();
+    expect(linkOmission(event)).toMatch(/commit-pinned/);
+  });
+
+  it("states the omission in prose, so a receipt shows it was declined not forgotten", () => {
+    const event = resolvedEvent();
+    event.code.sourceUrl = null;
+    const omission = linkOmission(event);
+    expect(typeof omission).toBe("string");
+    expect((omission as string).length).toBeGreaterThan(20);
+  });
+
+  it("reports no omission when a link is being written", () => {
+    expect(linkOmission(resolvedEvent())).toBeNull();
   });
 
   it("refuses when the enrichment could not be attributed to a commit", () => {
@@ -139,7 +163,8 @@ describe("refusalReason", () => {
     // The receipt shows this string to a reviewer. A boolean would produce a
     // silent skip, which is the failure mode the receipt exists to prevent.
     const event = resolvedEvent();
-    event.code.sourceUrl = null;
+    event.code.method = "unresolved";
+    event.code.repositoryRelativePath = null;
     const reason = refusalReason(event);
     expect(typeof reason).toBe("string");
     expect((reason as string).length).toBeGreaterThan(20);
@@ -203,10 +228,20 @@ describe("planWriteback", () => {
     },
   );
 
-  it("plans nothing when there is no source URL to write", () => {
+  it("plans the evidence tier alone when there is no source URL to write", () => {
+    // The mutation that carries the evidence is the one that does not need the
+    // link. Dropping both was the absence-collapse: "cannot do all of it" read
+    // as "cannot do any of it".
     const event = resolvedEvent();
     event.code.sourceUrl = null;
-    expect(planWriteback(event)).toEqual([]);
+    const mutations = planWriteback(event).map((s) => s.mutation);
+    expect(mutations).toEqual(["upsertStructuredProperties"]);
+  });
+
+  it("never writes a link mutation without a URL to put in it", () => {
+    const event = resolvedEvent();
+    event.code.sourceUrl = null;
+    expect(planWriteback(event).some((s) => s.mutation === "upsertLink")).toBe(false);
   });
 
   it("is pure — planning does not mutate the event it reads", () => {
@@ -278,6 +313,22 @@ describe("redact", () => {
     redact(variables);
     expect(variables.input.token).toBe("secret-value");
   });
+
+  it("passes through null and primitive values without error", () => {
+    expect(redact({ a: null, b: 42, c: "text", d: true })).toEqual({
+      a: null, b: 42, c: "text", d: true,
+    });
+  });
+
+  it("handles an empty object", () => {
+    expect(redact({})).toEqual({});
+  });
+
+  it("redacts a key nested inside an array of objects within an object", () => {
+    const out = redact({ outer: [{ inner: { secret: "s" } }] });
+    const arr = out.outer as Array<{ inner: { secret: string } }>;
+    expect(arr[0]?.inner.secret).toBe("[redacted]");
+  });
 });
 
 /** A state the catalog actually answered for. */
@@ -323,11 +374,20 @@ describe("intendedState", () => {
     expect(intendedState(resolvedEvent())).toEqual(INTENT);
   });
 
-  it("is null when there is nothing to write, matching the refusal", () => {
+  it("is null exactly when the writeback is refused outright", () => {
     const event = resolvedEvent();
-    event.code.sourceUrl = null;
+    event.code.method = "unresolved";
+    event.code.repositoryRelativePath = null;
     expect(intendedState(event)).toBeNull();
     expect(refusalReason(event)).not.toBeNull();
+  });
+
+  it("carries a null link as a real intent when only the tier is written", () => {
+    // Returning null here would leave a mutation that does land with nothing to
+    // verify it against — an unobserved write, which HAC-223 exists to prevent.
+    const event = resolvedEvent();
+    event.code.sourceUrl = null;
+    expect(intendedState(event)).toEqual({ linkUrl: null, evidenceTier: "VERIFIED" });
   });
 
   it("follows the event's tier rather than assuming one", () => {
@@ -492,6 +552,20 @@ describe("deriveOutcome", () => {
     expect(seen.verified).toBe(true);
     expect(seen.succeeded).toBe(false);
   });
+
+  it("claims nothing when intent is null and nothing was refused", () => {
+    // The event had no source URL, so intent is null, but there was no refusal
+    // reason either (e.g. a dry run that chose not to compute one). This is
+    // not a success and not a noop — it is the absence of a write.
+    const noIntent = outcome({ intent: null, attempts: [] });
+    expect(noIntent.succeeded).toBe(false);
+    expect(noIntent.noop).toBe(false);
+  });
+
+  it("does not claim success when only one of two mutations succeeded", () => {
+    const half = [landed[0]!, { ...landed[1]!, succeeded: false, response: "timeout" }];
+    expect(outcome({ attempts: half }).succeeded).toBe(false);
+  });
 });
 
 describe("attachReceipt", () => {
@@ -501,6 +575,7 @@ describe("attachReceipt", () => {
     attemptedAt: "2026-07-27T00:00:00.000Z",
     revision: { repository: "https://github.com/dcaribou/transfermarkt-datasets", commit: COMMIT },
     intended: INTENT,
+    linkOmittedBecause: null,
     before: readState(null),
     after: readState(SOURCE_URL, "VERIFIED"),
     attempts: [
@@ -587,5 +662,51 @@ describe("attachReceipt", () => {
     );
     expect(refused.writeback?.refusedBecause).toMatch(/commit-pinned/);
     expect(refused.writeback?.attempts).toEqual([]);
+  });
+
+  it("carries a null observation when no write was attempted", () => {
+    // A refused or dry-run writeback has no observation record. The receipt
+    // must carry the null explicitly, not omit the key — a missing key reads
+    // as "this consumer is old" while null reads as "nothing was observed".
+    const noObservation = attachReceipt(
+      resolvedEvent(),
+      receipt({
+        succeeded: false,
+        attempts: [],
+        observation: null,
+        refusedBecause: "no commit-pinned source URL is available",
+        after: notQueriedState("dry run"),
+        before: notQueriedState("dry run"),
+      }),
+    );
+    expect(noObservation.writeback?.observation).toBeNull();
+    expect(Object.hasOwn(noObservation.writeback as object, "observation")).toBe(true);
+  });
+});
+
+describe("observing an intent that omits the link", () => {
+  const tierOnly: WritebackIntent = { linkUrl: null, evidenceTier: "VERIFIED" };
+
+  it("settles against a catalog that already holds an unrelated link", () => {
+    // The live failure this encodes: a prior run had left a link, the tier-only
+    // writeback landed cleanly, and the observation polled to its 120s bound
+    // reporting `timed-out` — because a null intent was being compared as a
+    // demand that no link exist.
+    expect(matchesIntent(
+      { linkUrl: "https://example.com/a/blob/abc/f.sql", evidenceTier: "VERIFIED", read: "ok", readError: null },
+      tierOnly,
+    )).toBe(true);
+  });
+
+  it("settles against a catalog holding no link at all", () => {
+    expect(matchesIntent({ linkUrl: null, evidenceTier: "VERIFIED", read: "ok", readError: null }, tierOnly)).toBe(true);
+  });
+
+  it("still requires the tier it did claim", () => {
+    expect(matchesIntent({ linkUrl: null, evidenceTier: "OBSERVED", read: "ok", readError: null }, tierOnly)).toBe(false);
+  });
+
+  it("still refuses a state nobody read", () => {
+    expect(matchesIntent(unreadableState("boom"), tierOnly)).toBe(false);
   });
 });

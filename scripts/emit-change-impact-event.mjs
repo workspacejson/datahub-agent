@@ -3,16 +3,33 @@
  * Emit a ChangeImpactEvent for one dataset, from a live DataHub plus the
  * workspace.json artifact.
  *
- * This is the read path the demo and the cockpit consume. It reads through the
- * catalog's GraphQL API — the same surface the official MCP server projects —
- * so the event reflects what an agent can actually obtain, not what a catalog
- * happens to store internally.
+ * This is the read path the demo and the cockpit consume.
+ *
+ * It reads the catalog's GraphQL API **directly**, and that is not the same
+ * thing as reading through the official MCP server. What makes the event
+ * MCP-faithful is a restriction, not the transport: this script requests only
+ * fields the official MCP server projects for `Dataset`, verified field by
+ * field in `evaluation/mcp-field-coverage.md`.
+ *
+ * The distinction matters because the earlier wording — "the same surface the
+ * official MCP server projects" — was false while this script read
+ * `externalUrl`, a field that measurement records as dropped at the MCP
+ * boundary for `Dataset`. The event then reflected a capability an MCP agent
+ * does not have. The read was removed; the claim outlived it by a merge, which
+ * is why it is spelled out here rather than summarised.
+ *
+ * The cost of the restriction is real and is stated rather than worked around:
+ * without `externalUrl` there is no commit-pinned source URL, so `code.sourceUrl`
+ * is null, no `external-url` resolution is possible, and the writeback refuses
+ * for want of a link it will not invent. HAC-156 is the upstream fix.
  *
  * Usage:
  *   node scripts/emit-change-impact-event.mjs [urn] [--gms URL] [--out FILE]
+ *     --subject-repository URL --subject-revision SHA
+ *     --workspace-artifact FILE
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,9 +43,16 @@ const flag = (name, fallback) => {
 };
 const GMS = flag("gms", "http://localhost:8080");
 const OUT = flag("out", null);
-const URN =
-  argv.find((a) => a.startsWith("urn:")) ??
-  "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)";
+const SUBJECT_REPOSITORY = flag("subject-repository", null);
+const SUBJECT_REVISION = flag("subject-revision", null);
+const WORKSPACE_ARTIFACT = flag("workspace-artifact", null);
+const READINESS_MANIFEST = flag("readiness-manifest", null);
+const READINESS_DEADLINE_MS = Number(flag("readiness-deadline-ms", "120000"));
+const URN = argv.find((a) => a.startsWith("urn:")) ?? null;
+if (!URN) {
+  console.error("usage: supply the DataHub dataset URN as the first positional argument");
+  process.exit(2);
+}
 
 async function gql(query) {
   const response = await fetch(`${GMS}/api/graphql`, {
@@ -91,7 +115,7 @@ const entity = await gql(`{
   dataset(urn: ${JSON.stringify(URN)}) {
     urn
     platform { name }
-    properties { name description externalUrl customProperties { key value } }
+    properties { name description customProperties { key value } }
     ownership { owners { owner { ... on CorpUser { urn } ... on CorpGroup { urn } } } }
     domain { domain { urn } }
     schemaMetadata { fields { fieldPath } }
@@ -164,6 +188,44 @@ const downstreams = down.edges;
 
 const lineageObservation = { upstreams: up.observation, downstreams: down.observation };
 
+// A readiness manifest is optional evidence supplied by the corpus owner, not
+// something this generic emitter invents. When present, it can upgrade exactly
+// one direction only after two bounded, set-equal live reads.
+if (READINESS_MANIFEST) {
+  try {
+    const manifest = JSON.parse(readFileSync(resolve(READINESS_MANIFEST), "utf8"));
+    const direction = manifest?.queryParameters?.direction;
+    if (direction !== "UPSTREAM" && direction !== "DOWNSTREAM") throw new Error("queryParameters.direction must be UPSTREAM or DOWNSTREAM");
+    const { observeReadiness } = await import(join(repoRoot, "src/integration/readiness.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
+      api.register(); return import(join(repoRoot, "src/integration/readiness.ts"));
+    }));
+    const readiness = await observeReadiness(manifest, READINESS_DEADLINE_MS, async (signal) => {
+      const response = await fetch(`${GMS}/api/graphql`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, signal,
+        body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(URN)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count} }) { searchResults { entity { urn } } } }` }),
+      });
+      const body = await response.json();
+      if (!response.ok || body.errors) throw new Error("readiness GraphQL request failed");
+      return (body.data?.searchAcrossLineage?.searchResults ?? []).map((result) => result.entity.urn);
+    });
+    if (readiness.disposition === "ready") {
+      const key = direction === "UPSTREAM" ? "upstreams" : "downstreams";
+      const observed = (key === "upstreams" ? upstreams : downstreams).map((edge) => edge.urn).sort();
+      const expected = [...new Set(manifest.expectedUrns)].sort();
+      if (JSON.stringify(observed) === JSON.stringify(expected)) {
+        lineageObservation[key] = { read: "ok", completeness: "verified", observedCount: observed.length, verification: {
+          manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
+          observedSetDigest: readiness.observedSetDigest, queryParameters: manifest.queryParameters,
+        } };
+      } else {
+        note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "unverified", observedCount: observed.length });
+      }
+    }
+  } catch (error) {
+    note("datahub.readiness", "datahub", "failed", `Readiness manifest was not usable: ${error.message}`);
+  }
+}
+
 for (const [field, side] of [
   ["datahub.upstreams", up],
   ["datahub.downstreams", down],
@@ -185,81 +247,87 @@ for (const [field, side] of [
 // Code resolution
 // ---------------------------------------------------------------------------
 const dbtFilePath = customProperties.dbt_file_path ?? null;
-const sourceUrl = props.externalUrl ?? null;
+// `externalUrl`, repository and commit are direct GraphQL fields, not part of
+// the official DataHub MCP projection. Do not smuggle them into this event.
+const sourceUrl = null;
 
 let repositoryRelativePath = null;
 let projectPrefix = null;
 let method = "unresolved";
 
-if (sourceUrl && dbtFilePath) {
-  // The catalog's URL is repository-relative; the dbt path is project-relative.
-  // The difference between them IS the project prefix — no configuration
-  // needed, and no guessing.
-  const afterBlob = sourceUrl.match(/\/blob\/[^/]+\/(.+)$/)?.[1] ?? null;
-  if (afterBlob && afterBlob.endsWith(dbtFilePath)) {
-    repositoryRelativePath = afterBlob;
-    projectPrefix = afterBlob.slice(0, afterBlob.length - dbtFilePath.length).replace(/\/$/, "");
-    method = "external-url";
-  }
-}
-
-if (method === "unresolved" && dbtFilePath) {
-  // Without a source URL the prefix is unknowable from the catalog alone. Say
-  // so rather than assuming the project sits at the repository root — that
-  // assumption is exactly what makes a nested project silently return nothing.
-  note("code.repositoryRelativePath", "datahub", "not-exposed-by-source",
-    "The catalog exposes a project-relative dbt path but no source URL, so the project's offset from the repository root cannot be derived.");
-}
+if (dbtFilePath) note("code.repositoryRelativePath", "datahub", "not-exposed-by-source",
+  "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact.");
 
 // ---------------------------------------------------------------------------
 // workspace.json evidence
 // ---------------------------------------------------------------------------
+const { assessWorkspaceEvidence, readArtifactIdentity } = await import(join(repoRoot, "src/integration/workspace-evidence.ts")).catch(async () => import("tsx/esm/api").then(async (api) => {
+  api.register();
+  return import(join(repoRoot, "src/integration/workspace-evidence.ts"));
+}));
 let workspaceArtifact = null;
 let partners = [];
 const records = [];
-
-try {
-  const ws = JSON.parse(
-    readFileSync(join(repoRoot, "test/fixtures/proof-corpus/workspace.json"), "utf8"),
-  );
-  const fileIndex = ws.generated?.fileIndex ?? {};
-  workspaceArtifact = {
-    producedBy: ws.generated?.by?.name ?? null,
-    fileIndexKeys: Object.keys(fileIndex).length,
-  };
-
-  if (repositoryRelativePath) {
-    const hit = Object.hasOwn(fileIndex, repositoryRelativePath);
-    records.push({
-      claim: `producing file ${repositoryRelativePath} is tracked in the workspace.json artifact`,
-      observation: hit
-        ? `key present in generated.fileIndex (${workspaceArtifact.fileIndexKeys} keys)`
-        : `key absent from generated.fileIndex (${workspaceArtifact.fileIndexKeys} keys)`,
-      source: "workspacejson",
-      verified: true,
-    });
-    if (!hit) {
-      note("partners", "workspacejson", "absent",
-        "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it.");
+let ws = null;
+let artifactIdentity = null;
+if (WORKSPACE_ARTIFACT) {
+  const artifactPath = resolve(WORKSPACE_ARTIFACT);
+  let artifactBytes = null;
+  try {
+    artifactBytes = readFileSync(artifactPath);
+    ws = JSON.parse(artifactBytes.toString("utf8"));
+  } catch (e) {
+    note("partners", "workspacejson", "failed",
+      `The supplied workspace.json artifact could not be read (${e.message}).`);
+  }
+  if (ws) {
+    // Identity comes from the sidecar, and the sidecar must be bound to these
+    // exact bytes. An unbound sidecar can drift — provenance saying commit X
+    // while the artifact was regenerated at commit Y — which is the same defect
+    // class as the cross-corpus join it exists to prevent.
+    //
+    // The bytes just parsed are handed over rather than re-read, so the digest
+    // is computed over what this event was actually built from.
+    const identity = readArtifactIdentity(artifactPath, artifactBytes);
+    if (identity.status === "found") {
+      artifactIdentity = { repository: identity.repository, revision: identity.revision };
+    } else {
+      // `identity.detail` names the sidecar status in prose. Deliberately not
+      // attached as a structured field: `Unavailable` does not declare one, and
+      // this script is untyped, so an extra key would ship into the event with
+      // nothing to catch it — a field no consumer is documented to expect.
+      note("partners", "workspacejson", "failed", identity.detail);
     }
   }
-} catch {
-  note("partners", "workspacejson", "not-queried",
-    "No workspace.json artifact was read, so repository evidence is unavailable.");
 }
-
-if (partners.length === 0 && !unavailable.some((u) => u.field === "partners")) {
-  note("partners", "workspacejson", "absent",
-    "The artifact carries file-index keys but no behavioral co-change values, so no partners are asserted.");
-}
-
-if (sourceUrl) {
-  records.push({
-    claim: "the producing file is addressable at an immutable commit",
-    observation: sourceUrl,
-    source: "datahub",
-    verified: true,
-  });
+const integrity = assessWorkspaceEvidence(
+  { repository: SUBJECT_REPOSITORY, revision: SUBJECT_REVISION },
+  ws && artifactIdentity ? artifactIdentity : null,
+  ws?.generated?.fileIndex ?? null,
+  dbtFilePath,
+);
+workspaceArtifact = {
+  // `producedBy` is reported only alongside an established identity.
+  //
+  // Reading it straight from the artifact meant an event could name the producer
+  // of a file whose identity was refused — `producedBy: "@workspacejson/cli"`
+  // beside `fileIndexKeys: null` and a mismatch disposition. That is partial
+  // trust in an artifact this path declined to trust, and a reader has no way to
+  // tell which half to believe. Either the artifact was identified and both are
+  // reportable, or it was not and neither is.
+  producedBy: artifactIdentity ? (ws?.generated?.by?.name ?? null) : null,
+  fileIndexKeys: integrity.fileIndexKeys,
+  repository: artifactIdentity?.repository ?? null, revision: artifactIdentity?.revision ?? null, integrity: integrity.integrity,
+};
+if (integrity.integrity === "exact-match") {
+  repositoryRelativePath = integrity.repositoryRelativePath;
+  projectPrefix = repositoryRelativePath.slice(0, repositoryRelativePath.length - dbtFilePath.length).replace(/\/$/, "");
+  method = "manifest-join";
+  records.push({ claim: `producing file ${repositoryRelativePath} is tracked in the corpus-matched workspace.json artifact`, observation: integrity.detail, source: "workspacejson", verified: true });
+  note("partners", "workspacejson", "indeterminate", "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.", { completeness: "unverified", observedCount: 0 });
+} else if (!unavailable.some((u) => u.field === "partners")) {
+  // A refusal never observed an empty collection. Keep its count absent.
+  note("partners", "workspacejson", integrity.integrity === "artifact-unavailable" ? "not-queried" : "indeterminate", integrity.detail);
 }
 
 // ---------------------------------------------------------------------------
@@ -278,10 +346,7 @@ const event = {
     producedAt: new Date().toISOString(),
     producer: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
     datahub: { gmsUrl: GMS, gmsVersion: gmsVersionData?.appConfig?.appVersion ?? null },
-    corpus: {
-      repository: sourceUrl?.match(/^(https:\/\/[^/]+\/[^/]+\/[^/]+)/)?.[1] ?? null,
-      commit: sourceUrl?.match(/\/blob\/([^/]+)\//)?.[1] ?? null,
-    },
+    corpus: { repository: SUBJECT_REPOSITORY, commit: SUBJECT_REVISION },
     workspaceArtifact,
   },
   subject: { urn: URN },

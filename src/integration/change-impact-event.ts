@@ -20,6 +20,8 @@
  * catalog context.
  */
 
+import { z } from "zod";
+
 /** Which system asserted a fact. Never inferred — always recorded at the source. */
 export type ContextSource = "datahub" | "workspacejson";
 
@@ -122,9 +124,44 @@ export interface Unavailable {
   verification?: VerificationEvidence;
 }
 
-/** How the dataset's producing file was determined. */
+/**
+ * Whether a workspace.json artifact could support claims about this subject.
+ *
+ * Defined here rather than beside the function that computes it, because the
+ * contract owns the vocabulary its consumers compile against; the assessment is
+ * an implementation of this vocabulary, not the source of it.
+ *
+ * Only `exact-match` permits workspace-derived claims. The rest are refusals,
+ * and they are kept distinct because they have different fixes: a mismatched
+ * repository means the wrong artifact was supplied, a mismatched revision means
+ * a stale one, and an ambiguous path means the index cannot single out a source.
+ */
+export type WorkspaceIntegrity =
+  | "exact-match"
+  | "artifact-unavailable"
+  | "repository-mismatch"
+  | "revision-mismatch"
+  | "path-unresolved"
+  | "path-ambiguous";
+
+/**
+ * How the dataset's producing file was determined.
+ *
+ * `external-url` is **currently unreachable, deliberately.** It depends on
+ * `Dataset.externalUrl`, which `evaluation/mcp-field-coverage.md` records as
+ * dropped at the official MCP boundary — so producing it would assert a
+ * capability an MCP agent does not have, which is the same shape of error as
+ * joining a subject against another repository's index.
+ *
+ * It is kept rather than deleted because the condition that makes it honest is
+ * named and in flight: HAC-156 exposes `externalUrl` through MCP upstream. When
+ * that lands, this becomes reachable by removing a restriction rather than by
+ * inventing a capability. Until then a test asserts the emitter cannot produce
+ * it, so the unreachability is a stated and checked fact rather than an
+ * accident nobody noticed.
+ */
 export type ResolutionMethod =
-  /** Parsed from the catalog's own commit-pinned source URL. */
+  /** Commit-pinned source URL. Gated on HAC-156 — see the note above. */
   | "external-url"
   /** dbt file path from catalog properties, normalized to repository-root. */
   | "dbt-file-path"
@@ -248,8 +285,27 @@ export interface Provenance {
   producer: { name: string; version: string };
   datahub: { gmsUrl: string; gmsVersion: string | null };
   corpus: { repository: string | null; commit: string | null };
-  /** Producer identity from the workspace.json artifact, when one was read. */
-  workspaceArtifact: { producedBy: string | null; fileIndexKeys: number } | null;
+  /**
+   * Identity and integrity disposition of the workspace artifact, when supplied.
+   *
+   * `repository`, `revision` and `integrity` are **required**, not optional, and
+   * the distinction is the whole point. Optional fields let an event omit its
+   * corpus identity and still validate — so the guard would not apply to
+   * precisely the events most likely to be malformed, and a reader could not
+   * tell "matched" from "never checked". That is absence read as safety, inside
+   * the fix for absence read as safety.
+   *
+   * `integrity` is recorded even when it is a refusal — especially then. It is
+   * what makes `validateEvent` able to reject a workspace claim the artifact
+   * could not support.
+   */
+  workspaceArtifact: {
+    producedBy: string | null;
+    fileIndexKeys: number | null;
+    repository: string | null;
+    revision: string | null;
+    integrity: WorkspaceIntegrity;
+  } | null;
 }
 
 /**
@@ -272,12 +328,33 @@ export interface Provenance {
  *
  * `validateEvent` therefore rejects 1.0 events by name and says to re-emit,
  * rather than reporting a confusing missing-field error.
+ *
+ * 1.2 made `provenance.workspaceArtifact.repository`, `.revision` and
+ * `.integrity` **required**, for the same reason and with the same consequence.
+ * A 1.1 event records that some artifact was read and how many keys it held, but
+ * not which repository it described nor whether that repository matched the
+ * subject — so an event joined against the wrong corpus is indistinguishable
+ * from one joined against the right corpus, and both look verified.
+ *
+ * Not hypothetical: the committed nested fixture asserted a producing file was
+ * absent from an index built from a different repository, and marked the claim
+ * `verified: true` (HAC-225).
+ *
+ * No in-place upgrade from 1.1 either. The corpus a past event was joined
+ * against is not recoverable from the event, and inferring it from the subject
+ * would assume exactly the thing the field exists to check.
+ *
+ * Note on the number: this project does not claim semver for this contract, and
+ * 1.0 → 1.1 already established that a breaking change takes a minor. **Both
+ * bumps are breaking.** The version string distinguishes shapes; it is not a
+ * compatibility promise, and `SUPERSEDED_EVENT_VERSIONS` is the signal to read.
  */
-export const CHANGE_IMPACT_EVENT_VERSION = "1.1" as const;
+export const CHANGE_IMPACT_EVENT_VERSION = "1.2" as const;
 
 /** Versions this contract knows about but can no longer validate. */
 export const SUPERSEDED_EVENT_VERSIONS: Record<string, string> = {
   "1.0": "1.1 requires datahub.lineageObservation, which a 1.0 event does not carry — re-emit the event rather than upgrading it in place",
+  "1.1": "1.2 requires provenance.workspaceArtifact.repository, .revision and .integrity, which a 1.1 event does not carry — re-emit the event rather than upgrading it in place",
 };
 
 export interface ChangeImpactEvent {
@@ -299,6 +376,185 @@ export interface ChangeImpactEvent {
    */
   unavailable: Unavailable[];
 }
+
+// ---------------------------------------------------------------------------
+// Runtime shape
+//
+// The interfaces above are the documentation; this is the enforcement. They are
+// two artifacts describing one contract, and the assertions at the end of this
+// block make drift between them a compile error rather than a silent divergence.
+//
+// Why this exists at all: every producer of these events is an untyped `.mjs`
+// script, so the compiler never sees them. Before this, "required" meant
+// "required of callers who happened to be writing TypeScript" — and none of the
+// ones that matter were. An event could omit `subject` entirely and validate
+// clean, or carry an undeclared key straight into the frozen artifact.
+//
+// Every object is `.strict()`. An unknown key is not a harmless extra: it is a
+// field no consumer is documented to expect, shipped inside an artifact whose
+// whole purpose is that its claims can be trusted.
+// ---------------------------------------------------------------------------
+
+const contextSourceSchema = z.enum(["datahub", "workspacejson"]);
+const completenessSchema = z.enum(["verified", "unverified"]);
+
+const verificationEvidenceSchema = z.strictObject({
+  manifestDigest: z.string(),
+  expectedSetDigest: z.string(),
+  observedSetDigest: z.string(),
+  queryParameters: z.record(z.string(), z.union([z.string(), z.number()])),
+});
+
+const unavailableSchema = z.strictObject({
+  field: z.string(),
+  source: contextSourceSchema,
+  reason: z.enum(["absent", "not-queried", "failed", "indeterminate", "not-exposed-by-source"]),
+  detail: z.string(),
+  completeness: completenessSchema.optional(),
+  observedCount: z.number().optional(),
+  verification: verificationEvidenceSchema.optional(),
+});
+
+const codeResolutionSchema = z.strictObject({
+  dbtUniqueId: z.string().nullable(),
+  dbtFilePath: z.string().nullable(),
+  repositoryRelativePath: z.string().nullable(),
+  projectPrefix: z.string().nullable(),
+  method: z.enum(["external-url", "dbt-file-path", "manifest-join", "unresolved"]),
+  sourceUrl: z.string().nullable(),
+});
+
+const lineageEdgeSchema = z.strictObject({
+  urn: z.string(),
+  name: z.string().nullable(),
+  degree: z.number(),
+});
+
+const lineageObservationSchema = z.strictObject({
+  read: z.enum(["ok", "failed", "not-queried"]),
+  completeness: completenessSchema,
+  observedCount: z.number().optional(),
+  verification: verificationEvidenceSchema.optional(),
+});
+
+const dataHubContextSchema = z.strictObject({
+  name: z.string().nullable(),
+  platform: z.string().nullable(),
+  description: z.string().nullable(),
+  upstreams: z.array(lineageEdgeSchema),
+  downstreams: z.array(lineageEdgeSchema),
+  lineageObservation: z.strictObject({
+    upstreams: lineageObservationSchema,
+    downstreams: lineageObservationSchema,
+  }),
+  schemaFieldCount: z.number().nullable(),
+  owners: z.array(z.string()),
+  domain: z.string().nullable(),
+});
+
+const codePartnerSchema = z.strictObject({
+  repositoryRelativePath: z.string(),
+  reason: z.string(),
+  source: contextSourceSchema,
+});
+
+const evidenceRecordSchema = z.strictObject({
+  claim: z.string(),
+  observation: z.string(),
+  source: contextSourceSchema,
+  verified: z.boolean(),
+});
+
+const corpusIdentitySchema = z.strictObject({
+  repository: z.string().nullable(),
+  commit: z.string().nullable(),
+});
+
+const provenanceSchema = z.strictObject({
+  producedAt: z.string(),
+  producer: z.strictObject({ name: z.string(), version: z.string() }),
+  datahub: z.strictObject({ gmsUrl: z.string(), gmsVersion: z.string().nullable() }),
+  corpus: corpusIdentitySchema,
+  workspaceArtifact: z.strictObject({
+    producedBy: z.string().nullable(),
+    fileIndexKeys: z.number().nullable(),
+    repository: z.string().nullable(),
+    revision: z.string().nullable(),
+    integrity: z.enum([
+      "exact-match", "artifact-unavailable", "repository-mismatch",
+      "revision-mismatch", "path-unresolved", "path-ambiguous",
+    ]),
+  }).nullable(),
+});
+
+const accountingSchema = z.strictObject({
+  datasetsRequested: z.number(),
+  datasetsResolved: z.number(),
+  datasetsUnresolved: z.number(),
+  nodesDropped: z.number(),
+  nodesExcluded: z.record(z.string(), z.number()),
+});
+
+/** The pure contract. Nothing beyond these keys is part of it. */
+export const changeImpactEventSchema = z.strictObject({
+  eventVersion: z.literal(CHANGE_IMPACT_EVENT_VERSION),
+  provenance: provenanceSchema,
+  subject: z.strictObject({ urn: z.string() }),
+  datahub: dataHubContextSchema,
+  code: codeResolutionSchema,
+  partners: z.array(codePartnerSchema),
+  evidence: z.strictObject({
+    records: z.array(evidenceRecordSchema),
+    tier: z.enum(["ASSERTED", "OBSERVED", "VERIFIED"]),
+  }),
+  accounting: accountingSchema,
+  unavailable: z.array(unavailableSchema),
+});
+
+/**
+ * What `validateEvent` actually parses.
+ *
+ * `writeback` is the one documented extension: `EnrichedChangeImpactEvent` adds
+ * it, the golden fixtures carry it, and `validateEvent` is called on those. Its
+ * shape is owned by the writeback module, so it is admitted by name and not
+ * inspected here — importing that schema would make the contract depend on a
+ * consumer of it. Naming it explicitly is the point: `.strict()` still rejects
+ * every key that is not this one, so the extension is a decision rather than a
+ * hole.
+ */
+const validatableEventSchema = changeImpactEventSchema.extend({
+  writeback: z.unknown().optional(),
+});
+
+/**
+ * Drift guards: if an interface and its schema stop describing the same fields,
+ * these stop compiling. That is what makes two artifacts safe to keep.
+ *
+ * They compare key sets rather than full assignability, because
+ * `exactOptionalPropertyTypes` is on and Zod's `.optional()` infers
+ * `T | undefined` where the interface says `?: T`. Under this flag those are
+ * different types, but not a different *contract* — the events are parsed from
+ * JSON, which cannot produce an explicit `undefined`. Key-set equality catches
+ * what actually drifts: a field added to one and not the other, or renamed.
+ */
+type SameKeys<A, B> = [keyof A] extends [keyof B]
+  ? [keyof B] extends [keyof A] ? true : never
+  : never;
+
+const _drift: [
+  SameKeys<ChangeImpactEvent, z.infer<typeof changeImpactEventSchema>>,
+  SameKeys<Provenance, z.infer<typeof provenanceSchema>>,
+  SameKeys<Unavailable, z.infer<typeof unavailableSchema>>,
+  SameKeys<CodeResolution, z.infer<typeof codeResolutionSchema>>,
+  SameKeys<DataHubContext, z.infer<typeof dataHubContextSchema>>,
+  SameKeys<LineageObservation, z.infer<typeof lineageObservationSchema>>,
+  SameKeys<LineageEdge, z.infer<typeof lineageEdgeSchema>>,
+  SameKeys<CodePartner, z.infer<typeof codePartnerSchema>>,
+  SameKeys<EvidenceRecord, z.infer<typeof evidenceRecordSchema>>,
+  SameKeys<ResolutionAccounting, z.infer<typeof accountingSchema>>,
+  SameKeys<VerificationEvidence, z.infer<typeof verificationEvidenceSchema>>,
+] = [true, true, true, true, true, true, true, true, true, true, true];
+void _drift;
 
 /**
  * Derive the tier from the records. Mechanical by construction — there is no
@@ -331,7 +587,20 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
         ? { ...event.code, repositoryRelativePath: null, projectPrefix: null, method: "unresolved" }
         : event.code,
     unavailable: [
-      ...event.unavailable,
+      // Workspace-sourced entries are dropped, not carried.
+      //
+      // Appending to the full list left the reduced view holding two mutually
+      // exclusive claims about the same field: `absent` — asked and reported
+      // nothing — beside `not-queried`, never asked. Both marked
+      // `source: "workspacejson"`, in the one view whose premise is that no
+      // workspace evidence was consulted.
+      //
+      // A DataHub-only agent could not have made the first claim, so keeping it
+      // misrepresents the comparison in the direction that flatters this
+      // project: it shows the reduced mode reporting a finding it had no means
+      // to reach. The removal is the honest reduction; `not-queried` is the
+      // single accurate statement about what that mode knows.
+      ...event.unavailable.filter((u) => u.source !== "workspacejson"),
       {
         field: "partners",
         source: "workspacejson",
@@ -358,7 +627,10 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
  * `verified` has to name what it was checked against, wherever it is claimed.
  */
 function verifiedEvidenceProblems(
-  holder: { completeness?: Completeness; verification?: VerificationEvidence },
+  // Explicit `| undefined` rather than bare `?:`. Under
+  // `exactOptionalPropertyTypes` those differ, and this reads values that came
+  // out of a schema parse, where an absent optional surfaces as `undefined`.
+  holder: { completeness?: Completeness | undefined; verification?: VerificationEvidence | undefined },
   label: string,
 ): string[] {
   if (holder.completeness !== "verified") return [];
@@ -374,33 +646,76 @@ function verifiedEvidenceProblems(
   return [];
 }
 
-export function validateEvent(event: ChangeImpactEvent): string[] {
+/**
+ * Check an event against the contract.
+ *
+ * Accepts `unknown` rather than `ChangeImpactEvent`. The parameter type was
+ * always a fiction here: the callers that matter are untyped `.mjs` producers
+ * and JSON read off disk, so annotating the input as already-valid asserted the
+ * very thing this function exists to determine — and left it reaching into
+ * fields that might not be there. Six of the eight required top-level fields
+ * threw a `TypeError` when omitted, in a function whose contract is to return
+ * problems so a receipt can show them.
+ *
+ * Two passes, in order:
+ *
+ * 1. **Shape and presence**, from the schema. Anything missing, mistyped, or
+ *    undeclared is reported here, and the function returns before pass two.
+ * 2. **Invariants**, in code. Whether the accounting reconciles, whether the
+ *    tier is the mechanical function of its records, whether an absence earned
+ *    the word it used. A schema cannot express these; it can only guarantee the
+ *    fields they read are present.
+ *
+ * Returning early between them is deliberate. Invariant checks on a malformed
+ * event produce noise about consequences of the shape error rather than the
+ * error itself.
+ */
+export function validateEvent(event: unknown): string[] {
   const problems: string[] = [];
 
-  if (event.eventVersion !== CHANGE_IMPACT_EVENT_VERSION) {
-    // A superseded version gets named, so a reviewer holding an old artifact
-    // reads why it no longer validates instead of a missing-field error that
-    // does not explain itself.
-    const superseded = SUPERSEDED_EVENT_VERSIONS[event.eventVersion as string];
-    problems.push(
+  // Version first, before shape. A superseded event has a *different* shape, so
+  // reporting its missing fields would bury the one fact that explains them.
+  const declaredVersion = (event as { eventVersion?: unknown } | null)?.eventVersion;
+  if (declaredVersion !== CHANGE_IMPACT_EVENT_VERSION) {
+    const superseded = SUPERSEDED_EVENT_VERSIONS[declaredVersion as string];
+    return [
       superseded
-        ? `eventVersion ${event.eventVersion} is superseded by ${CHANGE_IMPACT_EVENT_VERSION}: ${superseded}`
-        : `unknown eventVersion ${event.eventVersion}`,
-    );
-    // The remaining checks assume the current shape. Running them against an
-    // older one produces noise about fields that were never meant to be there.
-    return problems;
+        ? `eventVersion ${declaredVersion} is superseded by ${CHANGE_IMPACT_EVENT_VERSION}: ${superseded}`
+        : `unknown eventVersion ${String(declaredVersion)}`,
+    ];
   }
+
+  const parsed = validatableEventSchema.safeParse(event);
+  if (!parsed.success) {
+    // One line per issue, path-prefixed, so a receipt names the field rather
+    // than showing a reviewer a nested error object.
+    //
+    // An absent key is reported as missing rather than in the library's
+    // "expected object, received undefined" phrasing. These strings are shown
+    // to a human reading a receipt, and the distinction between a field that is
+    // absent and a field that holds the wrong type is one they act on
+    // differently.
+    return parsed.error.issues.map((issue) => {
+      const path = issue.path.join(".") || "(root)";
+      const isAbsent =
+        issue.code === "invalid_type" && issue.message.endsWith("received undefined");
+      return isAbsent ? `${path}: is missing` : `${path}: ${issue.message}`;
+    });
+  }
+
+  // From here the shape is guaranteed, so the invariant checks below can read
+  // fields directly without guarding each access.
+  const valid = parsed.data;
 
 
   // Stated on every event, in both directions, whether or not anything is
   // missing — a partial answer is the case that looks like a complete one.
   for (const [direction, edges] of [
-    ["upstreams", event.datahub.upstreams],
-    ["downstreams", event.datahub.downstreams],
+    ["upstreams", valid.datahub.upstreams],
+    ["downstreams", valid.datahub.downstreams],
   ] as const) {
     const label = `datahub.lineageObservation.${direction}`;
-    const observation = event.datahub.lineageObservation?.[direction];
+    const observation = valid.datahub.lineageObservation?.[direction];
     if (!observation) {
       problems.push(`${label} is missing — every event must state the standing of both directions`);
       continue;
@@ -429,32 +744,69 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
     }
   }
 
-  const { datasetsRequested, datasetsResolved, datasetsUnresolved } = event.accounting;
+  const { datasetsRequested, datasetsResolved, datasetsUnresolved } = valid.accounting;
   if (datasetsResolved + datasetsUnresolved !== datasetsRequested) {
     problems.push(
       `accounting does not reconcile: ${datasetsResolved} resolved + ${datasetsUnresolved} unresolved != ${datasetsRequested} requested`,
     );
   }
 
-  if (deriveTier(event.evidence.records) !== event.evidence.tier) {
+  if (deriveTier(valid.evidence.records) !== valid.evidence.tier) {
     problems.push("evidence.tier is not the mechanical function of evidence.records");
+  }
+
+  // A workspace.json claim is a claim about one repository at one revision.
+  // When the artifact does not match the subject, the file-index lookup still
+  // runs and still returns an answer — to a question nobody asked. These two
+  // checks refuse the ways that answer gets dressed up as evidence.
+  //
+  // The disposition is computed at read time and recorded on the event, so this
+  // re-derives nothing: it holds the event to what its own integrity field says.
+  // Anything other than `exact-match` is a refusal, and a refusal cannot carry
+  // verified repository claims or earn the word `absent`.
+  // Presence is the schema's job, not this function's. An event that omits
+  // `workspaceArtifact.integrity` never reaches here: pass one rejects it and
+  // names the path. A hand-rolled presence loop beside the schema would be a
+  // second definition of one rule, and two definitions of one rule is how these
+  // fields became compile-time-only to begin with.
+  const artifact = valid.provenance.workspaceArtifact;
+  if (artifact && artifact.integrity !== "exact-match") {
+    const verifiedClaims = valid.evidence.records.filter(
+      (r) => r.source === "workspacejson" && r.verified,
+    );
+    if (verifiedClaims.length > 0) {
+      problems.push(
+        `evidence carries ${verifiedClaims.length} verified workspacejson claim(s), but workspaceArtifact.integrity is ${artifact.integrity} — an artifact that was refused verifies nothing`,
+      );
+    }
+    // `absent` is the vocabulary's strongest word: asked, and reported nothing.
+    // Non-membership in an index that was never established to describe this
+    // subject cannot earn it.
+    const assertedAbsent = valid.unavailable.filter(
+      (u) => u.source === "workspacejson" && u.reason === "absent",
+    );
+    if (assertedAbsent.length > 0) {
+      problems.push(
+        `unavailable asserts workspacejson 'absent' on ${assertedAbsent.map((u) => u.field).join(", ")}, but workspaceArtifact.integrity is ${artifact.integrity} — absence from an unmatched artifact is not absence`,
+      );
+    }
   }
 
   // The core rule: an empty result must be accompanied by a stated reason.
   const emptyNeedsReason: Array<[unknown[], string]> = [
-    [event.datahub.upstreams, "datahub.upstreams"],
-    [event.datahub.downstreams, "datahub.downstreams"],
-    [event.partners, "partners"],
+    [valid.datahub.upstreams, "datahub.upstreams"],
+    [valid.datahub.downstreams, "datahub.downstreams"],
+    [valid.partners, "partners"],
   ];
   for (const [collection, field] of emptyNeedsReason) {
-    if (collection.length === 0 && !event.unavailable.some((u) => u.field === field)) {
+    if (collection.length === 0 && !valid.unavailable.some((u) => u.field === field)) {
       problems.push(
         `${field} is empty with no entry in unavailable — a consumer cannot tell absence from failure`,
       );
     }
   }
 
-  if (event.code.method === "unresolved" && event.code.repositoryRelativePath !== null) {
+  if (valid.code.method === "unresolved" && valid.code.repositoryRelativePath !== null) {
     problems.push("code.method is unresolved but a repositoryRelativePath is present");
   }
 
@@ -463,12 +815,12 @@ export function validateEvent(event: ChangeImpactEvent): string[] {
   // returning zero edges is the case this exists for: it satisfies "asked and
   // got nothing" while being no evidence at all about the data.
   const observedCollections: Record<string, unknown[] | undefined> = {
-    "datahub.upstreams": event.datahub.upstreams,
-    "datahub.downstreams": event.datahub.downstreams,
-    partners: event.partners,
+    "datahub.upstreams": valid.datahub.upstreams,
+    "datahub.downstreams": valid.datahub.downstreams,
+    partners: valid.partners,
   };
 
-  for (const entry of event.unavailable) {
+  for (const entry of valid.unavailable) {
     if (entry.reason === "absent" && entry.completeness === "unverified") {
       problems.push(
         `${entry.field} claims absent on an answer whose completeness is unverified — use indeterminate`,

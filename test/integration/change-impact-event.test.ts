@@ -1,3 +1,7 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -21,7 +25,13 @@ function validEvent(overrides: Partial<ChangeImpactEvent> = {}): ChangeImpactEve
       producer: { name: "@workspacejson/datahub-agent", version: "0.0.1" },
       datahub: { gmsUrl: "http://localhost:8080", gmsVersion: "v1.5.0.6" },
       corpus: { repository: "https://github.com/example/repo", commit: "a".repeat(40) },
-      workspaceArtifact: { producedBy: "@workspacejson/cli", fileIndexKeys: 36 },
+      workspaceArtifact: {
+        producedBy: "@workspacejson/cli",
+        fileIndexKeys: 36,
+        repository: "https://github.com/example/repo",
+        revision: "a".repeat(40),
+        integrity: "exact-match",
+      },
     },
     subject: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)" },
     datahub: {
@@ -100,7 +110,12 @@ describe("the version a consumer compiles against", () => {
     const event = { ...validEvent(), eventVersion: "1.0" } as unknown as ChangeImpactEvent;
     const problems = validateEvent(event);
     expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/1\.0 is superseded by 1\.1/);
+    // Against the current version rather than a literal: the behaviour under
+    // test is that the message names where to migrate to, which stays true
+    // across bumps. Hardcoding it fails every bump for no semantic reason.
+    expect(problems[0]).toMatch(
+      new RegExp(`1\\.0 is superseded by ${CHANGE_IMPACT_EVENT_VERSION.replace(".", "\\.")}`),
+    );
     expect(problems[0]).toMatch(/re-emit/);
   });
 
@@ -117,13 +132,23 @@ describe("the version a consumer compiles against", () => {
     expect(validateEvent(event)[0]).toMatch(/unknown eventVersion 9\.9/);
   });
 
-  it("offers no in-place upgrade from 1.0, deliberately", () => {
-    // The added field records whether a lineage read was complete. A 1.0 event
-    // does not carry that, so any value synthesised for it would be invented
-    // rather than observed — manufacturing an observation nobody made, on the
-    // exact axis the field exists to keep honest.
-    expect(SUPERSEDED_EVENT_VERSIONS["1.0"]).toMatch(/re-emit/);
-    expect(Object.keys(SUPERSEDED_EVENT_VERSIONS)).toEqual(["1.0"]);
+  it("offers no in-place upgrade from any superseded version, deliberately", () => {
+    // 1.0 lacked lineageObservation; 1.1 lacked the workspace artifact's corpus
+    // identity. In both cases a synthesised value would be invented rather than
+    // observed — manufacturing an observation nobody made, on the exact axis the
+    // field exists to keep honest. So every entry says re-emit.
+    expect(Object.keys(SUPERSEDED_EVENT_VERSIONS)).toEqual(["1.0", "1.1"]);
+    for (const [version, guidance] of Object.entries(SUPERSEDED_EVENT_VERSIONS)) {
+      expect(guidance, `${version} must direct the reader to re-emit`).toMatch(/re-emit/);
+    }
+  });
+
+  it("names what a 1.1 event cannot carry, rather than reporting a missing field", () => {
+    const event = { ...validEvent(), eventVersion: "1.1" } as unknown as ChangeImpactEvent;
+    const problems = validateEvent(event);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/workspaceArtifact/);
+    expect(problems[0]).toMatch(/re-emit/);
   });
 });
 
@@ -297,6 +322,159 @@ describe("verified completeness must carry its evidence", () => {
   });
 });
 
+describe("a workspace claim the artifact could not support", () => {
+  // The defect HAC-225 found in the committed nested fixture: a Transfermarkt
+  // subject joined against the jaffle_shop artifact, reporting the producing
+  // file `absent` from an index built from a different repository — and marking
+  // the claim `verified: true`. Every test here fails against 42c2806.
+  //
+  // These hold the event to its own recorded `integrity`. The disposition is
+  // computed once at read time; validation re-derives nothing, so a refusal
+  // cannot be quietly re-described as evidence further down the pipeline.
+  const refusals = [
+    "artifact-unavailable",
+    "repository-mismatch",
+    "revision-mismatch",
+    "path-unresolved",
+    "path-ambiguous",
+  ] as const;
+
+  function withIntegrity(
+    integrity: (typeof refusals)[number] | "exact-match",
+    overrides: Partial<ChangeImpactEvent> = {},
+  ): ChangeImpactEvent {
+    const base = validEvent();
+    return {
+      ...base,
+      provenance: {
+        ...base.provenance,
+        workspaceArtifact: { ...base.provenance.workspaceArtifact!, integrity },
+      },
+      ...overrides,
+    };
+  }
+
+  it.each(refusals)("cannot carry a verified workspacejson claim when integrity is %s", (integrity) => {
+    const problems = validateEvent(withIntegrity(integrity));
+    expect(problems.some((p) => p.includes("verified workspacejson claim"))).toBe(true);
+    expect(problems.some((p) => p.includes(integrity))).toBe(true);
+  });
+
+  it.each(refusals)("cannot earn 'absent' when integrity is %s", (integrity) => {
+    const problems = validateEvent(withIntegrity(integrity, {
+      partners: [],
+      evidence: { records: [], tier: "ASSERTED" },
+      unavailable: [{
+        field: "partners",
+        source: "workspacejson",
+        reason: "absent",
+        detail: "The producing file is not present in the workspace.json artifact.",
+      }],
+    }));
+    expect(problems.some((p) => p.includes("'absent'"))).toBe(true);
+    expect(problems.some((p) => p.includes("is not absence"))).toBe(true);
+  });
+
+  it("reproduces the shipped fixture's exact shape and rejects it on both counts", () => {
+    const problems = validateEvent(withIntegrity("repository-mismatch", {
+      partners: [],
+      evidence: {
+        records: [{
+          claim: "producing file dbt/models/curated/game_events.sql is tracked in the workspace.json artifact",
+          observation: "key absent from generated.fileIndex (36 keys)",
+          source: "workspacejson",
+          verified: true,
+        }],
+        tier: "VERIFIED",
+      },
+      unavailable: [{
+        field: "partners",
+        source: "workspacejson",
+        reason: "absent",
+        detail: "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it.",
+      }],
+    }));
+    expect(problems).toHaveLength(2);
+  });
+
+  it("still permits DataHub-sourced verified claims — only repository evidence is gated", () => {
+    // The catalog read does not depend on which workspace artifact was supplied.
+    const problems = validateEvent(withIntegrity("repository-mismatch", {
+      partners: [],
+      evidence: {
+        records: [{
+          claim: "the producing file is addressable at an immutable commit",
+          observation: "https://github.com/example/repo/blob/abc/dbt/models/model.sql",
+          source: "datahub",
+          verified: true,
+        }],
+        tier: "VERIFIED",
+      },
+      unavailable: [{
+        field: "partners",
+        source: "workspacejson",
+        reason: "not-queried",
+        detail: "The artifact describes a different repository, so the subject's corpus was never consulted.",
+      }],
+    }));
+    expect(problems).toEqual([]);
+  });
+
+  it("accepts the same claims once integrity is exact-match", () => {
+    expect(validateEvent(withIntegrity("exact-match"))).toEqual([]);
+  });
+
+  /** An event carrying an artifact block with the named keys removed. */
+  function withoutIdentity(...omit: string[]): ChangeImpactEvent {
+    const base = validEvent();
+    const artifact: Record<string, unknown> = { ...base.provenance.workspaceArtifact };
+    for (const key of omit) delete artifact[key];
+    return {
+      ...base,
+      provenance: { ...base.provenance, workspaceArtifact: artifact },
+    } as unknown as ChangeImpactEvent;
+  }
+
+  it.each(["repository", "revision", "integrity"])(
+    "reports %s by path, not as a side effect of another check",
+    (key) => {
+      // An earlier version of this test asserted only `not.toEqual([])`, and
+      // passed for the wrong reason: the helper happened to carry a verified
+      // workspacejson record, so the refusal branch fired and the absent field
+      // was never actually noticed. Naming the path is what makes this a test
+      // about presence.
+      const problems = validateEvent(withoutIdentity(key));
+      expect(problems.some((p) => p.startsWith(`provenance.workspaceArtifact.${key}:`))).toBe(true);
+    },
+  );
+
+  it("catches an artifact with no identity even when nothing claims anything from it", () => {
+    // The gap the schema closes. With no verified workspacejson record and no
+    // `absent` assertion, every relationship check has nothing to disagree
+    // with, so the event would previously validate clean while carrying an
+    // artifact whose corpus was never established.
+    const stripped = withoutIdentity("repository", "revision", "integrity");
+    const problems = validateEvent({
+      ...stripped,
+      partners: [],
+      evidence: {
+        records: [{ claim: "c", observation: "o", source: "datahub", verified: true }],
+        tier: "VERIFIED",
+      },
+      unavailable: [{
+        field: "partners",
+        source: "workspacejson",
+        reason: "not-queried",
+        detail: "nothing was claimed from the artifact",
+      }],
+    });
+    expect(problems).toHaveLength(3);
+    for (const key of ["repository", "revision", "integrity"]) {
+      expect(problems.some((p) => p.startsWith(`provenance.workspaceArtifact.${key}:`))).toBe(true);
+    }
+  });
+});
+
 describe("validateEvent", () => {
   it("accepts a well-formed event", () => {
     expect(validateEvent(validEvent())).toEqual([]);
@@ -367,6 +545,49 @@ describe("validateEvent", () => {
     expect(() => validateEvent(event)).not.toThrow();
     expect(validateEvent(event).length).toBeGreaterThan(0);
   });
+
+  it("accepts an event with no workspace artifact at all", () => {
+    const event = validEvent();
+    event.provenance.workspaceArtifact = null;
+    expect(validateEvent(event)).toEqual([]);
+  });
+
+  it("rejects a missing lineageObservation on upstreams", () => {
+    const event = validEvent();
+    delete (event.datahub as { lineageObservation?: unknown }).lineageObservation;
+    const problems = validateEvent(event);
+    expect(problems.some((p) => p.includes("lineageObservation") && p.includes("missing"))).toBe(true);
+  });
+
+  it("rejects read:ok without an observedCount on upstreams", () => {
+    const event = validEvent();
+    event.datahub.lineageObservation.upstreams = { read: "ok", completeness: "unverified" };
+    const problems = validateEvent(event);
+    expect(problems.some((p) => p.includes("read ok without an observedCount"))).toBe(true);
+  });
+
+  it("rejects read:failed with edges present", () => {
+    const event = validEvent();
+    event.datahub.lineageObservation.upstreams = { read: "failed", completeness: "unverified" };
+    const problems = validateEvent(event);
+    expect(problems.some((p) => p.includes("failed") && p.includes("edges are present"))).toBe(true);
+  });
+
+  it("rejects read:failed that claims verified completeness", () => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = { read: "failed", completeness: "verified" };
+    const problems = validateEvent(event);
+    expect(problems.some((p) => p.includes("verified completeness on a read that did not happen"))).toBe(true);
+  });
+
+  it("rejects read:not-queried with an observedCount", () => {
+    const event = validEvent();
+    event.datahub.upstreams = [];
+    event.datahub.lineageObservation.upstreams = { read: "not-queried", completeness: "unverified", observedCount: 0 };
+    const problems = validateEvent(event);
+    expect(problems.some((p) => p.includes("not-queried") && p.includes("observedCount"))).toBe(true);
+  });
 });
 
 describe("toDataHubOnly", () => {
@@ -417,5 +638,90 @@ describe("toDataHubOnly", () => {
     const reduced = toDataHubOnly(validEvent());
     expect(reduced.code.method).toBe("external-url");
     expect(reduced.code.repositoryRelativePath).toBe("dbt/models/model.sql");
+  });
+
+  it("preserves a dbt-file-path resolution, which DataHub also supplies", () => {
+    const event = validEvent();
+    event.code.method = "dbt-file-path";
+    const reduced = toDataHubOnly(event);
+    expect(reduced.code.method).toBe("dbt-file-path");
+    expect(reduced.code.repositoryRelativePath).toBe("dbt/models/model.sql");
+  });
+
+  it("states a different detail when no partners were present to withhold", () => {
+    const event = validEvent({ partners: [] });
+    event.unavailable = [
+      { field: "partners", source: "workspacejson", reason: "absent", detail: "no partners" },
+    ];
+    const reduced = toDataHubOnly(event);
+    const entry = reduced.unavailable.find((u) => u.field === "partners" && u.reason === "not-queried");
+    expect(entry?.detail).toMatch(/no co-change is computed/);
+    expect(entry?.detail).not.toMatch(/co-changing file/);
+  });
+});
+
+describe("the MCP restriction the emitter operates under", () => {
+  const emitter = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../../scripts/emit-change-impact-event.mjs"),
+    "utf8",
+  );
+
+  it("does not request externalUrl, which MCP drops for Dataset", () => {
+    // evaluation/mcp-field-coverage.md measures `externalUrl` as DROPPED AT THE
+    // MCP BOUNDARY for Dataset. Reading it would make the event describe a
+    // capability an MCP agent does not have.
+    const graphqlRequests = emitter
+      .split("\n")
+      .filter((line) => !line.trimStart().startsWith("//") && !line.trimStart().startsWith("*"));
+    expect(graphqlRequests.some((l) => l.includes("externalUrl"))).toBe(false);
+  });
+
+  it("cannot produce external-url resolution while that restriction holds", () => {
+    // The vocabulary keeps `external-url` because HAC-156 exposes the field
+    // upstream. Until then it must be unreachable, and unreachable-by-test
+    // rather than unreachable-by-accident — the difference between a documented
+    // gate and a claim nobody noticed had stopped being true.
+    expect(emitter).not.toMatch(/method\s*=\s*"external-url"/);
+  });
+
+  it("states the cost of the restriction rather than working around it", () => {
+    expect(emitter).toMatch(/const sourceUrl = null/);
+    expect(emitter).toMatch(/HAC-156/);
+  });
+});
+
+describe("the DataHub-only reduction", () => {
+  it("drops workspace-sourced absences instead of carrying them alongside not-queried", () => {
+    // The reduced view previously held two mutually exclusive claims about one
+    // field: `absent` (asked, reported nothing) beside `not-queried` (never
+    // asked), both marked source workspacejson — in the one view whose premise
+    // is that no workspace evidence was consulted.
+    const event = validEvent({
+      partners: [],
+      evidence: { records: [{ claim: "c", observation: "o", source: "datahub", verified: true }], tier: "VERIFIED" },
+      unavailable: [{
+        field: "partners", source: "workspacejson", reason: "absent",
+        detail: "The artifact carries file-index keys but no behavioral co-change values.",
+      }],
+    });
+    const reduced = toDataHubOnly(event);
+    const partners = reduced.unavailable.filter((u) => u.field === "partners");
+    expect(partners).toHaveLength(1);
+    expect(partners[0]?.reason).toBe("not-queried");
+  });
+
+  it("retains DataHub-sourced absences, which that mode could genuinely observe", () => {
+    const event = validEvent({
+      unavailable: [{
+        field: "datahub.upstreams", source: "datahub", reason: "indeterminate",
+        detail: "the lineage query succeeded; completeness is unknown",
+        completeness: "unverified", observedCount: 0,
+      }],
+    });
+    expect(toDataHubOnly(event).unavailable.some((u) => u.field === "datahub.upstreams")).toBe(true);
+  });
+
+  it("still satisfies the contract after the reduction", () => {
+    expect(validateEvent(toDataHubOnly(validEvent()))).toEqual([]);
   });
 });

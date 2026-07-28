@@ -67,8 +67,7 @@ const {
   notQueriedState,
   unreadableState,
   LINK_LABEL,
-  EVIDENCE_TIER_PROPERTY_ID,
-} = await import(join(repoRoot, "src/integration/writeback.ts"));
+  EVIDENCE_TIER_PROPERTY_ID, linkOmission,} = await import(join(repoRoot, "src/integration/writeback.ts"));
 
 const event = JSON.parse(readFileSync(resolve(eventPath), "utf8"));
 
@@ -284,6 +283,7 @@ const receipt = {
   observation: observed.record,
   ...outcome,
   refusedBecause: refused,
+  linkOmittedBecause: linkOmission(event),
 };
 
 const enriched = attachReceipt(event, receipt);

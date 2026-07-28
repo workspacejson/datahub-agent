@@ -1,0 +1,10 @@
+{
+  "corpus": "https://github.com/dcaribou/transfermarkt-datasets",
+  "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+  "producer": "@workspacejson/cli@0.5.1",
+  "generated_by": "scripts/build-corpus-fixture.mjs",
+  "command": "workspacejson generate <pinned-checkout>",
+  "file_count": 131,
+  "note": "workspace.json is a schema-valid producer artifact. This external sidecar preserves corpus provenance without modifying the standard artifact. Fixture-local convention, not a standard proposal.",
+  "workspace_sha256": "3b1f636edc28b0f44f5aa1aa2b9da6fbcd8e340ad5e3ad2c457e933cd6bd3da1"
+}

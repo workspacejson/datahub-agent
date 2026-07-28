@@ -62,3 +62,33 @@ describe("DataHub join — nested dbt project (HAC-75 treatment)", () => {
     expect(computeProjectPrefix("/repo/dbt", "/repo")).toBeNull();
   });
 });
+
+describe("joinModels edge cases", () => {
+  it("returns zero matched for an empty models array", () => {
+    const result = joinModels([], "dbt", NESTED_FILE_INDEX);
+    expect(result.matched).toBe(0);
+    expect(result.total).toBe(0);
+    expect(result.rows).toEqual([]);
+  });
+
+  it("returns zero matched when the fileIndex is empty", () => {
+    const result = joinModels(MODELS, "dbt", {});
+    expect(result.matched).toBe(0);
+    expect(result.total).toBe(5);
+    expect(result.rows.every((r) => !r.matched)).toBe(true);
+  });
+
+  it("reports a partial match when only some models resolve", () => {
+    const partialIndex: FileIndex = {
+      "dbt/models/customers.sql": {},
+      "dbt/models/orders.sql": {},
+    };
+    const result = joinModels(MODELS, "dbt", partialIndex);
+    expect(result.matched).toBe(2);
+    expect(result.total).toBe(5);
+    const matched = result.rows.filter((r) => r.matched);
+    const unmatched = result.rows.filter((r) => !r.matched);
+    expect(matched.map((r) => r.uniqueId)).toEqual(["model.jaffle_shop.customers", "model.jaffle_shop.orders"]);
+    expect(unmatched).toHaveLength(3);
+  });
+});

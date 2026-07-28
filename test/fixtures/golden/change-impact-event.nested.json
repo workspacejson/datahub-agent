@@ -1,7 +1,7 @@
 {
-  "eventVersion": "1.1",
+  "eventVersion": "1.2",
   "provenance": {
-    "producedAt": "2026-07-27T17:08:07.570Z",
+    "producedAt": "2026-07-28T03:08:50.821Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -16,7 +16,10 @@
     },
     "workspaceArtifact": {
       "producedBy": "@workspacejson/cli",
-      "fileIndexKeys": 36
+      "fileIndexKeys": 131,
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "revision": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+      "integrity": "exact-match"
     }
   },
   "subject": {
@@ -96,22 +99,16 @@
     "dbtFilePath": "models/curated/game_events.sql",
     "repositoryRelativePath": "dbt/models/curated/game_events.sql",
     "projectPrefix": "dbt",
-    "method": "external-url",
-    "sourceUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql"
+    "method": "manifest-join",
+    "sourceUrl": null
   },
   "partners": [],
   "evidence": {
     "records": [
       {
-        "claim": "producing file dbt/models/curated/game_events.sql is tracked in the workspace.json artifact",
-        "observation": "key absent from generated.fileIndex (36 keys)",
+        "claim": "producing file dbt/models/curated/game_events.sql is tracked in the corpus-matched workspace.json artifact",
+        "observation": "Artifact repository, revision, and repository-relative source path matched exactly.",
         "source": "workspacejson",
-        "verified": true
-      },
-      {
-        "claim": "the producing file is addressable at an immutable commit",
-        "observation": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
-        "source": "datahub",
         "verified": true
       }
     ],
@@ -126,10 +123,18 @@
   },
   "unavailable": [
     {
+      "field": "code.repositoryRelativePath",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact."
+    },
+    {
       "field": "partners",
       "source": "workspacejson",
-      "reason": "absent",
-      "detail": "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it."
+      "reason": "indeterminate",
+      "detail": "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.",
+      "completeness": "unverified",
+      "observedCount": 0
     }
   ],
   "writeback": {
@@ -138,18 +143,18 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-27T17:08:08.616Z",
+    "attemptedAt": "2026-07-28T03:11:42.968Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
     },
     "intended": {
-      "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+      "linkUrl": null,
       "evidenceTier": "VERIFIED"
     },
     "before": {
-      "linkUrl": null,
-      "evidenceTier": null,
+      "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+      "evidenceTier": "VERIFIED",
       "read": "ok",
       "readError": null
     },
@@ -169,18 +174,6 @@
         },
         "succeeded": true,
         "response": "already defined"
-      },
-      {
-        "mutation": "upsertLink",
-        "variables": {
-          "input": {
-            "resourceUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
-            "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
-            "label": "Producing source (workspace.json)"
-          }
-        },
-        "succeeded": true,
-        "response": "{\"upsertLink\":true}"
       },
       {
         "mutation": "upsertStructuredProperties",
@@ -206,13 +199,14 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 20,
-      "timeoutMs": 120000,
+      "elapsedMs": 8,
+      "timeoutMs": 20000,
       "lastError": null
     },
     "succeeded": true,
-    "noop": false,
+    "noop": true,
     "verified": true,
-    "refusedBecause": null
+    "refusedBecause": null,
+    "linkOmittedBecause": "no commit-pinned source URL is available; an unpinned link would drift from the artifact it describes, so none was written"
   }
 }
