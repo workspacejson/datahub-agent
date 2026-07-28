@@ -196,8 +196,16 @@ describe("completeness as an axis of its own", () => {
     const problems = validateEvent(
       withLineageEntry({ reason: "absent", completeness: "not-established" }),
     );
-    expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/absent.*not-established.*use indeterminate/);
+    // Two complementary refusals, named rather than counted: the entry's own
+    // claim is refused, and so is its disagreement with the canonical
+    // observation. A length assertion here broke when the second guard was
+    // added, reporting a tightening as a regression.
+    expect(problems).toContainEqual(
+      expect.stringMatching(/absent.*not-established.*use indeterminate/),
+    );
+    expect(problems).toContainEqual(
+      expect.stringContaining("absence is only sayable about an answer established complete"),
+    );
   });
 
   it("does not let claiming complete-against-pinned-manifest be enough to earn absent", () => {
@@ -239,14 +247,16 @@ describe("completeness as an axis of its own", () => {
   });
 
   it("rejects a negative observedCount", () => {
-    expect(validateEvent(withLineageEntry({ observedCount: -1 }))[0]).toMatch(/negative/);
+    expect(validateEvent(withLineageEntry({ observedCount: -1 }))).toContainEqual(
+      expect.stringContaining("negative observedCount"),
+    );
   });
 
   it("rejects an observedCount that disagrees with the edges carried", () => {
     // The count is a summary of the set, not a second independent claim. If
     // they can drift, the summary becomes the thing consumers trust.
-    expect(validateEvent(withLineageEntry({ observedCount: 3 }))[0]).toMatch(
-      /observedCount 3 but carries 0 entries/,
+    expect(validateEvent(withLineageEntry({ observedCount: 3 }))).toContainEqual(
+      expect.stringContaining("observedCount 3 but carries 0 entries"),
     );
   });
 
@@ -278,10 +288,16 @@ describe("complete-against-pinned-manifest must carry its evidence", () => {
   const verifiedAbsence = (verification?: Partial<VerificationEvidence>): ChangeImpactEvent => {
     const event = validEvent();
     event.datahub.upstreams = [];
+    // The canonical observation mirrors the entry, because they describe one
+    // answer. This used to say `not-established` while the entry below claimed
+    // `complete-against-pinned-manifest`, and validateEvent accepted it — the
+    // contradiction V-1c now refuses. The helper is only a valid fixture for
+    // "verified absence" if both representations actually agree.
     event.datahub.lineageObservation.upstreams = {
       read: "ok",
-      completeness: "not-established",
+      completeness: "complete-against-pinned-manifest",
       observedCount: 0,
+      ...(verification === undefined ? {} : { verification: { ...EVIDENCE, ...verification } }),
     };
     event.unavailable = [
       {
@@ -325,6 +341,15 @@ describe("complete-against-pinned-manifest must carry its evidence", () => {
     event.unavailable[0]!.reason = "indeterminate";
     event.unavailable[0]!.completeness = "not-established";
     delete event.unavailable[0]!.verification;
+    // The canonical observation is downgraded with it. Leaving it claiming
+    // complete-against-pinned-manifest would make this fixture assert the
+    // contradiction V-1c refuses, rather than the cheapness of the honest
+    // default it is actually about.
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "not-established",
+      observedCount: 0,
+    };
     expect(validateEvent(event)).toEqual([]);
   });
 });
@@ -401,7 +426,15 @@ describe("a workspace claim the artifact could not support", () => {
         detail: "The producing file is not present in the workspace.json artifact, so no co-change partners can be derived for it.",
       }],
     }));
-    expect(problems).toHaveLength(2);
+    // Named rather than counted. A bare length assertion says nothing about
+    // *which* rules fired, and it broke when a third genuinely-violated rule
+    // was added — reporting the tightening as a regression.
+    expect(problems).toEqual(expect.arrayContaining([
+      expect.stringContaining("record(s) marked checkExecuted"),
+      expect.stringContaining("absence from an unmatched artifact is not absence"),
+      expect.stringContaining("claims absent without stating completeness"),
+    ]));
+    expect(problems).toHaveLength(3);
   });
 
   it("still permits DataHub-sourced verified claims — only repository evidence is gated", () => {
@@ -531,7 +564,14 @@ describe("validateEvent", () => {
       {
         field: "partners",
         source: "workspacejson",
-        reason: "absent",
+        // This used to say `absent`, and validated clean while stating no
+        // completeness at all — the hole V-1b now closes. `indeterminate` is
+        // both the honest word here and the one the emitter produces: an
+        // artifact holding index keys but no co-change values has not
+        // established that no co-change exists.
+        reason: "indeterminate",
+        completeness: "not-established",
+        observedCount: 0,
         detail: "the artifact carries keys but no behavioral values",
       },
     ];

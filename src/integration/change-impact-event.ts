@@ -720,6 +720,168 @@ export function toDataHubOnly(event: ChangeImpactEvent): ChangeImpactEvent {
  * built to avoid.
  */
 /**
+ * Which lineage direction an `unavailable` entry is talking about.
+ *
+ * `unavailable` and `lineageObservation` are two representations of the same
+ * fact, and until these checks existed nothing held them to each other. The
+ * observation is the canonical record — it is mandatory on every event, in both
+ * directions, precisely so that completeness cannot go unstated. An `unavailable`
+ * entry is the human explanation beside it, never a second source of truth.
+ */
+const LINEAGE_FIELDS = {
+  "datahub.upstreams": "upstreams",
+  "datahub.downstreams": "downstreams",
+} as const;
+
+/** The query direction a manifest for that field must have been taken under. */
+const QUERY_DIRECTION = {
+  upstreams: "UPSTREAM",
+  downstreams: "DOWNSTREAM",
+} as const;
+
+/** Two evidence blocks describe the same attestation, or they do not. */
+function sameVerification(
+  a: VerificationEvidence | undefined,
+  b: VerificationEvidence | undefined,
+): boolean {
+  if (a === undefined || b === undefined) return a === b;
+  return (
+    a.manifestDigest === b.manifestDigest &&
+    a.expectedSetDigest === b.expectedSetDigest &&
+    a.observedSetDigest === b.observedSetDigest &&
+    JSON.stringify(Object.entries(a.queryParameters).sort()) ===
+      JSON.stringify(Object.entries(b.queryParameters).sort())
+  );
+}
+
+/**
+ * Hold an `unavailable` lineage entry to the canonical observation beside it.
+ *
+ * Without this, one event could say both things about one answer. The case that
+ * exposed it was a test fixture this contract's own author wrote: the upstream
+ * observation said `not-established` while the `unavailable` entry for the same
+ * field said `complete-against-pinned-manifest`, with expected and observed
+ * digests that differed — and `validateEvent` returned no problems.
+ *
+ * That is the contract's central failure mode reproduced across two fields
+ * instead of inside one: a claim standing next to evidence that does not support
+ * it, where the mismatch is only visible if someone thinks to compare them. The
+ * fix is the same one applied to `succeeded` and to `absent` — the comparison
+ * happens here, once, rather than in the head of every reader.
+ */
+function lineageAgreementProblems(
+  entry: {
+    field: string;
+    reason: UnavailableReason;
+    completeness?: Completeness | undefined;
+    observedCount?: number | undefined;
+    verification?: VerificationEvidence | undefined;
+  },
+  // Explicit `| undefined` on the members, not `LineageObservation`. These
+  // values come out of a schema parse, where an absent optional surfaces as an
+  // explicit `undefined` — which `exactOptionalPropertyTypes` treats as a
+  // different type from the interface's `?:`. Same contract, different spelling.
+  observations: Record<
+    "upstreams" | "downstreams",
+    | {
+        read: LineageObservation["read"];
+        completeness: Completeness;
+        observedCount?: number | undefined;
+        verification?: VerificationEvidence | undefined;
+      }
+    | undefined
+  >,
+  edgeCounts: Record<"upstreams" | "downstreams", number>,
+): string[] {
+  const direction = LINEAGE_FIELDS[entry.field as keyof typeof LINEAGE_FIELDS];
+  if (!direction) return [];
+
+  const observation = observations[direction];
+  // Absence of the observation is reported by the loop that owns it; adding a
+  // second complaint here would name one fault twice.
+  if (!observation) return [];
+
+  const problems: string[] = [];
+  const canonical = `datahub.lineageObservation.${direction}`;
+
+  if (entry.completeness !== undefined && entry.completeness !== observation.completeness) {
+    problems.push(
+      `${entry.field} states completeness ${entry.completeness} but ${canonical} states ${observation.completeness} — one answer cannot be both`,
+    );
+  }
+
+  if (entry.observedCount !== undefined && entry.observedCount !== observation.observedCount) {
+    problems.push(
+      `${entry.field} reports observedCount ${entry.observedCount} but ${canonical} reports ${observation.observedCount ?? "none"}`,
+    );
+  }
+
+  if (entry.verification !== undefined || observation.verification !== undefined) {
+    if (!sameVerification(entry.verification, observation.verification)) {
+      problems.push(
+        `${entry.field} carries verification evidence that differs from ${canonical} — the same read cannot have two attestations`,
+      );
+    }
+  }
+
+  // A manifest taken in the other direction is not evidence about this one.
+  // Upstream and downstream closures are different sets; comparing an answer
+  // against the wrong one would pass or fail for reasons unrelated to the field
+  // being described.
+  for (const [holder, label] of [
+    [entry.verification, entry.field],
+    [observation.verification, canonical],
+  ] as const) {
+    const stated = holder?.queryParameters?.["direction"];
+    if (stated !== undefined && stated !== QUERY_DIRECTION[direction]) {
+      problems.push(
+        `${label} is evidenced by a manifest queried ${String(stated)}, but the field describes ${QUERY_DIRECTION[direction]} lineage`,
+      );
+    }
+  }
+
+  // `absent` on lineage is the strongest thing this contract can say about a
+  // catalog: it was asked, it answered, the answer was established complete, and
+  // it was empty. Every one of those has to be true at once, and each is
+  // recorded in a different place — so they are checked together here rather
+  // than left to line up by coincidence.
+  if (entry.reason === "absent") {
+    if (observation.read !== "ok") {
+      problems.push(
+        `${entry.field} claims absent but ${canonical} read is ${observation.read} — a read that did not happen found nothing to report`,
+      );
+    }
+    if (edgeCounts[direction] > 0) {
+      problems.push(
+        `${entry.field} claims absent but ${edgeCounts[direction]} edge(s) are carried`,
+      );
+    }
+    if (observation.observedCount !== 0) {
+      problems.push(
+        `${entry.field} claims absent but ${canonical} observed ${observation.observedCount ?? "no"} edge(s)`,
+      );
+    }
+    if (observation.completeness !== "complete-against-pinned-manifest") {
+      problems.push(
+        `${entry.field} claims absent while ${canonical} completeness is ${observation.completeness} — absence is only sayable about an answer established complete against a pinned manifest`,
+      );
+    }
+    // No attestation-match check here, deliberately.
+    //
+    // One was written and removed: mutation testing could not kill it. The
+    // general agreement check above fires whenever *either* side carries
+    // evidence, so an absent-specific version can only be reached when both are
+    // `undefined` — where they are equal by definition. It was unreachable.
+    //
+    // Removed rather than left in place with a note, because a guard no test can
+    // kill is worse than no guard: it reads as coverage, and the next person to
+    // touch this file would trust it.
+  }
+
+  return problems;
+}
+
+/**
  * A second axis with nothing behind it is just a new place to assert the word.
  * `complete-against-pinned-manifest` names a manifest, so it has to produce one
  * — wherever it is claimed. This is the only path to that value.
@@ -739,6 +901,28 @@ function completenessEvidenceProblems(
   if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
     return [
       `${label} claims complete-against-pinned-manifest without naming the manifest (${missing.join(", ") || "queryParameters"})`,
+    ];
+  }
+
+  // The digests must agree, or the evidence refutes the claim it is attached to.
+  //
+  // `complete-against-pinned-manifest` means one thing: the observed set was
+  // compared against the pinned expected set and found equal. Two different
+  // digests are the record of a comparison that came out *unequal* — so an event
+  // carrying them is asserting completeness on evidence that disproves it, with
+  // the disproof sitting in the adjacent field.
+  //
+  // This is the cheapest possible check and it was missing, which meant the
+  // evidence block could be populated with any two strings and satisfy the gate.
+  // Requiring the block was only ever half the requirement; requiring it to
+  // *agree* is the other half.
+  //
+  // Equality is the minimum internal invariant, not the whole story: it cannot
+  // tell whether the digests were honestly derived. That remains the producer's
+  // obligation, and for lineage it is HAC-231's.
+  if (v.expectedSetDigest !== v.observedSetDigest) {
+    return [
+      `${label} claims complete-against-pinned-manifest but its expected and observed set digests differ (${v.expectedSetDigest} vs ${v.observedSetDigest}) — unequal sets are the record of an incomplete answer`,
     ];
   }
   return [];
@@ -919,9 +1103,24 @@ export function validateEvent(event: unknown): string[] {
   };
 
   for (const entry of valid.unavailable) {
-    if (entry.reason === "absent" && entry.completeness === "not-established") {
+    // `absent` is the vocabulary's strongest word, so it is gated on the
+    // strongest completeness value — which in turn cannot be claimed without
+    // `VerificationEvidence`. That chain is the whole requirement: absence is
+    // only sayable about an answer established complete against a pinned
+    // manifest.
+    //
+    // Written as `!== complete-against-pinned-manifest` rather than
+    // `=== not-established`, because the two differ on the case that was
+    // actually escaping: `completeness` omitted entirely. Only the explicit
+    // pairing was rejected, so a producer that stated no completeness at all
+    // claimed absence with nothing behind it and validated clean — the missing
+    // field read as permission, inside the check written to stop absence being
+    // read as safety.
+    if (entry.reason === "absent" && entry.completeness !== "complete-against-pinned-manifest") {
       problems.push(
-        `${entry.field} claims absent on an answer whose completeness is not-established — use indeterminate`,
+        entry.completeness === undefined
+          ? `${entry.field} claims absent without stating completeness — absence is only sayable about an answer established complete against a pinned manifest`
+          : `${entry.field} claims absent on an answer whose completeness is ${entry.completeness} — use indeterminate`,
       );
     }
     // The converse guard, so the two words cannot drift apart in use.
@@ -935,6 +1134,18 @@ export function validateEvent(event: unknown): string[] {
     }
 
     problems.push(...completenessEvidenceProblems(entry, entry.field));
+
+    // Held to the canonical observation, for the lineage fields that have one.
+    problems.push(
+      ...lineageAgreementProblems(
+        entry,
+        valid.datahub.lineageObservation ?? { upstreams: undefined, downstreams: undefined },
+        {
+          upstreams: valid.datahub.upstreams.length,
+          downstreams: valid.datahub.downstreams.length,
+        },
+      ),
+    );
 
     // A read that did not happen has no count. Manufacturing a zero for one
     // recreates the collapse this contract prevents, in arithmetic rather than
