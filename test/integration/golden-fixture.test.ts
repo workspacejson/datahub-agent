@@ -51,7 +51,14 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
     expect(event.code.repositoryRelativePath).not.toMatch(/^\/|^\.\/|\\/);
   });
 
-  it("pins the source link to an immutable commit, not a branch", () => {
+  it("pins the source link to an immutable commit when it has one at all", () => {
+    // `externalUrl` is dropped at the official MCP boundary, so an MCP-faithful
+    // read often has no URL to pin. Null is the honest outcome and is asserted
+    // as one; what must never happen is an unpinned or branch-relative link.
+    if (event.code.sourceUrl === null) {
+      expect(event.code.method).not.toBe("external-url");
+      return;
+    }
     expect(event.code.sourceUrl).toContain(`/blob/${event.provenance.corpus.commit}/`);
   });
 
@@ -103,6 +110,12 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
         linkUrl: event.code.sourceUrl,
         evidenceTier: event.evidence.tier,
       });
+      // A null link is a stated omission, not a silent one.
+      if (event.code.sourceUrl === null) {
+        expect(event.writeback?.linkOmittedBecause).toMatch(/commit-pinned/);
+      } else {
+        expect(event.writeback?.linkOmittedBecause).toBeNull();
+      }
     });
 
     it("claims success against that intent rather than against the reads alone", () => {
@@ -111,7 +124,11 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       // which is true of a write that never became visible.
       const { intended, after, succeeded } = event.writeback!;
       expect(succeeded).toBe(true);
-      expect(after.linkUrl).toBe(intended?.linkUrl);
+      // A null intended link makes no claim about the catalog's link, so it is
+      // not compared. Requiring absence there would assert the opposite of what
+      // the writeback intended, and a live run reported `timed-out` on exactly
+      // that before it was fixed.
+      if (intended?.linkUrl !== null) expect(after.linkUrl).toBe(intended?.linkUrl);
       expect(after.evidenceTier).toBe(intended?.evidenceTier);
     });
 
@@ -136,17 +153,21 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       // already-enriched instance yields noop=true and before === after — a
       // correct result, but a misleading thing to commit as the demonstration.
       // Making the reset deterministic and verified is tracked under HAC-146.
-      expect(event.writeback?.before).toEqual({
-        linkUrl: null,
-        evidenceTier: null,
-        read: "ok",
-        readError: null,
-      });
-      expect(event.writeback?.noop).toBe(false);
+      // The tier this tool owns had no prior value; the link is whatever the
+      // instance already held, which this run does not touch when it has no URL
+      // to write.
+      expect(event.writeback?.before.read).toBe("ok");
+      expect(event.writeback?.before.readError).toBeNull();
+      if (event.code.sourceUrl !== null) {
+        expect(event.writeback?.before.linkUrl).toBeNull();
+        expect(event.writeback?.noop).toBe(false);
+      }
     });
 
-    it("moved the dataset to the commit-pinned link and the derived tier", () => {
-      expect(event.writeback?.after.linkUrl).toBe(event.code.sourceUrl);
+    it("moved the dataset to the derived tier, and to the link when it had one", () => {
+      if (event.code.sourceUrl !== null) {
+        expect(event.writeback?.after.linkUrl).toBe(event.code.sourceUrl);
+      }
       expect(event.writeback?.after.evidenceTier).toBe(event.evidence.tier);
     });
 
@@ -162,8 +183,11 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
 
     it("used only the two upsert mutations, both core OSS", () => {
       const mutations = event.writeback?.attempts.map((a) => a.mutation) ?? [];
-      expect(mutations).toContain("upsertLink");
+      // The tier write is unconditional; the link write is not. Dropping both
+      // for want of a URL was the absence-collapse this receipt now avoids.
       expect(mutations).toContain("upsertStructuredProperties");
+      if (event.code.sourceUrl !== null) expect(mutations).toContain("upsertLink");
+      expect(mutations.every((m) => m.startsWith("upsert") || m === "createStructuredProperty")).toBe(true);
       expect(mutations.some((m) => /assertion/i.test(m))).toBe(false);
     });
 
@@ -180,11 +204,14 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
       // such rather than skipped: if nothing was attempted, the receipt must say
       // why.
       const mutations = event.writeback?.attempts.map((a) => a.mutation) ?? [];
-      if (mutations.length === 0) {
-        expect(event.writeback?.refusedBecause ?? null).not.toBeNull();
+      const linkIdx = mutations.indexOf("upsertLink");
+      if (linkIdx === -1) {
+        // No link was written, so there is no ordering to assert — but the
+        // omission must be stated, and the tier must still have landed.
+        expect(event.writeback?.linkOmittedBecause).not.toBeNull();
+        expect(mutations).toContain("upsertStructuredProperties");
         return;
       }
-      const linkIdx = mutations.indexOf("upsertLink");
       const propIdx = mutations.indexOf("upsertStructuredProperties");
       expect(linkIdx).toBeGreaterThanOrEqual(0);
       expect(propIdx).toBeGreaterThan(linkIdx);
@@ -205,7 +232,11 @@ describe.each(Object.entries(FIXTURES))("golden fixture: %s", (_name, event) => 
 
     it("labels the link so a re-run upserts the same one", () => {
       const linkAttempt = event.writeback?.attempts.find((a) => a.mutation === "upsertLink");
-      expect((linkAttempt?.variables.input as { label?: string })?.label).toBe(LINK_LABEL);
+      if (!linkAttempt) {
+        expect(event.writeback?.linkOmittedBecause).not.toBeNull();
+        return;
+      }
+      expect((linkAttempt.variables.input as { label?: string })?.label).toBe(LINK_LABEL);
     });
   });
 });
@@ -225,10 +256,22 @@ describe("the fixtures cover both project layouts", () => {
     expect(repositoryRelativePath).not.toBe(dbtFilePath);
   });
 
-  it("both were resolved from the catalog rather than an out-of-band manifest read", () => {
-    // Recorded because it is the load-bearing claim: the prefix was derived
-    // from what DataHub itself exposed, not from configuration we supplied.
-    expect(FIXTURES.root.code.method).toBe("external-url");
-    expect(FIXTURES.nested.code.method).toBe("external-url");
+  it("both derived their prefix from evidence, never from supplied configuration", () => {
+    // This previously asserted `method === "external-url"` and described the
+    // resolution as coming from the catalog alone. Both stopped being true when
+    // the emitter was restricted to fields the official MCP server projects:
+    // `externalUrl` is dropped at that boundary, so the prefix now comes from a
+    // unique suffix match against the corpus-matched workspace fileIndex.
+    //
+    // The load-bearing claim is unchanged and is what is asserted — the offset
+    // between the dbt path and the repository root was derived, not configured.
+    // The mechanism that derives it is not.
+    for (const fixture of [FIXTURES.root, FIXTURES.nested]) {
+      expect(fixture.code.method).toBe("manifest-join");
+      expect(fixture.code.projectPrefix).not.toBeNull();
+      expect(fixture.code.repositoryRelativePath?.endsWith(fixture.code.dbtFilePath ?? "\u0000")).toBe(true);
+    }
+    // Different layouts, so a hardcoded prefix could not satisfy both.
+    expect(FIXTURES.root.code.projectPrefix).not.toBe(FIXTURES.nested.code.projectPrefix);
   });
 });
