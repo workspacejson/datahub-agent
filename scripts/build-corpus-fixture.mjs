@@ -28,6 +28,19 @@ const CORPUS = "dbt-labs/jaffle_shop_duckdb";
 // Fields retained from each manifest node. Everything dropped is payload the
 // join never reads (compiled_code, raw_code, columns, docs, config, depends_on).
 // Retained values are copied verbatim — none are rewritten.
+//
+// `depends_on` is dropped *here* because the URN join does not read it. That is
+// not a statement that the project has no use for it: HAC-231's readiness
+// manifests are derived from `depends_on`, `parent_map` and `child_map`, by
+// `scripts/derive-readiness-manifest.mjs`, which reads a checkout's own
+// `target/manifest.json` directly and never consults this fixture. Do not read
+// this list as "dbt dependency data is unavailable" — it is unavailable in this
+// artifact, on purpose, and lives in that derivation instead.
+//
+// This script is also pinned to jaffle_shop_duckdb and refuses other checkouts
+// (see the SHA guard below). It is deliberately not the vehicle for the
+// transfermarkt readiness manifests, whose governance requires manifest
+// generation to be a separate explicit command.
 const KEEP = [
   "resource_type", "unique_id", "original_file_path",
   "database", "schema", "alias", "name", "language", "relation_name",
