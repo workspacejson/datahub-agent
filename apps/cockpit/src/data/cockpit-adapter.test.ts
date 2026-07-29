@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createAdapter, fixtureLiveParity, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
+import { createAdapter, createComparisonAdapter, fixtureLiveParity, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
 import { cockpitViewModelSchema } from "../model/cockpit-view-model";
 import { contractEvent } from "../test/contract-event";
+import { judgeRunBundle } from "../test/judge-run-bundle";
 
 describe("CockpitViewModel boundary", () => {
   it("marks the entire provisional model placeholder", () => expect(provisionalAdapter.read().sourceMode).toBe("placeholder"));
@@ -18,6 +19,26 @@ describe("CockpitViewModel boundary", () => {
     const live = createAdapter(event, "live").read();
     expect(fixtureLiveParity(fixture, live)).toBe(true);
     expect(fixtureLiveParity(fixture, { ...live, read: "failed" })).toBe(false);
+  });
+
+  it("normalizes a bundle into a model carrying its observed comparison", () => {
+    const event = contractEvent();
+    const model = createComparisonAdapter(judgeRunBundle(event), "live").read();
+    expect(model.sourceMode).toBe("live");
+    expect(model.planComparison.state).toBe("observed");
+    expect(cockpitViewModelSchema.safeParse(model).success).toBe(true);
+  });
+
+  it("throws on a malformed event in a bundle, but not on a malformed comparison", () => {
+    // The asymmetry, at the adapter boundary: a bad event has no view, while a
+    // bad comparison is a state the view can show. Collapsing these would either
+    // crash away a diagnosis or render a partial artifact as a confident one.
+    const bundle = judgeRunBundle(contractEvent());
+    expect(() => createComparisonAdapter({ ...bundle, event: { eventVersion: "1.3" } }, "live"))
+      .toThrow(/does not satisfy the change-impact contract/);
+
+    const model = createComparisonAdapter({ ...bundle, comparison: { ...bundle.comparison, eventDigest: "sha256:wrong" } }, "live").read();
+    expect(model.planComparison.state).toBe("unavailable");
   });
 
   it("refuses a view model where an event belongs, instead of casting it", () => {

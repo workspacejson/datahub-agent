@@ -58,7 +58,14 @@ export function contractEvent(overrides: Partial<ChangeImpactEvent> = {}): Chang
     },
     unavailable: [
       { field: "datahub.downstreams", source: "datahub", reason: "indeterminate", detail: "The catalog returned no downstream edges; completeness was not established.", completeness: "not-established", observedCount: 0 },
-      { field: "partners", source: "workspacejson", reason: "absent", detail: "The artifact carries file-index keys but no behavioral co-change values." },
+      // `indeterminate` with completeness stated, not `absent`. This said
+      // `absent` with no completeness, which `validateEvent` rejects: absence is
+      // only sayable about an answer established complete against a pinned
+      // manifest. Nothing caught it because the cockpit's read path parses the
+      // schema and never ran the contract's invariants, so a helper documented as
+      // "shaped exactly as the emitter produces one" was shaped in a way the
+      // emitter cannot produce. This is the shape the live emitter writes.
+      { field: "partners", source: "workspacejson", reason: "indeterminate", detail: "The artifact carries file-index keys but no behavioral co-change values.", completeness: "not-established", observedCount: 0 },
     ],
     ...overrides,
   };

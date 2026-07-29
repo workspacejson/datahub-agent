@@ -15,7 +15,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["vite/client"],
-    "paths": { "@contract": ["../../src/integration/change-impact-event.ts"] }
+    "paths": { "@contract": ["../../src/integration/change-impact-event.ts"], "@comparison": ["../../src/integration/plan-comparison.ts"] }
   },
   "include": [
     "src",

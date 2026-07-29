@@ -5,7 +5,7 @@ export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   define: { __COCKPIT_SOURCE_MODE__: JSON.stringify("placeholder") },
   resolve: {
-    alias: { "@contract": fileURLToPath(new URL("../../src/integration/change-impact-event.ts", import.meta.url)) },
+    alias: { "@contract": fileURLToPath(new URL("../../src/integration/change-impact-event.ts", import.meta.url)), "@comparison": fileURLToPath(new URL("../../src/integration/plan-comparison.ts", import.meta.url)) },
   },
   test: {
     environment: "jsdom",

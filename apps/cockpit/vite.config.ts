@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === "production" && sourceMode === "placeholder") {
 
 export default defineConfig({
     resolve: {
-    alias: { "@contract": fileURLToPath(new URL("../../src/integration/change-impact-event.ts", import.meta.url)) },
+    alias: { "@contract": fileURLToPath(new URL("../../src/integration/change-impact-event.ts", import.meta.url)), "@comparison": fileURLToPath(new URL("../../src/integration/plan-comparison.ts", import.meta.url)) },
   },
 plugins: [react(), tailwindcss()],
   define: { __COCKPIT_SOURCE_MODE__: JSON.stringify(sourceMode) },

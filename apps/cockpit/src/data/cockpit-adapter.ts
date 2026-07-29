@@ -1,5 +1,5 @@
 import { provisionalSource, provisionalStates } from "./provisional-source";
-import { readChangeImpactEvent } from "../model/from-change-impact-event";
+import { readChangeImpactEvent, readJudgeRunBundle } from "../model/from-change-impact-event";
 import {
   cockpitViewModelSchema,
   type CockpitViewModel,
@@ -74,6 +74,32 @@ export function createAdapter(event: unknown, sourceMode: Exclude<SourceMode, "p
   if (!result.ok) {
     throw new Error(
       `The supplied event does not satisfy the change-impact contract:\n  ${result.problems.join("\n  ")}`,
+    );
+  }
+  return { read: () => normalize(result.event, sourceMode) };
+}
+
+/**
+ * The path for a `JudgeRunBundle`: an event plus the comparison derived from it.
+ *
+ * Separate from `createAdapter` rather than a widened `unknown` branch, because
+ * the two inputs make different promises. Passing a bundle to `createAdapter`
+ * would render "no comparison supplied" for a bundle that supplied one, so the
+ * caller states which it holds and gets the matching guarantee.
+ *
+ * Throws only when the bundled *event* is malformed, matching `createAdapter`. A
+ * comparison that does not validate is not a crash: it reaches the view as
+ * `unavailable` carrying the validation problems, because that is a state a
+ * judge can read and act on.
+ */
+export function createComparisonAdapter(
+  bundle: unknown,
+  sourceMode: Exclude<SourceMode, "placeholder">,
+): CockpitSourceAdapter {
+  const result = readJudgeRunBundle(bundle, "change-plan");
+  if (!result.ok) {
+    throw new Error(
+      `The event inside the supplied bundle does not satisfy the change-impact contract:\n  ${result.problems.join("\n  ")}`,
     );
   }
   return { read: () => normalize(result.event, sourceMode) };

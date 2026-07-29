@@ -14,7 +14,11 @@ export const provisionalSource = {
   repositoryEvidence: { text: "<repository evidence unavailable>", source: "workspace.json" },
   immutableViewSourceUrl: "https://example.invalid/evidence-binding-pending",
   impactEdges: [{ label: "<lineage read not observed>", state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
-  planDeltas: [{ kind: "uncertainty-changed", label: "<joined plan unavailable>", reason: "Evidence binding is pending; no semantic plan change is claimed.", source: "Joined" }],
+  // Not a placeholder delta. This used to be one `uncertainty-changed` entry
+  // labelled `<joined plan unavailable>`, which spelled an absence as a plan
+  // change — the shape of a finding, carrying none. The state now says it
+  // outright, so nothing has to read a label to learn no comparison exists.
+  planComparison: { state: "unavailable", reason: "Evidence binding is pending; no comparison has been run, so no semantic plan change is claimed." },
   receipt: {
     // The contract's own accounting vocabulary. Datasets and dbt nodes are
     // separate denominators and are never summed; only `resolved + unresolved =
