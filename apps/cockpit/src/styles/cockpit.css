@@ -541,5 +541,24 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
 
-/* Anchor targets clear the top of the viewport rather than butting against it. */
+/* ── Anchor reachability ──────────────────────────────────────
+   Anchor targets clear the top of the viewport rather than butting against it. */
 .receipts-view h2 { scroll-margin-top: var(--sp-6); }
+
+/* The last section is given enough height for its own heading to reach the
+   reading line.
+
+   Without it the document ended 521px too early: max scroll was 1658 while the
+   final two headings needed 1855 and 2179 to reach the top, so the index offered
+   six destinations and the page could only deliver four. Clicking either of the
+   last two landed at the same maximum offset, and neither could ever be "scrolled
+   past", so neither ever highlighted.
+
+   Fixing the index instead, by highlighting a section the reader cannot actually
+   reach, would have left the click still inert. An index that lists a destination
+   has to be able to go there, so the page provides the room.
+
+   `100dvh` rather than a guessed pixel padding: the shortfall is exactly one
+   viewport minus the reading line, so this is self-adjusting and correct at any
+   window size. `first-frame.spec.ts` asserts every entry is reachable. */
+.receipts-view > section:last-of-type { min-height: calc(100dvh - var(--sp-6) - 2rem); }

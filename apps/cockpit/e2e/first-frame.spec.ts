@@ -165,38 +165,44 @@ test("the changed-plan destination shows the real evidence-backed delta", async 
   await expect(page.getByText("Declared context plus repository evidence")).toBeVisible();
 });
 
-test("the receipt has in-page wayfinding that tracks the reader", async ({ page }) => {
+test("every receipt section is reachable, distinct, and highlights itself", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
   await page.goto(`${FIXTURE_ORIGIN}/?view=receipts`);
 
   // Receipts is far taller than the other two routes and holds six distinct
-  // arguments; none of them appeared in any navigation, and the rail was empty
-  // here, so the widest column was unused exactly where wayfinding was needed.
+  // arguments; none of them appeared in any navigation, and the rail sat empty
+  // here, so the widest column was unused where wayfinding was needed most.
   const index = page.getByRole("navigation", { name: "Receipt sections" });
   await expect(index).toBeVisible();
   const links = index.getByRole("link");
-  expect(await links.count()).toBeGreaterThan(4);
+  const labels = await links.allTextContents();
+  expect(labels.length).toBeGreaterThan(4);
 
-  // Every entry must point at a heading that exists, or the index is decoration.
-  for (const href of await links.evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")))) {
-    expect(href).toMatch(/^#/);
-    await expect(page.locator(href!)).toHaveCount(1);
+  // The invariant the first version of this test missed: an index entry has to be
+  // able to go where it says. The document used to end 521px too early, so the
+  // final two headings could never reach the reading line: clicking either landed
+  // at the same maximum offset and neither could ever become active. Asserting
+  // only that the highlight moved somewhere passed straight through that.
+  const offsets: number[] = [];
+  for (const label of labels) {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await index.getByRole("link", { name: label, exact: true }).click();
+
+    const target = await index.getByRole("link", { name: label, exact: true })
+      .evaluate((node) => (node as HTMLAnchorElement).getAttribute("href")!);
+    // The heading actually arrives at the top of the viewport, rather than merely
+    // being somewhere on screen because the page could not scroll any further.
+    await expect
+      .poll(async () => Math.round((await page.locator(target).boundingBox())!.y), { timeout: 4000 })
+      .toBeLessThan(72);
+
+    await expect(index.locator("[aria-current='location']")).toHaveText(label);
+    offsets.push(await page.evaluate(() => Math.round(window.scrollY)));
   }
 
-  const activeText = async () => index.locator("[aria-current='location']").first().textContent();
-  const first = await activeText();
-
-  // Tracking is the part that was wrong twice: an observer over a narrow band
-  // stuck on the first entry, and position-only tracking never reached the last
-  // section because the page bottom arrives before its heading reaches the top.
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await page.waitForFunction(
-    (was) => document.querySelector(".rail-index .is-active a")?.textContent !== was,
-    first,
-  );
-  const atBottom = await activeText();
-  expect(atBottom).not.toBe(first);
-  // At the bottom it is the last section outright, not whichever heading happened
-  // to clear the threshold.
-  expect((await links.allTextContents()).at(-1)).toBe(atBottom);
+  // Distinct destinations. Equal offsets would mean the index is offering choices
+  // that resolve to one place, which is what a reader reported as "they all go to
+  // the same breakpoint".
+  expect(new Set(offsets).size).toBe(offsets.length);
+  expect([...offsets]).toEqual([...offsets].sort((a, b) => a - b));
 });
