@@ -74,15 +74,47 @@ must not treat `lag: 0` as universally sufficient.
 - It says nothing about whether the *ingest* produced the edges you expected. It
   answers "has the index caught up", not "are the edges correct".
 
-## Not usable — ingestion execution requests
+## Usable, and this section previously said otherwise — ingestion execution requests
 
-`executionRequest` / `listExecutionRequests` (GraphQL) look like the obvious
-readiness signal and are not.
-
-Verified live: the instance holds 11 execution requests, **all** of them
-`input.source.type = SCHEDULED_INGESTION_SOURCE`, all `FAILURE`, firing on a
-15-minute cron with durations of 66–102 ms. These are UI-managed ingestion
-sources, unrelated to this project's path.
+> **Correction 2026-07-29.** This section stated: *"CLI `datahub ingest` creates
+> no execution request at all. There is nothing to poll."* **That is false**, and
+> the conclusion drawn from it — that any design gating on `executionRequest`
+> would be gating on an unrelated cron job — is false with it.
+>
+> Re-measured live against GMS `v1.5.0.6`. `listExecutionRequests` now returns 51
+> requests, and they carry two distinct source types:
+>
+> ```
+> SCHEDULED_INGESTION_SOURCE   FAILURE   x28
+> CLI_INGESTION_SOURCE         SUCCESS   x2
+> ```
+>
+> CLI ingests **do** create execution requests, typed `CLI_INGESTION_SOURCE`, and
+> they are also reachable through `listIngestionSources` under a source named
+> `[CLI] dbt`:
+>
+> ```
+> [CLI] dbt   SUCCESS  2026-07-29T10:47:45.350Z   1206ms
+> [CLI] dbt   SUCCESS  2026-07-29T10:39:03.034Z   1681ms
+> [CLI] dbt   SUCCESS  2026-07-29T01:32:27.420Z  15617ms
+> ```
+>
+> That last one is the run that produced this repository's readiness manifests.
+> The 10:47:45Z one reintroduced `jaffle_shop`, matching that dataset's
+> `lastIngested` of 10:47:46.528Z to within the ingest's own duration.
+>
+> **Why the original observation was probably accurate and the conclusion still
+> wrong.** The instance held 11 requests then and holds 51 now, and the scheduled
+> cron fires every 15 minutes — so the earlier sample was small and the CLI
+> entries were either absent from it or lost among the failures, which currently
+> outnumber them roughly fourteen to one in a single page. A survey that finds
+> only one source type in a page dominated by another has established what that
+> page contained, not what the endpoint reports. **Filter by
+> `input.source.type` rather than reading the first page and generalising.**
+>
+> The rest of the original observation survives: the 15-minute `FAILURE` cron is
+> real, and it is `datahub-documents` and `datahub-gc` — UI-managed sources
+> unrelated to this project's path. Those are noise. The CLI entries are not.
 
 `scripts/reproduce-hac-152-live.sh` line 49 runs the CLI:
 
@@ -90,9 +122,21 @@ sources, unrelated to this project's path.
 DATAHUB_TELEMETRY_ENABLED=false "$run_dir/venv/bin/datahub" ingest -c "$run_dir/dbt-recipe.yml"
 ```
 
-**CLI `datahub ingest` creates no execution request at all.** There is nothing
-to poll. Any design that gates on `executionRequest` would be gating on an
-unrelated cron job's failures.
+**Consequence for anything built on this document.** The environment's ingestion
+history *is* recorded and timestamped, in the place this section said was empty.
+That is worth knowing twice over:
+
+* it is an audit trail for a catalog that has been observed changing without this
+  project acting (HAC-248), which is how the correction was found at all;
+* it may be a simpler readiness signal than the MCL offsets endpoint below —
+  a completed `CLI_INGESTION_SOURCE` request is a fact about *this* ingest, where
+  `totalLag: 0` is a fact about a shared queue. **HAC-241's shape should be
+  revisited before anything is built on the offsets path**, since the reasoning
+  that ruled this out was this section.
+
+Neither signal is a completeness proof, and the ordering consequence at the foot
+of this document is unchanged: `observeReadiness` already handles the cold-index
+case correctly without either.
 
 ## Adjacent — a read that is not graph-index-backed
 
