@@ -29,7 +29,10 @@ export const provisionalSource = {
     // separate denominators and are never summed; only `resolved + unresolved =
     // requested` is asserted, which is the arithmetic `validateEvent` enforces.
     accounting: { datasetsRequested: 1, datasetsResolved: 0, datasetsUnresolved: 1, nodesDropped: 0, nodesExcluded: {} },
-    unresolvedDatasets: { state: "observed", names: ["<unresolved dataset>"] },
+    unresolvedDatasets: {
+      state: "observed",
+      records: [{ urn: "<unresolved dataset>", reason: "<reason unavailable in placeholder mode>" }],
+    },
     statedGaps: [{ field: "<unresolved item>", reason: "not-queried", detail: "Evidence binding is pending; nothing was read for this field." }],
     provenance: {
       subjectRepository: { state: "placeholder", value: "<subject repository>" },

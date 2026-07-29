@@ -309,6 +309,26 @@ export interface EvidenceRecord {
   checkExecuted: boolean;
 }
 
+/**
+ * One dataset that did not resolve, and why.
+ *
+ * A count says how many answers are missing. It cannot say which, and "which"
+ * is the difference between a reader who can act and one who can only worry.
+ * The reason is required rather than optional because HAC-217's gate asks for
+ * scope establishment, not just identity: a name with no reason says a dataset
+ * failed without saying whether the manifest lacked it, the path was ambiguous,
+ * or the artifact never covered it — three different fixes.
+ *
+ * `reason` is free text on purpose. A closed vocabulary was considered and
+ * deferred: the failure modes are not yet enumerable from evidence, and
+ * inventing an enum to look rigorous would be the same error as inventing the
+ * names — a shape asserting more structure than anyone has observed.
+ */
+export interface UnresolvedDatasetRecord {
+  urn: string;
+  reason: string;
+}
+
 /** Counts that must reconcile, so a reviewer can check the arithmetic. */
 export interface ResolutionAccounting {
   datasetsRequested: number;
@@ -318,6 +338,15 @@ export interface ResolutionAccounting {
   nodesDropped: number;
   /** Nodes excluded by policy, by resource type. */
   nodesExcluded: Record<string, number>;
+  /**
+   * The unresolved datasets themselves, when the producer can name them.
+   *
+   * Optional, and that is the whole compatibility story: every artifact emitted
+   * before this field existed stays valid, and the projection keeps its honest
+   * "the count is recorded, the names are not carried" fallback for them. A
+   * producer that can name them must name all of them — see the invariant.
+   */
+  unresolvedRecords?: UnresolvedDatasetRecord[];
 }
 
 export interface Provenance {
@@ -548,12 +577,18 @@ const provenanceSchema = z.strictObject({
   }).nullable(),
 });
 
+const unresolvedDatasetRecordSchema = z.strictObject({
+  urn: z.string().min(1),
+  reason: z.string().min(1),
+});
+
 const accountingSchema = z.strictObject({
   datasetsRequested: z.number(),
   datasetsResolved: z.number(),
   datasetsUnresolved: z.number(),
   nodesDropped: z.number(),
   nodesExcluded: z.record(z.string(), z.number()),
+  unresolvedRecords: z.array(unresolvedDatasetRecordSchema).optional(),
 });
 
 /** The pure contract. Nothing beyond these keys is part of it. */
@@ -1035,11 +1070,34 @@ export function validateEvent(event: unknown): string[] {
     }
   }
 
-  const { datasetsRequested, datasetsResolved, datasetsUnresolved } = valid.accounting;
+  const { datasetsRequested, datasetsResolved, datasetsUnresolved, unresolvedRecords } = valid.accounting;
   if (datasetsResolved + datasetsUnresolved !== datasetsRequested) {
     problems.push(
       `accounting does not reconcile: ${datasetsResolved} resolved + ${datasetsUnresolved} unresolved != ${datasetsRequested} requested`,
     );
+  }
+
+  // HAC-146's Invariants require rejecting "unresolved counts without the
+  // matching named unresolved items". Specified 2026-07-13, unbuilt until now.
+  //
+  // The check is conditional on presence, not on the count, because an artifact
+  // predating the field is not lying — it simply carries less. What must never
+  // pass is a *partial* naming: `datasetsUnresolved: 2` shipping one record
+  // reads as a complete list and is not one, which is a new way to be quietly
+  // incomplete inside the field added to prevent exactly that.
+  if (unresolvedRecords !== undefined) {
+    if (unresolvedRecords.length !== datasetsUnresolved) {
+      problems.push(
+        `accounting names ${unresolvedRecords.length} unresolved dataset(s) but counts ${datasetsUnresolved}; a partial list reads as a complete one`,
+      );
+    }
+    const urns = unresolvedRecords.map((record) => record.urn);
+    const duplicates = [...new Set(urns.filter((urn, index) => urns.indexOf(urn) !== index))];
+    if (duplicates.length > 0) {
+      problems.push(
+        `accounting names the same unresolved dataset more than once: ${duplicates.join(", ")}`,
+      );
+    }
   }
 
   if (deriveTier(valid.evidence.records) !== valid.evidence.tier) {

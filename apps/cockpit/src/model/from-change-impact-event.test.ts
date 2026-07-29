@@ -162,12 +162,53 @@ describe("the receipt projection", () => {
   });
 
   it("states the absence of unresolved names rather than inventing them", () => {
+    // The fallback for artifacts emitted before HAC-267 added
+    // `accounting.unresolvedRecords`. It must survive the field's arrival: an
+    // older event carries a count and no names, and that is not a defect to
+    // paper over.
     const event = contractEvent();
     event.accounting = { ...event.accounting, datasetsRequested: 3, datasetsResolved: 1, datasetsUnresolved: 2 };
     const { unresolvedDatasets } = projectEvent(event, "receipts").receipt;
     expect(unresolvedDatasets.state).toBe("unavailable");
     if (unresolvedDatasets.state !== "unavailable") return;
-    expect(unresolvedDatasets.reason).toContain("does not carry per-dataset names");
+    expect(unresolvedDatasets.reason).toContain("without per-dataset names");
+    expect(unresolvedDatasets.reason).toContain("none are invented here");
+  });
+
+  it("names every unresolved dataset, with its reason, when the event carries them", () => {
+    // The state HAC-217's gate asks for and contract 1.3 could not express:
+    // "counts alone do not pass". Reachable since HAC-267.
+    const event = contractEvent();
+    event.accounting = {
+      ...event.accounting,
+      datasetsRequested: 3,
+      datasetsResolved: 1,
+      datasetsUnresolved: 2,
+      unresolvedRecords: [
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node in the pinned manifest" },
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.b,PROD)", reason: "two candidate paths matched; the join refused to pick" },
+      ],
+    };
+    const { unresolvedDatasets } = projectEvent(event, "receipts").receipt;
+    expect(unresolvedDatasets.state).toBe("observed");
+    if (unresolvedDatasets.state !== "observed") return;
+    expect(unresolvedDatasets.records).toEqual(event.accounting.unresolvedRecords);
+  });
+
+  it("carries a reason for each named dataset, because a name alone does not establish scope", () => {
+    const event = contractEvent();
+    event.accounting = {
+      ...event.accounting,
+      datasetsRequested: 2,
+      datasetsResolved: 1,
+      datasetsUnresolved: 1,
+      unresolvedRecords: [{ urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "excluded by policy: resource_type test" }],
+    };
+    const { unresolvedDatasets } = projectEvent(event, "receipts").receipt;
+    if (unresolvedDatasets.state !== "observed") throw new Error("expected observed");
+    for (const record of unresolvedDatasets.records) {
+      expect(record.reason.length).toBeGreaterThan(0);
+    }
   });
 
   it("reports a null source URL as unavailable with a reason, never as a URL", () => {
