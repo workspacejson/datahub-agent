@@ -1,0 +1,475 @@
+{
+  "capturedAt": "2026-07-29T14:25:09.822Z",
+  "gms": {
+    "url": "http://localhost:8080",
+    "serverType": "quickstart",
+    "serverEnv": "core",
+    "versions": {
+      "acryldata/datahub": {
+        "version": "v1.5.0.6",
+        "commit": "d0fce948555c06b3083479d40e8fa270d156c71f"
+      }
+    }
+  },
+  "counts": {
+    "datasetsTotal": 82,
+    "byQuery": {
+      "jaffle_shop": 16,
+      "transfermarkt": 43,
+      "duck.dev": 48,
+      "duck.transfermarkt_scraper": 20
+    }
+  },
+  "ingestion": [
+    {
+      "name": "[CLI] dbt",
+      "type": "dbt",
+      "currentSourceRecipe": {
+        "source": {
+          "type": "dbt",
+          "config": {
+            "manifest_path": "/tmp/hac145-audit/jaffle/target/manifest.json",
+            "catalog_path": "/tmp/hac145-audit/jaffle/target/catalog.json",
+            "target_platform": "duckdb",
+            "git_info": {
+              "repo": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+              "branch": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+            }
+          }
+        },
+        "sink": {
+          "type": "datahub-rest",
+          "config": {
+            "server": "http://localhost:8080"
+          }
+        }
+      },
+      "cliVersion": "1.6.0.16",
+      "executions": [
+        {
+          "status": "SUCCESS",
+          "startTimeMs": 1785322065350,
+          "startedIso": "2026-07-29T10:47:45.350Z",
+          "durationMs": 1206,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "1.6.0.16",
+          "recipe": {
+            "source": {
+              "type": "dbt",
+              "config": {
+                "manifest_path": "/tmp/hac145-audit/jaffle/target/manifest.json",
+                "catalog_path": "/tmp/hac145-audit/jaffle/target/catalog.json",
+                "target_platform": "duckdb",
+                "git_info": {
+                  "repo": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+                  "branch": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+                }
+              }
+            },
+            "sink": {
+              "type": "datahub-rest",
+              "config": {
+                "server": "http://localhost:8080"
+              }
+            }
+          }
+        },
+        {
+          "status": "SUCCESS",
+          "startTimeMs": 1785321543034,
+          "startedIso": "2026-07-29T10:39:03.034Z",
+          "durationMs": 1681,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "1.6.0.16",
+          "recipe": {
+            "source": {
+              "type": "dbt",
+              "config": {
+                "manifest_path": "/tmp/hac145-audit/jaffle/target/manifest.json",
+                "catalog_path": "/tmp/hac145-audit/jaffle/target/catalog.json",
+                "target_platform": "duckdb",
+                "git_info": {
+                  "repo": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+                  "branch": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+                }
+              }
+            },
+            "sink": {
+              "type": "datahub-rest",
+              "config": {
+                "server": "http://localhost:8080"
+              }
+            }
+          }
+        },
+        {
+          "status": "SUCCESS",
+          "startTimeMs": 1785288747420,
+          "startedIso": "2026-07-29T01:32:27.420Z",
+          "durationMs": 15617,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "1.6.0.16",
+          "recipe": {
+            "source": {
+              "type": "dbt",
+              "config": {
+                "manifest_path": "/tmp/hac-152-live.5PoLx6/transfermarkt/dbt/target/manifest.json",
+                "catalog_path": "/tmp/hac-152-live.5PoLx6/transfermarkt/dbt/target/catalog.json",
+                "target_platform": "duckdb",
+                "git_info": {
+                  "repo": "https://github.com/dcaribou/transfermarkt-datasets",
+                  "branch": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+                }
+              }
+            },
+            "sink": {
+              "type": "datahub-rest",
+              "config": {
+                "server": "http://localhost:8080"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "datahub-documents",
+      "type": "datahub-documents",
+      "currentSourceRecipe": {
+        "source": {
+          "type": "datahub-documents",
+          "config": {}
+        }
+      },
+      "cliVersion": null,
+      "executions": [
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785334500064,
+          "startedIso": "2026-07-29T14:15:00.064Z",
+          "durationMs": 84,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785333600091,
+          "startedIso": "2026-07-29T14:00:00.091Z",
+          "durationMs": 84,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785332700056,
+          "startedIso": "2026-07-29T13:45:00.056Z",
+          "durationMs": 88,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785331800051,
+          "startedIso": "2026-07-29T13:30:00.051Z",
+          "durationMs": 73,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785330900089,
+          "startedIso": "2026-07-29T13:15:00.089Z",
+          "durationMs": 89,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785330000076,
+          "startedIso": "2026-07-29T13:00:00.076Z",
+          "durationMs": 77,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785329100051,
+          "startedIso": "2026-07-29T12:45:00.051Z",
+          "durationMs": 64,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785329100030,
+          "startedIso": "2026-07-29T12:45:00.030Z",
+          "durationMs": 75,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785328200066,
+          "startedIso": "2026-07-29T12:30:00.066Z",
+          "durationMs": 155,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        },
+        {
+          "status": "FAILURE",
+          "startTimeMs": 1785327300091,
+          "startedIso": "2026-07-29T12:15:00.091Z",
+          "durationMs": 84,
+          "actorUrn": "urn:li:corpuser:__datahub_system",
+          "cliVersion": "",
+          "recipe": {
+            "source": {
+              "type": "datahub-documents",
+              "config": {}
+            },
+            "pipeline_name": "urn:li:dataHubIngestionSource:datahub-documents"
+          }
+        }
+      ]
+    },
+    {
+      "name": "datahub-gc",
+      "type": "datahub-gc",
+      "currentSourceRecipe": {
+        "source": {
+          "type": "datahub-gc",
+          "config": {
+            "cleanup_expired_tokens": "[REDACTED]",
+            "truncate_indices": true,
+            "truncate_index_older_than_days": 30,
+            "dataprocess_cleanup": {
+              "enabled": false,
+              "retention_days": 10,
+              "delete_empty_data_jobs": false,
+              "delete_empty_data_flows": false,
+              "hard_delete_entities": false,
+              "keep_last_n": 5,
+              "batch_size": 500,
+              "max_workers": 10
+            },
+            "soft_deleted_entities_cleanup": {
+              "retention_days": 10,
+              "enabled": true,
+              "batch_size": 500,
+              "max_workers": 10,
+              "limit_entities_delete": 25000,
+              "runtime_limit_seconds": 7200
+            },
+            "execution_request_cleanup": {
+              "keep_history_min_count": 10,
+              "keep_history_max_count": 1000,
+              "keep_history_max_days": 90,
+              "batch_read_size": 100,
+              "enabled": true,
+              "runtime_limit_seconds": 3600,
+              "limit_entities_delete": 10000,
+              "max_read_errors": 10
+            }
+          }
+        }
+      },
+      "cliVersion": null,
+      "executions": []
+    }
+  ],
+  "subjects": [
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)",
+      "present": true,
+      "lastIngested": 1785322066528,
+      "lastIngestedIso": "2026-07-29T10:47:46.528Z",
+      "schemaFieldCount": 7,
+      "upstream": {
+        "observedCount": 12,
+        "total": 12,
+        "edges": [
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_customers,PROD)",
+            "degree": 4
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_orders,PROD)",
+            "degree": 4
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_payments,PROD)",
+            "degree": 4
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_customers,PROD)",
+            "degree": 2
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_orders,PROD)",
+            "degree": 2
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_payments,PROD)",
+            "degree": 2
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_customers,PROD)",
+            "degree": 3
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_orders,PROD)",
+            "degree": 3
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_payments,PROD)",
+            "degree": 3
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_customers,PROD)",
+            "degree": 1
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_orders,PROD)",
+            "degree": 1
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_payments,PROD)",
+            "degree": 1
+          }
+        ],
+        "setDigest": "082e76712a5803c83064ee936186a62e8585e055e3c4e3cc23cfd86d7069be42"
+      },
+      "downstream": {
+        "observedCount": 1,
+        "total": 1,
+        "edges": [
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.customers,PROD)",
+            "degree": 1
+          }
+        ],
+        "setDigest": "91be104d87a13eb308317771ef6b1f1b397110ddb00fec5dbea70b25415708f5"
+      }
+    },
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+      "present": true,
+      "lastIngested": 1785288762872,
+      "lastIngestedIso": "2026-07-29T01:32:42.872Z",
+      "schemaFieldCount": 2,
+      "upstream": {
+        "observedCount": 8,
+        "total": 8,
+        "edges": [
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+            "degree": 2
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+            "degree": 2
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+            "degree": 3
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+            "degree": 3
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+            "degree": 1
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+            "degree": 1
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+            "degree": 4
+          },
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)",
+            "degree": 4
+          }
+        ],
+        "setDigest": "888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6"
+      },
+      "downstream": {
+        "observedCount": 1,
+        "total": 1,
+        "edges": [
+          {
+            "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.game_events,PROD)",
+            "degree": 1
+          }
+        ],
+        "setDigest": "0bd210967c1a5c17de6d45d166c9f38ec934026a37579d49ab37292a7457c260"
+      }
+    }
+  ]
+}
