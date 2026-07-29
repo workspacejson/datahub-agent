@@ -12,7 +12,7 @@
  * future reconstruction mechanisms.
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -54,7 +54,6 @@ describe("legacy-seam guard (HAC-273)", () => {
 
   it("no source file under src/ contains deleted seam symbols", () => {
     const srcDir = join(repoRoot, "src");
-    const { readdirSync, readFileSync, statSync } = require("node:fs");
 
     function walk(dir: string): string[] {
       const files: string[] = [];

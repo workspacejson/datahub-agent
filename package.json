@@ -2,7 +2,7 @@
   "name": "@workspacejson/datahub-agent",
   "version": "0.0.1",
   "private": true,
-  "description": "Public reference DataHub application consuming released workspace.json interfaces: DataHub MCP consumption, dbt/DataHub URN-to-source-file joins, evaluation and demo assets.",
+  "description": "Public reference DataHub application consuming released workspace.json interfaces: DataHub MCP consumption, dbt source-file joins keyed on repository-relative paths, evaluation and demo assets.",
   "license": "Apache-2.0",
   "author": "workspace-json contributors",
   "homepage": "https://github.com/workspacejson/datahub-agent",

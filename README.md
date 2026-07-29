@@ -43,8 +43,7 @@ See [`docs/claims.md`](docs/claims.md) for the claim ledger backing every figure
 ## What Tally does
 
 ```
-DataHub dataset URN
-  → dbt manifest node         matched by the dataset name DataHub already carries
+DataHub dataset             customProperties carry dbt_file_path — read, not reconstructed
   → original_file_path        every node accounted for, never silently dropped
   → repo-root-relative key    the normalization that makes the join actually work
   → workspace.json evidence   co-change partners, fileIndex membership
