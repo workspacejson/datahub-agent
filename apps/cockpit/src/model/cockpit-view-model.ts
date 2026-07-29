@@ -156,14 +156,26 @@ export const resolutionAccountingSchema = z.object({
 /**
  * Named unresolved datasets, or a stated reason there are no names.
  *
- * "Every unresolved count has a matching named list" is the rule, and the
- * contract carries the count without the names. Synthesising names to satisfy
- * the rule would satisfy it with fiction; leaving the list empty beside a
- * non-zero count reads as a contradiction. Stating the absence is the third
- * option, and the only honest one.
+ * "Every unresolved count has a matching named list" is the rule. Synthesising
+ * names to satisfy it would satisfy it with fiction; leaving the list empty
+ * beside a non-zero count reads as a contradiction. Stating the absence is the
+ * third option, and the only honest one — which is what this rendered until
+ * 2026-07-29, because contract 1.3's accounting was five counts with nowhere to
+ * put a name.
+ *
+ * HAC-267 added `accounting.unresolvedRecords`, so the `observed` branch is now
+ * reachable for producers that emit it. `unavailable` is retained and still
+ * correct for every artifact predating the field.
+ *
+ * Each record carries a reason, not just a URN. HAC-217's gate asks for scope
+ * establishment: a name alone says a dataset failed without saying whether the
+ * manifest lacked it, the path was ambiguous, or the artifact never covered it.
  */
 export const unresolvedDatasetsSchema = z.discriminatedUnion("state", [
-  z.object({ state: z.literal("observed"), names: z.array(z.string().min(1)) }),
+  z.object({
+    state: z.literal("observed"),
+    records: z.array(z.object({ urn: z.string().min(1), reason: z.string().min(1) })),
+  }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
 ]);
 
@@ -213,7 +225,7 @@ export const receiptSchema = z.object({
   if (a.datasetsResolved + a.datasetsUnresolved !== a.datasetsRequested) {
     context.addIssue({ code: "custom", path: ["accounting"], message: "Dataset accounting must reconcile: resolved + unresolved = requested." });
   }
-  if (receipt.unresolvedDatasets.state === "observed" && receipt.unresolvedDatasets.names.length !== a.datasetsUnresolved) {
+  if (receipt.unresolvedDatasets.state === "observed" && receipt.unresolvedDatasets.records.length !== a.datasetsUnresolved) {
     context.addIssue({ code: "custom", path: ["unresolvedDatasets"], message: "Every unresolved count needs a matching named list." });
   }
   if (receipt.writeback.bothStatesRead !== (receipt.writeback.afterStateRead === "ok")) {

@@ -535,6 +535,66 @@ describe("validateEvent", () => {
     expect(problems.join(" ")).toMatch(/does not reconcile/);
   });
 
+  // HAC-267 / HAC-146 Invariants: "unresolved counts without the matching named
+  // unresolved items". Specified at the freeze, built 2026-07-29.
+  describe("named unresolved records", () => {
+    const withRecords = (datasetsUnresolved: number, unresolvedRecords?: Array<{ urn: string; reason: string }>) =>
+      validEvent({
+        accounting: {
+          datasetsRequested: 1 + datasetsUnresolved,
+          datasetsResolved: 1,
+          datasetsUnresolved,
+          nodesDropped: 0,
+          nodesExcluded: {},
+          ...(unresolvedRecords ? { unresolvedRecords } : {}),
+        },
+      });
+
+    it("accepts an event that omits the field, because older artifacts carry only the count", () => {
+      expect(validateEvent(withRecords(2))).toEqual([]);
+    });
+
+    it("accepts a list that names every unresolved dataset", () => {
+      expect(validateEvent(withRecords(2, [
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node" },
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.b,PROD)", reason: "path ambiguous" },
+      ]))).toEqual([]);
+    });
+
+    it("rejects a partial list, which would read as a complete one", () => {
+      // The failure this field exists to prevent: two unresolved, one named. A
+      // reader sees a list and has no way to know it is short.
+      const problems = validateEvent(withRecords(2, [
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node" },
+      ]));
+      expect(problems.join(" ")).toMatch(/names 1 unresolved dataset\(s\) but counts 2/);
+    });
+
+    it("rejects more names than the count, so the list cannot overstate either", () => {
+      const problems = validateEvent(withRecords(1, [
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node" },
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.b,PROD)", reason: "path ambiguous" },
+      ]));
+      expect(problems.join(" ")).toMatch(/names 2 unresolved dataset\(s\) but counts 1/);
+    });
+
+    it("rejects a duplicated dataset, which would pad a short list to the right length", () => {
+      const urn = "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)";
+      const problems = validateEvent(withRecords(2, [
+        { urn, reason: "no producing node" },
+        { urn, reason: "no producing node" },
+      ]));
+      expect(problems.join(" ")).toMatch(/names the same unresolved dataset more than once/);
+    });
+
+    it("rejects a record with an empty reason, because a name alone does not establish scope", () => {
+      const problems = validateEvent(withRecords(1, [
+        { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "" },
+      ]));
+      expect(problems.length).toBeGreaterThan(0);
+    });
+  });
+
   it("rejects a tier that is not the mechanical function of the records", () => {
     const event = validEvent();
     event.evidence.tier = "ASSERTED"; // records contain a verified item

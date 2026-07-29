@@ -69,9 +69,21 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
       <section aria-labelledby="unresolved-title">
         <h3 id="unresolved-title">Unresolved datasets ({accounting.datasetsUnresolved})</h3>
         {unresolvedDatasets.state === "observed"
-          ? (unresolvedDatasets.names.length === 0
+          ? (unresolvedDatasets.records.length === 0
             ? <p>None. The empty list is the complete list — every requested dataset resolved.</p>
-            : <ul>{unresolvedDatasets.names.map((name) => <li key={name}>{name}</li>)}</ul>)
+            : (
+              <ul className="unresolved-list">
+                {unresolvedDatasets.records.map((record) => (
+                  <li key={record.urn}>
+                    <code>{record.urn}</code>
+                    {/* The reason sits beside the name rather than behind a
+                        tooltip: a name alone does not establish scope, which is
+                        the whole reason the record carries one. */}
+                    <span className="unresolved-list__reason"> — {record.reason}</span>
+                  </li>
+                ))}
+              </ul>
+            ))
           : <p className="evidence evidence--unavailable">Unavailable — {unresolvedDatasets.reason}</p>}
       </section>
       <section aria-labelledby="gaps-title">

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 
 import { provisionalStateAdapter } from "../data/cockpit-adapter";
@@ -84,5 +84,36 @@ it("does not let an empty unresolved list read as a finding when names are unava
   event.accounting = { ...event.accounting, datasetsRequested: 3, datasetsResolved: 1, datasetsUnresolved: 2 };
   render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "fixture" }} />);
   expect(screen.getByRole("heading", { name: /Unresolved datasets \(2\)/ })).toBeTruthy();
-  expect(screen.getByText(/does not carry per-dataset names/)).toBeTruthy();
+  expect(screen.getByText(/without per-dataset names/)).toBeTruthy();
+});
+
+it("renders each unresolved dataset with the reason it did not resolve", () => {
+  // A name without a reason says a dataset failed without saying whether the
+  // manifest lacked it or the path was ambiguous — different fixes. HAC-217's
+  // gate asks for scope, so the reason has to be on screen, not in a title
+  // attribute.
+  const event = contractEvent();
+  event.accounting = {
+    ...event.accounting,
+    datasetsRequested: 3,
+    datasetsResolved: 1,
+    datasetsUnresolved: 2,
+    unresolvedRecords: [
+      { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node in the pinned manifest" },
+      { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.b,PROD)", reason: "two candidate paths matched; the join refused to pick" },
+    ],
+  };
+  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "fixture" }} />);
+
+  // Scoped to the section deliberately. The view also renders the whole event
+  // as raw JSON for copy/download, so an unscoped text match finds every reason
+  // twice — once where a reader reads it, once inside the evidence dump. Asking
+  // the document would pass on the dump alone, which is not the claim.
+  const section = within(screen.getByRole("region", { name: /Unresolved datasets \(2\)/ }));
+  expect(section.getByText("urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)")).toBeTruthy();
+  expect(section.getByText(/no producing node in the pinned manifest/)).toBeTruthy();
+  expect(section.getByText("urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.b,PROD)")).toBeTruthy();
+  expect(section.getByText(/the join refused to pick/)).toBeTruthy();
+  // The fallback message must not also be on screen — one state at a time.
+  expect(section.queryByText(/without per-dataset names/)).toBeNull();
 });

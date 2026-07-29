@@ -193,13 +193,22 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes): SourceEv
       nodesDropped: event.accounting.nodesDropped,
       nodesExcluded: { ...event.accounting.nodesExcluded },
     },
-    // The contract carries the count without the names. Zero unresolved is the
-    // one case where the empty list is the complete list.
+    // Three cases, and the middle one is new. Zero unresolved is the case where
+    // the empty list is the complete list. A producer that emitted
+    // `unresolvedRecords` has named them, and the contract already refused the
+    // event if that list disagreed with the count. Anything else predates
+    // HAC-267's field and keeps the honest fallback — the count is recorded, the
+    // names are not carried, and none are invented here.
     unresolvedDatasets: event.accounting.datasetsUnresolved === 0
-      ? { state: "observed", names: [] }
+      ? { state: "observed", records: [] }
+      : event.accounting.unresolvedRecords
+      ? {
+        state: "observed",
+        records: event.accounting.unresolvedRecords.map((record) => ({ urn: record.urn, reason: record.reason })),
+      }
       : {
         state: "unavailable",
-        reason: `${event.accounting.datasetsUnresolved} dataset(s) went unresolved. The event records the count; it does not carry per-dataset names, and none are invented here.`,
+        reason: `${event.accounting.datasetsUnresolved} dataset(s) went unresolved. This event predates the accounting.unresolvedRecords field, so it records the count without per-dataset names, and none are invented here.`,
       },
     statedGaps: event.unavailable.map((u) => ({ field: u.field, reason: u.reason, detail: u.detail })),
     provenance: {
