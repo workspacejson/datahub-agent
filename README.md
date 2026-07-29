@@ -7,11 +7,7 @@ Tally resolves DataHub context to repository code, joins code and lineage impact
 Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](https://github.com/workspacejson).
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/workspacejson/datahub-agent/main/public/assets/github/tally-github-readme.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/workspacejson/datahub-agent/main/public/assets/github/tally-github-readme.png">
-    <img src="https://raw.githubusercontent.com/workspacejson/datahub-agent/main/public/assets/github/tally-github-readme.png" alt="Tally — Change Impact Cockpit" width="760">
-  </picture>
+  <img src="public/assets/github/tally-github-readme.png" alt="Tally — Change Impact Cockpit" width="760">
 </p>
 
 ## Four questions Tally answers
