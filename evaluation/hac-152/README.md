@@ -12,6 +12,8 @@ SHA256SUMS` from this directory.
   `dbt/models/curated/game_events.sql` at
   `59fa295c51fc23466f3a71542f8bf3d1335daa83`.
 - DataHub-only explicitly lacks the repository-relative source location.
+- Lineage read through MCP in both directions: 8 upstream and 1 downstream
+  edge, each carrying its own read state and completeness.
 - `qwen-plus` ran both conditions under the same task, prompt digest and
   temperature-zero settings, producing added, removed and constrained deltas.
 - The writeback read tier `null` before, wrote `VERIFIED`, then observed
@@ -20,11 +22,20 @@ SHA256SUMS` from this directory.
 
 ## Limitations
 
-Both lineage reads failed because the official MCP server returned no
-`searchResults` array. `upstreams` and `downstreams` are therefore empty only
-as payload shape: their observations are `read: failed` and completeness is
-`not-established`. This package does not claim zero lineage, corpus
-completeness, HAC-231 manifest ratification, or a cold-reader witness.
+Both lineage reads succeeded — 8 upstream edges and 1 downstream edge — but
+completeness in both directions is `not-established`. An observed count is not
+an exhaustiveness claim, and nothing here promotes it to one.
+
+An earlier capture of this same chain recorded `upstreams: read: failed`,
+because it read lineage immediately after ingestion and DataHub's graph index
+had not yet converged. The parser refused to read that shape as "zero
+upstreams", which was correct. The reads here were taken after convergence.
+That timing dependency is not fixed and is tracked in HAC-241; a run of
+`reproduce-hac-152-live.sh` against a cold DataHub can still reproduce the
+failed read.
+
+This package does not claim corpus completeness, HAC-231 manifest ratification,
+or a cold-reader witness.
 
 ## Reproduction
 

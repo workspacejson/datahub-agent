@@ -22,7 +22,12 @@ describe("HAC-152 committed live evidence package", () => {
     expect(validateBundle(bundle)).toEqual([]);
     expect(bundle.comparison.joinedPlan.run.model).toBe("qwen-plus");
     expect(bundle.comparison.deltas).toHaveLength(3);
-    expect(bundle.event.datahub.lineageObservation.upstreams).toMatchObject({ read: "failed", completeness: "not-established" });
+    // Both directions read, and neither claims exhaustiveness. `observedCount`
+    // is pinned because the package's own README quotes these numbers: a
+    // re-capture that changes them should fail here rather than silently leave
+    // the prose describing a run that is no longer committed.
+    expect(bundle.event.datahub.lineageObservation.upstreams).toMatchObject({ read: "ok", completeness: "not-established", observedCount: 8 });
+    expect(bundle.event.datahub.lineageObservation.downstreams).toMatchObject({ read: "ok", completeness: "not-established", observedCount: 1 });
     expect(bundle.event.writeback).toMatchObject({ succeeded: true, noop: false, bothStatesRead: true });
   });
 });

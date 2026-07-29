@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.3",
   "provenance": {
-    "producedAt": "2026-07-29T01:16:23.780Z",
+    "producedAt": "2026-07-29T01:48:36.086Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -29,16 +29,65 @@
     "name": "game_events",
     "platform": "dbt",
     "description": "",
-    "upstreams": [],
-    "downstreams": [],
+    "upstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+        "name": "base_game_events",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+        "name": "base_games",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "game_lineups",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+        "name": "games",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+        "name": "duck.dev.base_game_events",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+        "name": "duck.dev.base_games",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "duck.transfermarkt_scraper.game_lineups",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)",
+        "name": "duck.transfermarkt_scraper.games",
+        "degree": 4
+      }
+    ],
+    "downstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.game_events,PROD)",
+        "name": "duck.dev.game_events",
+        "degree": 1
+      }
+    ],
     "lineageObservation": {
       "upstreams": {
-        "read": "failed",
-        "completeness": "not-established"
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 8
       },
       "downstreams": {
-        "read": "failed",
-        "completeness": "not-established"
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 1
       }
     },
     "schemaFieldCount": 2,
@@ -78,18 +127,6 @@
       "source": "datahub",
       "reason": "not-exposed-by-source",
       "detail": "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr."
-    },
-    {
-      "field": "datahub.upstreams",
-      "source": "datahub",
-      "reason": "failed",
-      "detail": "The upstream lineage query did not complete (get_lineage \"upstreams\" carried no searchResults array). This is not a statement about the catalog's contents."
-    },
-    {
-      "field": "datahub.downstreams",
-      "source": "datahub",
-      "reason": "failed",
-      "detail": "The downstream lineage query did not complete (get_lineage \"downstreams\" carried no searchResults array). This is not a statement about the catalog's contents."
     },
     {
       "field": "code.repositoryRelativePath",

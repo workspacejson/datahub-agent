@@ -3,7 +3,7 @@
   "event": {
     "eventVersion": "1.3",
     "provenance": {
-      "producedAt": "2026-07-29T01:16:23.780Z",
+      "producedAt": "2026-07-29T01:48:36.086Z",
       "producer": {
         "name": "@workspacejson/datahub-agent",
         "version": "0.0.1"
@@ -31,16 +31,65 @@
       "name": "game_events",
       "platform": "dbt",
       "description": "",
-      "upstreams": [],
-      "downstreams": [],
+      "upstreams": [
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+          "name": "base_game_events",
+          "degree": 2
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+          "name": "base_games",
+          "degree": 2
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+          "name": "game_lineups",
+          "degree": 3
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+          "name": "games",
+          "degree": 3
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+          "name": "duck.dev.base_game_events",
+          "degree": 1
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+          "name": "duck.dev.base_games",
+          "degree": 1
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+          "name": "duck.transfermarkt_scraper.game_lineups",
+          "degree": 4
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)",
+          "name": "duck.transfermarkt_scraper.games",
+          "degree": 4
+        }
+      ],
+      "downstreams": [
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.game_events,PROD)",
+          "name": "duck.dev.game_events",
+          "degree": 1
+        }
+      ],
       "lineageObservation": {
         "upstreams": {
-          "read": "failed",
-          "completeness": "not-established"
+          "read": "ok",
+          "completeness": "not-established",
+          "observedCount": 8
         },
         "downstreams": {
-          "read": "failed",
-          "completeness": "not-established"
+          "read": "ok",
+          "completeness": "not-established",
+          "observedCount": 1
         }
       },
       "schemaFieldCount": 2,
@@ -82,18 +131,6 @@
         "detail": "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr."
       },
       {
-        "field": "datahub.upstreams",
-        "source": "datahub",
-        "reason": "failed",
-        "detail": "The upstream lineage query did not complete (get_lineage \"upstreams\" carried no searchResults array). This is not a statement about the catalog's contents."
-      },
-      {
-        "field": "datahub.downstreams",
-        "source": "datahub",
-        "reason": "failed",
-        "detail": "The downstream lineage query did not complete (get_lineage \"downstreams\" carried no searchResults array). This is not a statement about the catalog's contents."
-      },
-      {
         "field": "code.repositoryRelativePath",
         "source": "datahub",
         "reason": "not-exposed-by-source",
@@ -114,7 +151,7 @@
         "tool": "@workspacejson/datahub-agent",
         "version": "0.0.1"
       },
-      "attemptedAt": "2026-07-29T01:17:02.945Z",
+      "attemptedAt": "2026-07-29T01:48:43.551Z",
       "revision": {
         "repository": "https://github.com/dcaribou/transfermarkt-datasets",
         "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -170,7 +207,7 @@
       "observation": {
         "status": "settled",
         "polls": 1,
-        "elapsedMs": 13,
+        "elapsedMs": 10,
         "timeoutMs": 120000,
         "lastError": null
       },
@@ -183,13 +220,13 @@
   },
   "comparison": {
     "artifactVersion": "1.0",
-    "eventDigest": "a77aedac2c74da33529025dcf3ff1a10cd88008e928a05e3e902a5fd0552a3f1",
+    "eventDigest": "75a8ec70be7b422546fa324a88a8c0a5574fa27d738ef9a99e3b0d4f380ab501",
     "snapshot": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "revision": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
       "datahub": {
         "gmsUrl": "http://localhost:8080",
-        "eventProducedAt": "2026-07-29T01:16:23.780Z"
+        "eventProducedAt": "2026-07-29T01:48:36.086Z"
       }
     },
     "datahubOnlyPlan": {
@@ -203,7 +240,7 @@
       "steps": [
         {
           "id": "refuse-unknown-source",
-          "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and must not be guessed"
+          "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
         }
       ]
     },
@@ -217,8 +254,8 @@
       },
       "steps": [
         {
-          "id": "add-dbt-quality-check",
-          "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+          "id": "add-dbt-quality-check-for-game-events",
+          "action": "Add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
         }
       ]
     },
