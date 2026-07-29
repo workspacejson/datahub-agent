@@ -1,6 +1,12 @@
 # HAC-231 step 6 — independent orientation check (ratification evidence)
 
-Captured: 2026-07-29T08:44:47Z · GMS v1.5.0.6 · tree at `1fbddae`
+Captured: 2026-07-29T08:44:47Z · GMS `v1.5.0.6` · **ingestion `acryl-datahub 1.6.0.16`** · tree at `1fbddae`
+
+The ingestion version is load-bearing here, not incidental metadata. The claim under
+review is about the orientation logic in `dbt_common.py:1173-1206` **of that version**.
+That logic is a dependency on someone else's code: if it changes, this evidence stops
+describing reality, and nothing else in this document would reveal that. Any re-reading
+of this record must first confirm the ingestion version still matches.
 
 ## Why this path
 
@@ -27,7 +33,7 @@ witness, not a re-run of either.
 --- dbt:source games
     upstream -> urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)
 --- duckdb:source games
-    upstreams: (no aspect - terminal)
+    upstreams: (no upstreamLineage aspect returned — see caveat below)
 ```
 
 ## What this establishes, hop by hop
@@ -38,7 +44,7 @@ witness, not a re-run of either.
 | deg 2 | `duckdb:base_games` | `dbt:base_games` | rule 2 — model sibling `duckdb:X <- dbt:X` | yes |
 | deg 3 | `dbt:base_games` | `dbt:source games`, `dbt:source game_lineups` | rule 1 — **source** dep stays on **dbt** | yes |
 | deg 4 | `dbt:source games` | `duckdb:source games` | rule 2 — source sibling **reverses** to `dbt:X <- duckdb:X` | yes |
-| — | `duckdb:source games` | (terminal) | closure genuinely ends at degree 4 | yes |
+| — | `duckdb:source games` | (no aspect returned) | consistent with the manifest's expectation that the closure ends at degree 4 | see below |
 
 **The asymmetry is real and it is not ambiguous.** A model's physical table has the
 logical node upstream of it; a source's logical node has the physical table upstream
@@ -48,6 +54,26 @@ direction the derivation predicted.
 The falsifying observation would have been either of: a source appearing on `duckdb`
 before `dbt`, or the source pair matching the model pair's orientation. Neither occurs.
 
+## What the absent aspect does and does not establish
+
+`duckdb:source games` returned no `upstreamLineage` aspect. **That is not proof of
+termination, and this record must not read it as such.** An absent aspect, an empty
+one, and one not yet written produce the same response — which is precisely the
+conflation HAC-241 exists to name. Treating it as "the closure genuinely ends here"
+would put the exact inference the manifest exists to prevent into the manifest's own
+ratification record.
+
+What is actually established is narrower and is enough: **the manifest expected degree
+4 to be terminal, and the observation is consistent with that expectation.** The
+expectation came first, from the derivation; the observation did not contradict it.
+That is a consistency check against a prior claim, not an independent discovery of
+termination.
+
+The stronger statement — that nothing lies beyond degree 4 — rests on the dbt manifest,
+where `source.transfermarkt_datasets.transfermarkt_scraper.games` declares no
+dependencies and no node depends on the duckdb table beneath it. That is a property of
+the pinned corpus, verifiable without asking DataHub anything.
+
 ## Corroboration already on disk
 
 `evaluation/hac-231/hop-semantics-gate.md` recorded platform **and** degree per URN,
@@ -56,6 +82,23 @@ captured before the derivation existed, across two further independent surfaces
 degree 3 and `duckdb` at degree 4 — the same reversal, from graph-index-backed reads.
 
 Three surfaces, one of them not graph-index-backed, all agreeing.
+
+## Why the evidence is upstream-heavy when both digests are being signed
+
+The downstream manifest carries exactly one edge, `dbt:game_events → duckdb:game_events`.
+That is **the model-sibling rule — the same rule, and the same line of code, already
+confirmed at upstream degree 2** by `duckdb:base_games → dbt:base_games`. It needs no
+separate line of argument, because a second instance of a rule tests the same
+transcription rather than a new claim.
+
+Read the same way, for completeness rather than because it was in doubt:
+
+```
+duckdb:game_events  upstream -> urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)
+```
+
+Orientation as predicted. The downstream digest is therefore signed on the same
+evidence as upstream degree 2, not on a thinner basis.
 
 ## Signing what is in the tree
 
@@ -76,3 +119,11 @@ This is evidence prepared for ratification, not the ratification. Per this issue
 governance an agent may run deterministic commands but may not be the sole witness of
 the verdict. What is established here is that the orientation claim is independently
 observable and was observed; the sign-off remains a human one.
+
+## Note on this transcript
+
+The `upstreams:` lines in the captured block are this check's own rendering of the API
+response, not verbatim API output. One of those labels originally read `terminal`,
+which asserted the very inference the caveat above rejects; it was reworded to describe
+what was returned rather than what it was taken to mean. The underlying responses are
+unchanged and the check is re-runnable against the same instance.
