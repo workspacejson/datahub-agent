@@ -299,8 +299,8 @@ describe("MCP stdio client", () => {
       function handle(m) {
         if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "chatty" } });
         for (let i = 0; i < 250; i++) process.stderr.write("INFO startup line " + i + "\\n");
-        process.stderr.write("Traceback: the actual cause\\n");
-        process.exit(7);
+        // Exit from the flush callback. See the note on the long-stream test below.
+        process.stderr.write("Traceback: the actual cause\\n", () => process.exit(7));
       }`),
     );
     await client.start();
@@ -317,13 +317,24 @@ describe("MCP stdio client", () => {
   });
 
   it("retains both ends of a long stderr stream and says how much it dropped", async () => {
+    // The fixture exits from the flush callback rather than on the line after the
+    // write, because `process.exit` does not flush what is still sitting in the
+    // stream's own buffer. Node's stdio to a pipe is asynchronous on POSIX, so
+    // this is true regardless of how much room the kernel pipe has — the 4395
+    // bytes written here fit inside a 65536-byte pipe several times over and were
+    // still lost. On a CI runner the child stopped emitting at "line 453" of 501,
+    // and the sibling test above lost its traceback after "line 172" of 251.
+    //
+    // Establishing that cost an intervention on the wrong end: draining stderr in
+    // the parent before composing the diagnostic changed nothing here, which is
+    // what rules the parent in as innocent for *this* failure. That drain is a
+    // real fix for a real defect (HAC-258) and it is not this one.
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
         if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "chatty" } });
         for (let i = 0; i < 500; i++) process.stderr.write("line " + i + "\\n");
-        process.stderr.write("LAST\\n");
-        process.exit(1);
+        process.stderr.write("LAST\\n", () => process.exit(1));
       }`),
     );
     await client.start();
