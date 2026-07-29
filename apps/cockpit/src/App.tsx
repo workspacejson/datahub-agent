@@ -29,6 +29,18 @@ export function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
+  /*
+   * The tab leads with the dataset, not the product. A reviewer with six tabs
+   * open is comparing datasets, so `tally · game_events` is the order that tells
+   * them which tab is which. Taken from the bound model rather than written into
+   * `index.html`, because a placeholder build must not put a real dataset name in
+   * a tab; there it stays the product title from the document.
+   */
+  useEffect(() => {
+    if (model.sourceMode === "placeholder") return;
+    document.title = `tally · ${model.title}`;
+  }, [model.sourceMode, model.title]);
+
   /**
    * Route changes cross-fade instead of cutting.
    *

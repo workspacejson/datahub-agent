@@ -147,13 +147,13 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
       <header className="lineage-band__head">
         <div>
           <p className="eyebrow">Declared lineage</p>
+          {/*
+            The head stays; the sentence under it moved to the coverage band in
+            the hero. It is the answer to "can I trust the set in front of me",
+            which is the question a reviewer opens this screen with, and stating
+            it here as well made the same fact appear twice on one page.
+          */}
           <h2>Lineage read and completeness are separate</h2>
-          <p className="lineage-band__note">
-            The read {READ_NOTE[model.read]}.{" "}
-            {model.completeness === "complete-against-pinned-manifest"
-              ? "The set is complete against the pinned manifest."
-              : "Whether the set is complete is not established, so an absent edge is not evidence of no impact."}
-          </p>
         </div>
         <div className="lineage-band__key">
           {/* The badges were bare integers with no key anywhere on the page. */}
@@ -198,12 +198,6 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
     </section>
   );
 }
-
-const READ_NOTE: Record<CockpitViewModel["read"], string> = {
-  ok: "returned",
-  failed: "failed",
-  "not-queried": "was never made",
-};
 
 /**
  * The join first, the catalog second.

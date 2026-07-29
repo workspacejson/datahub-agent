@@ -12,7 +12,17 @@ import { SourceTag } from "./SourceTag";
  */
 function Evidence({ value }: { value: EvidenceValue }) {
   if (value.state === "unavailable") {
-    return <span className="evidence evidence--unavailable">Unavailable: {value.reason}</span>;
+    // Amber marks the state, not the sentence. Six lines of amber 12px mono read
+    // as an error for what is a legitimate, deliberately stated absence, and it
+    // put the caution colour and the absence colour on the same treatment so the
+    // two meanings collided. The tag carries the amber; the explanation is sans
+    // at body size in muted grey, which is also the fastest text to read.
+    return (
+      <span className="evidence evidence--unavailable">
+        <span className="evidence__tag">Unavailable</span>
+        <span className="evidence__reason">{value.reason}</span>
+      </span>
+    );
   }
   if (value.state === "placeholder") {
     return <span className="evidence evidence--placeholder">{value.value} <em>(placeholder, not observed)</em></span>;
@@ -145,7 +155,10 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
                 ))}
               </ul>
             ))
-          : <p className="evidence evidence--unavailable">Unavailable: {unresolvedDatasets.reason}</p>}
+          : <p className="evidence evidence--unavailable">
+              <span className="evidence__tag">Unavailable</span>
+              <span className="evidence__reason">{unresolvedDatasets.reason}</span>
+            </p>}
       </section>
     </section>
 

@@ -4,7 +4,8 @@
     "repository": "workspacejson/datahub-agent",
     "scannedAtBaseRevision": "70a91e3681cf7f3f3c78d3d376ff1e7431a9e64e",
     "includedPaths": [
-      "public/assets/"
+      "public/assets/",
+      "apps/cockpit/public/"
     ],
     "excludedGeneratedPaths": [
       "apps/cockpit/test-results/",
@@ -14,7 +15,7 @@
   "assets": [
     {
       "id": "tally-devpost-hero-1280x720",
-      "title": "Tally Devpost hero (1280 × 720)",
+      "title": "Tally Devpost hero (1280 \u00d7 720)",
       "storyBeat": "Candidate Devpost hero presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
       "canonicalPath": "public/assets/devpost/tally-devpost-hero-1280x720.png",
@@ -51,7 +52,7 @@
     },
     {
       "id": "tally-devpost-thumbnail-1200x800-v2",
-      "title": "Tally Devpost thumbnail v2 (1200 × 800)",
+      "title": "Tally Devpost thumbnail v2 (1200 \u00d7 800)",
       "storyBeat": "Candidate Devpost thumbnail presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
       "canonicalPath": "public/assets/devpost/tally-devpost-thumbnail-1200x800-v2.png",
@@ -88,7 +89,7 @@
     },
     {
       "id": "tally-github-readme",
-      "title": "Tally GitHub README image (1774 × 887)",
+      "title": "Tally GitHub README image (1774 \u00d7 887)",
       "storyBeat": "Existing GitHub README presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
       "canonicalPath": "public/assets/github/tally-github-readme.png",
@@ -102,7 +103,7 @@
         "height": 887,
         "aspectRatio": "2:1"
       },
-      "proposedAltText": "Proposed: Tally — Change Impact Cockpit.",
+      "proposedAltText": "Proposed: Tally \u2014 Change Impact Cockpit.",
       "proposedCaption": "Proposed: Tally resolves a data asset to repository evidence and records the resulting review.",
       "approvalState": "pending",
       "publicUse": "pending",
@@ -122,11 +123,236 @@
         "github": "pending-owner-review",
         "video": "pending-owner-review"
       }
+    },
+    {
+      "id": "tally-mark",
+      "title": "Tally bracket mark",
+      "storyBeat": "Application identity in product chrome and as the scalable favicon.",
+      "intendedConclusion": "Identifies the application in its own chrome. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "apps/cockpit/public/brand/tally-mark.svg",
+      "sha256": "5e4e46cac60c5746584d34342b3e8f0e1f555754dd4f05a4aef2dfb2f4d635f9",
+      "claimIds": [],
+      "sourceType": "checked-in-vector",
+      "export": {
+        "filename": "tally-mark.svg",
+        "format": "svg",
+        "width": 104,
+        "height": 96,
+        "aspectRatio": "104:96"
+      },
+      "proposedAltText": "The tally mark: four counting strokes and a slash inside emerald brackets.",
+      "proposedCaption": "The tally mark at full detail, for use at 24px and above.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "6090bd0",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-mark-16",
+      "title": "Tally bracket mark, 16px optical variant",
+      "storyBeat": "Favicon at 16px, where the full mark collapses into a hatch pattern.",
+      "intendedConclusion": "Identifies the application in its own chrome. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "apps/cockpit/public/brand/tally-mark-16.svg",
+      "sha256": "7fe313481151319ab0b0a6fafc1bfa547b0343576da94f888129bf392bd1020f",
+      "claimIds": [],
+      "sourceType": "checked-in-vector",
+      "export": {
+        "filename": "tally-mark-16.svg",
+        "format": "svg",
+        "width": 104,
+        "height": 96,
+        "aspectRatio": "104:96"
+      },
+      "proposedAltText": "The tally mark reduced to two strokes and a slash inside emerald brackets.",
+      "proposedCaption": "The 16px optical variant, drawn heavier so the count still reads at favicon size.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "6090bd0",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "Not a scaled copy of the full mark: stroke count and weight differ by design, so the two files are not interchangeable."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-lockup",
+      "title": "Tally lockup, mark and wordmark",
+      "storyBeat": "Standalone brand lockup for external surfaces.",
+      "intendedConclusion": "Identifies the application in its own chrome. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "apps/cockpit/public/brand/tally-lockup.svg",
+      "sha256": "6379cfb752fd7ac339276d2f307c56e23dfecff3d15338ba8f1f4c12139f4690",
+      "claimIds": [],
+      "sourceType": "checked-in-vector",
+      "export": {
+        "filename": "tally-lockup.svg",
+        "format": "svg",
+        "width": 340,
+        "height": 96,
+        "aspectRatio": "340:96"
+      },
+      "proposedAltText": "The tally mark beside the lowercase wordmark tally.",
+      "proposedCaption": "The horizontal lockup, for contexts that need the mark and word as one file.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "6090bd0",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "Sets the wordmark as a live SVG text node with a font-family, so it renders in a fallback face wherever Plus Jakarta Sans is unavailable and its metrics shift. The application chrome composes the mark with HTML text instead; prefer that where markup is possible."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-favicon-16",
+      "title": "Tally favicon, 16px",
+      "storyBeat": "Browser tab identity at 16px.",
+      "intendedConclusion": "Identifies the application in its own chrome. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "apps/cockpit/public/favicon-16.png",
+      "sha256": "563c19afa7c1b2b27e0ace855c22cb947477562f770458453b4f5cadb35cded1",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "favicon-16.png",
+        "format": "png",
+        "width": 16,
+        "height": 16,
+        "aspectRatio": "16:16"
+      },
+      "proposedAltText": "The tally mark as a 16 pixel browser tab icon.",
+      "proposedCaption": "Raster fallback for browsers that do not take an SVG favicon.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "6090bd0",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-favicon-32",
+      "title": "Tally favicon, 32px",
+      "storyBeat": "Browser tab identity at 32px.",
+      "intendedConclusion": "Identifies the application in its own chrome. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "apps/cockpit/public/favicon-32.png",
+      "sha256": "f1673e175f18c298409db548d204e5d5ac0aac8e6944027ebedec6b2c94f8039",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "favicon-32.png",
+        "format": "png",
+        "width": 32,
+        "height": 32,
+        "aspectRatio": "32:32"
+      },
+      "proposedAltText": "The tally mark as a 32 pixel browser tab icon.",
+      "proposedCaption": "Raster fallback for browsers that do not take an SVG favicon.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "6090bd0",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-apple-touch-icon",
+      "title": "Tally home-screen icon, 180px",
+      "storyBeat": "Installed-application identity.",
+      "intendedConclusion": "Identifies the application in its own chrome. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "apps/cockpit/public/apple-touch-icon.png",
+      "sha256": "77d131f5f8945aad444aa4b8667f34e9a8684e03fd493aab60b4f2e029bfeb47",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "apple-touch-icon.png",
+        "format": "png",
+        "width": 180,
+        "height": 180,
+        "aspectRatio": "180:180"
+      },
+      "proposedAltText": "The tally mark as a 180 pixel home-screen icon.",
+      "proposedCaption": "Home-screen and installed-app icon.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "6090bd0",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
     }
   ],
   "supportingInternalEvidencePaths": [
     "evaluation/hac-152/SHA256SUMS",
-    "test/fixtures/golden/"
+    "test/fixtures/golden/",
+    "apps/cockpit/public/site.webmanifest"
   ],
   "rejectedOrSupersededAssets": [],
   "knownMissingAssetFamilies": [

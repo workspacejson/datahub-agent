@@ -6,13 +6,17 @@ import { ReceiptsView } from "./ReceiptsView";
 import { SourceTag } from "./SourceTag";
 
 /**
- * The three views are a sequence, not three parallel destinations.
+ * The three views are a sequence, and only the sequence navigates.
  *
- * Evidence, then the plan that evidence supports, then the receipt for both. The
- * primary action advances it. Rendering them as a plain tab bar gave the reader
- * two affordances for the same move and made the CTA look like a duplicate of a
- * tab 600px above it; numbering them says the order carries meaning, and leaves
- * the CTA as the only thing that moves you forward.
+ * Two navigation models used to run at once: numbered steps that read as free
+ * lateral movement, and rail buttons that read as a linear wizard, with nothing
+ * telling a reviewer whether Receipts was reachable before the plan was read or
+ * whether clicking a step abandoned anything. Two of the four rail buttons were
+ * pure back-navigation dressed as a decision, at the weight of a secondary CTA.
+ *
+ * Now: the spine is the navigation, every step is reachable and marks itself
+ * visited, going back is a text link in the spine, and the two-button pattern is
+ * reserved for the one place there is a real decision to make.
  */
 const routes: Array<{ route: CockpitRoute; label: string }> = [
   { route: "impact", label: "Impact" },
@@ -23,73 +27,94 @@ const routes: Array<{ route: CockpitRoute; label: string }> = [
 const READ_LABEL: Record<CockpitViewModel["read"], string> = {
   ok: "returned",
   failed: "failed",
-  "not-queried": "not queried",
+  "not-queried": "was never made",
 };
 
 /**
- * What is under review, and how much of it is actually known.
+ * The tally lockup, per the approved nav spec.
  *
- * This used to state the same three facts in three registers stacked on top of
- * each other: a prose tier line, four bare chips, and this panel. `exact` and
- * `not-established` as free-standing tokens had no visible subject, so a reader
- * could not tell what was exact or what was not established, and the tier line
- * sat directly above "Completeness not established" appearing to contradict it.
+ * The mark is inline SVG at 24px and the word is real HTML text, not the
+ * `tally-lockup.svg` artifact. That file sets the word in a live SVG text node
+ * with a `font-family`, so it re-renders in whatever fallback face the viewer has
+ * and its metrics move; it stays the standalone asset for contexts needing one
+ * file. Here the word is selectable, scales with the type ramp, and honours the
+ * three brand rules directly: not tinted emerald, not set in mono, and the mark
+ * never sits on an accent fill.
  *
- * One statement now, and it is this one: it is labelled, its numbers have
- * subjects, and each axis names what it is an axis of. The tier moved to
- * Receipts, next to the evidence records that produce it, which is the only
- * place its narrow meaning (one record carries an executed check) can be read
- * without being mistaken for a warrant over the whole screen.
+ * `workspace.json` is the substrate, not the application, so it appears as an
+ * endorsement on the right rather than as the wordmark on the left.
  */
-function CoveragePanel({ model }: { model: CockpitViewModel }) {
+function Wordmark() {
+  return (
+    <p className="wordmark">
+      <svg className="wordmark__mark" viewBox="0 0 104 96" width="24" height="22" aria-hidden="true" focusable="false">
+        <g fill="#00c896">
+          <rect x="6" y="6" width="7" height="84" /><rect x="6" y="6" width="22" height="7" /><rect x="6" y="83" width="22" height="7" />
+          <rect x="91" y="6" width="7" height="84" /><rect x="76" y="6" width="22" height="7" /><rect x="76" y="83" width="22" height="7" />
+        </g>
+        <g fill="currentColor">
+          <rect x="32" y="18" width="7" height="60" /><rect x="45" y="18" width="7" height="60" />
+          <rect x="58" y="18" width="7" height="60" /><rect x="71" y="18" width="7" height="60" />
+        </g>
+        <path d="M26 74 L84 38" stroke="currentColor" strokeWidth="7" />
+      </svg>
+      <span className="wordmark__word">tally</span>
+      <span className="wordmark__rule" aria-hidden="true" />
+      <span className="wordmark__product">Change impact cockpit</span>
+    </p>
+  );
+}
+
+/**
+ * Coverage, stated once, here.
+ *
+ * It used to be asserted twice: this panel, and a sentence in the rail 900px
+ * away restating the same fact in different words, on all three routes. Neither
+ * was authoritative and a reviewer trusted it less each time they met it. This
+ * is the only place coverage is asserted; the rail carries the consequence.
+ *
+ * The counters are four figures on one rule rather than a bordered panel with a
+ * nested grid. They are one line of information and do not need a second border.
+ *
+ * A live region, inherited from the chip strip this replaced: the panel changes
+ * when the route or the model changes and neither reloads the page, so without it
+ * a screen-reader user is told the route changed and not that the evidence state
+ * under it did.
+ */
+function Coverage({ model }: { model: CockpitViewModel }) {
   const { accounting } = model.receipt;
   const complete = model.completeness === "complete-against-pinned-manifest";
-  // A live region, inherited from the chip strip this replaced. The panel changes
-  // when the route or the model changes and neither reloads the page, so without
-  // it a screen-reader user is told the route changed and not that the evidence
-  // state under it did, which is the half that says whether anything on screen
-  // can be trusted.
   return (
-    <aside className="coverage" aria-label="Coverage of this review" aria-live="polite">
+    <div className="coverage" aria-label="Coverage of this review" aria-live="polite">
       <p className="eyebrow">Coverage of this review</p>
       <p className={`coverage__headline ${complete ? "" : "coverage__headline--open"}`}>
         {complete ? "Complete against pinned manifest" : "Completeness not established"}
       </p>
-
+      <p className="coverage__note">
+        The lineage read {READ_LABEL[model.read]}.{" "}
+        {complete
+          ? "The set is complete against the pinned manifest."
+          : "Whether the set is complete is not established, so an absent edge is not evidence of no impact."}
+      </p>
       <dl className="coverage__counts">
         <div>
           <dt>{accounting.datasetsResolved}<span className="coverage__of">/{accounting.datasetsRequested}</span></dt>
-          <dd>producer paths resolved</dd>
+          <dd>paths resolved</dd>
         </div>
         <div>
           <dt>{accounting.datasetsUnresolved}</dt>
-          <dd>datasets unresolved</dd>
+          <dd>unresolved</dd>
         </div>
         <div>
-          <dt>{model.receipt.statedGaps.length}</dt>
-          <dd>gaps stated, each named</dd>
+          <dt className="coverage__count--open">{model.receipt.statedGaps.length}</dt>
+          <dd>gaps, each named</dd>
+        </div>
+        <div>
+          <dt className="coverage__count--word">{model.resolutionDisposition}</dt>
+          <dd>path resolution</dd>
         </div>
       </dl>
-
-      {/*
-        The axes the chips used to carry, with the subjects the chips lacked.
-        Source and resolution stay separate lines because they are separate
-        axes: a DataHub-sourced claim can still read unresolved.
-      */}
-      <dl className="coverage__axes">
-        <div><dt>Lineage read</dt><dd>{READ_LABEL[model.read]}</dd></div>
-        <div><dt>Path resolution</dt><dd>{model.resolutionDisposition}</dd></div>
-        {/*
-          `unavailable` is a real value of this axis and is not a claim source,
-          so it renders as the word rather than being cast into a tag. A source
-          tag that said "unavailable" would attribute the evidence to a system
-          called unavailable.
-        */}
-        <div><dt>Evidence source</dt><dd>
-          {model.source === "unavailable" ? "none attributable" : <SourceTag source={model.source} />}
-        </dd></div>
-      </dl>
-    </aside>
+    </div>
   );
 }
 
@@ -99,36 +124,33 @@ export function CockpitShell({ model, route, onRouteChange }: {
   onRouteChange(route: CockpitRoute): void;
 }) {
   const step = routes.findIndex((item) => item.route === route);
+  const previous = step > 0 ? routes[step - 1] : null;
 
   return <main className="cockpit-shell">
     {model.sourceMode === "placeholder" && <p className="placeholder-banner" role="status">DESIGN PLACEHOLDER · NOT OBSERVED DATA</p>}
 
     <header className="product-header">
-      <p className="wordmark">workspace<b>.json</b></p>
-      <p className="eyebrow">Change impact cockpit</p>
+      <Wordmark />
+      <p className="endorsement">built on <b>workspace.json</b></p>
     </header>
 
-    <section className="first-frame" aria-label="Dataset under review">
-      <div className="first-frame__identity">
+    {/*
+      The glow and the scanline grid stop at the bottom of this band, so the eye
+      reads the band as chrome and everything below it as data.
+    */}
+    <section className="hero" aria-label="Dataset under review">
+      <div className="hero__identity">
         <p className="eyebrow">Dataset under review</p>
         <h1 id="route-title">{model.title}</h1>
-        {/*
-          The URN carries its own source tag. It used to be repeated by a
-          `Dataset identity` card in the Impact row, which is where the
-          attribution lived; removing that duplication would otherwise have taken
-          the attribution with it, and an identifier on a judge surface without
-          the system that asserted it is exactly the collapse this cockpit
-          refuses.
-        */}
         <p className="subject-urn">
           <span className="mono">{model.datasetIdentity.text}</span>
           <SourceTag source={model.datasetIdentity.source} />
         </p>
       </div>
-      <CoveragePanel model={model} />
+      <Coverage model={model} />
     </section>
 
-    <nav className="stepper" aria-label="Review sequence">
+    <nav className="spine" aria-label="Review sequence">
       <ol>
         {routes.map(({ route: itemRoute, label }, index) => (
           <li key={itemRoute} className={index === step ? "is-current" : index < step ? "is-done" : ""}>
@@ -137,12 +159,22 @@ export function CockpitShell({ model, route, onRouteChange }: {
               aria-current={route === itemRoute ? "step" : undefined}
               onClick={() => onRouteChange(itemRoute)}
             >
-              <span className="stepper__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              <span className="stepper__label">{label}</span>
+              <span className="spine__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span className="spine__label">{label}</span>
             </button>
           </li>
         ))}
       </ol>
+      {/*
+        Going back is navigation, so it lives in the navigation. As a button in
+        the decision card it had the weight of a secondary action and competed
+        with the one real choice on the screen.
+      */}
+      {previous && (
+        <button className="spine__back" type="button" onClick={() => onRouteChange(previous.route)}>
+          Back to {previous.label.toLowerCase()}
+        </button>
+      )}
     </nav>
 
     <section className="route-slot" aria-labelledby="route-title">

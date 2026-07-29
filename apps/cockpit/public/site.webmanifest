@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Tally Change Impact Cockpit",
+  "short_name": "Tally",
+  "description": "Review a data change with its catalog and repository evidence attached.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#07100e",
+  "background_color": "#07100e",
+  "icons": [
+    { "src": "/brand/tally-mark.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon-16.png", "sizes": "16x16", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "maskable" }
+  ]
+}

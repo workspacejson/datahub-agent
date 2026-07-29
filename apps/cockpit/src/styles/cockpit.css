@@ -16,10 +16,12 @@
      dotted    literal word carry the state, so it survives greyscale.
    ───────────────────────────────────────────────────────────── */
 
+/* Flat. The atmosphere is contained to the hero band rather than washing the
+   whole page, so a card two thirds down is not sitting on a gradient. */
 .cockpit-shell {
   min-height: 100vh;
   padding: var(--sp-6) clamp(var(--sp-5), 4vw, var(--sp-10)) var(--sp-10);
-  background: var(--glow-page), var(--surface-page);
+  background: var(--surface-page);
 }
 
 .placeholder-banner {
@@ -33,12 +35,42 @@
   letter-spacing: .08em;
 }
 
+/* ── Chrome ───────────────────────────────────────────────────
+   The application is tally. `workspace.json` is the substrate it is built on, so
+   it is an endorsement on the right rather than the wordmark on the left, which
+   is where it used to sit and where it read as the product's name. */
 .product-header {
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6);
   border-bottom: 1px solid var(--border-default); padding-bottom: var(--sp-4);
 }
-.wordmark { margin: 0; font-size: var(--fs-base); font-weight: 800; letter-spacing: var(--ls-tight); color: var(--text-heading); }
-.wordmark b { color: var(--wj-accent); font-weight: 800; }
+
+/* Clear space is the bracket arm length on all four sides, which at a 24px mark
+   resolves to the 18px the spec calls for in a 60px header. */
+.wordmark { display: flex; align-items: center; gap: var(--sp-3); margin: 0; padding-left: 18px; color: var(--text-heading); }
+.wordmark__mark { flex: none; display: block; }
+/* Not tinted emerald: emerald is load bearing in this UI and means workspace.json
+   contributed the material. Not set in mono: mono is data. The mark's own
+   brackets are emerald and its strokes take `currentColor` from this rule. */
+.wordmark__word { font-size: var(--fs-lg); font-weight: 800; letter-spacing: var(--ls-tight); line-height: 1; }
+.wordmark__rule { width: 1px; align-self: stretch; margin: 0 var(--sp-1); background: var(--border-strong); }
+/* A caption on the brand, never a second brand. */
+.wordmark__product {
+  color: var(--text-muted); font-family: var(--font-mono);
+  font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+}
+
+.endorsement {
+  margin: 0; flex: none;
+  border: 1px solid var(--border-default); border-radius: var(--radius-pill);
+  padding: var(--sp-1) var(--sp-3);
+  color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption);
+}
+.endorsement b { color: var(--wj-accent); font-weight: 500; }
+
+@media (max-width: 1100px) {
+  /* Below the nav range the caption drops and only the lockup stays. */
+  .wordmark__rule, .wordmark__product { display: none; }
+}
 
 .eyebrow {
   margin: 0;
@@ -51,19 +83,31 @@
 }
 
 
-/* ── First frame ──────────────────────────────────────────────
-   Identity on the left, coverage on the right, at the same optical weight.
-   Both are above the fold at 1440x900 and 1280x800; `first-frame.test.ts`
-   asserts that mechanically rather than trusting this comment. */
-.first-frame {
+/* ── Hero band ────────────────────────────────────────────────
+   Identity left, the one coverage verdict right, on the same baseline grid. Both
+   are above the fold at 1440x900 and 1280x800; `first-frame.spec.ts` asserts that
+   mechanically rather than trusting this comment.
+
+   The dataset name stays the largest element. Setting the coverage verdict as
+   display type was considered and rejected: it makes a *limitation* the biggest
+   thing on the screen and demotes the subject to a caption, so a reviewer's first
+   impression becomes "this tool did not establish much" when the claim being made
+   is that resolution succeeded exactly and coverage is bounded. */
+.hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   gap: var(--sp-8);
   align-items: center;
-  padding: var(--sp-5) 0 var(--sp-4);
+  padding: var(--sp-5) 0 var(--sp-5);
+  /* The glow and the scanline grid live in this band only, so the eye reads the
+     band as chrome and everything below it as data. */
+  margin: 0 calc(-1 * clamp(var(--sp-5), 4vw, var(--sp-10)));
+  padding-inline: clamp(var(--sp-5), 4vw, var(--sp-10));
+  background: var(--glow-page), var(--surface-page);
+  border-bottom: 1px solid var(--border-default);
 }
-.first-frame__identity { min-width: 0; }
-.first-frame h1 {
+.hero__identity { min-width: 0; }
+.hero h1 {
   margin: var(--sp-2) 0 var(--sp-3);
   font-size: clamp(2rem, 3.4vw, var(--fs-3xl));
   font-weight: 800;
@@ -72,7 +116,7 @@
   color: var(--text-heading);
   overflow-wrap: anywhere;
 }
-.subject-urn { margin: 0 0 var(--sp-3); color: var(--text-muted); font-size: var(--fs-xs); }
+.subject-urn { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: 0; color: var(--text-muted); font-size: var(--fs-xs); }
 
 
 /* ── Chips: two independent axes, never collapsed ─────────────
@@ -119,7 +163,26 @@
 .rail-group ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-2); max-height: 8rem; overflow-y: auto; }
 .rail-group li { font-size: var(--fs-xs); color: var(--text-muted); line-height: var(--lh-normal); overflow-wrap: anywhere; }
 .rail-group li strong { display: block; color: var(--text-body); font-family: var(--font-mono); font-weight: 500; }
-.rail-caveat { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+.rail-group__reason { display: block; color: var(--text-muted); }
+/* The consequence of proceeding, not a second statement of coverage. Coverage is
+   asserted once, in the hero. */
+.rail-caveat { margin: 0; color: var(--text-body); font-size: var(--fs-sm); line-height: var(--lh-normal); }
+
+/* ── Receipt section index ────────────────────────────────────
+   Wayfinding for the one route long enough to need it. The active state is the
+   design system's 2px accent left border, which is the same device the coverage
+   verdict uses for "unsettled", here meaning "you are here": both are a rule in
+   the margin rather than a fill, so neither reads as a status on the text. */
+.rail-index ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: 0; max-height: none; overflow: visible; }
+.rail-index li { border-left: 2px solid transparent; }
+.rail-index a {
+  display: block; padding: var(--sp-2) var(--sp-3);
+  color: var(--text-muted); font-size: var(--fs-xs); text-decoration: none;
+  transition: var(--transition-interactive);
+}
+.rail-index a:hover { color: var(--text-body); }
+.rail-index .is-active { border-left-color: var(--wj-accent); }
+.rail-index .is-active a { color: var(--text-heading); }
 
 /* The one decision. A single primary action per view; the caveat sits directly
    above it so accepting the stated gap is unavoidable rather than incidental. */
@@ -256,7 +319,24 @@
    exists to make. */
 .comparison-unavailable { color: var(--wj-experimental); }
 .comparison-no-delta { color: var(--text-muted); }
-.evidence--unavailable { color: var(--wj-experimental); }
+
+/* ── Amber marks the state, not the sentence ──────────────────
+   Amber was carrying two meanings at once: deliberate, stated absence and
+   caution. That is the palette breaking the project's own rule that colour may
+   only reinforce a distinction the shape and the word already make, so the two
+   collided and long amber prose read as an error.
+   Now the tag is amber and short; the explanation is sans at body size in muted
+   grey, which is also the fastest text on the screen to read. Mono stays for
+   field names and paths, which are data. */
+.evidence--unavailable { display: block; color: var(--text-muted); }
+.evidence__tag {
+  display: inline-block; margin-right: var(--sp-2);
+  border: 1px solid var(--wj-experimental); border-radius: var(--radius-sm);
+  padding: 0 var(--sp-2);
+  color: var(--wj-experimental); font-family: var(--font-mono); font-size: var(--fs-caption);
+  white-space: nowrap;
+}
+.evidence__reason { color: var(--text-muted); font-family: var(--font-sans); font-size: var(--fs-sm); line-height: var(--lh-normal); }
 .evidence--placeholder { color: var(--wj-danger); }
 .evidence--placeholder em { font-style: normal; font-weight: 700; }
 
@@ -292,8 +372,9 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 @media (max-width: 1100px) {
   /* Below the two asserted breakpoints the rail stops being a column and becomes
      the first thing under the identity, so the decision stays reachable. */
-  .first-frame, .route-body { grid-template-columns: minmax(0, 1fr); }
+  .hero, .route-body { grid-template-columns: minmax(0, 1fr); }
   .decision-rail { position: static; }
+  .spine { flex-wrap: wrap; }
 }
 @media (max-width: 640px) {
   .product-header { align-items: flex-start; flex-direction: column; }
@@ -307,47 +388,68 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    tier line, four bare chips, and this panel. The chips lost because `exact` and
    `not-established` standing alone had no visible subject; their axes survive
    here as labelled rows. */
-.coverage {
-  min-width: 0;
-  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
-  background: var(--surface-card); padding: var(--sp-4);
-}
-.coverage__headline { margin: var(--sp-2) 0 var(--sp-3); color: var(--text-heading); font-size: var(--fs-base); font-weight: 600; letter-spacing: var(--ls-snug); line-height: var(--lh-snug); }
+/* No border. It is the right half of the hero, on the hero's own surface, rather
+   than a card floating in the top-right corner. */
+.coverage { min-width: 0; }
+.coverage__headline { margin: var(--sp-2) 0 var(--sp-2); color: var(--text-heading); font-size: var(--fs-xl); font-weight: 600; letter-spacing: var(--ls-snug); line-height: var(--lh-snug); }
 /* Amber is unsettled, and unestablished coverage is unsettled. It is a hairline
    marker rather than coloured text: the word carries the state, the colour only
    reinforces it, and the statement has to survive greyscale. */
 .coverage__headline--open { padding-left: var(--sp-3); border-left: 2px solid var(--wj-experimental); }
+.coverage__note { margin: 0 0 var(--sp-4); max-width: 44ch; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-relaxed); }
 
-.coverage__counts { display: grid; gap: var(--sp-1); margin: 0 0 var(--sp-3); padding: 0 0 var(--sp-3); border-bottom: 1px solid var(--border-default); }
-.coverage__counts > div { display: flex; align-items: baseline; gap: var(--sp-3); }
-.coverage__counts dt { min-width: 3.5ch; color: var(--text-heading); font-family: var(--font-mono); font-size: var(--fs-base); font-weight: 500; font-variant-numeric: tabular-nums; }
+/* Four figures on one rule, not a bordered panel with a nested grid. They are one
+   line of information, so they get one line and no second border. */
+.coverage__counts {
+  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-6);
+  margin: 0; padding-top: var(--sp-3);
+  border-top: 1px solid var(--border-default);
+}
+.coverage__counts > div { min-width: 0; }
+.coverage__counts dt { color: var(--text-heading); font-family: var(--font-mono); font-size: var(--fs-lg); font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
+/* The gap count is the one figure that carries an unsettled state, so it is the
+   one that takes amber. The others are neutral because they are just counts. */
+.coverage__count--open { color: var(--wj-experimental); }
+.coverage__count--word { font-size: var(--fs-base); }
 .coverage__of { color: var(--text-faint); font-size: var(--fs-sm); }
-.coverage__counts dd { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); }
+.coverage__counts dd { margin: var(--sp-1) 0 0; color: var(--text-muted); font-size: var(--fs-caption); }
 
-.coverage__axes { display: grid; gap: var(--sp-1); margin: 0; }
-.coverage__axes > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); }
-.coverage__axes dt { color: var(--text-faint); font-size: var(--fs-xs); }
-.coverage__axes dd { margin: 0; color: var(--text-body); font-family: var(--font-mono); font-size: var(--fs-xs); }
-
-/* ── Stepper ──────────────────────────────────────────────────
-   Numbered because the three views are a sequence the primary action advances,
-   not three parallel destinations. As a plain tab bar it gave the reader a
-   second affordance for the move the CTA already owns. */
-.stepper { margin: var(--sp-4) 0 0; border-bottom: 1px solid var(--border-default); }
-.stepper ol { display: flex; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
-.stepper button {
+/* ── Spine ────────────────────────────────────────────────────
+   The only navigation on the page. Numbered because the three views are a
+   sequence the primary action advances; every step stays reachable and marks
+   itself visited, so a reviewer can see where they are and that nothing is
+   locked. Going back is a text link here rather than a button in the decision
+   card, where it had the weight of a secondary action and competed with the one
+   real choice. */
+.spine { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin: var(--sp-4) 0 0; border-bottom: 1px solid var(--border-default); }
+.spine ol { display: flex; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
+.spine button {
   display: flex; align-items: baseline; gap: var(--sp-2);
   min-height: var(--tap-target);
   border: 0; border-bottom: 2px solid transparent; background: transparent;
   padding: 0 var(--sp-4); cursor: pointer;
-  color: var(--text-faint); font-size: var(--fs-sm);
+  color: var(--text-muted); font-size: var(--fs-sm);
   transition: var(--transition-interactive);
 }
-.stepper__index { font-family: var(--font-mono); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
-.stepper button:hover { color: var(--text-body); }
-.stepper .is-done button { color: var(--text-muted); }
-.stepper .is-current button { color: var(--text-heading); border-bottom-color: var(--wj-accent); }
-.stepper .is-current .stepper__index { color: var(--wj-accent); }
+.spine__index { font-family: var(--font-mono); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.spine button:hover { color: var(--text-body); }
+/* Three legible steps on the neutral ramp: upcoming muted, visited brighter,
+   current brightest with the accent underline. Visited was `--wj-accent-low`,
+   which measures 1.43:1 on the canvas at 11px and axe failed the frame on it.
+   The ramp also avoids spending emerald on "you have been here", which is not an
+   attribution and must not read as one. */
+.spine .is-done button { color: var(--wj-gray-2); }
+.spine .is-current button { color: var(--text-heading); border-bottom-color: var(--wj-accent); }
+.spine .is-current .spine__index { color: var(--wj-accent); }
+
+.spine__back {
+  flex: none;
+  border: 0; background: transparent; padding: 0 var(--sp-2); cursor: pointer;
+  color: var(--text-muted); font-size: var(--fs-xs);
+  text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px;
+  transition: var(--transition-interactive);
+}
+.spine__back:hover { color: var(--text-body); text-decoration-color: currentColor; }
 
 /* ── The seam: the one thing this screen is remembered by ─────
    What the catalog could not supply, directly above what the join did. Both
@@ -394,7 +496,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 
      1. route change   a cross-fade with a 6px rise, on the panel that actually
                        changed. Driven by the View Transitions API rather than a
-                       library, because the shell, stepper and rail persist and
+                       library, because the shell, spine and rail persist and
                        only the body should appear to move.
      2. first paint    one staged rise, via @starting-style. Once, on load.
      3. interaction    colour and border on hover, a 1px press on the CTA.
@@ -415,15 +517,15 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 
   /* One staged entry on first paint. The identity resolves before the coverage
      that qualifies it, which is the order the page wants to be read in. */
-  .first-frame__identity, .coverage, .stepper, .route-body { transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard); }
+  .hero__identity, .coverage, .spine, .route-body { transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard); }
   @starting-style {
-    .first-frame__identity { opacity: 0; transform: translateY(6px); }
+    .hero__identity { opacity: 0; transform: translateY(6px); }
     .coverage { opacity: 0; transform: translateY(6px); }
-    .stepper { opacity: 0; }
+    .spine { opacity: 0; }
     .route-body { opacity: 0; transform: translateY(6px); }
   }
   .coverage { transition-delay: 60ms; }
-  .stepper { transition-delay: 100ms; }
+  .spine { transition-delay: 100ms; }
   .route-body { transition-delay: 140ms; }
 
   .cta { transition: var(--transition-interactive), translate var(--dur-fast) var(--ease-standard); }
@@ -438,3 +540,6 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
+
+/* Anchor targets clear the top of the viewport rather than butting against it. */
+.receipts-view h2 { scroll-margin-top: var(--sp-6); }

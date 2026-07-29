@@ -164,3 +164,39 @@ test("the changed-plan destination shows the real evidence-backed delta", async 
   await expect(page.getByText("Declared context alone")).toBeVisible();
   await expect(page.getByText("Declared context plus repository evidence")).toBeVisible();
 });
+
+test("the receipt has in-page wayfinding that tracks the reader", async ({ page }) => {
+  await page.setViewportSize(VIEWPORTS[0]);
+  await page.goto(`${FIXTURE_ORIGIN}/?view=receipts`);
+
+  // Receipts is far taller than the other two routes and holds six distinct
+  // arguments; none of them appeared in any navigation, and the rail was empty
+  // here, so the widest column was unused exactly where wayfinding was needed.
+  const index = page.getByRole("navigation", { name: "Receipt sections" });
+  await expect(index).toBeVisible();
+  const links = index.getByRole("link");
+  expect(await links.count()).toBeGreaterThan(4);
+
+  // Every entry must point at a heading that exists, or the index is decoration.
+  for (const href of await links.evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")))) {
+    expect(href).toMatch(/^#/);
+    await expect(page.locator(href!)).toHaveCount(1);
+  }
+
+  const activeText = async () => index.locator("[aria-current='location']").first().textContent();
+  const first = await activeText();
+
+  // Tracking is the part that was wrong twice: an observer over a narrow band
+  // stuck on the first entry, and position-only tracking never reached the last
+  // section because the page bottom arrives before its heading reaches the top.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForFunction(
+    (was) => document.querySelector(".rail-index .is-active a")?.textContent !== was,
+    first,
+  );
+  const atBottom = await activeText();
+  expect(atBottom).not.toBe(first);
+  // At the bottom it is the last section outright, not whichever heading happened
+  // to clear the threshold.
+  expect((await links.allTextContents()).at(-1)).toBe(atBottom);
+});
