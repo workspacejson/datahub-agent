@@ -35,6 +35,54 @@ const base = JSON.parse(baseRaw.toString("utf8"));
 /** Deep clone, so a transformation cannot reach back into the base. */
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+/**
+ * What the base run's after-state read actually did, and what that does not
+ * establish.
+ *
+ * A degraded fixture that inverts an observation should say what the real
+ * observation was, or a reader has no way to tell a modelled failure from a
+ * measured one. `accepted-not-observed` sets `status: timed-out`; the run it
+ * comes from settled on the first poll in 10ms.
+ *
+ * That is read-your-writes converging immediately through the production
+ * after-state path, on the pinned stack, and it matters because the alternative
+ * would have been expensive: had the after-state read traversed an eventually
+ * consistent tier, this fixture's premise would be wrong, the evidence would
+ * need regenerating, and the adapter and copy would follow. It does not.
+ *
+ * **The read tier itself is not established, and is recorded as unknown rather
+ * than inferred.** Ten milliseconds is consistent with a primary read and also
+ * consistent with a replica that happened to be current. One observation cannot
+ * separate them, and a fast answer is not evidence of a strong consistency
+ * guarantee. Stating the tier as unknown is the honest disclosure; asserting
+ * primary from a latency number would be exactly the kind of claim this
+ * repository refuses elsewhere.
+ *
+ * Derived from the base rather than transcribed, so it cannot drift from it.
+ */
+const observation = base.writeback?.observation ?? null;
+const BASE_OBSERVATION = {
+  status: observation?.status ?? null,
+  polls: observation?.polls ?? null,
+  elapsedMs: observation?.elapsedMs ?? null,
+  timeoutMs: observation?.timeoutMs ?? null,
+  bothStatesRead: base.writeback?.bothStatesRead ?? null,
+  beforeRead: base.writeback?.before?.read ?? null,
+  afterRead: base.writeback?.after?.read ?? null,
+  readTier: "unknown",
+  readTierNote:
+    "The after-state read settled on the first poll, which shows read-your-writes converging " +
+    "immediately on this stack but does not establish which storage tier served it. A replica " +
+    "that happened to be current answers identically. Recorded as unknown rather than inferred " +
+    "from latency; no primary-read option has been identified on the pinned stack.",
+  surface: "GraphQL dataset(urn:) — institutionalMemory, structuredProperties",
+  instrumentNote:
+    "The client behind this read checks the GraphQL top-level `errors` array before HTTP status " +
+    "and maps a failed read to an unreadable state rather than to nulls, so an unreachable " +
+    "instance cannot be recorded here as an empty one. Audited 2026-07-29 across all nine " +
+    "GraphQL clients in this repository.",
+};
+
 const STATES = [
   {
     name: "accepted-not-observed",
@@ -90,6 +138,9 @@ for (const spec of STATES) {
     command: "node scripts/derive-state-fixtures.mjs",
     transformation: spec.transformation,
     note: spec.note,
+    // Read from the base rather than written down beside it, so it cannot drift
+    // from the run it describes. See BASE_OBSERVATION.
+    baseObservation: BASE_OBSERVATION,
     fixtureSha256: createHash("sha256").update(body).digest("hex"),
   };
   writeFileSync(join(root, OUT, `${file.replace(/\.json$/, "")}.provenance.json`), `${JSON.stringify(sidecar, null, 2)}\n`);
