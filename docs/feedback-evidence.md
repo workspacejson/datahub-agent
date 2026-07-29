@@ -242,6 +242,10 @@ as a suggestion.
 
 Tracked here so the submission fields are never reconstructed from memory.
 
+> Migrated from the deleted Devpost working draft before deletion under
+> HAC-260/HAC-273. Submission management URL intentionally not perpetuated
+> (private management URL in a public repo).
+
 | Field | State |
 | -- | -- |
 | Project title | **not yet set** — still `Untitled` |
