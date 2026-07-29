@@ -21,7 +21,7 @@ it("offers no View Source link in placeholder mode, and never tags unavailable a
   // a live link on a judge-facing screenshot. Absence states itself instead.
   const model = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={model} route="impact" onRouteChange={() => undefined} />);
-  expect(screen.queryByRole("link", { name: "View Source" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "View source at this revision" })).toBeNull();
   expect(screen.getByText(/View Source unavailable/).textContent).toContain("evidence binding is pending");
   expect(screen.queryByText("unavailable", { selector: ".source-tag" })).toBeNull();
 });
@@ -40,7 +40,7 @@ it("labels a constructed link as constructed, and shows what it was built from",
     },
   } as const;
   render(<CockpitShell model={{ ...model, viewSource }} route="impact" onRouteChange={() => undefined} />);
-  expect(screen.getByRole("link", { name: "View Source" }).getAttribute("href")).toBe(viewSource.url);
+  expect(screen.getByRole("link", { name: "View source at this revision" }).getAttribute("href")).toBe(viewSource.url);
   expect(screen.getByText(/constructed, not catalog-supplied/)).toBeTruthy();
   expect(screen.getByText(/drops/).textContent).toContain("dbt/models/curated/game_events.sql");
 });
@@ -49,7 +49,7 @@ it("does not claim construction when the catalog declared the link", () => {
   const model = provisionalStateAdapter("partial").read();
   const viewSource = { state: "declared", url: "https://example.com/declared.sql" } as const;
   render(<CockpitShell model={{ ...model, viewSource }} route="impact" onRouteChange={() => undefined} />);
-  expect(screen.getByRole("link", { name: "View Source" }).getAttribute("href")).toBe(viewSource.url);
+  expect(screen.getByRole("link", { name: "View source at this revision" }).getAttribute("href")).toBe(viewSource.url);
   expect(screen.getByText(/declared by the catalog/)).toBeTruthy();
   expect(screen.queryByText(/constructed, not catalog-supplied/)).toBeNull();
 });
@@ -57,12 +57,13 @@ it("does not claim construction when the catalog declared the link", () => {
 it("announces evidence-state changes, which happen without a reload", () => {
   // The attribute shipped once with no assertion. Under this project's own
   // rule a claim carries the check that keeps it true, so this is that check:
-  // the strip is a polite live region, and it is the strip and not the shell.
+  // the coverage panel is a polite live region, and it is the panel not the shell.
   const model = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={model} route="impact" onRouteChange={() => undefined} />);
-  const strip = screen.getByLabelText("Evidence state");
+  const strip = screen.getByLabelText("Coverage of this review");
   expect(strip.getAttribute("aria-live")).toBe("polite");
-  expect(strip.textContent).toContain(model.read);
+  // Still carries the axes, so this fails if the panel stops reflecting them.
+  expect(strip.textContent).toContain(model.resolutionDisposition);
 });
 
 it("does not present a placeholder warning for non-placeholder models", () => {

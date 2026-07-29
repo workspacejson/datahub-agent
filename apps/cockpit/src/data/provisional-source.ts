@@ -33,7 +33,7 @@ export const provisionalSource = {
       state: "observed",
       records: [{ urn: "<unresolved dataset>", reason: "<reason unavailable in placeholder mode>" }],
     },
-    statedGaps: [{ field: "<unresolved item>", reason: "not-queried", detail: "Evidence binding is pending; nothing was read for this field." }],
+    statedGaps: [{ field: "<unresolved item>", source: "datahub", reason: "not-queried", detail: "Evidence binding is pending; nothing was read for this field." }],
     provenance: {
       subjectRepository: { state: "placeholder", value: "<subject repository>" },
       subjectRevision: { state: "placeholder", value: "<subject revision>" },

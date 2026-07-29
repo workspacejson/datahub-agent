@@ -1,4 +1,4 @@
-import type { CockpitViewModel, EvidenceValue } from "../model/cockpit-view-model";
+import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
 
 /**
@@ -35,10 +35,68 @@ const provenanceRows = [
   ["limitations", "Limitations"],
 ] as const;
 
+const GAP_SYSTEM: Record<StatedGap["source"], string> = {
+  datahub: "DataHub",
+  workspacejson: "workspace.json",
+  joined: "Joined",
+};
+
+/**
+ * Everything the event could not establish, banded and placed first.
+ *
+ * These were distributed through a twelve-row provenance grid at the same visual
+ * weight as "Subject repository", which reads as noise. They are the opposite of
+ * noise: a stated absence with a named cause is the claim no competing surface
+ * makes, and it is the reason this receipt can be trusted about the rows that
+ * *are* filled in.
+ *
+ * Each row names the system that could not supply the field, because "the
+ * catalog does not expose this" and "the artifact could not resolve it" are
+ * different findings with different fixes.
+ */
+function UnestablishedBand({ statedGaps }: { statedGaps: readonly StatedGap[] }) {
+  return (
+    <section aria-labelledby="unestablished-title">
+      <p className="eyebrow">What is not established</p>
+      <h2 id="unestablished-title">Absence is stated, never omitted</h2>
+      {statedGaps.length === 0
+        ? <p>The event states no gaps. Every field this receipt carries was observed.</p>
+        : (
+          <ul className="gap-band">
+            {statedGaps.map((gap) => (
+              <li className="gap" key={gap.field}>
+                <span className="gap__system">{GAP_SYSTEM[gap.source]}</span>
+                <span className="gap__field mono">{gap.field}</span>
+                <span className="gap__reason">{gap.reason}</span>
+                <span className="gap__detail">{gap.detail}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+    </section>
+  );
+}
+
 export function ReceiptsView({ model }: { model: CockpitViewModel }) {
   const { accounting, unresolvedDatasets, statedGaps, provenance, writeback, evaluation } = model.receipt;
   const rawEvidenceBound = evaluation.rawEvidence.state === "observed";
   return <div className="receipts-view">
+    <UnestablishedBand statedGaps={statedGaps} />
+
+    <section aria-labelledby="evidence-title">
+      <p className="eyebrow">Evidence standing</p>
+      <h2 id="evidence-title">The tier is a count, not a warrant</h2>
+      {/*
+        The tier lives here rather than in the first frame. Rendered as the hero
+        it read as a verdict over the whole screen, all-caps and directly above
+        "Completeness not established", so the two most prominent statements on
+        the page appeared to contradict each other and resolving them meant
+        reading a qualifying clause. Its actual meaning is narrow and countable,
+        and it belongs beside the records it counts.
+      */}
+      <p className="evidence-standing">{model.summary}</p>
+    </section>
+
     <section aria-labelledby="accounting-title">
       <p className="eyebrow">Resolution accounting</p>
       <h2 id="accounting-title">Resolution remains bounded by the pinned manifest</h2>
@@ -85,13 +143,6 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
               </ul>
             ))
           : <p className="evidence evidence--unavailable">Unavailable — {unresolvedDatasets.reason}</p>}
-      </section>
-      <section aria-labelledby="gaps-title">
-        <h3 id="gaps-title">Stated gaps ({statedGaps.length})</h3>
-        {statedGaps.length === 0
-          ? <p>The event states no gaps.</p>
-          : <dl className="provenance-list">{statedGaps.map((gap) =>
-            <div key={gap.field}><dt>{gap.field} — {gap.reason}</dt><dd>{gap.detail}</dd></div>)}</dl>}
       </section>
     </section>
 

@@ -32,23 +32,30 @@ export function DecisionRail({ model, route, onRouteChange }: {
   onRouteChange(route: CockpitRoute): void;
 }) {
   const gaps = model.receipt.statedGaps;
+  // Receipts opens with the same gaps banded at full width, with their details.
+  // Repeating them in the rail beside that band is the duplication this frame
+  // has already been corrected for once; the rail keeps only the decision there.
+  const showGaps = route !== "receipts";
+
   return (
     <aside className="decision-rail" aria-label="Stated gaps and next action">
-      <div className="rail-group">
-        <p className="eyebrow">Stated gaps, named</p>
-        {gaps.length === 0 ? (
-          <ul><li>No gaps are stated for this event.</li></ul>
-        ) : (
-          <ul>
-            {gaps.map((gap) => (
-              <li key={gap.field}>
-                <strong>{gap.field}</strong>
-                {gap.reason}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {showGaps && (
+        <div className="rail-group">
+          <p className="eyebrow">Stated gaps, named</p>
+          {gaps.length === 0 ? (
+            <ul><li>No gaps are stated for this event.</li></ul>
+          ) : (
+            <ul>
+              {gaps.map((gap) => (
+                <li key={gap.field}>
+                  <strong>{gap.field}</strong>
+                  {gap.reason}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/*
         One decision per view, and the caveat sits directly above the control

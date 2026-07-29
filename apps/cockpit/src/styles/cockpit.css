@@ -50,15 +50,6 @@
   text-transform: uppercase;
 }
 
-nav.view-tabs { display: flex; gap: var(--sp-1); margin: var(--sp-5) 0 0; border-bottom: 1px solid var(--border-default); }
-nav.view-tabs button {
-  min-height: var(--tap-target);
-  border: 0; border-bottom: 2px solid transparent; background: transparent;
-  color: var(--text-muted); padding: 0 var(--sp-4); cursor: pointer;
-  font-size: var(--fs-sm); transition: var(--transition-interactive);
-}
-nav.view-tabs button:hover { color: var(--text-body); }
-nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: var(--wj-accent); }
 
 /* ── First frame ──────────────────────────────────────────────
    Identity on the left, coverage on the right, at the same optical weight.
@@ -66,10 +57,10 @@ nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: v
    asserts that mechanically rather than trusting this comment. */
 .first-frame {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
-  gap: var(--sp-6);
-  align-items: start;
-  padding: var(--sp-6) 0 var(--sp-5);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  gap: var(--sp-8);
+  align-items: center;
+  padding: var(--sp-5) 0 var(--sp-4);
 }
 .first-frame__identity { min-width: 0; }
 .first-frame h1 {
@@ -82,17 +73,7 @@ nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: v
   overflow-wrap: anywhere;
 }
 .subject-urn { margin: 0 0 var(--sp-3); color: var(--text-muted); font-size: var(--fs-xs); }
-.frame-summary { margin: 0; max-width: 60ch; color: var(--text-body); font-size: var(--fs-sm); line-height: var(--lh-relaxed); }
 
-.coverage-panel {
-  min-width: 0;
-  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
-  background: var(--surface-card); padding: var(--sp-4);
-}
-.coverage-panel > strong { display: block; margin: var(--sp-2) 0; color: var(--text-heading); font-size: var(--fs-base); }
-.coverage-panel dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); margin: var(--sp-3) 0 0; font-size: var(--fs-xs); }
-.coverage-panel dt { font-family: var(--font-mono); color: var(--text-heading); }
-.coverage-panel dd { margin: 0; color: var(--text-muted); }
 
 /* ── Chips: two independent axes, never collapsed ─────────────
    Source says who contributed the material. Resolution says what is known about
@@ -104,7 +85,6 @@ nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: v
    colour reads as "we generated this". Resolution uses the neutral ramp, plus
    dashed for unresolved and dotted for not queried, so the state survives
    greyscale on shape and word alone. */
-.state-strip { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-4) 0 0; padding: 0; }
 .chip {
   display: inline-block; border-radius: var(--radius-pill); padding: var(--sp-1) var(--sp-3);
   font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em;
@@ -125,13 +105,15 @@ nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: v
 }
 
 /* ── Route body: content, and a rail that carries the decision ─ */
-.route-slot { padding: var(--sp-5) 0 0; }
+.route-slot { padding: var(--sp-4) 0 0; }
 .route-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 20rem); gap: var(--sp-6); align-items: start; }
 .route-body > * { min-width: 0; }
 
-.decision-rail { position: sticky; top: var(--sp-4); display: grid; gap: var(--sp-3); }
-.rail-group { border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
-.rail-group ul { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: grid; gap: var(--sp-3); max-height: 14rem; overflow-y: auto; }
+.decision-rail { position: sticky; top: var(--sp-4); display: grid; gap: var(--sp-2); }
+.rail-group { border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-3) var(--sp-4); }
+/* The named gaps scroll inside the rail rather than pushing the decision below
+   the fold. The list is the reference; the decision is what the frame is for. */
+.rail-group ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-2); max-height: 11rem; overflow-y: auto; }
 .rail-group li { font-size: var(--fs-xs); color: var(--text-muted); line-height: var(--lh-normal); overflow-wrap: anywhere; }
 .rail-group li strong { display: block; color: var(--text-body); font-family: var(--font-mono); font-weight: 500; }
 .rail-caveat { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
@@ -161,7 +143,7 @@ nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: v
 .claim { min-width: 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
 .claim > p { margin: 0 0 var(--sp-2); color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
 .claim > strong { display: block; margin-bottom: var(--sp-3); color: var(--text-heading); font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; }
-.claim--evidence > strong { font-family: var(--font-sans); font-weight: 400; line-height: var(--lh-normal); }
+.claim--evidence > strong { display: block; margin-bottom: var(--sp-3); font-family: var(--font-sans); font-size: var(--fs-sm); font-weight: 400; line-height: var(--lh-relaxed); }
 .claim--identifier > strong { font-family: var(--font-mono); font-weight: 500; }
 
 /* The row that carries the join. Two cards rather than three: the third was a
@@ -298,4 +280,141 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* ── Coverage: the single epistemic statement ─────────────────
+   This replaces three stacked registers that all said the same thing: a prose
+   tier line, four bare chips, and this panel. The chips lost because `exact` and
+   `not-established` standing alone had no visible subject; their axes survive
+   here as labelled rows. */
+.coverage {
+  min-width: 0;
+  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  background: var(--surface-card); padding: var(--sp-4);
+}
+.coverage__headline { margin: var(--sp-2) 0 var(--sp-3); color: var(--text-heading); font-size: var(--fs-base); font-weight: 600; letter-spacing: var(--ls-snug); line-height: var(--lh-snug); }
+/* Amber is unsettled, and unestablished coverage is unsettled. It is a hairline
+   marker rather than coloured text: the word carries the state, the colour only
+   reinforces it, and the statement has to survive greyscale. */
+.coverage__headline--open { padding-left: var(--sp-3); border-left: 2px solid var(--wj-experimental); }
+
+.coverage__counts { display: grid; gap: var(--sp-1); margin: 0 0 var(--sp-3); padding: 0 0 var(--sp-3); border-bottom: 1px solid var(--border-default); }
+.coverage__counts > div { display: flex; align-items: baseline; gap: var(--sp-3); }
+.coverage__counts dt { min-width: 3.5ch; color: var(--text-heading); font-family: var(--font-mono); font-size: var(--fs-base); font-weight: 500; font-variant-numeric: tabular-nums; }
+.coverage__of { color: var(--text-faint); font-size: var(--fs-sm); }
+.coverage__counts dd { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); }
+
+.coverage__axes { display: grid; gap: var(--sp-1); margin: 0; }
+.coverage__axes > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); }
+.coverage__axes dt { color: var(--text-faint); font-size: var(--fs-xs); }
+.coverage__axes dd { margin: 0; color: var(--text-body); font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+/* ── Stepper ──────────────────────────────────────────────────
+   Numbered because the three views are a sequence the primary action advances,
+   not three parallel destinations. As a plain tab bar it gave the reader a
+   second affordance for the move the CTA already owns. */
+.stepper { margin: var(--sp-4) 0 0; border-bottom: 1px solid var(--border-default); }
+.stepper ol { display: flex; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
+.stepper button {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  min-height: var(--tap-target);
+  border: 0; border-bottom: 2px solid transparent; background: transparent;
+  padding: 0 var(--sp-4); cursor: pointer;
+  color: var(--text-faint); font-size: var(--fs-sm);
+  transition: var(--transition-interactive);
+}
+.stepper__index { font-family: var(--font-mono); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.stepper button:hover { color: var(--text-body); }
+.stepper .is-done button { color: var(--text-muted); }
+.stepper .is-current button { color: var(--text-heading); border-bottom-color: var(--wj-accent); }
+.stepper .is-current .stepper__index { color: var(--wj-accent); }
+
+/* ── The seam: the one thing this screen is remembered by ─────
+   What the catalog could not supply, directly above what the join did. Both
+   halves are recorded fields, so the contrast is exhibited rather than asserted.
+   Everything around it is deliberately quiet; this is where the boldness goes. */
+.seam {
+  margin: 0 0 var(--sp-3);
+  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  padding: var(--sp-4) var(--sp-5);
+}
+.seam__row { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); gap: var(--sp-4); padding: var(--sp-4) 0; }
+.seam__row:first-child { padding-top: var(--sp-3); }
+.seam__row:last-child { padding-bottom: 0; }
+.seam__row + .seam__row { border-top: 1px solid var(--border-default); }
+.seam__row--withheld { color: var(--text-faint); }
+.seam__system { min-width: 0; font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; color: var(--text-muted); }
+.seam__value { min-width: 0; }
+.seam__field { display: block; color: var(--text-muted); font-size: var(--fs-xs); text-decoration: line-through; text-decoration-color: var(--wj-gray-5); }
+.seam__reason { display: block; margin-top: var(--sp-1); color: var(--text-faint); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+/* The resolved path is the largest text in the body of this screen, because it
+   is the fact the whole pipeline exists to produce. */
+.seam__path { display: block; color: var(--text-heading); font-size: var(--fs-xl); font-weight: 500; line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.seam__row--resolved .view-source { margin-top: var(--sp-3); }
+
+/* ── Receipts: the unestablished, banded and first ────────────
+   Distributed through the provenance grid at the weight of any other row, these
+   read as noise. Banded, they read as the discipline they are. */
+.gap-band { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: grid; gap: var(--sp-2); }
+.gap {
+  display: grid; grid-template-columns: minmax(0, 7rem) minmax(0, 1fr); gap: var(--sp-1) var(--sp-4);
+  border: 1px solid var(--border-default); border-left: 2px solid var(--wj-experimental);
+  border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4);
+}
+.gap__system { grid-row: span 3; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption); }
+.gap__field { color: var(--text-body); font-size: var(--fs-xs); }
+.gap__reason { color: var(--wj-experimental); font-family: var(--font-mono); font-size: var(--fs-caption); }
+.gap__detail { color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+.evidence-standing { margin: var(--sp-2) 0 0; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+/* ── Motion ───────────────────────────────────────────────────
+   Three moments, and no more. An interface that animates everything reads as a
+   demo of animation; the restraint is the taste.
+
+     1. route change   a cross-fade with a 6px rise, on the panel that actually
+                       changed. Driven by the View Transitions API rather than a
+                       library, because the shell, stepper and rail persist and
+                       only the body should appear to move.
+     2. first paint    one staged rise, via @starting-style. Once, on load.
+     3. interaction    colour and border on hover, a 1px press on the CTA.
+
+   Durations sit in the design system's 120-200ms band. Nothing here is
+   scroll-triggered, nothing scales, and nothing bounces. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Only the changing panel is named, so the browser cross-fades that and leaves
+     the persistent chrome alone. */
+  .route-body__main { view-transition-name: route-body; }
+
+  ::view-transition-old(route-body) { animation: route-out var(--dur-fast, 120ms) var(--ease-standard) both; }
+  ::view-transition-new(route-body) { animation: route-in var(--dur-slow, 200ms) var(--ease-standard) both; }
+
+  @keyframes route-out { to { opacity: 0; transform: translateY(-4px); } }
+  @keyframes route-in { from { opacity: 0; transform: translateY(6px); } }
+
+  /* One staged entry on first paint. The identity resolves before the coverage
+     that qualifies it, which is the order the page wants to be read in. */
+  .first-frame__identity, .coverage, .stepper, .route-body { transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard); }
+  @starting-style {
+    .first-frame__identity { opacity: 0; transform: translateY(6px); }
+    .coverage { opacity: 0; transform: translateY(6px); }
+    .stepper { opacity: 0; }
+    .route-body { opacity: 0; transform: translateY(6px); }
+  }
+  .coverage { transition-delay: 60ms; }
+  .stepper { transition-delay: 100ms; }
+  .route-body { transition-delay: 140ms; }
+
+  .cta { transition: var(--transition-interactive), translate var(--dur-fast) var(--ease-standard); }
+  .cta:active { translate: 0 1px; }
+  .seam { transition: border-color var(--dur-base) var(--ease-standard); }
+  .topology__node { transition: border-color var(--dur-base) var(--ease-standard); }
+  .topology__node:hover { border-color: var(--border-strong); }
+}
+
+/* The DOM still swaps at full speed; only the animation is removed. A reader who
+   asked for no motion gets navigation that works, not navigation that is slow. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

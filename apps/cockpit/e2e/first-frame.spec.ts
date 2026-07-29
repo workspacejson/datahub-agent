@@ -69,10 +69,12 @@ for (const viewport of VIEWPORTS) {
 
     // The frame must not buy the CTA's place by dropping what the reader needs
     // to judge it. All four have to be in the same unscrolled frame.
+    // The coverage panel now carries the epistemic state and the thesis together,
+    // which is the point of collapsing three registers into one. It is still
+    // asserted, so dropping either would fail here.
     for (const locator of [
       page.getByRole("heading", { level: 1 }),                       // dataset identity
-      page.getByLabel("Evidence state"),                             // epistemic state
-      page.getByLabel("Coverage of this review"),                    // thesis: how much is known
+      page.getByLabel("Coverage of this review"),                    // epistemic state + how much is known
       page.getByLabel("Stated gaps and next action"),                // material gaps
     ]) {
       const region = await locator.first().boundingBox();

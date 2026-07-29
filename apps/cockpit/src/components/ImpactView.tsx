@@ -1,5 +1,8 @@
-import type { CockpitViewModel, ImpactEdge, ViewSource } from "../model/cockpit-view-model";
+import type { CockpitViewModel, ImpactEdge, StatedGap, ViewSource } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
+
+/** The contract field the seam is about: the producing file's repository-relative path. */
+const PRODUCER_PATH_FIELD = "code.repositoryRelativePath";
 
 /**
  * The link, and never without its origin.
@@ -8,10 +11,6 @@ import { SourceTag } from "./SourceTag";
  * built from. Presenting it bare would let a reader take it for something the
  * catalog asserted, which is the collapse this surface exists to refuse: the
  * link is just as clickable either way, and only one of the two is honest.
- *
- * It renders inside the producer-file card rather than beneath the card row. It
- * is a link to *that* file, and standing alone between two panels it read as
- * unowned page furniture.
  */
 function ViewSourceLink({ viewSource }: { viewSource: ViewSource }) {
   if (viewSource.state === "unavailable") {
@@ -19,12 +18,12 @@ function ViewSourceLink({ viewSource }: { viewSource: ViewSource }) {
   }
   return (
     <>
-      <a className="view-source" href={viewSource.url} target="_blank" rel="noreferrer">View Source</a>
+      <a className="view-source" href={viewSource.url} target="_blank" rel="noreferrer">View source at this revision</a>
       {viewSource.state === "constructed"
-        ? <span className="view-source__origin">(constructed, not catalog-supplied)</span>
-        : <span className="view-source__origin">(declared by the catalog)</span>}
+        ? <span className="view-source__origin">constructed, not catalog-supplied</span>
+        : <span className="view-source__origin">declared by the catalog</span>}
       <details>
-        <summary>Source URL details</summary>
+        <summary>How this link was built</summary>
         <code>{viewSource.url}</code>
         {viewSource.state === "constructed" && (
           <p>
@@ -35,6 +34,52 @@ function ViewSourceLink({ viewSource }: { viewSource: ViewSource }) {
         )}
       </details>
     </>
+  );
+}
+
+/**
+ * The seam: what the catalog could not supply, directly above what the join did.
+ *
+ * This is the product's entire argument, and it was previously only assertable
+ * by reading three separate cards and inferring the relationship between them.
+ * Both halves are recorded facts, not framing: the event states the gap on
+ * `unavailable[]` with its source and reason, and states the resolved path on
+ * `code`. Putting them in one element in that order exhibits the claim instead
+ * of asserting it, and it is the one place on this screen where the two systems
+ * are visibly doing different work.
+ *
+ * If the event states no gap for the producing path, the upper half is omitted
+ * rather than invented. A seam with nothing on the catalog side is a dataset the
+ * catalog could resolve on its own, and saying otherwise would be a fabricated
+ * contrast on the one screen that must not have any.
+ */
+function ResolutionSeam({ model, gap }: { model: CockpitViewModel; gap: StatedGap | undefined }) {
+  return (
+    <article className="seam" aria-label="Producing file resolution">
+      <p className="eyebrow">Producing file</p>
+
+      {gap && (
+        <div className="seam__row seam__row--withheld">
+          <span className="seam__system">
+            {gap.source === "datahub" ? "DataHub" : gap.source === "workspacejson" ? "workspace.json" : "Joined"}
+          </span>
+          <span className="seam__value">
+            <span className="seam__field mono">{gap.field}</span>
+            <span className="seam__reason">{gap.detail}</span>
+          </span>
+        </div>
+      )}
+
+      <div className="seam__row seam__row--resolved">
+        <span className="seam__system">
+          <SourceTag source={model.producerPath.source} />
+        </span>
+        <span className="seam__value">
+          <strong className="seam__path mono">{model.producerPath.text}</strong>
+          <ViewSourceLink viewSource={model.viewSource} />
+        </span>
+      </div>
+    </article>
   );
 }
 
@@ -50,7 +95,7 @@ function LineageNode({ edge, showSource }: { edge: ImpactEdge; showSource: boole
     <li className="topology__node">
       <span className="topology__name">{edge.node}</span>
       <span className="topology__meta">
-        {edge.degree !== null && <span className="chip chip--degree">degree {edge.degree}</span>}
+        {edge.degree !== null && <span className="chip chip--degree">{edge.degree}</span>}
         {/*
           The resolution axis, which this view never rendered at all: `state` was
           in the model and on no screen. It stays a separate chip from the source
@@ -87,12 +132,13 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
     <section className="lineage-band" aria-label="Lineage topology">
       <header className="lineage-band__head">
         <div>
+          <p className="eyebrow">Declared lineage</p>
           <h2>Lineage read and completeness are separate</h2>
-          <p>
-            Read: {model.read}. Completeness: {model.completeness}.{" "}
-            {undirected.length > 0 && model.completeness !== "complete-against-pinned-manifest"
-              ? "No observed edges does not mean no impact."
-              : "Observed by the catalog lineage read."}
+          <p className="lineage-band__note">
+            The read {READ_NOTE[model.read]}.{" "}
+            {model.completeness === "complete-against-pinned-manifest"
+              ? "The set is complete against the pinned manifest."
+              : "Whether the set is complete is not established, so an absent edge is not evidence of no impact."}
           </p>
         </div>
         {sharedSource && <SourceTag source={sharedSource} />}
@@ -135,31 +181,32 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
   );
 }
 
+const READ_NOTE: Record<CockpitViewModel["read"], string> = {
+  ok: "returned",
+  failed: "failed",
+  "not-queried": "was never made",
+};
+
 /**
- * What the join contributes, then what the catalog read.
+ * The join first, the catalog second.
  *
- * The claim row used to lead with a `Dataset identity` card restating the URN
- * printed a hundred pixels above it in the hero. That spent one of three slots
- * in the row that carries the join on a repetition, and the two cards that
- * actually answer "what does workspace.json add" were crowded into the rest. The
- * URN is in the hero, tagged with its source; the row is now the join alone.
+ * Order is the argument. This screen exists to show that joining repository
+ * evidence resolves what the catalog alone cannot, and it previously opened with
+ * three small cards of preamble followed by a wall of catalog output, so a cold
+ * reader's first seconds landed on the half that is not the product.
  */
 export function ImpactView({ model }: { model: CockpitViewModel }) {
+  const producerGap = model.receipt.statedGaps.find((gap) => gap.field === PRODUCER_PATH_FIELD);
+
   return (
     <section aria-label="Impact evidence">
-      <div className="identity-grid identity-grid--join">
-        <article className="claim claim--identifier">
-          <p>Producer file</p>
-          <strong>{model.producerPath.text}</strong>
-          <SourceTag source={model.producerPath.source} />
-          <ViewSourceLink viewSource={model.viewSource} />
-        </article>
-        <article className="claim claim--evidence">
-          <p>Repository evidence</p>
-          <strong>{model.repositoryEvidence.text}</strong>
-          <SourceTag source={model.repositoryEvidence.source} />
-        </article>
-      </div>
+      <ResolutionSeam model={model} gap={producerGap} />
+
+      <article className="claim claim--evidence">
+        <p className="eyebrow">Repository evidence</p>
+        <strong>{model.repositoryEvidence.text}</strong>
+        <SourceTag source={model.repositoryEvidence.source} />
+      </article>
 
       <TopologyBand model={model} />
     </section>

@@ -37,9 +37,8 @@ describe("the Impact frame spends its space on the join", () => {
     // Standing between the card row and the lineage panel it read as unowned
     // page furniture, and nothing said which file it pointed at.
     shell();
-    const producerCard = screen.getByText("Producer file").closest("article");
-    expect(producerCard).not.toBeNull();
-    expect(within(producerCard!).getByRole("link", { name: "View Source" })).toBeTruthy();
+    const producerCard = screen.getByLabelText("Producing file resolution");
+    expect(within(producerCard).getByRole("link", { name: "View source at this revision" })).toBeTruthy();
   });
 
   it("lays lineage out by direction rather than as one flat list", () => {

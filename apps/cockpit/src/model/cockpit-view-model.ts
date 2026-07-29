@@ -207,8 +207,18 @@ export const unresolvedDatasetsSchema = z.discriminatedUnion("state", [
 ]);
 
 /** An absence the event stated. Always named — that is what `unavailable` is for. */
+/**
+ * One field the event states it could not supply, and which system could not.
+ *
+ * `source` is carried because a gap without it cannot say *whose* gap it is, and
+ * that distinction is the product's whole argument: "the catalog does not expose
+ * this" and "the artifact could not resolve it" are different findings with
+ * different fixes. The contract records it on `unavailable[].source`; dropping it
+ * in projection made every gap read as an anonymous absence.
+ */
 export const statedGapSchema = z.object({
   field: z.string().min(1),
+  source: z.enum(["datahub", "workspacejson", "joined"]),
   reason: z.string().min(1),
   detail: z.string().min(1),
 });
@@ -402,6 +412,8 @@ export type PlanComparisonView = z.infer<typeof planComparisonSchema>;
 export type ViewSource = z.infer<typeof viewSourceSchema>;
 
 export type ImpactEdge = z.infer<typeof impactEdgeSchema>;
+
+export type StatedGap = z.infer<typeof statedGapSchema>;
 export type MutationAcceptance = z.infer<typeof mutationAcceptanceSchema>;
 export type IntendedStateObservation = z.infer<typeof intendedStateObservationSchema>;
 export type TerminalWritebackDisposition = z.infer<typeof terminalWritebackDispositionSchema>;

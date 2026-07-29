@@ -215,7 +215,7 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes): SourceEv
         state: "unavailable",
         reason: `${event.accounting.datasetsUnresolved} dataset(s) went unresolved. This event predates the accounting.unresolvedRecords field, so it records the count without per-dataset names, and none are invented here.`,
       },
-    statedGaps: event.unavailable.map((u) => ({ field: u.field, reason: u.reason, detail: u.detail })),
+    statedGaps: event.unavailable.map((u) => ({ field: u.field, source: u.source, reason: u.reason, detail: u.detail })),
     provenance: {
       subjectRepository: fromNullable(event.provenance.corpus.repository, "Joined", "The event states no subject repository, so no workspace claim on it can be checked."),
       subjectRevision: fromNullable(event.provenance.corpus.commit, "Joined", "The event states no subject revision, so no claim about it is revision-bound."),
