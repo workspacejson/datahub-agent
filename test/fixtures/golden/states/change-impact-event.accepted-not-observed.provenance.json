@@ -1,0 +1,17 @@
+{
+  "fixture": "change-impact-event.accepted-not-observed.json",
+  "state": "Mutation accepted; intended state not observed",
+  "why": "HAC-217 rules this a mandatory terminal state: acceptance is not success, and the distinction is central to the trust surface. HAC-226 binds it into Receipts.",
+  "derivedFrom": "evaluation/hac-152/live-event-with-writeback.json",
+  "derivedFromSha256": "1a8634332b8363b15c4c88e7606327c1ab5d6751bf3beb582b0541934cfd00e4",
+  "generated_by": "scripts/derive-state-fixtures.mjs",
+  "command": "node scripts/derive-state-fixtures.mjs",
+  "transformation": [
+    "writeback.observation.status: settled -> timed-out",
+    "writeback.observation.polls: 1 -> 12, elapsedMs raised to the full timeoutMs",
+    "writeback.succeeded: true -> false",
+    "writeback.after.evidenceTier: set to the before-state value, so the after-state reads cleanly and shows the pre-mutation answer"
+  ],
+  "note": "The after-state read still succeeds. That is the point: `read: ok` and a stale answer are two facts, and a surface collapsing them would lose the distinction exactly where it matters. Every mutation attempt is left untouched and still succeeded, so the mutation is genuinely accepted and genuinely unconfirmed.",
+  "fixtureSha256": "e13d9e4493bbd41b6eaba6714e0b9e51429c8be01ebcd164cf36bb79500823d3"
+}
