@@ -23,14 +23,45 @@
  */
 
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const fixtures = join(root, "test/fixtures");
+
+/**
+ * Every directory holding committed evidence, not just the test fixtures.
+ *
+ * `evaluation/` was outside this rule when it was written, which meant the first
+ * new evidence to land after it — HAC-248's catalog baseline — would have been
+ * grandfathered past the guard rather than being the first thing it checked. A
+ * provenance rule scoped to the directory that already complied is a rule that
+ * can only ever ratify the past.
+ */
+const EVIDENCE_DIRS = ["test/fixtures", "evaluation"].map((d) => join(root, d));
+
+/**
+ * A `SHA256SUMS` file is a provenance record too.
+ *
+ * `evaluation/hac-152/` predates the sidecar convention and records its digests
+ * in the coreutils format instead, asserted by `hac-152-live-package.test.ts`.
+ * That is a working mechanism with a passing check, so this recognises it rather
+ * than demanding it be converted — relocating or reformatting provenance that
+ * already works is risk spent for no evidentiary gain.
+ */
+function sha256sumsIn(dir: string): Map<string, string> {
+  const file = join(dir, "SHA256SUMS");
+  if (!existsSync(file)) return new Map();
+  const entries = new Map<string, string>();
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    const match = line.match(/^([0-9a-f]{64})\s+\*?(.+)$/);
+    const [, digest, name] = match ?? [];
+    if (digest && name) entries.set(name.trim(), digest);
+  }
+  return entries;
+}
 
 /**
  * Fixtures committed before this rule existed, each with the reason it carries
@@ -46,15 +77,15 @@ const WITHOUT_PROVENANCE: Record<string, string> = {
   // and `name` is populated on dbt edges and null on every duckdb one — a
   // partial-field asymmetry that comes from what the catalog returned, not from
   // an author. `57df55b` regenerated it from a clean instance.
-  "golden/change-impact-event.root.json":
+  "test/fixtures/golden/change-impact-event.root.json":
     "Emitted against the Jaffle corpus before the sidecar convention existed. Its 12 upstream / 1 downstream edges are a real observation from an instance that had jaffle ingested; the catalog has since been re-ingested with transfermarkt only, so the figures are stale rather than wrong. HAC-145 rebinds this surface to the Transfermarkt package.",
-  "golden/change-impact-event.nested.json":
+  "test/fixtures/golden/change-impact-event.nested.json":
     "As above, for the nested-path proof. Same emitter, same corpus pinning, same missing sidecar.",
-  "readiness/game_events.upstream.json":
+  "test/fixtures/readiness/game_events.upstream.json":
     "Captured by scripts/derive-readiness-manifest.mjs under HAC-231; the derivation and its command are recorded in evaluation/hac-231/readiness-manifest-derivation.md rather than in a sidecar.",
-  "readiness/game_events.downstream.json":
+  "test/fixtures/readiness/game_events.downstream.json":
     "As above, for the downstream direction. Same script, same pinned revision, same missing sidecar.",
-  "proof-corpus/manifest.json":
+  "test/fixtures/proof-corpus/manifest.json":
     "The dbt manifest as produced by the pinned Jaffle corpus at 36bde6cb. It is an input to the fixtures rather than a fixture this repository derived, and its provenance is the corpus pin recorded in evaluation/proof-corpus.md.",
 };
 
@@ -74,7 +105,7 @@ function artifactFor(sidecar: string): string {
   return sidecar.replace(/[-.]provenance\.json$/, ".json");
 }
 
-const everyJson = walk(fixtures);
+const everyJson = EVIDENCE_DIRS.flatMap((d) => walk(d));
 const sidecars = everyJson.filter((f) => isSidecar(f));
 const artifacts = everyJson.filter((f) => !isSidecar(f));
 
@@ -85,7 +116,7 @@ describe("a sidecar's digest accounts for the artifact it describes", () => {
     expect(sidecars.length).toBeGreaterThan(0);
   });
 
-  it.each(sidecars.map((s) => [relative(fixtures, s), s] as const))("%s", (_label, sidecarPath) => {
+  it.each(sidecars.map((s) => [relative(root, s), s] as const))("%s", (_label, sidecarPath) => {
     const artifactPath = artifactFor(sidecarPath);
     const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8")) as Record<string, unknown>;
 
@@ -107,9 +138,21 @@ describe("a sidecar's digest accounts for the artifact it describes", () => {
 });
 
 describe("every committed fixture accounts for where it came from", () => {
-  it.each(artifacts.map((a) => [relative(fixtures, a), a] as const))("%s", (label, artifactPath) => {
+  it.each(artifacts.map((a) => [relative(root, a), a] as const))("%s", (label, artifactPath) => {
     const hasSidecar = sidecars.some((s) => artifactFor(s) === artifactPath);
     if (hasSidecar) return;
+
+    // A SHA256SUMS line is a provenance record in the older format.
+    const sums = sha256sumsIn(dirname(artifactPath));
+    const recorded = sums.get(basename(artifactPath));
+    if (recorded) {
+      const actual = createHash("sha256").update(readFileSync(artifactPath)).digest("hex");
+      expect(
+        actual,
+        `${label} is listed in SHA256SUMS as ${recorded} but hashes to ${actual}.`,
+      ).toBe(recorded);
+      return;
+    }
 
     expect(
       WITHOUT_PROVENANCE,
@@ -121,7 +164,7 @@ describe("every committed fixture accounts for where it came from", () => {
   it("keeps the exemption list honest — no entry for a fixture that no longer exists", () => {
     // An exemption outliving its fixture is a reason nobody can check, and it
     // silently widens the rule for whatever is added at that path next.
-    const present = new Set(artifacts.map((a) => relative(fixtures, a)));
+    const present = new Set(artifacts.map((a) => relative(root, a)));
     for (const exempt of Object.keys(WITHOUT_PROVENANCE)) {
       expect(present, `WITHOUT_PROVENANCE names ${exempt}, which is not committed`).toContain(exempt);
     }
