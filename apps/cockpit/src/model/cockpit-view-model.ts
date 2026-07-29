@@ -213,6 +213,12 @@ export const receiptSchema = z.object({
     afterStateFreshness: z.enum(["fresh", "stale", "not-read"]),
     intendedStateObservation: intendedStateObservationSchema,
     terminalDisposition: terminalWritebackDispositionSchema,
+    /**
+     * Derived in `writeback-axes` from the raw receipt, because the asserted
+     * fields are only distinguishable there. Carried on the model rather than
+     * recomputed in the refinement so the check and the value cannot disagree.
+     */
+    beforeMatchedIntent: z.boolean(),
   }),
   evaluation: z.object({
     pairedSpread: evidenceValueSchema,
@@ -238,10 +244,24 @@ export const receiptSchema = z.object({
     context.addIssue({ code: "custom", path: ["writeback", "terminalDisposition"], message: "Success requires observed intended state." });
   }
   // `noop` is intent-relative: nothing was written because the catalog already
-  // held what was intended. That is only sayable when the before-state and the
-  // intent are the same observation.
-  if (receipt.writeback.terminalDisposition === "noop"
-      && JSON.stringify(receipt.writeback.beforeState) !== JSON.stringify(receipt.writeback.intent)) {
+  // held what was intended. That is only sayable when the before-state already
+  // carried everything intent asserted.
+  //
+  // This used to `JSON.stringify` the *rendered* `beforeState` and `intent`
+  // display values and compare them. Two defects in one line. It compared
+  // presentation, so it would break the next time copy changed. And it treated
+  // every field of the rendered state as asserted — so a writeback that
+  // deliberately declined to write a link, recording `linkOmittedBecause`, read
+  // as intending the link's absence and therefore as mismatching a before-state
+  // that already had one.
+  //
+  // Both committed golden fixtures failed on that, and it was invisible because
+  // `select-adapter` threw for every non-placeholder mode, so nothing had ever
+  // rendered the judge package through the adapter that will render it to a
+  // judge. `beforeMatchedIntent` is derived in `writeback-axes` from the raw
+  // receipt, where the asserted fields are still distinguishable from the
+  // rendered string.
+  if (receipt.writeback.terminalDisposition === "noop" && !receipt.writeback.beforeMatchedIntent) {
     context.addIssue({ code: "custom", path: ["writeback", "terminalDisposition"], message: "Noop is valid only when before-state already matched intent." });
   }
 });

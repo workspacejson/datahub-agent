@@ -48,7 +48,7 @@ export const provisionalSource = {
       immutableSourceUrl: { state: "placeholder", value: "<immutable source URL>" },
       limitations: { state: "placeholder", value: "<limitations>" },
     },
-    writeback: { intent: { state: "placeholder", value: "<intent>" }, beforeState: { state: "placeholder", value: "<before state>" }, mutationResponse: "not-attempted", afterStateRead: "not-queried", bothStatesRead: false, afterStateFreshness: "not-read", intendedStateObservation: "not-attempted", terminalDisposition: "not-applicable" },
+    writeback: { intent: { state: "placeholder", value: "<intent>" }, beforeState: { state: "placeholder", value: "<before state>" }, mutationResponse: "not-attempted", afterStateRead: "not-queried", bothStatesRead: false, afterStateFreshness: "not-read", intendedStateObservation: "not-attempted", terminalDisposition: "not-applicable", beforeMatchedIntent: false },
     evaluation: {
       pairedSpread: { state: "placeholder", value: "<paired spread>" },
       locBaseline: { state: "placeholder", value: "<LOC baseline>" },
