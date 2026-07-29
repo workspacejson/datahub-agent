@@ -89,11 +89,14 @@ describe("projecting the frozen contract onto the cockpit", () => {
     expect(projectEvent(event, "impact").resolutionDisposition).toBe(expected);
   });
 
-  it("claims no plan delta, because the event carries no plan", () => {
-    // The DataHub-only/joined comparison is HAC-218's surface. Synthesising a
-    // delta here would put an invented claim on the screen whose whole job is
-    // showing a real one.
-    expect(projectEvent(contractEvent(), "impact").planDeltas).toEqual([]);
+  it("states the comparison unavailable rather than rendering an empty delta list", () => {
+    // An event carries evidence, not plans. Reporting that as `deltas: []` would
+    // make "nobody compared" indistinguishable from "the comparison found no
+    // difference" — opposite findings, one rendering.
+    const comparison = projectEvent(contractEvent(), "impact").planComparison;
+    expect(comparison.state).toBe("unavailable");
+    if (comparison.state !== "unavailable") throw new Error("unreachable");
+    expect(comparison.reason).toContain("carries evidence, not plans");
   });
 
   it("reads an enriched event, which the pure contract schema rejects outright", () => {

@@ -29,7 +29,56 @@ export const cockpitRouteSchema = z.enum(["impact", "change-plan", "receipts"]);
 export const claimSourceSchema = z.enum(["DataHub", "workspace.json", "Joined"]);
 export const sourceClaimSchema = z.object({ text: z.string().min(1), source: claimSourceSchema });
 export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
-export const planDeltaSchema = z.object({ kind: z.enum(["added", "removed", "reordered", "constrained", "uncertainty-changed"]), label: z.string().min(1), reason: z.string().min(1), source: claimSourceSchema });
+/**
+ * One semantic plan change, and the way back to what produced it.
+ *
+ * `evidenceRefs` is carried through from the comparison artifact rather than
+ * flattened into the source tag, because `PlanComparisonArtifact` refuses to
+ * emit a delta that cites nothing — a plan change asserted with nothing behind
+ * it is the claim that contract exists to prevent. A view that dropped the refs
+ * would be laxer than its own source, and the one screen whose job is to show a
+ * real plan change would be unable to say which evidence backs it.
+ */
+export const planDeltaSchema = z.object({
+  kind: z.enum(["added", "removed", "reordered", "constrained", "uncertainty-changed"]),
+  label: z.string().min(1),
+  reason: z.string().min(1),
+  source: claimSourceSchema,
+  evidenceRefs: z.array(z.string().min(1)).min(1),
+});
+
+/**
+ * Whether a DataHub-only/joined comparison was observed, and if not, why not.
+ *
+ * `planDeltas: PlanDelta[]` could not express this. An empty array had to serve
+ * two opposite findings: *the comparison ran and the joined context changed
+ * nothing*, and *no comparison exists*. The first is a result — evidence that
+ * joining the repository made no difference to the plan. The second means nobody
+ * looked. Rendering both as an empty list told a judge the same thing about a
+ * measurement and about its absence.
+ *
+ * So the state is the discriminator, matching `evidenceValueSchema` above:
+ *
+ * - `observed` — a comparison was run. `deltas` may be empty, and an empty
+ *   `deltas` here now means exactly one thing.
+ * - `unavailable` — no comparison was supplied, and the reason says why.
+ *
+ * The comparison's own identity travels with it. A delta list is only meaningful
+ * relative to the event it was derived from and the run that produced it, so
+ * `eventDigest`, `taskId` and `model` are not decoration — they are what lets a
+ * reader check that both plans answered the same question against the same
+ * evidence.
+ */
+export const planComparisonSchema = z.discriminatedUnion("state", [
+  z.object({
+    state: z.literal("observed"),
+    deltas: z.array(planDeltaSchema),
+    taskId: z.string().min(1),
+    model: z.string().min(1),
+    eventDigest: z.string().min(1),
+  }),
+  z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
+]);
 export const cockpitStateNameSchema = z.enum([
   "loading", "unavailable", "partial", "ambiguous", "indeterminate", "contradictory", "error", "accepted-not-observed", "success",
 ]);
@@ -205,7 +254,7 @@ const cockpitViewModelBaseSchema = z.object({
    */
   immutableViewSourceUrl: z.string().url().nullable(),
   impactEdges: z.array(impactEdgeSchema),
-  planDeltas: z.array(planDeltaSchema),
+  planComparison: planComparisonSchema,
   receipt: receiptSchema,
 });
 
@@ -265,6 +314,8 @@ export type CockpitRoute = z.infer<typeof cockpitRouteSchema>;
 export type SourceMode = z.infer<typeof sourceModeSchema>;
 export type CockpitStateName = z.infer<typeof cockpitStateNameSchema>;
 export type ClaimSource = z.infer<typeof claimSourceSchema>;
+export type PlanComparisonView = z.infer<typeof planComparisonSchema>;
+export type PlanDelta = z.infer<typeof planDeltaSchema>;
 
 export const sourceEventSchema = cockpitViewModelBaseSchema.omit({ sourceMode: true });
 export type SourceEvent = z.infer<typeof sourceEventSchema>;

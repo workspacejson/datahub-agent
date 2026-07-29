@@ -119,16 +119,30 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
 /**
  * Project a validated event onto what the cockpit renders.
  *
- * `planDeltas` is deliberately empty. The event contract carries evidence, not
- * a plan — the DataHub-only/joined comparison is HAC-218's surface, and
- * synthesising a delta here would put an invented claim on the one screen whose
- * job is to show a real one.
+ * `planComparison` is `unavailable` here, and says so in the reason rather than
+ * rendering as an empty delta list. The event contract carries evidence, not a
+ * plan: a comparison is a separate, separately-versioned artifact, and
+ * synthesising a delta from an event alone would put an invented claim on the one
+ * screen whose job is to show a real one. `projectBundle` below is the path that
+ * produces an observed comparison, from a `JudgeRunBundle` that actually holds
+ * one.
  *
  * The `receipt` is projected here, under the contract's own accounting
  * vocabulary, and every field the event does not carry is `unavailable` with a
  * reason rather than a plausible string. HAC-226 replaces those stated absences
  * with observed evidence; nothing here needs to change for it to.
  */
+/**
+ * Why a view built from an event alone has no comparison.
+ *
+ * One constant, used both by `projectEvent` and as `toComparisonState`'s
+ * null-bundle reason, so the two paths cannot come to describe the same absence
+ * in two different ways.
+ */
+export const NO_COMPARISON_SUPPLIED =
+  "this view was built from a change-impact event alone. The event contract carries evidence, not plans: " +
+  "a DataHub-only/joined comparison is a separate artifact bound to the event by digest, and none was supplied";
+
 /** An observation, tagged with the system that made it. */
 const observed = (value: string, source: ClaimSource): EvidenceValue =>
   ({ state: "observed", value, source });
@@ -271,7 +285,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     // support — see the note on `immutableViewSourceUrl` in the view model.
     immutableViewSourceUrl: event.code.sourceUrl,
     impactEdges: impactEdges(event),
-    planDeltas: [],
+    planComparison: { state: "unavailable", reason: NO_COMPARISON_SUPPLIED },
     receipt: projectReceipt(event),
   };
 }
@@ -308,3 +322,4 @@ export function readChangeImpactEvent(
   }
   return { ok: true, event: projectEvent(parsed.data as ChangeImpactEvent, route) };
 }
+

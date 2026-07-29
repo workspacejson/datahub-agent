@@ -1,0 +1,146 @@
+{
+  "eventVersion": "1.3",
+  "provenance": {
+    "producedAt": "2026-07-29T01:48:36.086Z",
+    "producer": {
+      "name": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "datahub": {
+      "gmsUrl": "http://localhost:8080",
+      "gmsVersion": null
+    },
+    "corpus": {
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+    },
+    "workspaceArtifact": {
+      "producedBy": "@workspacejson/cli",
+      "fileIndexKeys": 131,
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "revision": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+      "integrity": "exact-match"
+    }
+  },
+  "subject": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)"
+  },
+  "datahub": {
+    "name": "game_events",
+    "platform": "dbt",
+    "description": "",
+    "upstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+        "name": "base_game_events",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+        "name": "base_games",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "game_lineups",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+        "name": "games",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+        "name": "duck.dev.base_game_events",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+        "name": "duck.dev.base_games",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "duck.transfermarkt_scraper.game_lineups",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)",
+        "name": "duck.transfermarkt_scraper.games",
+        "degree": 4
+      }
+    ],
+    "downstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.game_events,PROD)",
+        "name": "duck.dev.game_events",
+        "degree": 1
+      }
+    ],
+    "lineageObservation": {
+      "upstreams": {
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 8
+      },
+      "downstreams": {
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 1
+      }
+    },
+    "schemaFieldCount": 2,
+    "owners": [],
+    "domain": null
+  },
+  "code": {
+    "dbtUniqueId": "model.transfermarkt_datasets.game_events",
+    "dbtFilePath": "models/curated/game_events.sql",
+    "repositoryRelativePath": "dbt/models/curated/game_events.sql",
+    "projectPrefix": "dbt",
+    "method": "manifest-join",
+    "sourceUrl": null
+  },
+  "partners": [],
+  "evidence": {
+    "records": [
+      {
+        "claim": "producing file dbt/models/curated/game_events.sql is tracked in the corpus-matched workspace.json artifact",
+        "observation": "Artifact repository, revision, and repository-relative source path matched exactly.",
+        "source": "workspacejson",
+        "checkExecuted": true
+      }
+    ],
+    "tier": "VERIFIED"
+  },
+  "accounting": {
+    "datasetsRequested": 1,
+    "datasetsResolved": 1,
+    "datasetsUnresolved": 0,
+    "nodesDropped": 0,
+    "nodesExcluded": {}
+  },
+  "unavailable": [
+    {
+      "field": "provenance.datahub.gmsVersion",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr."
+    },
+    {
+      "field": "code.repositoryRelativePath",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact."
+    },
+    {
+      "field": "partners",
+      "source": "workspacejson",
+      "reason": "indeterminate",
+      "detail": "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.",
+      "completeness": "not-established",
+      "observedCount": 0
+    }
+  ]
+}

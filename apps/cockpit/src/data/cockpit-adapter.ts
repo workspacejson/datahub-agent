@@ -14,7 +14,7 @@ export interface CockpitSourceAdapter {
 
 export type { CockpitStateName } from "../model/cockpit-view-model";
 
-function normalize(event: SourceEvent, sourceMode: SourceMode): CockpitViewModel {
+export function normalize(event: SourceEvent, sourceMode: SourceMode): CockpitViewModel {
   return cockpitViewModelSchema.parse({ ...event, sourceMode });
 }
 
