@@ -27,11 +27,6 @@ import {
   type WorkspaceIntegrity,
 } from "@contract";
 
-import {
-  toComparisonState,
-  type PlanComparisonArtifact,
-} from "@comparison";
-
 import type {
   ClaimSource,
   CockpitRoute,
@@ -328,72 +323,3 @@ export function readChangeImpactEvent(
   return { ok: true, event: projectEvent(parsed.data as ChangeImpactEvent, route) };
 }
 
-/**
- * Project the comparison half of a bundle.
- *
- * Every delta is tagged `Joined`, and that is a claim about how deltas come to
- * exist rather than a default. A delta is the difference between a plan made
- * without repository evidence and one made with it: neither side alone produces
- * it, so neither `DataHub` nor `workspace.json` is the honest tag. Reading a
- * finer source out of `evidenceRefs` would invent precision the comparison never
- * asserted — the refs are carried through instead, so a reader follows them to
- * the evidence rather than trusting a label derived from them.
- */
-function projectComparison(comparison: PlanComparisonArtifact): SourceEvent["planComparison"] {
-  return {
-    state: "observed",
-    // Both plans are checked to share one run identity by `validateBundle`, so
-    // reading the joined side is not a choice of sides.
-    taskId: comparison.joinedPlan.run.taskId,
-    model: comparison.joinedPlan.run.model,
-    eventDigest: comparison.eventDigest,
-    deltas: comparison.deltas.map((delta) => ({
-      kind: delta.kind,
-      label: delta.label,
-      reason: delta.reason,
-      source: "Joined" as const,
-      evidenceRefs: [...delta.evidenceRefs],
-    })),
-  };
-}
-
-
-/**
- * Read a `JudgeRunBundle` — an event plus the comparison derived from it.
- *
- * The two halves fail differently, because they promise different things. A
- * malformed event has no view at all, so it is the only hard failure here. A
- * comparison that is absent or does not validate still has an honest rendering:
- * `toComparisonState` turns it into `unavailable` carrying the problems, which
- * the cockpit can show. Crashing instead would lose the diagnosis, and quietly
- * rendering the surviving deltas of a failed validation would turn a partial
- * artifact into a confident one — the failure that function exists to refuse.
- *
- * The comparison's own invariants are not re-implemented here. `validateBundle`,
- * reached through `toComparisonState`, is what checks that the digest binds the
- * comparison to *this* event, that both plans share one task, model, prompt and
- * settings, and that every delta cites evidence the event actually contains. A
- * second copy of those rules in the view layer is a second place for them to
- * drift.
- */
-export function readJudgeRunBundle(
-  bundle: unknown,
-  route: CockpitRoute,
-): { ok: true; event: SourceEvent } | { ok: false; problems: string[] } {
-  const candidateEvent = (bundle as { event?: unknown } | null | undefined)?.event;
-  const parsed = readChangeImpactEvent(candidateEvent, route);
-  if (!parsed.ok) {
-    return { ok: false, problems: parsed.problems.map((problem) => `event: ${problem}`) };
-  }
-
-  const state = toComparisonState(bundle, NO_COMPARISON_SUPPLIED);
-  return {
-    ok: true,
-    event: {
-      ...parsed.event,
-      planComparison: state.status === "observed"
-        ? projectComparison(state.comparison)
-        : { state: "unavailable", reason: state.reason },
-    },
-  };
-}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createAdapter, createComparisonAdapter, fixtureLiveParity, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
+import { createAdapter, fixtureLiveParity, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
+import { createComparisonAdapter } from "./comparison-adapter";
 import { cockpitViewModelSchema } from "../model/cockpit-view-model";
 import { contractEvent } from "../test/contract-event";
 import { judgeRunBundle } from "../test/judge-run-bundle";

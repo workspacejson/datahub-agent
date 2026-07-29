@@ -15,7 +15,8 @@ import { digestEvent } from "@comparison";
 
 import { contractEvent } from "../test/contract-event";
 import { RUN, judgeRunBundle } from "../test/judge-run-bundle";
-import { NO_COMPARISON_SUPPLIED, readChangeImpactEvent, readJudgeRunBundle } from "./from-change-impact-event";
+import { NO_COMPARISON_SUPPLIED, readChangeImpactEvent } from "./from-change-impact-event";
+import { readJudgeRunBundle } from "./from-judge-run-bundle";
 import { cockpitViewModelSchema } from "./cockpit-view-model";
 
 describe("projecting a JudgeRunBundle", () => {
