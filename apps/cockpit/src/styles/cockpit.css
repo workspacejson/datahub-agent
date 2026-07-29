@@ -45,14 +45,31 @@
 }
 
 /* Clear space is the bracket arm length on all four sides, which at a 24px mark
-   resolves to the 18px the spec calls for in a 60px header. */
-.wordmark { display: flex; align-items: center; gap: var(--sp-3); margin: 0; padding-left: 18px; color: var(--text-heading); }
-.wordmark__mark { flex: none; display: block; }
+   resolves to the 18px the spec calls for in a 60px header.
+
+   Spacing is per-element rather than a single flex `gap`, because the interval
+   inside the lockup and the interval separating it from the descriptor are doing
+   opposite jobs and cannot be one value. With a uniform 12px gap the three
+   measured intervals came out 13.4 / 16 / 16: near enough to equal that the eye
+   parsed four peer elements instead of a lockup followed by a caption, so the
+   grouping did not exist.
+
+   It also broke the mark's own rule. The word is set to the bracket *interior* so
+   the brackets read as containing it; at 13px the brackets read as a separate
+   glyph standing nearby, which is the exact failure that rule exists to prevent.
+   The bracket's right arm and the `t` ascender are also two heavy verticals, and
+   at an ambiguous distance they compete. Decisive tightness resolves both. */
+.wordmark { display: flex; align-items: center; margin: 0; padding-left: 18px; color: var(--text-heading); }
+/* 6px of margin plus the 1.4px of internal padding the viewBox carries on this
+   side lands the visual interval at roughly 7px, against 16px at the divider. */
+.wordmark__mark { flex: none; display: block; margin-right: 6px; }
 /* Not tinted emerald: emerald is load bearing in this UI and means workspace.json
    contributed the material. Not set in mono: mono is data. The mark's own
    brackets are emerald and its strokes take `currentColor` from this rule. */
 .wordmark__word { font-size: var(--fs-lg); font-weight: 800; letter-spacing: var(--ls-tight); line-height: 1; }
-.wordmark__rule { width: 1px; align-self: stretch; margin: 0 var(--sp-1); background: var(--border-strong); }
+/* Unchanged at 16px a side. The external interval is the one that was already
+   correct; only the internal one moved. */
+.wordmark__rule { width: 1px; align-self: stretch; margin: 0 var(--sp-4); background: var(--border-strong); }
 /* A caption on the brand, never a second brand. */
 .wordmark__product {
   color: var(--text-muted); font-family: var(--font-mono);
