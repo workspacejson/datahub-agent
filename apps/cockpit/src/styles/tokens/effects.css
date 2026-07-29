@@ -1,0 +1,52 @@
+/* ─────────────────────────────────────────────────────────────
+   EFFECTS — shadows, glows, gradients, motion — workspace.json
+   The brand's atmosphere: emerald radial glows over near-black,
+   a faint horizontal scanline grid, and gradient display text.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Shadows ── */
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.08);
+  --shadow-code: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.35);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* ── Focus ── */
+  --focus-ring: 2px solid var(--wj-accent);
+  --focus-offset: 2px;
+
+  /* ── Gradients ── */
+  --gradient-brand: linear-gradient(135deg, #00c896 0%, #7fffd4 100%); /* @kind color */
+  --gradient-hero-title: linear-gradient(135deg, #00c896 0%, #7fffd4 100%); /* @kind color */
+
+  /* Ambient page glow — layer under content on the app canvas */
+  --glow-page:
+    radial-gradient(circle at top right,
+      color-mix(in srgb, var(--wj-accent) 12%, transparent), transparent 28rem),
+    radial-gradient(circle at left 18rem,
+      color-mix(in srgb, var(--wj-accent-high) 8%, transparent), transparent 24rem);
+
+  /* Faint horizontal scanline grid (mask to fade downward) */
+  --grid-lines: linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px); /* @kind other */
+  --grid-size: 100% 3rem;
+
+  /* Tint helpers (accent washes used across badges, hovers, selection) */
+  --accent-wash-4: color-mix(in srgb, var(--wj-accent) 4%, transparent);
+  --accent-wash-6: color-mix(in srgb, var(--wj-accent) 6%, transparent);
+  --accent-wash-15: color-mix(in srgb, var(--wj-accent) 15%, transparent);
+  --accent-wash-25: color-mix(in srgb, var(--wj-accent) 25%, transparent);
+
+  /* ── Motion ── */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --dur-fast: 120ms; /* @kind other */
+  --dur-base: 150ms; /* @kind other */
+  --dur-slow: 200ms; /* @kind other */
+  --transition-interactive: color var(--dur-base) ease,
+    border-color var(--dur-base) ease, background var(--dur-base) ease,
+    transform var(--dur-base) ease;
+}
+
+@keyframes wj-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

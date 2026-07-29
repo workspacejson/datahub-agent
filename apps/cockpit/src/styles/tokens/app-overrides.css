@@ -1,0 +1,25 @@
+/* ─────────────────────────────────────────────────────────────
+   Deviations from the design system, stated rather than edited in.
+
+   The four token files beside this one are verbatim copies. Anything this app
+   needs to differ on belongs here, so a future sync can diff the copies against
+   the system and see nothing, and read this file to find out where we depart and
+   why. Editing a vendored token in place would hide the deviation as fidelity.
+
+   Loaded after the token files, so these win.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* The system maps `--text-faint` to `--wj-gray-4` (#5d7a70). Every use of it
+     in the cockpit is 11px or 12px: eyebrows, card labels, evidence refs. On
+     `--wj-bg-elevated` (#0b1714) that measures 3.9:1, under the 4.5:1 WCAG AA
+     floor for text that size, and axe fails the frame on it.
+
+     Raised to `--wj-gray-3`, which clears the floor and still reads clearly
+     quieter than body text. `--wj-gray-4` is untouched and remains correct for
+     larger text and for non-text use.
+
+     This is one value, fixed because the first frame would otherwise have
+     shipped a new AA failure. HAC-220 owns the full contrast audit. */
+  --text-faint: var(--wj-gray-3);
+}
