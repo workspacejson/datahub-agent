@@ -44,7 +44,7 @@
  *     --workspace-artifact FILE
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -420,7 +420,7 @@ const { assessWorkspaceEvidence, readArtifactIdentity } = await load(
   "src/integration/workspace-evidence.ts",
 );
 let workspaceArtifact = null;
-let partners = [];
+const partners = [];
 const records = [];
 let ws = null;
 let artifactIdentity = null;

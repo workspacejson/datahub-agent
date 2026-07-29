@@ -134,7 +134,7 @@ rows.sort((a, b) => (b.usable - a.usable) || (b.recoverable - a.recoverable));
 
 const pad = (s, n) => String(s).padEnd(n);
 console.log("");
-console.log(pad("repo", 42) + pad("license", 13) + pad("models", 7) + pad("mergedPR", 9) + pad("multi%", 8) + pad("recover", 8) + "usable");
+console.log(`${pad("repo", 42)}${pad("license", 13)}${pad("models", 7)}${pad("mergedPR", 9)}${pad("multi%", 8)}${pad("recover", 8)}usable`);
 console.log("-".repeat(95));
 for (const r of rows) {
   console.log(

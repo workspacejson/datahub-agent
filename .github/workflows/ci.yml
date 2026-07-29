@@ -39,6 +39,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Covers what tsc cannot: `tsconfig.json` includes only `src/**/*.ts` and
+      # `test/**/*.ts`, so ~3.7k lines of `scripts/*.mjs` had no automated check
+      # of any kind. Ten of those scripts are not exercised by any test either,
+      # and they are the ones that produce judge-facing evidence — a broken probe
+      # is worse than a broken test, because it emits a claim.
+      - name: Lint (scripts, which tsc does not cover)
+        run: npm run lint
+
       - name: Clean-room audit
         run: npm run check:clean-room
 
