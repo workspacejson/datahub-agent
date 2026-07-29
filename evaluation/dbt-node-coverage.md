@@ -160,7 +160,7 @@ and distinguishes two outcomes that HAC-162 correctly treats differently:
 | `dropped` | *is* dataset-bearing but has no `original_file_path` | a **warning naming every node** — unexpected |
 
 `formatDropWarnings()` renders the warning lines. Covered by
-`test/adapters/workspacejson/urn-join.integration.test.ts`.
+`test/adapters/workspacejson/nodes-join.integration.test.ts`.
 
 ## Scope decision
 

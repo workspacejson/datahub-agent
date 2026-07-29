@@ -44,7 +44,7 @@ See [`docs/claims.md`](docs/claims.md) for the claim ledger backing every figure
 
 ```
 DataHub dataset URN
-  → dbt manifest node         reconstructs database.schema.alias to match back
+  → dbt manifest node         matched by the dataset name DataHub already carries
   → original_file_path        every node accounted for, never silently dropped
   → repo-root-relative key    the normalization that makes the join actually work
   → workspace.json evidence   co-change partners, fileIndex membership
@@ -118,7 +118,7 @@ The runner refuses a DataHub-only answer that does not explicitly acknowledge th
 ## Architecture
 
 ```
-src/adapters/workspacejson/   URN resolution, dbt path normalization, fileIndex join
+src/adapters/workspacejson/   dbt path normalization, fileIndex join
 src/integration/              change-impact event contract, MCP read, writeback,
                               plan comparison, workspace evidence
 apps/cockpit/                 React UI: Impact → Change plan → Receipts
@@ -232,7 +232,7 @@ See [`examples/README.md`](examples/README.md) for the full index with descripti
 **Tally** is the product. [workspace.json](https://github.com/workspacejson) is the neutral standard that produces the repository artifact. [DataHub](https://datahubproject.io/) is the data catalog. Tally joins both.
 
 - **Pre-existing work:** The workspace.json standard, its producer CLI, and the dbt path-normalization adapter in `src/adapters/workspacejson/` were developed before the hackathon and adopted with full provenance. See [`docs/provenance.md`](docs/provenance.md) and [`HACKATHON_PROVENANCE.md`](HACKATHON_PROVENANCE.md).
-- **New work:** DataHub dataset-URN resolution, non-silent node extraction, the change-impact event contract, the MCP read path, writeback with observed receipts, the paired plan comparison, the cockpit, and all evaluation evidence.
+- **New work:** Non-silent node extraction, the change-impact event contract, the MCP read path, writeback with observed receipts, the paired plan comparison, the cockpit, and all evaluation evidence.
 - **Clean-room boundary:** Tally consumes only released, published `@workspacejson/*` packages. No source-level cross-org imports. See [`docs/clean-room.md`](docs/clean-room.md).
 - **Upstream contributions:** The `externalUrl` MCP projection fix (filed against `acryldata/mcp-server-datahub`) and the `node:fs` type-stub masking defect (filed against `workspacejson/cli`).
 

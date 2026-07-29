@@ -2,8 +2,7 @@
 
 Internal module. Joins dbt models to [workspace.json](https://www.workspacejson.dev)
 behavioral intelligence (fragility, co-change, modification history) by
-**repository-root-relative POSIX path**, and resolves DataHub dataset URNs to
-the dbt nodes that back them.
+**repository-root-relative POSIX path**.
 
 Adopted from `workspacejson/cli@c60447fc` under
 [META-248](https://linear.app/marcelle-labs/issue/META-248). See
@@ -38,15 +37,14 @@ assuming a single knowable path.
 ## The full seam
 
 ```text
-DataHub dataset URN
-   -> dbt manifest node        urn.ts        (added here; HAC-147)
+dbt manifest node
    -> original_file_path       nodes.ts      (added here; HAC-162)
    -> repo-root-relative key   normalize.ts  (adopted)
    -> workspace.json evidence  join.ts       (adopted)
 ```
 
-`urn.ts` and `nodes.ts` were added at adoption. The adopted module covered
-`dbt → fileIndex` but had no URN handling at all.
+`nodes.ts` was added at adoption. The adopted module covered
+`dbt → fileIndex` but had no non-silent node extraction.
 
 ## Two extraction paths — pick deliberately
 
@@ -86,5 +84,5 @@ workspace link) for the `FileIndexEntry` key contract.
 ## Status
 
 The path-normalization shim and join are adopted with parity preserved at 35/35.
-The URN seam and non-silent extraction are new and tested against the frozen
+Non-silent extraction is new and tested against the frozen
 proof corpus ([HAC-143](https://linear.app/marcelle-labs/issue/HAC-143)).

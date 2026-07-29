@@ -263,11 +263,13 @@ and must not appear on the submission until it is.
 | Technology | Status |
 | -- | -- |
 | dbt (`manifest.json`, multi-node-type coverage) | **used** — corpus + probe, dbt 1.12.0 |
-| DataHub dataset URN semantics | **used** — `src/adapters/workspacejson/urn.ts` |
+| DataHub dataset URN semantics | **used** — DataHub-returned URNs consumed via `src/integration/mcp-read.ts` |
 | DataHub OSS/Core | **not yet** — no instance stood up |
 | DataHub MCP Server | **not yet** — pending HAC-148 |
 | Agent Context Kit | **not yet** — pending [HAC-163](https://linear.app/marcelle-labs/issue/HAC-163) substrate decision |
 | Analytics Agent | **not yet** — pending HAC-163 |
+
+> Corrected 2026-07-29 under HAC-273; previous `urn.ts` reference in the URN semantics row superseded after dormant seam removal.
 
 ### Pre-existing-work disclosure
 
@@ -279,11 +281,12 @@ To be stated plainly on the submission:
 > provenance recorded in `docs/provenance.md` (frozen baseline commit, per-file
 > source identity, 35/35 parity).
 >
-> New work in this repository for the hackathon: the DataHub dataset-URN
-> resolution seam (`urn.ts`), non-silent dbt node extraction (`nodes.ts`), the
-> end-to-end URN → dbt → source → evidence integration test, the frozen proof
-> corpus selection and its node-type coverage verification, and the DataHub
-> application itself.
+> New work in this repository for the hackathon: non-silent dbt node
+> extraction (`nodes.ts`), the end-to-end node extraction → source → evidence
+> integration test, the frozen proof corpus selection and its node-type
+> coverage verification, and the DataHub application itself.
+>
+> Corrected 2026-07-29 under HAC-273; previous `urn.ts` reference superseded after dormant seam removal.
 
 Keeping this line honest and specific is worth more than maximizing the claimed
 surface. Judges can read `docs/provenance.md`.
