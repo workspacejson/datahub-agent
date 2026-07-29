@@ -1,0 +1,149 @@
+{
+  "registryVersion": 1,
+  "inventoryScope": {
+    "repository": "workspacejson/datahub-agent",
+    "scannedAtBaseRevision": "70a91e3681cf7f3f3c78d3d376ff1e7431a9e64e",
+    "includedPaths": [
+      "public/assets/"
+    ],
+    "excludedGeneratedPaths": [
+      "apps/cockpit/test-results/",
+      "apps/cockpit/playwright-report/"
+    ]
+  },
+  "assets": [
+    {
+      "id": "tally-devpost-hero-1280x720",
+      "title": "Tally Devpost hero (1280 × 720)",
+      "storyBeat": "Candidate Devpost hero presentation; website use has not been reviewed.",
+      "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
+      "canonicalPath": "public/assets/devpost/tally-devpost-hero-1280x720.png",
+      "sha256": "7ea95e5fad83e20db81bd86d34e18f586f9e83f5b98dab2b754ca054b07d2663",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "tally-devpost-hero-1280x720.png",
+        "format": "png",
+        "width": 1280,
+        "height": 720,
+        "aspectRatio": "16:9"
+      },
+      "proposedAltText": "Proposed: Tally Change Impact Cockpit interface.",
+      "proposedCaption": "Proposed: Tally attaches DataHub and repository evidence to a change review.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "0b5e1eef55e564615c972b8a970555795f6b926a",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "No claim relationship has been approved."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-devpost-thumbnail-1200x800-v2",
+      "title": "Tally Devpost thumbnail v2 (1200 × 800)",
+      "storyBeat": "Candidate Devpost thumbnail presentation; website use has not been reviewed.",
+      "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
+      "canonicalPath": "public/assets/devpost/tally-devpost-thumbnail-1200x800-v2.png",
+      "sha256": "4620a0f127bdcb912208187e307b37bdc3531f8fc9e801d898f2f1ddc3dd19ff",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "tally-devpost-thumbnail-1200x800-v2.png",
+        "format": "png",
+        "width": 1200,
+        "height": 800,
+        "aspectRatio": "3:2"
+      },
+      "proposedAltText": "Proposed: Tally Change Impact Cockpit thumbnail.",
+      "proposedCaption": "Proposed: Review a data change with its catalog and repository evidence attached.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "0b5e1eef55e564615c972b8a970555795f6b926a",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "No claim relationship has been approved."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    },
+    {
+      "id": "tally-github-readme",
+      "title": "Tally GitHub README image (1774 × 887)",
+      "storyBeat": "Existing GitHub README presentation; website use has not been reviewed.",
+      "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
+      "canonicalPath": "public/assets/github/tally-github-readme.png",
+      "sha256": "bc6a36a29c8bcc3b2bb91a580ca54e0feddb6eb7fd188bdd9ec58e6fabbbdf21",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "tally-github-readme.png",
+        "format": "png",
+        "width": 1774,
+        "height": 887,
+        "aspectRatio": "2:1"
+      },
+      "proposedAltText": "Proposed: Tally — Change Impact Cockpit.",
+      "proposedCaption": "Proposed: Tally resolves a data asset to repository evidence and records the resulting review.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "0b5e1eef55e564615c972b8a970555795f6b926a",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "No claim relationship has been approved."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      }
+    }
+  ],
+  "supportingInternalEvidencePaths": [
+    "evaluation/hac-152/SHA256SUMS",
+    "test/fixtures/golden/"
+  ],
+  "rejectedOrSupersededAssets": [],
+  "knownMissingAssetFamilies": [
+    {
+      "id": "tally-website-approved-public-asset",
+      "status": "missing-approved-source",
+      "detail": "No discovered asset is both approved and allowed for website use."
+    },
+    {
+      "id": "tally-motion-demo-asset",
+      "status": "not-discovered",
+      "detail": "No checked-in Tally video asset was discovered in the inventory scan."
+    },
+    {
+      "id": "tally-standalone-social-card",
+      "status": "not-discovered",
+      "detail": "No separately declared social-card asset was discovered; existing Devpost exports remain pending and are not selected as substitutes."
+    }
+  ]
+}

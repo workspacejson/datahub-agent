@@ -28,6 +28,7 @@
     "test:cockpit": "npm run test --workspace=@workspacejson/cockpit",
     "e2e": "playwright test --config apps/cockpit/playwright.config.ts",
     "check:clean-room": "node scripts/check-clean-room.mjs",
+    "validate:asset-registry": "node scripts/validate-asset-registry.mjs",
     "parity:datahub-adapter": "tsx migration/parity-datahub-shim.mjs",
     "lint": "biome lint --error-on-warnings"
   },
