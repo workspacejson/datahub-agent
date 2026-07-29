@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "docs/claims.md",
+  "claims": [
+    {
+      "id": "TALLY-CLAIM-001",
+      "claim": "Models matched, dbt project at repo root",
+      "section": "Silent failure"
+    },
+    {
+      "id": "TALLY-CLAIM-002",
+      "claim": "Models matched, dbt project nested under `dbt/`",
+      "section": "Silent failure"
+    },
+    {
+      "id": "TALLY-CLAIM-003",
+      "claim": "Corpus nodes silently discarded by `extractModels`",
+      "section": "Silent failure"
+    },
+    {
+      "id": "TALLY-CLAIM-004",
+      "claim": "Process exit code on silent failure",
+      "section": "Silent failure"
+    },
+    {
+      "id": "TALLY-CLAIM-005",
+      "claim": "Plan comparison: deltas",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-006",
+      "claim": "Checksums valid",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-007",
+      "claim": "No completeness claim",
+      "section": "Known limitations"
+    }
+  ]
+}
