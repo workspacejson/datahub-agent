@@ -35,6 +35,9 @@
  * Exit codes:
  *   0  sets match between surfaces (or single-surface mode completed)
  *   1  sets differ — kill switch condition, hop semantics not reproducible
+ *   3  inconclusive — a surface produced nothing, so a comparison this gate
+ *      exists to make did not happen. Distinct from 1: a mismatch is a finding,
+ *      an inconclusive run is the absence of one.
  *   2  could not reach GMS or MCP server
  */
 
@@ -249,6 +252,25 @@ if (TRANSPORT !== "gms") console.log(`mcp command:  ${MCP_COMMAND}`);
 console.log(`urns:         ${urns.length}`);
 
 let allMatch = true;
+/**
+ * Comparisons that were intended and did not happen, because a surface produced
+ * nothing.
+ *
+ * Without this the gate passed on a comparison it never made. `allMatch` starts
+ * true and only flips when *both* surfaces answered and disagreed, so an MCP
+ * side that failed to start skipped the comparison entirely and left the verdict
+ * reading "sets match — derivation can proceed". Observed 2026-07-29: four
+ * consecutive `spawn mcp-server-datahub ENOENT` failures, and the script still
+ * reported a match and exited 0.
+ *
+ * That is the precise failure `evaluation/lineage-readiness-signals.md` names —
+ * "a readiness gate that silently always passes is strictly worse than no gate,
+ * because it converts an unchecked read into an apparently-checked one" — in the
+ * gate that licensed HAC-231's derivation. The recorded HAC-231 run was genuine
+ * and carries real MCP counts, so its conclusion stands; this is about every
+ * re-run after it, including the clean rebuild HAC-248 requires.
+ */
+const skipped = [];
 
 for (const urn of urns) {
   console.log(`\n${"=".repeat(72)}`);
@@ -290,13 +312,26 @@ for (const urn of urns) {
       if (cmp.onlyGql.length > 0 || cmp.onlyMcp.length > 0) {
         allMatch = false;
       }
+    } else if (TRANSPORT === "both") {
+      // A comparison that could not be made is not a comparison that succeeded.
+      const absent = !gqlEdges && !mcpEdges ? "neither surface" : !gqlEdges ? "GraphQL" : "MCP";
+      skipped.push(`${direction} ${urn} — no answer from ${absent}`);
+      console.error(`  NOT COMPARED: ${absent} produced no result for ${direction}.`);
     }
   }
 }
 
 console.log(`\n${"=".repeat(72)}`);
 if (TRANSPORT === "both") {
-  if (allMatch) {
+  if (skipped.length > 0) {
+    // Reported before match/differ, because it outranks both: neither verdict is
+    // available when a surface did not answer.
+    console.log("VERDICT: INCONCLUSIVE — a comparison this gate exists to make did not happen.");
+    console.log(`${skipped.length} comparison(s) were not made:`);
+    for (const entry of skipped) console.log(`  - ${entry}`);
+    console.log("\nThis is not a match and not a mismatch. The gate fails toward not-ready,");
+    console.log("because a surface that produced nothing cannot agree with anything.");
+  } else if (allMatch) {
     console.log("VERDICT: sets match between GraphQL and MCP surfaces.");
     console.log("Hop semantics are reproducible — derivation can proceed.");
   } else {
@@ -312,4 +347,7 @@ console.log(`  GraphQL:  { surface: "searchAcrossLineage", query: "*", start: 0,
 console.log(`  MCP:      { surface: "mcp:get_lineage", max_hops: 3, max_results: 50, query: "*" }`);
 console.log(`  note:     MCP max_hops=3 maps to degree filter ["1","2","3+"] — degree 4 collapses into "3+"`);
 
+// 3 is distinct from 1 on purpose: a mismatch is a finding, an inconclusive run
+// is an absence of one, and a caller that treats them alike relearns this bug.
+if (TRANSPORT === "both" && skipped.length > 0) process.exit(3);
 process.exit(allMatch || TRANSPORT !== "both" ? 0 : 1);
