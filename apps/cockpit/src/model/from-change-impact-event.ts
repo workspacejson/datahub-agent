@@ -23,6 +23,7 @@
 import {
   describeTier,
   emittedEventSchema,
+  validateEvent,
   type ChangeImpactEvent,
   type WorkspaceIntegrity,
 } from "@contract";
@@ -309,6 +310,44 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
  * or live build exists to render. Measured, not inferred: parsing
  * `test/fixtures/golden/change-impact-event.nested.json` against the strict
  * schema fails on that key alone.
+ *
+ * ## Two gates, not one
+ *
+ * A schema pass is a shape check. The contract's invariants are a separate
+ * function, and until 2026-07-29 this path ran only the first — so an event
+ * whose shape was right and whose *claims* contradicted the contract rendered
+ * happily (HAC-242).
+ *
+ * That was not theoretical. `contract-event.ts`, the shared helper documented as
+ * "shaped exactly as the emitter produces one", carried a `partners` entry
+ * reading `reason: "absent"` with no `completeness` — which `validateEvent`
+ * rejects, because absence is only sayable about an answer established complete
+ * against a pinned manifest. Every cockpit test using that helper asserted
+ * against an event the contract refuses, and nothing failed.
+ *
+ * The gap matters more now than when it was filed. `accounting.unresolvedRecords`
+ * (HAC-267) is guarded by an invariant that a partial list is rejected — a list
+ * of one beside a count of two reads as complete and is not. That guard lives in
+ * `validateEvent`. Without this call it protects the emitter and the test suite
+ * while the judge-facing surface renders the short list without complaint.
+ *
+ * Order matters: schema first. `validateEvent` takes `unknown` deliberately, but
+ * its problems are legible only against a value already known to be shaped
+ * right; a malformed blob should fail as malformed rather than producing a
+ * cascade of invariant complaints about fields that are simply absent.
+ *
+ * Invariant problems carry an `invariant: ` prefix so the two kinds stay
+ * distinguishable in one list. They call for different fixes — a shape failure
+ * is a malformed producer, an invariant failure is a producer making a claim it
+ * cannot support — and collapsing them costs the reader the diagnosis, which is
+ * the same defect this contract exists to refuse. Shape problems keep their
+ * `path: message` form; the field path is their signature.
+ *
+ * This tightens the *event* gate only. The comparison side deliberately fails
+ * differently — an absent or invalid comparison reaches the view as
+ * `unavailable` carrying its problems, because crashing loses the diagnosis and
+ * rendering the survivors turns a partial artifact into a confident one. That
+ * asymmetry is load-bearing and must not be "made consistent".
  */
 export function readChangeImpactEvent(
   input: unknown,
@@ -325,6 +364,12 @@ export function readChangeImpactEvent(
       }),
     };
   }
+
+  const violations = validateEvent(parsed.data);
+  if (violations.length > 0) {
+    return { ok: false, problems: violations.map((problem) => `invariant: ${problem}`) };
+  }
+
   return { ok: true, event: projectEvent(parsed.data as ChangeImpactEvent, route) };
 }
 

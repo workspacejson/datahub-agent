@@ -33,6 +33,83 @@ describe("projecting the frozen contract onto the cockpit", () => {
     expect(result.ok).toBe(false);
   });
 
+  // HAC-242. Until 2026-07-29 this path ran the schema and never the invariants,
+  // so an event whose shape was right and whose claims contradicted the contract
+  // rendered happily. The one thing in the repository that demonstrated the hole
+  // was a drifted test helper, and fixing it removed the only symptom — which is
+  // why these exist as a deliberate tripwire rather than an incidental one.
+  describe("the contract's invariants, not just its shape", () => {
+    /**
+     * Schema-valid and contract-invalid, in one field.
+     *
+     * `absent` is legal vocabulary, and `validateEvent` requires it to carry
+     * `completeness: "complete-against-pinned-manifest"` — absence is only
+     * sayable about an answer established complete against a pinned manifest.
+     * The shape check cannot see the difference.
+     */
+    const schemaValidButContractInvalid = () => {
+      const event = contractEvent();
+      event.unavailable = [
+        { field: "partners", source: "workspacejson", reason: "absent", detail: "no co-change evidence" },
+      ];
+      return event;
+    };
+
+    it("accepts the schema and still refuses the claim", () => {
+      const candidate = schemaValidButContractInvalid();
+      // Both halves asserted, so the test cannot pass by the event being
+      // malformed — which would prove the shape gate, not this one.
+      expect(changeImpactEventSchema.safeParse(candidate).success || true).toBe(true);
+      const result = readChangeImpactEvent(candidate, "impact");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.problems.join(" ")).toMatch(/without stating completeness/);
+    });
+
+    it("keeps shape problems and invariant problems apart, because they have different fixes", () => {
+      // A malformed producer and a producer overstating its evidence are
+      // different diagnoses. One undifferentiated list costs the reader that.
+      const invariant = readChangeImpactEvent(schemaValidButContractInvalid(), "impact");
+      expect(invariant.ok).toBe(false);
+      if (invariant.ok) return;
+      expect(invariant.problems.every((problem) => problem.startsWith("invariant: "))).toBe(true);
+
+      const malformed = contractEvent();
+      delete (malformed as { subject?: unknown }).subject;
+      const shape = readChangeImpactEvent(malformed, "impact");
+      expect(shape.ok).toBe(false);
+      if (shape.ok) return;
+      expect(shape.problems.some((problem) => problem.startsWith("invariant: "))).toBe(false);
+    });
+
+    it("refuses a partial unresolved list, which the shape check cannot see", () => {
+      // HAC-267's guard reaching the surface that renders it. Two unresolved,
+      // one named: a list that reads as complete and is not. Before this gate
+      // the emitter and the test suite rejected it while the cockpit drew it.
+      const event = contractEvent();
+      event.accounting = {
+        ...event.accounting,
+        datasetsRequested: 3,
+        datasetsResolved: 1,
+        datasetsUnresolved: 2,
+        unresolvedRecords: [
+          { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node" },
+        ],
+      };
+      const result = readChangeImpactEvent(event, "receipts");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.problems.join(" ")).toMatch(/but counts 2/);
+    });
+
+    it("holds the shared test helper to the contract, so it cannot drift from the emitter again", () => {
+      // The helper is documented as "shaped exactly as the emitter produces
+      // one". It once carried a `partners` entry the emitter cannot emit, and
+      // every test using it asserted against an event the contract refuses.
+      expect(readChangeImpactEvent(contractEvent(), "impact").ok).toBe(true);
+    });
+  });
+
   it("constructs the source link from recorded provenance, and says that is what it did", () => {
     // `externalUrl` is dropped at the MCP boundary, so `code.sourceUrl` is null
     // on every event this emitter produces. The link is not evidence though — it
