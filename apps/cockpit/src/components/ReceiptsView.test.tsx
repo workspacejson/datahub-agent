@@ -23,7 +23,7 @@ it("renders an unavailable receipt field as a stated reason, never as a blank", 
   // "nobody looked" are different findings and they act on them differently.
   render(<ReceiptsView model={projected()} />);
   const row = screen.getByText("Immutable source URL").closest("div");
-  expect(row?.textContent).toContain("Unavailable —");
+  expect(row?.textContent).toContain("Unavailable:");
   expect(row?.textContent).toContain("externalUrl");
 });
 

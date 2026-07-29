@@ -5,14 +5,14 @@ import { SourceTag } from "./SourceTag";
  * One receipt value, rendered as what it is.
  *
  * An `unavailable` field shows the stated reason, not an empty cell and not a
- * dash — a judge acts differently on "the catalog does not expose this" than on
+ * dash. A judge acts differently on "the catalog does not expose this" than on
  * "nobody looked", and a blank tells them neither. A `placeholder` field says so
  * on its face; it can only reach here in a placeholder build, because the view
  * model refuses one anywhere else.
  */
 function Evidence({ value }: { value: EvidenceValue }) {
   if (value.state === "unavailable") {
-    return <span className="evidence evidence--unavailable">Unavailable — {value.reason}</span>;
+    return <span className="evidence evidence--unavailable">Unavailable: {value.reason}</span>;
   }
   if (value.state === "placeholder") {
     return <span className="evidence evidence--placeholder">{value.value} <em>(placeholder, not observed)</em></span>;
@@ -115,7 +115,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
         </tr></tbody>
       </table>
       <table className="accounting-table">
-        <caption>dbt nodes in the manifest — a separate denominator, never added to the dataset counts.</caption>
+        <caption>dbt nodes in the manifest. A separate denominator, never added to the dataset counts.</caption>
         <thead><tr><th>Dropped</th><th>Excluded by policy</th></tr></thead>
         <tbody><tr>
           <td>{accounting.nodesDropped}</td>
@@ -128,7 +128,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
         <h3 id="unresolved-title">Unresolved datasets ({accounting.datasetsUnresolved})</h3>
         {unresolvedDatasets.state === "observed"
           ? (unresolvedDatasets.records.length === 0
-            ? <p>None. The empty list is the complete list — every requested dataset resolved.</p>
+            ? <p>None. The empty list is the complete list: every requested dataset resolved.</p>
             : (
               <ul className="unresolved-list">
                 {unresolvedDatasets.records.map((record) => (
@@ -137,12 +137,12 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
                     {/* The reason sits beside the name rather than behind a
                         tooltip: a name alone does not establish scope, which is
                         the whole reason the record carries one. */}
-                    <span className="unresolved-list__reason"> — {record.reason}</span>
+                    <span className="unresolved-list__reason">{record.reason}</span>
                   </li>
                 ))}
               </ul>
             ))
-          : <p className="evidence evidence--unavailable">Unavailable — {unresolvedDatasets.reason}</p>}
+          : <p className="evidence evidence--unavailable">Unavailable: {unresolvedDatasets.reason}</p>}
       </section>
     </section>
 
@@ -158,7 +158,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
       */}
       {provenance.immutableSourceUrl.state === "observed"
         ? <a className="view-source" href={provenance.immutableSourceUrl.value} target="_blank" rel="noreferrer">View immutable source</a>
-        : <p className="view-source view-source--unavailable">No immutable source link is offered — see the Immutable source URL row for the reason.</p>}
+        : <p className="view-source view-source--unavailable">No immutable source link is offered. The Immutable source URL row states why.</p>}
     </section>
 
     <section aria-labelledby="writeback-title">
