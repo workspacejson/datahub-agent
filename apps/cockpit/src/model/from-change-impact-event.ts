@@ -28,6 +28,7 @@ import {
 } from "@contract";
 
 import { resolveViewSource } from "./view-source";
+import { writebackAxes, type WritebackAxes } from "./writeback-axes";
 
 import type {
   ClaimSource,
@@ -169,7 +170,7 @@ function fromNullable(value: string | null | undefined, source: ClaimSource, rea
  * made alone: it is the key the two are compared on, and every workspace-derived
  * claim on the event is gated on it matching the artifact's own identity.
  */
-function projectReceipt(event: ChangeImpactEvent): SourceEvent["receipt"] {
+function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes): SourceEvent["receipt"] {
   const artifact = event.provenance.workspaceArtifact;
   const noArtifact = "No workspace.json artifact was supplied with this event, so the artifact side of the join has no identity to report.";
   // Digests and query parameters live on `VerificationEvidence`, which the
@@ -223,21 +224,11 @@ function projectReceipt(event: ChangeImpactEvent): SourceEvent["receipt"] {
         ? observed(capabilityLimits.join(" · "), "Joined")
         : missing("The event records no source-capability limitation."),
     },
-    // The writeback receipt is produced by HAC-149 and attached to the event as
-    // the documented `writeback` extension; binding and rendering it is HAC-226.
-    // Until then this states that nothing was read rather than implying that
-    // nothing happened, and the axes stay `not-attempted` so no terminal
-    // disposition can be inferred from a surface that has not read one.
-    writeback: {
-      intent: missing("The writeback receipt is not bound into the cockpit yet, so no intent is shown."),
-      beforeState: missing("The writeback receipt is not bound into the cockpit yet, so no before-state is shown."),
-      mutationResponse: "not-attempted",
-      afterStateRead: "not-queried",
-      bothStatesRead: false,
-      afterStateFreshness: "not-read",
-      intendedStateObservation: "not-attempted",
-      terminalDisposition: "not-applicable",
-    },
+    // Bound from the receipt HAC-149 attaches as the documented `writeback`
+    // extension. This block and the top-level axes come from one derivation, so
+    // the view model's "axes must match the receipt" invariant is a check rather
+    // than the thing keeping them aligned. HAC-226 owns how this renders.
+    writeback: axes.receipt,
     evaluation: {
       pairedSpread: missing("The paired DataHub-only vs joined evaluation has not been run."),
       locBaseline: missing("No lines-of-code baseline has been measured."),
@@ -257,6 +248,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
   const artifact = event.provenance.workspaceArtifact;
 
   const producerPath = event.code.repositoryRelativePath;
+  const axes = writebackAxes((event as { writeback?: unknown }).writeback);
   const partnerSummary = event.partners.length > 0
     ? `${event.partners.length} co-changing file(s) from repository evidence`
     : event.unavailable.find((u) => u.field === "partners")?.detail
@@ -268,11 +260,13 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     read: upstream.read,
     completeness: upstream.completeness,
     resolutionDisposition: artifact ? DISPOSITION[artifact.integrity] : "unavailable",
-    // The writeback axes are owned by HAC-219, which binds the receipt. Until
-    // then this states that nothing was attempted rather than implying success.
-    mutationAcceptance: "not-attempted",
-    intendedStateObservation: "not-attempted",
-    terminalWritebackDisposition: "not-applicable",
+    // Derived from the attached receipt rather than asserted. These were pinned
+    // to `not-attempted` while HAC-219 was outstanding; HAC-219 has landed, so
+    // saying "nothing was attempted" beside a completed mutation is no longer
+    // caution, it is a false statement. See `writebackAxes`.
+    mutationAcceptance: axes.mutationAcceptance,
+    intendedStateObservation: axes.intendedStateObservation,
+    terminalWritebackDisposition: axes.terminalWritebackDisposition,
     title: event.datahub.name ?? event.subject.urn,
     summary: `${describeTier(event.evidence.records)}; ${event.unavailable.length} stated gap(s).`,
     unresolvedItems: event.unavailable.map((u) => `${u.field}: ${u.reason}`),
@@ -288,7 +282,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     viewSource: resolveViewSource(event),
     impactEdges: impactEdges(event),
     planComparison: { state: "unavailable", reason: NO_COMPARISON_SUPPLIED },
-    receipt: projectReceipt(event),
+    receipt: projectReceipt(event, axes),
   };
 }
 

@@ -341,6 +341,9 @@ export type CockpitStateName = z.infer<typeof cockpitStateNameSchema>;
 export type ClaimSource = z.infer<typeof claimSourceSchema>;
 export type PlanComparisonView = z.infer<typeof planComparisonSchema>;
 export type ViewSource = z.infer<typeof viewSourceSchema>;
+export type MutationAcceptance = z.infer<typeof mutationAcceptanceSchema>;
+export type IntendedStateObservation = z.infer<typeof intendedStateObservationSchema>;
+export type TerminalWritebackDisposition = z.infer<typeof terminalWritebackDispositionSchema>;
 export type PlanDelta = z.infer<typeof planDeltaSchema>;
 
 export const sourceEventSchema = cockpitViewModelBaseSchema.omit({ sourceMode: true });
