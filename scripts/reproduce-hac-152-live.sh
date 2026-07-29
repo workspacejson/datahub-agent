@@ -4,11 +4,52 @@ set -euo pipefail
 # Produce a fresh HAC-152 package against an already-running local DataHub.
 # This script writes only to a temporary directory and the explicitly selected
 # local GMS instance. It never reads, prints, or persists a secret value.
+#
+# It requires this project's Doppler tenant, because the last step runs a paired
+# LLM plan comparison. Most readers do not want that step and cannot run it.
+#
+# If you are here to rebuild the Transfermarkt demo corpus, you want
+# `scripts/ingest-transfermarkt-corpus.sh` instead — same pinned corpus, same
+# pinned tools, same ingest recipe, no credential of any kind.
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Checked before anything is created, and answered with what to do rather than
+# with a variable name. This used to be a bare `${VAR:?message}` on this line,
+# which exits 1 before the clone for anyone outside the tenant — leaving a reader
+# to conclude the evidence path is broken when in fact they are missing an input
+# they were never told they needed, for a step they probably did not want.
+if [ -z "${HAC152_QWEN_CONFIG:-}" ]; then
+  cat >&2 <<'MSG'
+reproduce-hac-152-live.sh needs HAC152_QWEN_CONFIG and did not find it.
+
+This script rebuilds the full HAC-152 evidence package, and its final step runs a
+paired plan comparison through an LLM. That step needs this project's private
+Doppler tenant (`--project dev_week_26_openai`) and a funded `OPENAI_API_KEY2`.
+Without them the run cannot complete, so it stops here rather than doing several
+minutes of work first.
+
+  You want the demo corpus, not the judge run:
+
+      scripts/ingest-transfermarkt-corpus.sh --build-only   # no DataHub needed
+      scripts/ingest-transfermarkt-corpus.sh                # build and ingest
+
+  That is the same corpus at the same pin, the same pinned tools, and the same
+  ingest recipe, with no credential required. It is the path to use if you are
+  reproducing the evidence in evaluation/hac-152/.
+
+  You are inside the tenant and do want the full package:
+
+      export HAC152_QWEN_CONFIG=<doppler config name>
+
+Nothing has been created or modified.
+MSG
+  exit 2
+fi
+
 run_dir="${HAC152_RUN_DIR:-$(mktemp -d /tmp/hac-152-live.XXXXXX)}"
 gms="${HAC152_GMS:-http://localhost:8080}"
-config="${HAC152_QWEN_CONFIG:?set HAC152_QWEN_CONFIG to the Doppler Qwen configuration name}"
+config="$HAC152_QWEN_CONFIG"
 python_bin="${HAC152_PYTHON:-python3.11}"
 urn='urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)'
 revision='59fa295c51fc23466f3a71542f8bf3d1335daa83'
