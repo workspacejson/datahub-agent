@@ -156,13 +156,16 @@ export interface Unavailable {
  * repository means the wrong artifact was supplied, a mismatched revision means
  * a stale one, and an ambiguous path means the index cannot single out a source.
  */
-export type WorkspaceIntegrity =
-  | "exact-match"
-  | "artifact-unavailable"
-  | "repository-mismatch"
-  | "revision-mismatch"
-  | "path-unresolved"
-  | "path-ambiguous";
+export const WORKSPACE_INTEGRITY_VALUES = [
+  "exact-match",
+  "artifact-unavailable",
+  "repository-mismatch",
+  "revision-mismatch",
+  "path-unresolved",
+  "path-ambiguous",
+] as const;
+
+export type WorkspaceIntegrity = (typeof WORKSPACE_INTEGRITY_VALUES)[number];
 
 /**
  * How the dataset's producing file was determined.
@@ -570,10 +573,10 @@ const provenanceSchema = z.strictObject({
     fileIndexKeys: z.number().nullable(),
     repository: z.string().nullable(),
     revision: z.string().nullable(),
-    integrity: z.enum([
-      "exact-match", "artifact-unavailable", "repository-mismatch",
-      "revision-mismatch", "path-unresolved", "path-ambiguous",
-    ]),
+    // One list, used by the type, the schema and the producer's reason
+    // vocabulary. Three copies would drift, and the drift would be silent:
+    // a new disposition would validate fine while having no reason to emit.
+    integrity: z.enum(WORKSPACE_INTEGRITY_VALUES),
   }).nullable(),
 });
 

@@ -1,0 +1,16 @@
+{
+  "fixture": "unresolved-repository-mismatch.json",
+  "capturedAt": "2026-07-29T15:20:53.054Z",
+  "generated_by": "scripts/emit-change-impact-event.mjs",
+  "command": "node scripts/emit-change-impact-event.mjs 'urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)' --gms http://localhost:8080 --transport mcp --mcp-command <venv>/bin/mcp-server-datahub --subject-repository https://github.com/dbt-labs/jaffle_shop_duckdb --subject-revision 36bde6cba69d962b83be1d52fc65a0dce1cb4ebb --workspace-artifact test/fixtures/proof-corpus-transfermarkt/workspace.json",
+  "readOnly": true,
+  "kind": "capture",
+  "why": "The first event this producer has emitted that populates accounting.unresolvedRecords. Captured rather than derived: there is no natural residual on the demo corpus, which resolves 23/23, so the unresolved case had to come from a request that legitimately falls outside the artifact rather than from a transformation of a resolving run.",
+  "howTheResidualIsReal": "The subject is jaffle_shop.main.customers, a dataset genuinely present in the live catalog. The workspace artifact supplied is the Transfermarkt one. The join therefore reports repository-mismatch on a real comparison of two real identities — the dataset is not invented, the mismatch is not simulated, and the name in the record is the URN that was requested.",
+  "transport": "official DataHub MCP server over stdio — datahub 3.4.5",
+  "gmsVersion": null,
+  "integrity": "repository-mismatch",
+  "contractValid": true,
+  "note": "A point capture against a live instance that has been observed to move. Meaningful as an existence proof of the unresolved path, not as a statement about the catalog.",
+  "fixtureSha256": "11fb4858839214f657b5d769792288b60647b9ad8206e9e282ff813ff74a41ab"
+}

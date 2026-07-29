@@ -419,6 +419,7 @@ if (dbtFilePath) note("code.repositoryRelativePath", "datahub", "not-exposed-by-
 const { assessWorkspaceEvidence, readArtifactIdentity } = await load(
   "src/integration/workspace-evidence.ts",
 );
+const { unresolvedRecordsFor } = await load("src/integration/unresolved-records.ts");
 let workspaceArtifact = null;
 const partners = [];
 const records = [];
@@ -480,8 +481,26 @@ if (integrity.integrity === "exact-match") {
   records.push({ claim: `producing file ${repositoryRelativePath} is tracked in the corpus-matched workspace.json artifact`, observation: integrity.detail, source: "workspacejson", checkExecuted: true });
   note("partners", "workspacejson", "indeterminate", "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.", { completeness: "not-established", observedCount: 0 });
 } else if (!unavailable.some((u) => u.field === "partners")) {
-  // A refusal never observed an empty collection. Keep its count absent.
-  note("partners", "workspacejson", integrity.integrity === "artifact-unavailable" ? "not-queried" : "indeterminate", integrity.detail);
+  // A refusal never observed an empty collection. Keep its count absent — the
+  // exact-match branch above carries `observedCount: 0` because it looked at a
+  // matched artifact and found nothing; here nothing was looked at.
+  //
+  // `completeness` is not optional the same way. The contract rejects "an
+  // indeterminate resolution without an explicit completeness state", and until
+  // 2026-07-29 this branch omitted it — so *every* event on the unresolved path
+  // failed its own validator with "partners is indeterminate without stating
+  // completeness". Found by running the path rather than reading it, while
+  // producing the first event that populates `unresolvedRecords`. The path had
+  // never been exercised end to end; the emitter's only committed outputs all
+  // resolve.
+  const refused = integrity.integrity === "artifact-unavailable";
+  note(
+    "partners",
+    "workspacejson",
+    refused ? "not-queried" : "indeterminate",
+    integrity.detail,
+    refused ? {} : { completeness: "not-established" },
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -526,6 +545,13 @@ const event = {
     datasetsUnresolved: method === "unresolved" ? 1 : 0,
     nodesDropped: 0,
     nodesExcluded: {},
+    // HAC-267 added the field; a field no producer populates is the same gap as
+    // machinery with no consumer, facing the other way. The subject is the only
+    // dataset requested, so when it does not resolve it is the unresolved one —
+    // its name is not derived, inferred, or authored, it is the URN that was
+    // asked for. The reason comes from the corpus-match disposition the join
+    // already computed, through the producer's documented vocabulary.
+    unresolvedRecords: unresolvedRecordsFor(URN, integrity.integrity),
   },
   unavailable,
 };
