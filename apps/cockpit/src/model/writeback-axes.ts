@@ -81,9 +81,69 @@ export interface WritebackAxes {
     afterStateFreshness: "fresh" | "stale" | "not-read";
     intendedStateObservation: IntendedStateObservation;
     terminalDisposition: TerminalWritebackDisposition;
+    /**
+     * Whether the catalog already held what this writeback intended.
+     *
+     * Derived here, from the raw receipt, because the view model cannot compute
+     * it. It used to string-compare the *rendered* `beforeState` and `intent`
+     * values, which is wrong twice over: it breaks whenever display copy
+     * changes, and it compared a field intent never asserted.
+     *
+     * Both committed golden fixtures failed on the second. Intent records
+     * `linkUrl: null` alongside `linkOmittedBecause` — "no commit-pinned source
+     * URL is available; an unpinned link would drift" — which is a decision *not
+     * to write* a link, not an intent that the link be absent. The before-state
+     * carried a link from an earlier run. Reading that as a mismatch treats an
+     * unasserted field as an asserted absence, which is the same conflation as
+     * an empty lineage array meaning "no dependencies".
+     */
+    beforeMatchedIntent: boolean;
   };
   /** Stated when the axes could not be derived, so the gap is never silent. */
   indeterminateBecause: string | null;
+}
+
+/**
+ * The fields intent asserted, and the honest limitation in how they are found.
+ *
+ * **Interim.** The right input is an explicit asserted-field set on the receipt —
+ * intent saying which fields it makes a claim about — so the comparison checks a
+ * *stated* scope. Contract 1.3 cannot express that, so this infers the set from
+ * non-null fields.
+ *
+ * That inference carries a latent version of the bug it fixes: a future writeback
+ * that genuinely intends to *remove* a link would record `linkUrl: null` and be
+ * indistinguishable from one that never asserted a link at all. No such writeback
+ * exists today — the writeback only ever adds — so the inference is currently
+ * sound and is recorded as interim rather than presented as the design.
+ *
+ * The durable fix is the same shape as `accounting.unresolvedRecords` carrying a
+ * reason rather than a bare count: make the artifact state its scope instead of
+ * having a consumer infer it.
+ */
+function assertedFields(intent: z.infer<typeof stateSchema>): Array<"evidenceTier" | "linkUrl"> {
+  return (["evidenceTier", "linkUrl"] as const).filter((field) => intent[field] !== null && intent[field] !== undefined);
+}
+
+/**
+ * True when the before-state already carried everything intent asserted.
+ *
+ * Compares raw recorded values, not rendered ones. An invariant that
+ * string-compares presentation breaks the next time copy changes, which is a
+ * defect independent of which fields it compares.
+ */
+function beforeMatchesIntent(
+  intent: z.infer<typeof stateSchema> | null | undefined,
+  before: z.infer<typeof stateSchema> | null | undefined,
+): boolean {
+  if (!intent || !before) return false;
+  // A before-state that was not read cannot be said to match anything.
+  if (before.read === "failed" || before.read === "not-queried") return false;
+  const asserted = assertedFields(intent);
+  // Intent that asserts nothing is not matched by default; "nothing was
+  // intended" is a different statement from "what was intended was already there".
+  if (asserted.length === 0) return false;
+  return asserted.every((field) => before[field] === intent[field]);
 }
 
 /**
@@ -116,6 +176,7 @@ const NOT_ATTEMPTED = axes("not-attempted", "not-attempted", "not-applicable", {
   afterStateRead: "not-queried",
   bothStatesRead: false,
   afterStateFreshness: "not-read",
+  beforeMatchedIntent: false,
 });
 
 export function writebackAxes(writeback: unknown): WritebackAxes {
@@ -134,6 +195,7 @@ export function writebackAxes(writeback: unknown): WritebackAxes {
       afterStateRead: "not-queried",
       bothStatesRead: false,
       afterStateFreshness: "not-read",
+      beforeMatchedIntent: false,
     }, unreadable);
   }
 
@@ -169,6 +231,7 @@ export function writebackAxes(writeback: unknown): WritebackAxes {
     // the old value is `ok` and `stale` at once, and collapsing the two would
     // lose exactly the distinction the observation vocabulary exists to draw.
     afterStateFreshness: afterStateRead !== "ok" ? "not-read" : intendedStateObservation === "observed" ? "fresh" : "stale",
+    beforeMatchedIntent: beforeMatchesIntent(receipt.intended, receipt.before),
   });
 }
 
