@@ -96,9 +96,14 @@ function attribution(event: ChangeImpactEvent): SourceEvent["source"] {
  * the contract keeps them apart.
  */
 function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
+  // `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)`. Read
+  // rather than inferred from the name shape, and null when absent.
+  const platformOf = (urn: string) => /urn:li:dataPlatform:([^,)]+)/.exec(urn)?.[1] ?? null;
+
   const directed = (kind: "upstream" | "downstream") =>
     (kind === "upstream" ? event.datahub.upstreams : event.datahub.downstreams).map((edge) => ({
       node: edge.name ?? edge.urn,
+      platform: platformOf(edge.urn),
       direction: kind,
       degree: edge.degree,
       state: "resolved" as const,
@@ -115,6 +120,7 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
   const stated = event.unavailable.find((u) => u.field.startsWith("datahub."));
   return [{
     node: "No lineage edges were observed",
+    platform: null,
     direction: "none" as const,
     degree: null,
     state: "unresolved" as const,

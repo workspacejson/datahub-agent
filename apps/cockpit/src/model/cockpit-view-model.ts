@@ -61,6 +61,18 @@ export const viewSourceSchema = z.discriminatedUnion("state", [
  */
 export const impactEdgeSchema = z.object({
   node: z.string().min(1),
+  /**
+   * The DataHub platform the node belongs to, read from its URN.
+   *
+   * Without it the upstream column reads as untidy rather than structured: the
+   * fixture holds four dbt models and the four duckdb datasets they are built
+   * from, so half the names are bare and half are fully qualified, and the only
+   * inference available to a cold reader is that the list was not cleaned up.
+   * The distinction is load-bearing and was invisible.
+   *
+   * Null when the URN does not carry one, rather than guessed.
+   */
+  platform: z.string().min(1).nullable(),
   direction: z.enum(["upstream", "downstream", "none"]),
   degree: z.number().int().positive().nullable(),
   state: z.enum(["resolved", "unresolved", "excluded"]),

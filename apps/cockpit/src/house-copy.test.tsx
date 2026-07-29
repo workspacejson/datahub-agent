@@ -89,3 +89,49 @@ it("keeps the sentence that states a complete empty list", () => {
   render(<CockpitShell model={model()} route="receipts" onRouteChange={() => {}} />);
   expect(screen.getByText(/The empty list is the complete list: every requested dataset resolved\./)).toBeTruthy();
 });
+
+describe("each fact is stated once per route", () => {
+  // The header stated coverage three ways and was collapsed to one; the same
+  // thing then reappeared on Receipts, where the limitations card repeated the
+  // banded gap reasons and the tier sentence rendered twice. Deduplication that
+  // is not asserted is deduplication that migrates.
+  // The raw evidence receipt is the event verbatim, so it necessarily restates
+  // every reason and the tier: it is the bytes a reviewer checks the rendered
+  // rows against, not a second rendering of them. `vocabulary-surface.test.ts`
+  // makes the same exemption by name, and naming it in both places is what keeps
+  // it a deliberate exception rather than a hole.
+  const textOf = (route: "impact" | "change-plan" | "receipts") => {
+    cleanup();
+    render(<CockpitShell model={model()} route={route} onRouteChange={() => {}} />);
+    for (const raw of Array.from(document.querySelectorAll(".receipts-view pre"))) raw.remove();
+    return document.body.innerText || document.body.textContent || "";
+  };
+  const occurrences = (haystack: string, needle: string) => haystack.split(needle).length - 1;
+
+  it("states each gap reason once on Receipts, not once in a band and again in a card", () => {
+    const text = textOf("receipts");
+    for (const gap of model().receipt.statedGaps) {
+      expect(occurrences(text, gap.detail), `"${gap.field}" detail`).toBe(1);
+    }
+  });
+
+  it("states the evidence tier once", () => {
+    // It reads as a verdict wherever it appears, so appearing twice reads as two.
+    const text = textOf("receipts");
+    for (const tier of ["ASSERTED", "OBSERVED", "VERIFIED"]) {
+      expect(occurrences(text, tier), `${tier} on receipts`).toBeLessThanOrEqual(1);
+    }
+    // And nowhere near the hero, which is the placement that made it look like a
+    // contradiction of "Completeness not established".
+    expect(textOf("impact")).not.toContain("VERIFIED");
+  });
+
+  it("would catch a fact restated", () => {
+    // The detector: `occurrences` returning 1 for a string that is absent would
+    // make both cases above vacuous, so a known-duplicated string is checked.
+    const doubled = "the same sentence. the same sentence.";
+    expect(occurrences(doubled, "the same sentence.")).toBe(2);
+    const text = textOf("receipts");
+    expect(text.length).toBeGreaterThan(200);
+  });
+});

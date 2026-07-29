@@ -178,8 +178,18 @@
 .lineage-band h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-base); font-weight: 600; color: var(--text-heading); }
 .lineage-band__head p { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
 
-.topology { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr)); gap: var(--sp-3); align-items: start; }
-.topology__col { min-width: 0; }
+/* Proportioned to their roles rather than split equally. Upstream carries the
+   most nodes and the longest names, the subject carries one short name, so equal
+   thirds wrapped the fully-qualified duckdb names onto two lines and made a
+   structured column look ragged. The roles are fixed, so the proportions can be. */
+.topology { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .85fr) minmax(0, 1.15fr); gap: var(--sp-4); align-items: stretch; }
+/* Columns are as tall as the longest, so the single-node ones centre their
+   contents rather than leaving two thirds of the band looking unfinished. The
+   eyebrow stays pinned to the top so the three headings still align and the
+   band reads as one row. */
+.topology__col { min-width: 0; display: flex; flex-direction: column; }
+.topology__col > .eyebrow { flex: none; }
+.topology__col .topology__nodes { flex: 1; align-content: center; }
 .topology__col--subject { border-inline: 1px solid var(--border-default); padding-inline: var(--sp-3); }
 .topology__nodes { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-1); }
 .topology__node {
@@ -200,7 +210,12 @@
 .topology__reason { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
 /* Degree is a count, so it is mono and neutral. It carries no resolution
    meaning and must not borrow the treatments that do. */
-.chip--degree { border-color: transparent; background: var(--surface-sunken); color: var(--text-muted); }
+/* Degree is a count and platform is an identity. Both are neutral: neither
+   carries resolution meaning, so neither may borrow the treatments that do. */
+.chip--degree { border-color: transparent; background: var(--surface-sunken); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.chip--platform { border-color: var(--border-default); background: transparent; color: var(--text-faint); }
+.lineage-band__key { display: flex; align-items: center; gap: var(--sp-3); flex: none; }
+.lineage-band__legend { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; white-space: nowrap; }
 
 /* ── Change plan ──────────────────────────────────────────────
    Two panels, not tabs. The comparison is the argument, and a tab would hide

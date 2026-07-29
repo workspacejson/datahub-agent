@@ -18,7 +18,7 @@ export const provisionalSource = {
   // not it resolves, so it occupies the place where a reader looks for a source
   // and answers the question wrongly. Absence has to look like absence.
   viewSource: { state: "unavailable", reason: "evidence binding is pending; no corpus provenance is bound in placeholder mode" },
-  impactEdges: [{ node: "<lineage read not observed>", direction: "none", degree: null, state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
+  impactEdges: [{ node: "<lineage read not observed>", platform: null, direction: "none", degree: null, state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
   // Not a placeholder delta. This used to be one `uncertainty-changed` entry
   // labelled `<joined plan unavailable>`, which spelled an absence as a plan
   // change — the shape of a finding, carrying none. The state now says it

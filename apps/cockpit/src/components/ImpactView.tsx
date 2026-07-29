@@ -95,6 +95,14 @@ function LineageNode({ edge, showSource }: { edge: ImpactEdge; showSource: boole
     <li className="topology__node">
       <span className="topology__name">{edge.node}</span>
       <span className="topology__meta">
+        {/*
+          The platform, because without it this column reads as untidy rather
+          than structured: four dbt models beside the four duckdb datasets they
+          are built from, half the names bare and half fully qualified. The
+          distinction is load-bearing and was invisible, so the only inference a
+          cold reader could draw was that the list had not been cleaned up.
+        */}
+        {edge.platform && <span className="chip chip--platform">{edge.platform}</span>}
         {edge.degree !== null && <span className="chip chip--degree">{edge.degree}</span>}
         {/*
           The resolution axis, which this view never rendered at all: `state` was
@@ -122,8 +130,14 @@ function LineageNode({ edge, showSource }: { edge: ImpactEdge; showSource: boole
  * distinguishes nothing and costs the space the argument needed.
  */
 function TopologyBand({ model }: { model: CockpitViewModel }) {
-  const upstream = model.impactEdges.filter((edge) => edge.direction === "upstream");
-  const downstream = model.impactEdges.filter((edge) => edge.direction === "downstream");
+  // Grouped by platform, then by degree. This only reorders on recorded fields:
+  // it does not assert that a dbt model and a duckdb dataset sharing a name are
+  // the same object, which the event does not state. It just stops the two
+  // layers from interleaving into what looks like an unsorted list.
+  const byPlatformThenDegree = (a: ImpactEdge, b: ImpactEdge) =>
+    (a.platform ?? "").localeCompare(b.platform ?? "") || (a.degree ?? 0) - (b.degree ?? 0);
+  const upstream = model.impactEdges.filter((edge) => edge.direction === "upstream").sort(byPlatformThenDegree);
+  const downstream = model.impactEdges.filter((edge) => edge.direction === "downstream").sort(byPlatformThenDegree);
   const undirected = model.impactEdges.filter((edge) => edge.direction === "none");
   const sources = [...new Set(model.impactEdges.map((edge) => edge.source))];
   const sharedSource = sources.length === 1 && sources[0] !== "unavailable" ? sources[0] : null;
@@ -141,7 +155,11 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
               : "Whether the set is complete is not established, so an absent edge is not evidence of no impact."}
           </p>
         </div>
-        {sharedSource && <SourceTag source={sharedSource} />}
+        <div className="lineage-band__key">
+          {/* The badges were bare integers with no key anywhere on the page. */}
+          <span className="lineage-band__legend">platform · lineage degree</span>
+          {sharedSource && <SourceTag source={sharedSource} />}
+        </div>
       </header>
 
       {undirected.length > 0 ? (

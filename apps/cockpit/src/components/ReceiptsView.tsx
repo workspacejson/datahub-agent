@@ -32,7 +32,10 @@ const provenanceRows = [
   ["dataHubReadParameters", "DataHub read parameters"],
   ["producerPath", "Producer path"],
   ["immutableSourceUrl", "Immutable source URL"],
-  ["limitations", "Limitations"],
+  // `limitations` is deliberately absent. It is the source-capability limits
+  // joined into one string, which is the same content as the gap band at the top
+  // of this receipt, minus the per-row source the band adds. Rendering both put
+  // the same two reasons on the page twice, at the weight of any other row.
 ] as const;
 
 const GAP_SYSTEM: Record<StatedGap["source"], string> = {
@@ -180,7 +183,14 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
     <section aria-labelledby="disclosure-title">
       <p className="eyebrow">Evaluation and disclosure</p>
       <h2 id="disclosure-title">Limitations lead</h2>
-      <p><Evidence value={evaluation.limitations} /></p>
+      {/*
+        They lead literally: every stated gap opens this receipt, each naming the
+        system that could not supply it. `evaluation.limitations` restated the
+        gap count and the tier sentence that "The tier is a count, not a warrant"
+        already carries, so rendering it here put the same sentence on the page
+        twice, reordered. The value is still in the raw receipt below.
+      */}
+      <p>Stated in full at the top of this receipt, each with the system that could not supply it.</p>
       <dl className="provenance-list">
         <div><dt>Paired evaluation spread</dt><dd><Evidence value={evaluation.pairedSpread} /></dd></div>
         <div><dt>LOC baseline</dt><dd><Evidence value={evaluation.locBaseline} /></dd></div>
