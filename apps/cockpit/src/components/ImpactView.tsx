@@ -33,4 +33,58 @@ function ViewSourceLink({ viewSource }: { viewSource: ViewSource }) {
     </>
   );
 }
-export function ImpactView({ model, onReviewPlan }: { model: CockpitViewModel; onReviewPlan(): void }) { return <section aria-label="Impact evidence"><div className="identity-grid">{([['Dataset identity', model.datasetIdentity], ['Producer file', model.producerPath], ['Repository evidence', model.repositoryEvidence]] as const).map(([label, claim]) => <article className="claim" key={label}><p>{label}</p><strong>{claim.text}</strong><SourceTag source={claim.source} /></article>)}</div><ViewSourceLink viewSource={model.viewSource} /><section className="impact-rail"><h2>Lineage read and completeness are separate</h2><p>Read: {model.read}. Completeness: {model.completeness}. {model.impactEdges.length === 0 && model.completeness !== "complete-against-pinned-manifest" ? "No observed edges does not mean no impact." : ""}</p><ul>{model.impactEdges.map((edge) => <li key={edge.label}><strong>{edge.label}</strong> — {edge.reason} {edge.source !== "unavailable" && <SourceTag source={edge.source} />}</li>)}</ul></section><button className="cta" type="button" onClick={onReviewPlan}>Review changed plan</button></section>; }
+/**
+ * The three material claims, the link, and the lineage read.
+ *
+ * The card row is `auto-fit` over `minmax(min(16rem, 100%), 1fr)` rather than
+ * `repeat(3, 1fr)`. The old rule put 953px of content into a 754px container,
+ * because `1fr` is `minmax(auto, 1fr)` and a column cannot shrink below an
+ * unbreakable URN: the third card, which is the workspace.json claim, rendered
+ * 144px wide and outside the panel. Reflowing is the honest failure mode here,
+ * since the alternative is a judge reading the repository evidence two words per
+ * line or not at all.
+ *
+ * Identifiers are set in mono and prose is not, so a URN or a path can be
+ * compared character by character.
+ */
+export function ImpactView({ model }: { model: CockpitViewModel }) {
+  const claims = [
+    { label: "Dataset identity", claim: model.datasetIdentity, kind: "identifier" },
+    { label: "Producer file", claim: model.producerPath, kind: "identifier" },
+    { label: "Repository evidence", claim: model.repositoryEvidence, kind: "evidence" },
+  ] as const;
+
+  return (
+    <section aria-label="Impact evidence">
+      <div className="identity-grid">
+        {claims.map(({ label, claim, kind }) => (
+          <article className={`claim claim--${kind}`} key={label}>
+            <p>{label}</p>
+            <strong>{claim.text}</strong>
+            <SourceTag source={claim.source} />
+          </article>
+        ))}
+      </div>
+
+      <ViewSourceLink viewSource={model.viewSource} />
+
+      <section className="impact-rail">
+        <h2>Lineage read and completeness are separate</h2>
+        <p>
+          Read: {model.read}. Completeness: {model.completeness}.{" "}
+          {model.impactEdges.length === 0 && model.completeness !== "complete-against-pinned-manifest"
+            ? "No observed edges does not mean no impact."
+            : ""}
+        </p>
+        <ul>
+          {model.impactEdges.map((edge) => (
+            <li key={edge.label}>
+              <strong>{edge.label}</strong>
+              {edge.reason} {edge.source !== "unavailable" && <SourceTag source={edge.source} />}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </section>
+  );
+}

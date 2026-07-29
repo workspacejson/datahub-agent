@@ -139,13 +139,13 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
 /**
  * Why a view built from an event alone has no comparison.
  *
- * One constant, used both by `projectEvent` and as `toComparisonState`'s
- * null-bundle reason, so the two paths cannot come to describe the same absence
- * in two different ways.
+ * Defined in `project-comparison.ts` and re-exported here so existing importers
+ * keep their path. It moved because `vite.config.ts` needs the same sentence at
+ * build time and cannot import this module: everything here reaches `@contract`,
+ * and a Vite config resolves no app aliases while it is being compiled.
  */
-export const NO_COMPARISON_SUPPLIED =
-  "this view was built from a change-impact event alone. The event contract carries evidence, not plans: " +
-  "a DataHub-only/joined comparison is a separate artifact bound to the event by digest, and none was supplied";
+export { NO_COMPARISON_SUPPLIED } from "./project-comparison";
+import { NO_COMPARISON_SUPPLIED } from "./project-comparison";
 
 /** An observation, tagged with the system that made it. */
 const observed = (value: string, source: ClaimSource): EvidenceValue =>

@@ -88,6 +88,13 @@ export const planDeltaSchema = z.object({
  * `eventDigest`, `taskId` and `model` are not decoration — they are what lets a
  * reader check that both plans answered the same question against the same
  * evidence.
+ *
+ * Both plans travel with it too. The deltas say what changed; `datahubOnlySteps`
+ * and `joinedSteps` are the two things that differ, and a frame arguing that
+ * joining repository evidence changed the plan has to show them side by side or
+ * it is asserting the difference rather than exhibiting it. They are steps as
+ * the run produced them, so an empty joined plan is a real (and visible) result
+ * rather than a rendering gap.
  */
 export const planComparisonSchema = z.discriminatedUnion("state", [
   z.object({
@@ -96,6 +103,8 @@ export const planComparisonSchema = z.discriminatedUnion("state", [
     taskId: z.string().min(1),
     model: z.string().min(1),
     eventDigest: z.string().min(1),
+    datahubOnlySteps: z.array(z.string().min(1)),
+    joinedSteps: z.array(z.string().min(1)),
   }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
 ]);

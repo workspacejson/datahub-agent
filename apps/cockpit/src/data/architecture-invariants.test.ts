@@ -58,7 +58,19 @@ describe("provisional boundary", () => {
       if (seen.has(file)) continue;
       seen.add(file);
       const source = readFileSync(file, "utf8");
-      for (const [, spec] of source.matchAll(/from\s+["']([^"']+)["']/g)) {
+      // The clause between `import`/`export` and `from` decides whether this edge
+      // survives compilation. `import type { X } from "y"` is erased whole by
+      // esbuild, so it puts nothing in the browser bundle and cannot carry a Node
+      // builtin into it; a value import of the same specifier does.
+      //
+      // The distinction is drawn here rather than by ignoring `@comparison`,
+      // because the two cases fail differently and only one of them is safe. A
+      // mixed import (`import { toComparisonState, type Artifact }`) does not
+      // start with `type` and is still reported, which is the conservative side
+      // to land on: the erasure has to be visible in the statement to be trusted.
+      for (const [, clause, spec] of source.matchAll(/(?:^|\n)\s*(?:import|export)\s+([\s\S]*?)\bfrom\s+["']([^"']+)["']/g)) {
+        const erased = /^type\b/.test(clause.trim());
+        if (erased) continue;
         if (spec.startsWith("node:")) offenders.push(`${file.replace(sourceRoot, "")} imports ${spec}`);
         // `@comparison` reaches `node:crypto`; it is an alias, so the relative
         // walk cannot follow it and it is named here as the one known bridge.
@@ -70,6 +82,32 @@ describe("provisional boundary", () => {
 
     expect(seen.size).toBeGreaterThan(5); // the walk actually walked
     expect(offenders).toEqual([]);
+  });
+
+  /**
+   * The check above now ignores type-only edges, so it can be blinded by a bad
+   * discriminator rather than by a bad import. This exercises the discriminator
+   * itself against both forms: a walk that silently stopped reporting would
+   * otherwise pass forever, and the invariant it protects has already reached CI
+   * once.
+   */
+  it("still reports a value import of a Node-reaching module, and only ignores erased ones", () => {
+    const classify = (source: string) => {
+      const found: string[] = [];
+      for (const [, clause, spec] of source.matchAll(/(?:^|\n)\s*(?:import|export)\s+([\s\S]*?)\bfrom\s+["']([^"']+)["']/g)) {
+        if (!/^type\b/.test(clause.trim())) found.push(spec);
+      }
+      return found;
+    };
+
+    expect(classify('import type { A } from "@comparison";')).toEqual([]);
+    expect(classify('import type {\n  A,\n} from "@comparison";')).toEqual([]);
+    expect(classify('import { toComparisonState } from "@comparison";')).toEqual(["@comparison"]);
+    // Mixed imports are not erased, and are deliberately still reported.
+    expect(classify('import { toComparisonState, type A } from "@comparison";')).toEqual(["@comparison"]);
+    expect(classify('import { createHash } from "node:crypto";')).toEqual(["node:crypto"]);
+    // `export ... from` re-exports a real runtime edge and must not be skipped.
+    expect(classify('export { NO_COMPARISON_SUPPLIED } from "./project-comparison";')).toEqual(["./project-comparison"]);
   });
 
   it("rejects arbitrary placeholder tokens outside the single provisional module", () => {

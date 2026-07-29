@@ -68,15 +68,30 @@ export function provisionalStateAdapter(state: CockpitStateName): CockpitSourceA
  * Throws only on a contract violation, and the message carries the offending
  * paths. A cockpit that rendered a malformed event would be showing a judge
  * claims nothing stands behind.
+ *
+ * `planComparison` is optional and arrives **already validated**, from the build
+ * step in `vite.config.ts`. It is not a way to hand the view an unchecked delta
+ * list: proving that a comparison is bound to this event means recomputing the
+ * event digest, `digestEvent` hashes with `node:crypto`, and Vite externalizes
+ * that for the browser rather than failing the build — which is how a bundle
+ * once built cleanly, passed every node-environment test, and then died on load.
+ * So the check runs where the artifact is read, in Node, and only its result
+ * crosses into the browser. Omitted, the event's own `unavailable` state stands,
+ * which is the honest reading of an event supplied without a comparison.
  */
-export function createAdapter(event: unknown, sourceMode: Exclude<SourceMode, "placeholder">): CockpitSourceAdapter {
+export function createAdapter(
+  event: unknown,
+  sourceMode: Exclude<SourceMode, "placeholder">,
+  planComparison?: SourceEvent["planComparison"] | null,
+): CockpitSourceAdapter {
   const result = readChangeImpactEvent(event, "impact");
   if (!result.ok) {
     throw new Error(
       `The supplied event does not satisfy the change-impact contract:\n  ${result.problems.join("\n  ")}`,
     );
   }
-  return { read: () => normalize(result.event, sourceMode) };
+  const projected = planComparison ? { ...result.event, planComparison } : result.event;
+  return { read: () => normalize(projected, sourceMode) };
 }
 
 export function fixtureLiveParity(fixture: CockpitViewModel, live: CockpitViewModel): boolean {
