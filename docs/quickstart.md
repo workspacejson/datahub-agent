@@ -120,13 +120,30 @@ key membership, not value reading.
 ## 4. Enrich
 
 The writeback annotates the dataset with the evidence tier, and with a
-commit-pinned link to the producing file when one is obtainable:
+commit-pinned link to the producing file when one is obtainable.
+
+It writes to `http://localhost:8080` unless `--gms URL` names another instance,
+so read the plan before sending it. A dry run prints the exact mutations and
+variables and contacts the catalog for nothing:
 
 ```bash
-node scripts/run-writeback.mjs event.json            # --dry-run to plan only
+node scripts/run-writeback.mjs event.json --dry-run
+```
+
+When the plan reads correctly, run it for real:
+
+```bash
+node scripts/run-writeback.mjs event.json
 ```
 
 It is idempotent, so the second run reports `noop`.
+
+Both mutations are additive on the pinned GMS `v1.5.0.6`:
+`upsertStructuredProperties` merges into the properties already on the dataset,
+and `upsertLink` appends to institutional memory. Neither replaces metadata this
+tool did not write. That is read from the resolver sources at tag `v1.5.0.6`
+rather than from the tutorial prose, which describes an aspect-level replace;
+see the note in [`src/integration/writeback.ts`](../src/integration/writeback.ts).
 
 ## 5. Run the examples
 

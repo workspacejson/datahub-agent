@@ -362,6 +362,38 @@ export function planWriteback(
           },
         }]
       : []),
+    // `upsertStructuredProperties` merges; it does not replace the aspect.
+    //
+    // Worth stating because DataHub's own tutorial says the opposite. The
+    // "Set Structured Property To a Dataset" page reads "This action will
+    // set/replace all structured properties on the entity", which describes the
+    // aspect-level OpenAPI write, not this mutation. Taken at face value it
+    // makes the call below look like it deletes every foreign property on the
+    // dataset, which is why HAC-269 was filed as a P0.
+    //
+    // The resolver at the pinned tag `v1.5.0.6` does the opposite. It reads the
+    // existing aspect, maps over the current assignments and returns each one
+    // untouched unless its URN appears in the input, appends only URNs that were
+    // not already present, and ingests the merged array:
+    //
+    //   UpsertStructuredPropertiesResolver.java:87   read existing aspect
+    //                                         :91    updateExistingProperties
+    //                                         :94    addNewProperties
+    //
+    // So naming one property here mutates that one property. A foreign property
+    // survives. The same holds for `upsertLink` above, which appends to
+    // institutional memory via LinkUtils rather than setting it.
+    //
+    // Two things this does NOT license, both unproven here:
+    //   - Atomicity. The merge is a server-side read-modify-write, so two
+    //     concurrent writers to one dataset can still lose an update. Narrower
+    //     than a clobber, and not addressed.
+    //   - The OpenAPI aspect PUT. That surface is where the documented replace
+    //     appears to apply, so porting this to it would introduce the very bug
+    //     the tutorial warns about.
+    //
+    // Re-read the resolver before changing the pinned GMS version; this is a
+    // property of that implementation, not a guarantee of the GraphQL contract.
     {
       mutation: "upsertStructuredProperties",
       variables: {
