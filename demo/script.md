@@ -204,3 +204,14 @@ value.
 
 See [`evaluation/hac-152/README.md`](../evaluation/hac-152/README.md) for full
 details.
+
+---
+
+## Demo production packet (local, gitignored)
+
+The working directory for demo production — narration script, scene
+definitions, voice config, generated audio, and rendered video — lives in
+`demo/` at the repo root. It is gitignored and never pushed; judges see
+only the final upload on Devpost / YouTube. The directory shape mirrors
+the production-packet discipline: story order first, evidence-labeled
+runs, captions frozen alongside audio.

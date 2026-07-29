@@ -20,3 +20,12 @@ __pycache__/
 /apps/cockpit/test-results/
 /apps/cockpit/playwright-report/
 /apps/cockpit/blob-report/
+
+# Demo production packet — rendered output only. The packet's *source* (script,
+# scene targets, pronunciations, voice config) is tracked: it is small, it is
+# authored, and a file that exists on one machine is a file already half-lost.
+# Only the generated audio and video are ignored, because they are large,
+# regenerable from the tracked source, and the final cut ships to Devpost and
+# YouTube rather than to this repository.
+/demo/output/
+/demo/narration/output/
