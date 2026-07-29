@@ -1,0 +1,164 @@
+{
+  "eventVersion": "1.3",
+  "provenance": {
+    "producedAt": "2026-07-29T15:20:53.054Z",
+    "producer": {
+      "name": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "datahub": {
+      "gmsUrl": "http://localhost:8080",
+      "gmsVersion": null
+    },
+    "corpus": {
+      "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+      "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+    },
+    "workspaceArtifact": {
+      "producedBy": "@workspacejson/cli",
+      "fileIndexKeys": 131,
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "revision": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+      "integrity": "repository-mismatch"
+    }
+  },
+  "subject": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)"
+  },
+  "datahub": {
+    "name": "customers",
+    "platform": "dbt",
+    "description": "This table has basic information about a customer, as well as some derived facts based on a customer's orders",
+    "upstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_customers,PROD)",
+        "name": "raw_customers",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_orders,PROD)",
+        "name": "raw_orders",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_payments,PROD)",
+        "name": "raw_payments",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_customers,PROD)",
+        "name": "stg_customers",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_orders,PROD)",
+        "name": "stg_orders",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_payments,PROD)",
+        "name": "stg_payments",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_customers,PROD)",
+        "name": "jaffle_shop.main.raw_customers",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_orders,PROD)",
+        "name": "jaffle_shop.main.raw_orders",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_payments,PROD)",
+        "name": "jaffle_shop.main.raw_payments",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_customers,PROD)",
+        "name": "jaffle_shop.main.stg_customers",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_orders,PROD)",
+        "name": "jaffle_shop.main.stg_orders",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_payments,PROD)",
+        "name": "jaffle_shop.main.stg_payments",
+        "degree": 1
+      }
+    ],
+    "downstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.customers,PROD)",
+        "name": "jaffle_shop.main.customers",
+        "degree": 1
+      }
+    ],
+    "lineageObservation": {
+      "upstreams": {
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 12
+      },
+      "downstreams": {
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 1
+      }
+    },
+    "schemaFieldCount": 7,
+    "owners": [],
+    "domain": null
+  },
+  "code": {
+    "dbtUniqueId": "model.jaffle_shop.customers",
+    "dbtFilePath": "models/customers.sql",
+    "repositoryRelativePath": null,
+    "projectPrefix": null,
+    "method": "unresolved",
+    "sourceUrl": null
+  },
+  "partners": [],
+  "evidence": {
+    "records": [],
+    "tier": "ASSERTED"
+  },
+  "accounting": {
+    "datasetsRequested": 1,
+    "datasetsResolved": 0,
+    "datasetsUnresolved": 1,
+    "nodesDropped": 0,
+    "nodesExcluded": {},
+    "unresolvedRecords": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)",
+        "reason": "The workspace.json artifact describes a different repository than the subject, so its file index cannot answer for this dataset."
+      }
+    ]
+  },
+  "unavailable": [
+    {
+      "field": "provenance.datahub.gmsVersion",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr."
+    },
+    {
+      "field": "code.repositoryRelativePath",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact."
+    },
+    {
+      "field": "partners",
+      "source": "workspacejson",
+      "reason": "indeterminate",
+      "detail": "Workspace artifact repository does not exactly match the subject repository; workspace-derived claims were refused.",
+      "completeness": "not-established"
+    }
+  ]
+}
