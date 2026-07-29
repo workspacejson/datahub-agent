@@ -120,7 +120,69 @@ const STATES = [
   },
 ];
 
+/**
+ * Captured states — a run that happened, copied in unchanged.
+ *
+ * Kept separate from `STATES` because the provenance claim is different, and
+ * flattening the two would let one claim stand in for the other. A derived
+ * fixture says "this is a real run with these named changes applied"; a captured
+ * one says "this *is* a real run, and nothing was applied". Both are honest;
+ * only one of them can also say which transformations it made, and a harness
+ * that demands a transformation list from a capture pushes toward inventing one.
+ *
+ * Some states cannot be derived at all. The demo corpus resolves 23/23, so
+ * partial resolution has no natural residual to degrade *into* — the state has
+ * to come from a request that genuinely falls outside the artifact. Producing it
+ * by editing a resolving run would be authoring the exact claim the state exists
+ * to make checkable.
+ *
+ * The copy is still script-maintained rather than hand-placed, so the same
+ * regeneration guard covers it: re-running reproduces the file byte for byte.
+ * For a capture that operation is identity, which is the point — the fixture and
+ * the recorded run cannot silently diverge.
+ */
+const CAPTURES = [
+  {
+    name: "partial-resolution",
+    state: "Resolution incomplete; every unresolved dataset named",
+    why:
+      "HAC-217's gate for this state is that resolution accounting names each unresolved item " +
+      "and establishes scope — counts alone do not pass. HAC-267 built the field that carries " +
+      "them; HAC-226 binds it into Receipts.",
+    capturedFrom: "evaluation/hac-267/unresolved-repository-mismatch.json",
+    note:
+      "Captured, not derived. The subject is jaffle_shop.main.customers, genuinely present in " +
+      "the live catalog, read while supplying the Transfermarkt workspace artifact. The join " +
+      "reports repository-mismatch on a real comparison of two real identities — the dataset is " +
+      "not invented, the mismatch is not simulated, and the name in the record is the URN that " +
+      "was requested. Nothing was applied to this event after it was emitted.",
+  },
+];
+
 mkdirSync(join(root, OUT), { recursive: true });
+
+for (const spec of CAPTURES) {
+  const sourcePath = join(root, spec.capturedFrom);
+  const raw = readFileSync(sourcePath);
+  const body = raw.toString("utf8");
+  const file = `change-impact-event.${spec.name}.json`;
+  writeFileSync(join(root, OUT, file), body);
+
+  const sidecar = {
+    fixture: file,
+    kind: "captured",
+    state: spec.state,
+    why: spec.why,
+    capturedFrom: spec.capturedFrom,
+    capturedFromSha256: createHash("sha256").update(raw).digest("hex"),
+    generated_by: "scripts/derive-state-fixtures.mjs",
+    command: "node scripts/derive-state-fixtures.mjs",
+    note: spec.note,
+    fixtureSha256: createHash("sha256").update(body).digest("hex"),
+  };
+  writeFileSync(join(root, OUT, `${file.replace(/\.json$/, "")}.provenance.json`), `${JSON.stringify(sidecar, null, 2)}\n`);
+  console.log(`${file}  <= ${spec.capturedFrom} (captured, unchanged)`);
+}
 
 for (const spec of STATES) {
   const event = spec.apply(clone(base));
@@ -130,6 +192,7 @@ for (const spec of STATES) {
 
   const sidecar = {
     fixture: file,
+    kind: "derived",
     state: spec.state,
     why: spec.why,
     derivedFrom: BASE,

@@ -1,0 +1,12 @@
+{
+  "fixture": "change-impact-event.partial-resolution.json",
+  "kind": "captured",
+  "state": "Resolution incomplete; every unresolved dataset named",
+  "why": "HAC-217's gate for this state is that resolution accounting names each unresolved item and establishes scope — counts alone do not pass. HAC-267 built the field that carries them; HAC-226 binds it into Receipts.",
+  "capturedFrom": "evaluation/hac-267/unresolved-repository-mismatch.json",
+  "capturedFromSha256": "11fb4858839214f657b5d769792288b60647b9ad8206e9e282ff813ff74a41ab",
+  "generated_by": "scripts/derive-state-fixtures.mjs",
+  "command": "node scripts/derive-state-fixtures.mjs",
+  "note": "Captured, not derived. The subject is jaffle_shop.main.customers, genuinely present in the live catalog, read while supplying the Transfermarkt workspace artifact. The join reports repository-mismatch on a real comparison of two real identities — the dataset is not invented, the mismatch is not simulated, and the name in the record is the URN that was requested. Nothing was applied to this event after it was emitted.",
+  "fixtureSha256": "11fb4858839214f657b5d769792288b60647b9ad8206e9e282ff813ff74a41ab"
+}

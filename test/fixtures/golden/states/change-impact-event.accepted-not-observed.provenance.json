@@ -1,5 +1,6 @@
 {
   "fixture": "change-impact-event.accepted-not-observed.json",
+  "kind": "derived",
   "state": "Mutation accepted; intended state not observed",
   "why": "HAC-217 rules this a mandatory terminal state: acceptance is not success, and the distinction is central to the trust surface. HAC-226 binds it into Receipts.",
   "derivedFrom": "evaluation/hac-152/live-event-with-writeback.json",
