@@ -127,13 +127,12 @@ an existing checkout instead.
 
 ## What was added, not adopted
 
-The adopted module had no URN handling — it covered `dbt → fileIndex` but never
-`URN → dbt`. Two modules were added **alongside** the frozen five, so the
+The adopted module covered `dbt → fileIndex` but had no non-silent node
+extraction. One module was added **alongside** the frozen five, so the
 parity baseline stays pinned:
 
 | File | Purpose |
 | -- | -- |
-| `urn.ts` | DataHub dataset URN → dbt manifest node ([HAC-147](https://linear.app/marcelle-labs/issue/HAC-147)) |
 | `nodes.ts` | non-silent node extraction ([HAC-162](https://linear.app/marcelle-labs/issue/HAC-162)) |
 
 `nodes.ts` exists because the adopted `extractModels` filters
@@ -142,6 +141,22 @@ parity baseline stays pinned:
 28 nodes without a word. HAC-162's bar is explicit: *"a dropped node must warn,
 not vanish."* `extractModels` is left untouched — it is the behavior the parity
 harness pins — and `extractDatasetNodes` is the accountable path the join uses.
+
+### Post-closure correction (HAC-273, 2026-07-29)
+
+HAC-147 delivered `urn.ts`, a module that parsed DataHub dataset URNs and
+matched them to dbt manifest nodes by reconstructing
+`database.schema.alias` from dbt naming conventions. Its only consumer was
+its own isolated test (`urn-join.integration.test.ts`); no production code
+imported it. The barrel `index.ts` never exported it.
+
+The DataHub-native path supersedes it: production consumes DataHub-returned
+URNs as-is via `mcp-read.ts`; writeback targets accepted URNs; identity is
+never reconstructed from dbt naming conventions. No `dbt_unique_id` join
+replaces it — the production path does not need one.
+
+`urn.ts` and its isolated test were removed under HAC-273. A legacy-seam
+guard (`test/policy/no-urn-reconstruction.test.ts`) prevents reintroduction.
 
 ## Boundary
 

@@ -44,8 +44,10 @@ in [`docs/provenance.md`](docs/provenance.md).
 - `index.ts` — barrel export
 
 **What was added (new work, not adopted):**
-- `urn.ts` — DataHub dataset URN parsing and dbt node matching
 - `nodes.ts` — non-silent node extraction with accounting
+
+> **Correction 2026-07-29 (HAC-273):** `urn.ts` was removed as dormant. See
+> [`docs/provenance.md`](docs/provenance.md) for the HAC-147 reconciliation.
 
 **Parity verification:** 35/35 checks pass against the frozen migration
 baseline. Run `npm run parity:datahub-adapter`.
@@ -68,7 +70,6 @@ platform or the workspacejson CLI source.
 
 | Component | File(s) | What it does |
 | -- | -- | -- |
-| Dataset URN resolution | `src/adapters/workspacejson/urn.ts` | Parses DataHub dataset URNs and matches them to dbt manifest nodes |
 | Non-silent node extraction | `src/adapters/workspacejson/nodes.ts` | Reports every dbt node as kept, dropped, or excluded — no silent zeros |
 | Change-impact event contract | `src/integration/change-impact-event.ts` | The versioned, Zod-validated, drift-guarded event contract (v1.3) |
 | MCP read path | `src/integration/mcp-read.ts` | Reads DataHub through the official MCP server: entities, lineage, schema |
@@ -142,4 +143,4 @@ Playwright. See [`docs/cockpit-architecture.md`](docs/cockpit-architecture.md).
 | -- | -- |
 | Pre-existing (consumed) | `@workspacejson/spec`, `@workspacejson/cli`, dbt path adapter (5 files, adopted with parity) |
 | Pre-existing (third-party) | `dbt-labs/jaffle_shop_duckdb` (proof corpus), DataHub, dbt |
-| New (hackathon) | URN resolution, non-silent extraction, event contract, MCP read, writeback, plan comparison, cockpit, all scripts, all evaluation, all tests |
+| New (hackathon) | Non-silent extraction, event contract, MCP read, writeback, plan comparison, cockpit, all scripts, all evaluation, all tests |

@@ -1,12 +1,11 @@
 /**
- * HAC-147 seam, end to end, on the frozen proof corpus (HAC-143):
+ * Manifest-node extraction and fileIndex join, end to end, on the frozen proof
+ * corpus (HAC-143):
  *
- *   DataHub dataset URN -> dbt model -> source path -> workspace.json evidence
+ *   dbt manifest node -> source path -> workspace.json evidence
  *
- * META-248 calls this out as the test the adopted adapter did not have: it
- * covered `dbt -> fileIndex` but never `URN -> dbt`. Fixtures are generated
- * from dbt-labs/jaffle_shop_duckdb@36bde6cb by scripts/build-corpus-fixture.mjs
- * and carry their own provenance block.
+ * Fixtures are generated from dbt-labs/jaffle_shop_duckdb@36bde6cb by
+ * scripts/build-corpus-fixture.mjs and carry their own provenance block.
  */
 
 import { readFileSync } from "node:fs";
@@ -19,7 +18,6 @@ import { describe, expect, it } from "vitest";
 import { computeProjectPrefix, joinModels, type DbtModel, type FileIndex } from "../../../src/adapters/workspacejson/index.js";
 import { extractModels } from "../../../src/adapters/workspacejson/dbt.js";
 import { extractDatasetNodes, formatDropWarnings } from "../../../src/adapters/workspacejson/nodes.js";
-import { indexNodesByDatasetName, parseDatasetUrn, resolveUrn } from "../../../src/adapters/workspacejson/urn.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = join(here, "../../fixtures/proof-corpus");
@@ -31,7 +29,6 @@ const workspaceProvenance = JSON.parse(readFileSync(join(fixtures, "workspace-pr
 const fileIndex: FileIndex = workspace.generated.fileIndex;
 
 const PINNED = "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb";
-const urnFor = (name: string) => `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.${name},PROD)`;
 
 describe("fixtures are the frozen corpus", () => {
   it("both fixtures pin the same immutable commit", () => {
@@ -75,45 +72,26 @@ describe("fixtures are the frozen corpus", () => {
   });
 });
 
-describe("URN parsing", () => {
-  it("parses a dbt dataset URN into platform, name and fabric", () => {
-    expect(parseDatasetUrn(urnFor("customers"))).toEqual({
-      platform: "dbt",
-      name: "jaffle_shop.main.customers",
-      fabric: "PROD",
-    });
-  });
-
-  it.each([
-    ["not a urn at all", "not-a-urn"],
-    ["a chart urn, not a dataset", "urn:li:chart:(looker,baz)"],
-    ["a truncated dataset urn", "urn:li:dataset:(urn:li:dataPlatform:dbt,only.two)"],
-  ])("returns null for %s", (_label, urn) => {
-    expect(parseDatasetUrn(urn)).toBeNull();
-  });
-});
-
-describe("URN -> dbt model -> source path -> fileIndex (the full seam)", () => {
-  const index = indexNodesByDatasetName(manifest.nodes);
+describe("node extraction → source path → fileIndex join", () => {
+  const result = extractDatasetNodes(manifest);
+  const nodes = result.nodes;
+  const nodeByUniqueId = new Map(nodes.map((n) => [n.uniqueId, n]));
 
   // The corpus's dbt project sits AT the repository root, so the prefix is "".
   const prefix = computeProjectPrefix("/repo", "/repo");
 
   it.each([
-    ["customers", "models/customers.sql"],
-    ["orders", "models/orders.sql"],
-    ["stg_customers", "models/staging/stg_customers.sql"],
-    ["stg_orders", "models/staging/stg_orders.sql"],
-    ["stg_payments", "models/staging/stg_payments.sql"],
-  ])("resolves %s all the way to a fileIndex hit", (name, expectedPath) => {
-    const resolution = resolveUrn(urnFor(name), index);
-
-    expect(resolution.failure).toBeNull();
-    expect(resolution.uniqueId).toBe(`model.jaffle_shop.${name}`);
-    expect(resolution.originalFilePath).toBe(expectedPath);
+    ["model.jaffle_shop.customers", "models/customers.sql"],
+    ["model.jaffle_shop.orders", "models/orders.sql"],
+    ["model.jaffle_shop.stg_customers", "models/staging/stg_customers.sql"],
+    ["model.jaffle_shop.stg_orders", "models/staging/stg_orders.sql"],
+    ["model.jaffle_shop.stg_payments", "models/staging/stg_payments.sql"],
+  ])("joins %s all the way to a fileIndex hit", (uniqueId, expectedPath) => {
+    const node = nodeByUniqueId.get(uniqueId)!;
+    expect(node.originalFilePath).toBe(expectedPath);
 
     const joined = joinModels(
-      [{ uniqueId: resolution.uniqueId!, originalFilePath: resolution.originalFilePath! }],
+      [{ uniqueId: node.uniqueId, originalFilePath: node.originalFilePath }],
       prefix as string,
       fileIndex,
     );
@@ -122,22 +100,20 @@ describe("URN -> dbt model -> source path -> fileIndex (the full seam)", () => {
   });
 
   it("joins all five corpus models in one pass", () => {
-    const models: DbtModel[] = ["customers", "orders", "stg_customers", "stg_orders", "stg_payments"]
-      .map((n) => resolveUrn(urnFor(n), index))
-      .map((r) => ({ uniqueId: r.uniqueId!, originalFilePath: r.originalFilePath! }));
+    const models: DbtModel[] = nodes
+      .filter((n) => n.resourceType === "model")
+      .map((n) => ({ uniqueId: n.uniqueId, originalFilePath: n.originalFilePath }));
 
     const joined = joinModels(models, prefix as string, fileIndex);
     expect(joined).toMatchObject({ matched: 5, total: 5 });
   });
 
-  it("resolves seeds too — not just models", () => {
-    const resolution = resolveUrn(urnFor("raw_customers"), index);
-    expect(resolution.failure).toBeNull();
-    expect(resolution.uniqueId).toBe("seed.jaffle_shop.raw_customers");
-    expect(resolution.originalFilePath).toBe("seeds/raw_customers.csv");
+  it("joins seeds too — not just models", () => {
+    const seed = nodeByUniqueId.get("seed.jaffle_shop.raw_customers")!;
+    expect(seed.originalFilePath).toBe("seeds/raw_customers.csv");
 
     const joined = joinModels(
-      [{ uniqueId: resolution.uniqueId!, originalFilePath: resolution.originalFilePath! }],
+      [{ uniqueId: seed.uniqueId, originalFilePath: seed.originalFilePath }],
       prefix as string,
       fileIndex,
     );
@@ -151,21 +127,11 @@ describe("URN -> dbt model -> source path -> fileIndex (the full seam)", () => {
     const nestedIndex: FileIndex = Object.fromEntries(
       Object.keys(fileIndex).map((k) => [`dbt/${k}`, {}]),
     );
-    const model = resolveUrn(urnFor("customers"), index);
-    const models: DbtModel[] = [{ uniqueId: model.uniqueId!, originalFilePath: model.originalFilePath! }];
+    const node = nodeByUniqueId.get("model.jaffle_shop.customers")!;
+    const models: DbtModel[] = [{ uniqueId: node.uniqueId, originalFilePath: node.originalFilePath }];
 
     expect(joinModels(models, "", nestedIndex).matched).toBe(0); // the silent failure
     expect(joinModels(models, "dbt", nestedIndex).matched).toBe(1); // the fix
-  });
-
-  it.each([
-    ["unparseable-urn", "garbage"],
-    ["non-dbt-platform", "urn:li:dataset:(urn:li:dataPlatform:snowflake,a.b.c,PROD)"],
-    ["no-matching-node", urnFor("does_not_exist")],
-  ])("reports %s explicitly rather than returning nothing", (failure, urn) => {
-    const r = resolveUrn(urn, index);
-    expect(r.failure).toBe(failure);
-    expect(r.uniqueId).toBeNull();
   });
 });
 

@@ -109,7 +109,7 @@ overstates what it supports.
    This corpus therefore *never exercises the nested-project normalization that
    is the adapter's entire reason to exist*. The nested case is covered by a
    perturbation test that relocates the same real paths under a `dbt/` prefix
-   (`urn-join.integration.test.ts`), not by the corpus itself.
+   (`nodes-join.integration.test.ts`), not by the corpus itself.
 2. **No snapshots, no Python models, no sources.** See
    [`dbt-node-coverage.md`](dbt-node-coverage.md) — those node types are
    verified against a purpose-built probe, not against this corpus.
