@@ -39,8 +39,15 @@ const fixtures = join(root, "test/fixtures");
  * reason, "it is fine" is not.
  */
 const WITHOUT_PROVENANCE: Record<string, string> = {
+  // Verified emitted, not authored — checked 2026-07-29 rather than assumed,
+  // because the alternative was an integrity defect. The carried edges show the
+  // dbt/duckdb sibling topology HAC-231 ratified independently a day later
+  // (deg 1 duckdb:stg -> deg 2 dbt:stg -> deg 3 duckdb:raw -> deg 4 dbt:raw),
+  // and `name` is populated on dbt edges and null on every duckdb one — a
+  // partial-field asymmetry that comes from what the catalog returned, not from
+  // an author. `57df55b` regenerated it from a clean instance.
   "golden/change-impact-event.root.json":
-    "Emitted against the Jaffle corpus before the sidecar convention existed. Reproducible via scripts/emit-change-impact-event.mjs; the derivation is recorded in evaluation/proof-corpus.md rather than beside the artifact. HAC-145 rebinds it.",
+    "Emitted against the Jaffle corpus before the sidecar convention existed. Its 12 upstream / 1 downstream edges are a real observation from an instance that had jaffle ingested; the catalog has since been re-ingested with transfermarkt only, so the figures are stale rather than wrong. HAC-145 rebinds this surface to the Transfermarkt package.",
   "golden/change-impact-event.nested.json":
     "As above, for the nested-path proof. Same emitter, same corpus pinning, same missing sidecar.",
   "readiness/game_events.upstream.json":
