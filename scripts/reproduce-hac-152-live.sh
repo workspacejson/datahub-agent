@@ -15,7 +15,14 @@ revision='59fa295c51fc23466f3a71542f8bf3d1335daa83'
 repository='https://github.com/dcaribou/transfermarkt-datasets'
 
 command -v "$python_bin" >/dev/null
-curl -fsS --max-time 5 "$gms/api/graphql" >/dev/null || true
+if [ ! -d "$repo_root/node_modules" ]; then
+  npm ci --prefix "$repo_root"
+fi
+
+# Fail early only when the local GMS cannot answer a real GraphQL request.
+curl -fsS --max-time 5 -X POST "$gms/api/graphql" \
+  -H 'Content-Type: application/json' \
+  --data '{"query":"{ appConfig { appVersion } }"}' >/dev/null
 
 git clone "$repository" "$run_dir/transfermarkt"
 git -C "$run_dir/transfermarkt" checkout --detach "$revision"
