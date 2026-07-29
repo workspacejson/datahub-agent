@@ -1,3 +1,4 @@
+import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
 
@@ -48,12 +49,6 @@ const provenanceRows = [
   // the same two reasons on the page twice, at the weight of any other row.
 ] as const;
 
-const GAP_SYSTEM: Record<StatedGap["source"], string> = {
-  datahub: "DataHub",
-  workspacejson: "workspace.json",
-  joined: "Joined",
-};
-
 /**
  * Everything the event could not establish, banded and placed first.
  *
@@ -78,7 +73,7 @@ function UnestablishedBand({ statedGaps }: { statedGaps: readonly StatedGap[] })
           <ul className="gap-band">
             {statedGaps.map((gap) => (
               <li className="gap" key={gap.field}>
-                <span className="gap__system">{GAP_SYSTEM[gap.source]}</span>
+                <span className="gap__system">{GAP_SOURCE_LABEL[gap.source]}</span>
                 <span className="gap__field mono">{gap.field}</span>
                 <span className="gap__reason">{gap.reason}</span>
                 <span className="gap__detail">{gap.detail}</span>

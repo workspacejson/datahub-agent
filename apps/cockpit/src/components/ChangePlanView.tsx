@@ -51,12 +51,14 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
         <article className="plan-panel">
           <p className="eyebrow">DataHub only</p>
           <h3>Declared context alone</h3>
-          <ol>{comparison.datahubOnlySteps.map((step) => <li key={step}>{step}</li>)}</ol>
+          {/* Index keys: two plan steps may legitimately carry identical text, and the
+              list is static per render, so position is the stable identity. */}
+          <ol>{comparison.datahubOnlySteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
         </article>
         <article className="plan-panel plan-panel--joined">
           <p className="eyebrow">Joined context</p>
           <h3>Declared context plus repository evidence</h3>
-          <ol>{comparison.joinedSteps.map((step) => <li key={step}>{step}</li>)}</ol>
+          <ol>{comparison.joinedSteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
         </article>
       </div>
 

@@ -1,3 +1,4 @@
+import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, ImpactEdge, StatedGap, ViewSource } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
 
@@ -60,9 +61,7 @@ function ResolutionSeam({ model, gap }: { model: CockpitViewModel; gap: StatedGa
 
       {gap && (
         <div className="seam__row seam__row--withheld">
-          <span className="seam__system">
-            {gap.source === "datahub" ? "DataHub" : gap.source === "workspacejson" ? "workspace.json" : "Joined"}
-          </span>
+          <span className="seam__system">{GAP_SOURCE_LABEL[gap.source]}</span>
           <span className="seam__value">
             <span className="seam__field mono">{gap.field}</span>
             <span className="seam__reason">{gap.detail}</span>

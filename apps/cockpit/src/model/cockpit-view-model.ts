@@ -230,10 +230,27 @@ export const unresolvedDatasetsSchema = z.discriminatedUnion("state", [
  */
 export const statedGapSchema = z.object({
   field: z.string().min(1),
-  source: z.enum(["datahub", "workspacejson", "joined"]),
+  /*
+   * Exactly the contract's `ContextSource`, which is two values.
+   *
+   * This carried a third, `joined`, which no producer can emit: the contract's
+   * `contextSourceSchema` is `z.enum(["datahub", "workspacejson"])` inside a
+   * `z.strictObject`, so an event with any other value is rejected before the
+   * cockpit sees it. The extra member made both renderers carry a branch that
+   * could never execute, which is a value nothing writes rendering as a real
+   * case. Narrowed to match, so widening the contract is a compile error here
+   * rather than a silently unreachable branch.
+   */
+  source: z.enum(["datahub", "workspacejson"]),
   reason: z.string().min(1),
   detail: z.string().min(1),
 });
+
+/** The sanctioned rendering of a gap's source. One table, two consumers. */
+export const GAP_SOURCE_LABEL: Record<z.infer<typeof statedGapSchema>["source"], string> = {
+  datahub: "DataHub",
+  workspacejson: "workspace.json",
+};
 
 export const receiptSchema = z.object({
   accounting: resolutionAccountingSchema,
