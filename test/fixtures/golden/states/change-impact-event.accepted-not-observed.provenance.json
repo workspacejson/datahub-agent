@@ -13,5 +13,18 @@
     "writeback.after.evidenceTier: set to the before-state value, so the after-state reads cleanly and shows the pre-mutation answer"
   ],
   "note": "The after-state read still succeeds. That is the point: `read: ok` and a stale answer are two facts, and a surface collapsing them would lose the distinction exactly where it matters. Every mutation attempt is left untouched and still succeeded, so the mutation is genuinely accepted and genuinely unconfirmed.",
+  "baseObservation": {
+    "status": "settled",
+    "polls": 1,
+    "elapsedMs": 10,
+    "timeoutMs": 120000,
+    "bothStatesRead": true,
+    "beforeRead": "ok",
+    "afterRead": "ok",
+    "readTier": "unknown",
+    "readTierNote": "The after-state read settled on the first poll, which shows read-your-writes converging immediately on this stack but does not establish which storage tier served it. A replica that happened to be current answers identically. Recorded as unknown rather than inferred from latency; no primary-read option has been identified on the pinned stack.",
+    "surface": "GraphQL dataset(urn:) — institutionalMemory, structuredProperties",
+    "instrumentNote": "The client behind this read checks the GraphQL top-level `errors` array before HTTP status and maps a failed read to an unreadable state rather than to nulls, so an unreachable instance cannot be recorded here as an empty one. Audited 2026-07-29 across all nine GraphQL clients in this repository."
+  },
   "fixtureSha256": "e13d9e4493bbd41b6eaba6714e0b9e51429c8be01ebcd164cf36bb79500823d3"
 }
