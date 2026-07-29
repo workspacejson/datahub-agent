@@ -72,7 +72,6 @@ migration baseline.
 | -- | -- |
 | [`docs/evidence.md`](../docs/evidence.md) | Evidence terminology and invariants: read, completeness, unavailable reasons, tier derivation |
 | [`docs/claims.md`](../docs/claims.md) | Public claim ledger: every figure in the README with its source and verification command |
-| [`docs/demo-script.md`](../docs/demo-script.md) | Demo script mirroring the video scenes with exact timestamps |
 | [`docs/cockpit-architecture.md`](../docs/cockpit-architecture.md) | Cockpit technology stack and architecture decisions |
 | [`docs/quickstart.md`](../docs/quickstart.md) | Full DataHub setup, MCP server installation, enrichment workflow |
 | [`docs/provenance.md`](../docs/provenance.md) | Adapter adoption provenance: source, identity, parity checks |
