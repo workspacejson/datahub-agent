@@ -109,6 +109,35 @@ async function subject(urn) {
 }
 
 /**
+ * Recipes are captured, so redaction is not optional.
+ *
+ * A dbt recipe is normally paths and a corpus pin, but the sink block is where a
+ * `token` lives, and nothing stops a future recipe carrying one. Committed
+ * evidence must never be the thing that publishes a credential, so this walks the
+ * parsed recipe and replaces any value under a secret-shaped key before it can
+ * reach a file. Unparseable input is dropped rather than passed through — a
+ * recipe this cannot read is a recipe it cannot redact.
+ */
+const SECRET_KEY = /token|password|secret|credential|api[_-]?key/i;
+const redact = (value) => {
+  if (Array.isArray(value)) return value.map(redact);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, SECRET_KEY.test(k) ? "[REDACTED]" : redact(v)]),
+    );
+  }
+  return value;
+};
+const redactedRecipe = (raw) => {
+  if (typeof raw !== "string") return null;
+  try {
+    return redact(JSON.parse(raw));
+  } catch {
+    return { _unparseable: true, _note: "recipe was not JSON; withheld rather than copied unredacted" };
+  }
+};
+
+/**
  * The ingestion audit trail.
  *
  * `evaluation/lineage-readiness-signals.md` records that "CLI `datahub ingest`
@@ -122,6 +151,22 @@ async function subject(urn) {
  * why it is captured here rather than left to the doc's conclusion. The doc's
  * *other* claim still holds — the 15-minute FAILURE cron is `datahub-documents`
  * and `datahub-gc`, unrelated to this project.
+ *
+ * **The per-execution recipe is the field that makes a teardown reversible, and
+ * it is the field that decays.** Discovered 2026-07-29: DataHub's CLI keys its
+ * generated source by a hash of the pipeline, so every `datahub ingest` of the
+ * same source type writes the *same* `[CLI] dbt` source URN and overwrites that
+ * source's stored recipe in place. The source-level recipe therefore describes
+ * only the most recent run — on this instance it reads as jaffle, and the
+ * transfermarkt recipe that actually built the demo corpus is no longer there.
+ *
+ * It survives one level down: each `executionRequest` keeps the recipe it ran
+ * with, so the 01:32:27Z transfermarkt ingest is still recoverable. That history
+ * is not permanent either — `datahub-gc` runs `execution_request_cleanup` with
+ * `keep_history_min_count: 10` and `keep_history_max_days: 90`. So this captures
+ * the per-run recipe, not just the run's outcome. Capturing the outcome alone
+ * records *that* the corpus was ingested while losing *how*, which is the half
+ * that cannot be reconstructed from a rebuilt instance.
  */
 async function ingestion() {
   const data = await gql(`{
@@ -129,8 +174,13 @@ async function ingestion() {
       total
       ingestionSources {
         urn name type
+        config { recipe version executorId }
         executions(start: 0, count: 10) {
-          executionRequests { id result { status startTimeMs durationMs } }
+          executionRequests {
+            id
+            input { requestedAt actorUrn arguments { key value } }
+            result { status startTimeMs durationMs }
+          }
         }
       }
     }
@@ -138,12 +188,22 @@ async function ingestion() {
   return (data.listIngestionSources?.ingestionSources ?? []).map((s) => ({
     name: s.name,
     type: s.type,
-    executions: (s.executions?.executionRequests ?? []).map((e) => ({
-      status: e.result?.status ?? null,
-      startTimeMs: e.result?.startTimeMs ?? null,
-      startedIso: e.result?.startTimeMs ? new Date(e.result.startTimeMs).toISOString() : null,
-      durationMs: e.result?.durationMs ?? null,
-    })).sort((a, b) => (b.startTimeMs ?? 0) - (a.startTimeMs ?? 0)),
+    // Latest-run-wins, per the note above. Kept so a capture shows what the
+    // source claims alongside what each run actually did.
+    currentSourceRecipe: redactedRecipe(s.config?.recipe),
+    cliVersion: s.config?.version || null,
+    executions: (s.executions?.executionRequests ?? []).map((e) => {
+      const args = Object.fromEntries((e.input?.arguments ?? []).map((a) => [a.key, a.value]));
+      return {
+        status: e.result?.status ?? null,
+        startTimeMs: e.result?.startTimeMs ?? null,
+        startedIso: e.result?.startTimeMs ? new Date(e.result.startTimeMs).toISOString() : null,
+        durationMs: e.result?.durationMs ?? null,
+        actorUrn: e.input?.actorUrn ?? null,
+        cliVersion: args.version ?? null,
+        recipe: redactedRecipe(args.recipe),
+      };
+    }).sort((a, b) => (b.startTimeMs ?? 0) - (a.startTimeMs ?? 0)),
   }));
 }
 

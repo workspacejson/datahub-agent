@@ -1,0 +1,9 @@
+{
+  "fixture": "catalog-baseline-2026-07-29T14-25-09-822Z.json",
+  "capturedAt": "2026-07-29T14:25:09.822Z",
+  "generated_by": "scripts/capture-catalog-baseline.mjs",
+  "command": "node scripts/capture-catalog-baseline.mjs --gms http://localhost:8080",
+  "readOnly": true,
+  "note": "A point observation of a live catalog that has been seen to change without this project acting. Meaningful as a series; a single capture states one moment and nothing about stability.",
+  "fixtureSha256": "b51f78d080854f0bda95234f914e00f62ad126af28ebcf15e7df412dfa12a822"
+}
