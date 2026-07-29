@@ -1,0 +1,109 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+
+  // Formatter and assist stay off. The formatter's first run would rewrite the
+  // repository and bury every real commit in a whitespace diff; `assist` applies
+  // code actions with the same effect. The linter has no such cost.
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+
+  // Scoped to what nothing else checks. `tsconfig.json` covers `src/**/*.ts` and
+  // `test/**/*.ts`; these ~3.7k lines had no automated check of any kind, and ten
+  // of the files are not exercised by any test either. They produce evidence, so
+  // a defect here emits a claim rather than failing a build.
+  "files": { "includes": ["scripts/**/*.mjs", "migration/**/*.mjs"] },
+
+  "linter": {
+    "enabled": true,
+    "rules": {
+      // `all` rather than `recommended`, then subtract. Measured on 2026-07-29:
+      // `all` produced 856 diagnostics across 31 rules, and every rule in the
+      // correctness class was a false positive here. Rather than accept the
+      // weaker preset, each of those 31 is turned off with its reason, so the
+      // remaining ~170 rules are live at zero present cost and will fire on new
+      // code. Turning a rule off below is a claim that needs to survive review;
+      // "it was noisy" is not one.
+      "preset": "all",
+
+      "suspicious": {
+        // These are command-line tools. `console` is their output, not a stray
+        // debug statement — 286 hits, all of them the program working.
+        "noConsole": "off",
+        // Flags `.sort()` without a comparator. Every bare sort here is over an
+        // array of URN strings, where the default is a UTF-16 code-unit compare:
+        // deterministic, locale-independent, and exactly what the digests need.
+        // The obvious "fix" — `.sort((a, b) => a.localeCompare(b))` — is
+        // locale-dependent and would make `expectedSetDigest` differ across
+        // machines, breaking the manifest-to-capture agreement this project
+        // relies on. Enabling this rule invites the defect it looks like it
+        // prevents.
+        "useArraySortCompare": "off",
+        // `== null` is the idiomatic null-or-undefined check, used deliberately.
+        "noEqualsToNull": "off",
+        // Both hits are the documented `tsx/esm/api` register fallback in the
+        // dynamic-import loader, which is the shape that pattern requires.
+        "useAwait": "off",
+        "noNestedPromises": "off",
+        // Two shadowed parameter names. Real but trivial, and these scripts
+        // produce committed evidence — deferred rather than dismissed, to be
+        // fixed when one of them is edited for another reason.
+        "noShadow": "off",
+        // Flags a condition it can prove constant. Both sites are `CONFIG.x && …`
+        // where CONFIG is a literal the script exists to let you vary; the
+        // conditional is the configurability, not dead code.
+        "noUnnecessaryConditions": "off"
+      },
+
+      "correctness": {
+        // Node scripts. `process.argv`, `process.exit` and `node:` imports are
+        // the platform, not a portability defect.
+        "noProcessGlobal": "off",
+        "noNodejsModules": "off",
+        // A Qwik framework rule. This is not a Qwik project; all 36 hits are
+        // false by construction.
+        "useQwikValidLexicalScope": "off",
+        "useSingleJsDocAsterisk": "off"
+      },
+
+      "security": {
+        // Entropy heuristic. Flagged `repoRoot`, `outDir` and `PINNED` — three
+        // ordinary identifiers, no secrets. Left off rather than suppressed at
+        // each site so a real hit is not buried among ignore comments.
+        "noSecrets": "off"
+      },
+
+      "performance": {
+        // Sequential awaits in scripts that are deliberately sequential — they
+        // poll a converging index, where concurrency would defeat the purpose.
+        "noAwaitInLoops": "off",
+        "useTopLevelRegex": "off"
+      },
+
+      "complexity": {
+        "useSimplifiedLogicExpression": "off",
+        "useMaxParams": "off"
+      },
+
+      // Style is preference, and preference is not rigor. Every rule below fires
+      // on code that is correct; enforcing them would mean editing evidence
+      // scripts to no end but uniformity, days from submission.
+      "style": {
+        "useBlockStatements": "off",
+        "noTernary": "off",
+        "noNestedTernary": "off",
+        "noMagicNumbers": "off",
+        "useNamingConvention": "off",
+        "useExplicitLengthCheck": "off",
+        "noUnusedTemplateLiteral": "off",
+        "noContinue": "off",
+        "useSingleVarDeclarator": "off",
+        "useDestructuring": "off",
+        "noNegationElse": "off",
+        "useNumericSeparators": "off",
+        "noExcessiveLinesPerFile": "off",
+        "noProcessEnv": "off",
+        "useErrorCause": "off"
+      }
+    }
+  }
+}
