@@ -16,19 +16,42 @@ it("automatically warns for every placeholder frame and switches routes", async 
   expect(route).toBe("change-plan");
 });
 
-it("offers an immutable View Source action and never tags unavailable as a source", () => {
+it("offers no View Source link in placeholder mode, and never tags unavailable as a source", () => {
+  // Placeholder mode previously carried `https://example.invalid/...`, which is
+  // a live link on a judge-facing screenshot. Absence states itself instead.
   const model = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={model} route="impact" onRouteChange={() => undefined} />);
-  expect(screen.getByRole("link", { name: "View Source" }).getAttribute("href")).toBe(model.immutableViewSourceUrl);
+  expect(screen.queryByRole("link", { name: "View Source" })).toBeNull();
+  expect(screen.getByText(/View Source unavailable/).textContent).toContain("evidence binding is pending");
   expect(screen.queryByText("unavailable", { selector: ".source-tag" })).toBeNull();
 });
 
-it("states the omission instead of offering a link when no commit-pinned URL exists", () => {
+it("labels a constructed link as constructed, and shows what it was built from", () => {
+  // A constructed link is exactly as clickable as a declared one, so the label
+  // is the only thing stopping a reader taking it for a catalog assertion.
   const model = provisionalStateAdapter("partial").read();
-  render(<CockpitShell model={{ ...model, immutableViewSourceUrl: null }} route="impact" onRouteChange={() => undefined} />);
-  expect(screen.queryByRole("link", { name: "View Source" })).toBeNull();
-  expect(screen.getByText(/View Source unavailable/).textContent).toContain("no link is offered rather than one that could drift");
-  expect(screen.getByText("unavailable", { selector: "code" })).toBeTruthy();
+  const viewSource = {
+    state: "constructed",
+    url: "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c/dbt/models/curated/game_events.sql",
+    from: {
+      repository: "https://github.com/dcaribou/transfermarkt-datasets",
+      revision: "59fa295c",
+      path: "dbt/models/curated/game_events.sql",
+    },
+  } as const;
+  render(<CockpitShell model={{ ...model, viewSource }} route="impact" onRouteChange={() => undefined} />);
+  expect(screen.getByRole("link", { name: "View Source" }).getAttribute("href")).toBe(viewSource.url);
+  expect(screen.getByText(/constructed, not catalog-supplied/)).toBeTruthy();
+  expect(screen.getByText(/drops/).textContent).toContain("dbt/models/curated/game_events.sql");
+});
+
+it("does not claim construction when the catalog declared the link", () => {
+  const model = provisionalStateAdapter("partial").read();
+  const viewSource = { state: "declared", url: "https://example.com/declared.sql" } as const;
+  render(<CockpitShell model={{ ...model, viewSource }} route="impact" onRouteChange={() => undefined} />);
+  expect(screen.getByRole("link", { name: "View Source" }).getAttribute("href")).toBe(viewSource.url);
+  expect(screen.getByText(/declared by the catalog/)).toBeTruthy();
+  expect(screen.queryByText(/constructed, not catalog-supplied/)).toBeNull();
 });
 
 it("announces evidence-state changes, which happen without a reload", () => {
