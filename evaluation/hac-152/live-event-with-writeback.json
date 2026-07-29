@@ -1,0 +1,181 @@
+{
+  "eventVersion": "1.3",
+  "provenance": {
+    "producedAt": "2026-07-29T01:16:23.780Z",
+    "producer": {
+      "name": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "datahub": {
+      "gmsUrl": "http://localhost:8080",
+      "gmsVersion": null
+    },
+    "corpus": {
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+    },
+    "workspaceArtifact": {
+      "producedBy": "@workspacejson/cli",
+      "fileIndexKeys": 131,
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "revision": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+      "integrity": "exact-match"
+    }
+  },
+  "subject": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)"
+  },
+  "datahub": {
+    "name": "game_events",
+    "platform": "dbt",
+    "description": "",
+    "upstreams": [],
+    "downstreams": [],
+    "lineageObservation": {
+      "upstreams": {
+        "read": "failed",
+        "completeness": "not-established"
+      },
+      "downstreams": {
+        "read": "failed",
+        "completeness": "not-established"
+      }
+    },
+    "schemaFieldCount": 2,
+    "owners": [],
+    "domain": null
+  },
+  "code": {
+    "dbtUniqueId": "model.transfermarkt_datasets.game_events",
+    "dbtFilePath": "models/curated/game_events.sql",
+    "repositoryRelativePath": "dbt/models/curated/game_events.sql",
+    "projectPrefix": "dbt",
+    "method": "manifest-join",
+    "sourceUrl": null
+  },
+  "partners": [],
+  "evidence": {
+    "records": [
+      {
+        "claim": "producing file dbt/models/curated/game_events.sql is tracked in the corpus-matched workspace.json artifact",
+        "observation": "Artifact repository, revision, and repository-relative source path matched exactly.",
+        "source": "workspacejson",
+        "checkExecuted": true
+      }
+    ],
+    "tier": "VERIFIED"
+  },
+  "accounting": {
+    "datasetsRequested": 1,
+    "datasetsResolved": 1,
+    "datasetsUnresolved": 0,
+    "nodesDropped": 0,
+    "nodesExcluded": {}
+  },
+  "unavailable": [
+    {
+      "field": "provenance.datahub.gmsVersion",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr."
+    },
+    {
+      "field": "datahub.upstreams",
+      "source": "datahub",
+      "reason": "failed",
+      "detail": "The upstream lineage query did not complete (get_lineage \"upstreams\" carried no searchResults array). This is not a statement about the catalog's contents."
+    },
+    {
+      "field": "datahub.downstreams",
+      "source": "datahub",
+      "reason": "failed",
+      "detail": "The downstream lineage query did not complete (get_lineage \"downstreams\" carried no searchResults array). This is not a statement about the catalog's contents."
+    },
+    {
+      "field": "code.repositoryRelativePath",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact."
+    },
+    {
+      "field": "partners",
+      "source": "workspacejson",
+      "reason": "indeterminate",
+      "detail": "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.",
+      "completeness": "not-established",
+      "observedCount": 0
+    }
+  ],
+  "writeback": {
+    "targetUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+    "actor": {
+      "tool": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "attemptedAt": "2026-07-29T01:17:02.945Z",
+    "revision": {
+      "repository": "https://github.com/dcaribou/transfermarkt-datasets",
+      "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+    },
+    "intended": {
+      "linkUrl": null,
+      "evidenceTier": "VERIFIED"
+    },
+    "before": {
+      "linkUrl": null,
+      "evidenceTier": null,
+      "read": "ok",
+      "readError": null
+    },
+    "after": {
+      "linkUrl": null,
+      "evidenceTier": "VERIFIED",
+      "read": "ok",
+      "readError": null
+    },
+    "attempts": [
+      {
+        "mutation": "createStructuredProperty",
+        "variables": {
+          "input": {
+            "id": "workspacejson_evidence_tier"
+          }
+        },
+        "succeeded": true,
+        "response": "already defined"
+      },
+      {
+        "mutation": "upsertStructuredProperties",
+        "variables": {
+          "input": {
+            "assetUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+            "structuredPropertyInputParams": [
+              {
+                "structuredPropertyUrn": "urn:li:structuredProperty:workspacejson_evidence_tier",
+                "values": [
+                  {
+                    "stringValue": "VERIFIED"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "succeeded": true,
+        "response": "{\"upsertStructuredProperties\":{\"properties\":[{\"structuredProperty\":{\"urn\":\"urn:li:structuredProperty:workspacejson_evidence_tier\"}}]}}"
+      }
+    ],
+    "observation": {
+      "status": "settled",
+      "polls": 1,
+      "elapsedMs": 13,
+      "timeoutMs": 120000,
+      "lastError": null
+    },
+    "succeeded": true,
+    "noop": false,
+    "bothStatesRead": true,
+    "refusedBecause": null,
+    "linkOmittedBecause": "no commit-pinned source URL is available; an unpinned link would drift from the artifact it describes, so none was written"
+  }
+}
