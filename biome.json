@@ -1,0 +1,9 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": { "enabled": true },
+  "files": {
+    "includes": ["scripts/**/*.mjs", "migration/**/*.mjs"]
+  }
+}

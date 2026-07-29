@@ -163,7 +163,7 @@ const addEdge = (downstream, upstream) => {
   upstreams.get(downstream).add(upstream);
 };
 
-for (const [id, n] of nodes) {
+for (const n of nodes.values()) {
   const fqn = dbFqn(n);
   const dbtUrn = urn(CONFIG.dbtPlatform, fqn);
   const targetUrn = urn(CONFIG.targetPlatform, fqn);

@@ -28,7 +28,8 @@
     "test:cockpit": "npm run test --workspace=@workspacejson/cockpit",
     "e2e": "playwright test --config apps/cockpit/playwright.config.ts",
     "check:clean-room": "node scripts/check-clean-room.mjs",
-    "parity:datahub-adapter": "tsx migration/parity-datahub-shim.mjs"
+    "parity:datahub-adapter": "tsx migration/parity-datahub-shim.mjs",
+    "lint": "biome lint --error-on-warnings"
   },
   "dependencies": {
     "@workspacejson/spec": "0.4.4",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
+    "@biomejs/biome": "2.5.6",
     "@playwright/test": "^1.55.0",
     "@types/node": "22.19.17",
     "@workspacejson/cli": "0.5.0",
