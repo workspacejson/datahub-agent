@@ -33,11 +33,34 @@ describe("projecting the frozen contract onto the cockpit", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("carries a null source URL through instead of inventing a link", () => {
-    // externalUrl is dropped at the MCP boundary, so an honest read path often
-    // has no commit-pinned URL. The view must say so, not fabricate one.
-    const model = projectEvent(contractEvent(), "impact");
-    expect(model.immutableViewSourceUrl).toBeNull();
+  it("constructs the source link from recorded provenance, and says that is what it did", () => {
+    // `externalUrl` is dropped at the MCP boundary, so `code.sourceUrl` is null
+    // on every event this emitter produces. The link is not evidence though — it
+    // is a pure function of the corpus repository, the pinned commit, and the
+    // repository-relative path, all of which the event already records. So it is
+    // built here rather than stored in the frozen contract, and labelled built.
+    const event = contractEvent();
+    const model = projectEvent(event, "impact");
+    expect(event.code.sourceUrl).toBeNull();
+    expect(model.viewSource.state).toBe("constructed");
+    if (model.viewSource.state !== "constructed") return;
+    expect(model.viewSource.url).toBe(
+      `${event.provenance.corpus.repository}/blob/${event.provenance.corpus.commit}/dbt/models/curated/game_events.sql`,
+    );
+    // The inputs travel with it, so a reader can check the construction rather
+    // than take it on trust.
+    expect(model.viewSource.from.revision).toBe(event.provenance.corpus.commit);
+    expect(model.viewSource.from.path).toBe("dbt/models/curated/game_events.sql");
+  });
+
+  it("prefers a catalog-declared URL over constructing one, when the catalog has one", () => {
+    // The forward path for HAC-156: when the MCP projection carries externalUrl
+    // again, `declared` wins with no consumer change and no second field to
+    // arbitrate between.
+    const event = contractEvent();
+    event.code.sourceUrl = "https://example.com/declared/by/the/catalog.sql";
+    const model = projectEvent(event, "impact");
+    expect(model.viewSource).toEqual({ state: "declared", url: "https://example.com/declared/by/the/catalog.sql" });
   });
 
   it("keeps the read and completeness axes separate, as the contract does", () => {

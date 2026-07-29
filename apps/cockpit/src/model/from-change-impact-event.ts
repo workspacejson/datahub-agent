@@ -27,6 +27,8 @@ import {
   type WorkspaceIntegrity,
 } from "@contract";
 
+import { resolveViewSource } from "./view-source";
+
 import type {
   ClaimSource,
   CockpitRoute,
@@ -280,10 +282,10 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
       source: "workspace.json",
     },
     repositoryEvidence: { text: partnerSummary, source: "workspace.json" },
-    // Null when the catalog exposes no commit-pinned URL. Rendering a
-    // fabricated or branch-relative link would be a claim the event does not
-    // support — see the note on `immutableViewSourceUrl` in the view model.
-    immutableViewSourceUrl: event.code.sourceUrl,
+    // Declared by the catalog when it says anything, constructed from recorded
+    // provenance when it does not, and explicitly unavailable when neither is
+    // possible. Never fabricated. See `resolveViewSource`.
+    viewSource: resolveViewSource(event),
     impactEdges: impactEdges(event),
     planComparison: { state: "unavailable", reason: NO_COMPARISON_SUPPLIED },
     receipt: projectReceipt(event),

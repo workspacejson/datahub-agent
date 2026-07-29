@@ -12,7 +12,12 @@ export const provisionalSource = {
   datasetIdentity: { text: "<dataset identity unavailable>", source: "DataHub" },
   producerPath: { text: "<producer path unavailable>", source: "workspace.json" },
   repositoryEvidence: { text: "<repository evidence unavailable>", source: "workspace.json" },
-  immutableViewSourceUrl: "https://example.invalid/evidence-binding-pending",
+  // This was `https://example.invalid/evidence-binding-pending`. That domain is
+  // RFC 2606 reserved and can never resolve, so it was not a working link — but
+  // that was never the problem. A URL-shaped string reads as a link whether or
+  // not it resolves, so it occupies the place where a reader looks for a source
+  // and answers the question wrongly. Absence has to look like absence.
+  viewSource: { state: "unavailable", reason: "evidence binding is pending; no corpus provenance is bound in placeholder mode" },
   impactEdges: [{ label: "<lineage read not observed>", state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
   // Not a placeholder delta. This used to be one `uncertainty-changed` entry
   // labelled `<joined plan unavailable>`, which spelled an absence as a plan

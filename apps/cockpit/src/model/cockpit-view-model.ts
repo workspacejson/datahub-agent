@@ -28,6 +28,26 @@ export const sourceModeSchema = z.enum(["placeholder", "fixture", "live"]);
 export const cockpitRouteSchema = z.enum(["impact", "change-plan", "receipts"]);
 export const claimSourceSchema = z.enum(["DataHub", "workspace.json", "Joined"]);
 export const sourceClaimSchema = z.object({ text: z.string().min(1), source: claimSourceSchema });
+/**
+ * A commit-pinned source link and its origin. See `resolveViewSource`.
+ *
+ * `declared` came from the catalog. `constructed` was built from provenance the
+ * event already records, and carries those inputs so the construction is
+ * checkable rather than trusted. `unavailable` names why neither was possible.
+ */
+export const viewSourceSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("declared"), url: z.string().url() }),
+  z.object({
+    state: z.literal("constructed"),
+    url: z.string().url(),
+    from: z.object({
+      repository: z.string().min(1),
+      revision: z.string().min(1),
+      path: z.string().min(1),
+    }),
+  }),
+  z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
+]);
 export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
 /**
  * One semantic plan change, and the way back to what produced it.
@@ -244,15 +264,20 @@ const cockpitViewModelBaseSchema = z.object({
   producerPath: sourceClaimSchema,
   repositoryEvidence: sourceClaimSchema,
   /**
-   * Null when the catalog exposes no commit-pinned URL for the producing file.
+   * The commit-pinned link to the producing file, carrying where it came from.
    *
-   * This was required, and requiring it was a mistake: `externalUrl` is dropped
-   * at the official MCP boundary (`evaluation/mcp-field-coverage.md`), so an
-   * MCP-honest read path cannot always produce one. A required URL leaves a
-   * projection two options, and both are worse than admitting absence —
-   * fabricate a link, or refuse to render an event that is otherwise sound.
+   * This was once a bare nullable URL sourced only from the catalog, and
+   * `externalUrl` is dropped at the official MCP boundary
+   * (`evaluation/mcp-field-coverage.md`), so it was null on every real event —
+   * a judge surface with a permanently missing link.
+   *
+   * It is now three states rather than a URL or nothing, because "here is a
+   * link" and "here is a link the catalog gave me" are different claims and a
+   * reader must not have to assume which one is on screen. See
+   * `resolveViewSource` for why the constructed case is built at render time
+   * instead of being stored in the frozen evidence contract.
    */
-  immutableViewSourceUrl: z.string().url().nullable(),
+  viewSource: viewSourceSchema,
   impactEdges: z.array(impactEdgeSchema),
   planComparison: planComparisonSchema,
   receipt: receiptSchema,
@@ -315,6 +340,7 @@ export type SourceMode = z.infer<typeof sourceModeSchema>;
 export type CockpitStateName = z.infer<typeof cockpitStateNameSchema>;
 export type ClaimSource = z.infer<typeof claimSourceSchema>;
 export type PlanComparisonView = z.infer<typeof planComparisonSchema>;
+export type ViewSource = z.infer<typeof viewSourceSchema>;
 export type PlanDelta = z.infer<typeof planDeltaSchema>;
 
 export const sourceEventSchema = cockpitViewModelBaseSchema.omit({ sourceMode: true });
