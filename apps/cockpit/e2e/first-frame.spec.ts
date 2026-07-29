@@ -23,6 +23,9 @@ import { FIXTURE_ORIGIN } from "../playwright.config";
  */
 const VIEWPORTS = [{ width: 1440, height: 900 }, { width: 1280, height: 800 }];
 
+/** Clearance the decision must keep below itself, in CSS pixels. */
+const FOLD_HEADROOM = 48;
+
 for (const viewport of VIEWPORTS) {
   test(`first frame contains its own content at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
@@ -37,6 +40,14 @@ for (const viewport of VIEWPORTS) {
         // silently loses: `visible` spills outside the panel, `hidden` clips.
         const overflowX = getComputedStyle(element).overflowX;
         if (overflowX === "auto" || overflowX === "scroll") continue;
+        // `clientWidth` is 0 for anything without a layout box of its own:
+        // inline elements, and content inside a collapsed `<details>`. Firefox
+        // reports a non-zero `scrollWidth` for those where Chromium reports 0,
+        // so the raw comparison fired on every `<code>` in a closed disclosure.
+        // Zero is "not a box that can overflow", not "a box overflowing by all
+        // of its content". The defect this guards had a 754px client width, so
+        // skipping unlaid-out elements does not weaken it.
+        if (element.clientWidth === 0) continue;
         if (element.scrollWidth > element.clientWidth + 1) {
           offenders.push(`${element.tagName.toLowerCase()}.${element.className || "(no class)"} ` +
             `content ${element.scrollWidth}px in ${element.clientWidth}px`);
@@ -65,7 +76,13 @@ for (const viewport of VIEWPORTS) {
     // Fully inside the first frame, not merely intersecting it. A button whose
     // label is half cut off is not an answer to "what is the next action".
     expect(box!.y).toBeGreaterThanOrEqual(0);
-    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+
+    // With headroom, not merely inside. `<= viewport.height` passes at one pixel
+    // of clearance, and a guard that clears by a pixel is a guard the next copy
+    // edit silently breaks: a longer stated-gap reason or a wider field name
+    // pushes the rail down and nothing fails until a reader is already scrolling.
+    // FOLD_HEADROOM is roughly two lines of body copy at this size.
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height - FOLD_HEADROOM);
 
     // The frame must not buy the CTA's place by dropping what the reader needs
     // to judge it. All four have to be in the same unscrolled frame.
@@ -83,6 +100,50 @@ for (const viewport of VIEWPORTS) {
     }
 
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
+  test(`the next action survives the copy that can actually grow at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
+
+    // Headroom is a number; this is what the number is for. Only the strings
+    // that can really vary are grown, because a test of impossible growth
+    // reports a failure nobody can cause and hides the one they can:
+    //
+    //   stated gaps   contract-supplied, unbounded in count and length. This is
+    //                 the real vector, and the rail caps the list and scrolls it
+    //                 rather than growing. Twenty is well past any observed event.
+    //   caveat        composed from a count, so it can gain a line, not a page.
+    //
+    // The completeness headline and the count subjects are fixed strings from a
+    // closed enum and from this file's own markup; they cannot grow at runtime,
+    // and doubling them was testing the frame against an edit no event can make.
+    await page.evaluate(() => {
+      const list = document.querySelector(".rail-group ul");
+      const template = list?.querySelector("li");
+      if (list && template) {
+        for (let i = 0; i < 20; i += 1) {
+          const clone = template.cloneNode(true) as HTMLElement;
+          const name = clone.querySelector("strong");
+          if (name) name.textContent = `provenance.datahub.someLongerFieldName${i}`;
+          list.append(clone);
+        }
+      }
+      const caveat = document.querySelector(".rail-caveat");
+      if (caveat) caveat.textContent = `${caveat.textContent} Each is named in the receipt with the system that could not supply it.`;
+    });
+
+    const cta = page.getByRole("button", { name: "Continue to change plan" });
+    const box = await cta.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+
+    // The cap is what made that true, so it is asserted rather than assumed.
+    const capped = await page.evaluate(() => {
+      const list = document.querySelector<HTMLElement>(".rail-group ul");
+      return list ? list.scrollHeight > list.clientHeight : false;
+    });
+    expect(capped, "the stated-gap list must scroll rather than grow the rail").toBe(true);
   });
 }
 

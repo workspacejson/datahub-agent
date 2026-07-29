@@ -112,8 +112,11 @@
 .decision-rail { position: sticky; top: var(--sp-4); display: grid; gap: var(--sp-2); }
 .rail-group { border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-3) var(--sp-4); }
 /* The named gaps scroll inside the rail rather than pushing the decision below
-   the fold. The list is the reference; the decision is what the frame is for. */
-.rail-group ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-2); max-height: 11rem; overflow-y: auto; }
+   the fold. The cap is deliberately tight: this list is a reference, the full
+   statement of every gap with its cause is the leading band on Receipts, and the
+   decision is what this frame exists to carry. `first-frame.spec.ts` grows the
+   list past the cap and asserts the decision is still readable. */
+.rail-group ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-2); max-height: 8rem; overflow-y: auto; }
 .rail-group li { font-size: var(--fs-xs); color: var(--text-muted); line-height: var(--lh-normal); overflow-wrap: anywhere; }
 .rail-group li strong { display: block; color: var(--text-body); font-family: var(--font-mono); font-weight: 500; }
 .rail-caveat { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
