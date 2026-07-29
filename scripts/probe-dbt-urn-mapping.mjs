@@ -89,7 +89,38 @@ const res = await fetch(`${GMS}/api/graphql`, {
   signal: AbortSignal.timeout(30_000),
 });
 const body = await res.json();
-const allUrns = body.data.search.searchResults.map((r) => r.entity.urn);
+
+// GraphQL reports failure at HTTP 200 with a top-level `errors` array, and it
+// can do so *while* returning partial `data`. This probe's entire output is a
+// set difference — "derived only" and "catalog only" — so a silently short
+// catalog does not look like an error. It looks like the derivation inventing
+// URNs the instance does not have, which is precisely the conclusion this probe
+// exists to rule out. It would have reported a wrong answer confidently.
+//
+// Checked before the shape, because a partial response has a plausible shape.
+if (!res.ok || body.errors) {
+  console.error(`Catalog read failed: ${JSON.stringify(body.errors ?? { status: res.status }).slice(0, 300)}`);
+  process.exit(2);
+}
+
+const results = body.data?.search?.searchResults;
+if (!Array.isArray(results)) {
+  console.error("Catalog read returned no searchResults array; refusing to compare against an unknown catalog.");
+  process.exit(2);
+}
+
+// A truncated page is the other way this comparison goes quietly wrong: `count`
+// is 500, and a catalog larger than that would silently drop the tail into
+// "derived only". Stated rather than assumed.
+if (typeof body.data.search.total === "number" && body.data.search.total > results.length) {
+  console.error(
+    `Catalog holds ${body.data.search.total} datasets but this read returned ${results.length}. ` +
+    `Raise the page size; a truncated catalog turns present URNs into apparent misses.`,
+  );
+  process.exit(2);
+}
+
+const allUrns = results.map((r) => r.entity.urn);
 const catalog = new Set(allUrns.filter((u) => u.includes(`dataPlatform:${PLATFORM},`)));
 
 console.log(`catalog (${PLATFORM}): ${catalog.size}\n`);
