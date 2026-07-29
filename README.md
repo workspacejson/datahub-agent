@@ -1,56 +1,195 @@
-# datahub-agent
+# Tally — Change Impact Cockpit
 
-Public, Apache-2.0 reference application consuming released [`workspacejson`](https://github.com/workspacejson) interfaces against [DataHub](https://datahubproject.io/). Built for the *Build with DataHub: The Agent Hackathon*.
+**Review a change with the evidence attached.**
 
-## What this repository is — and isn't
+Tally resolves DataHub context to repository code, joins code and lineage impact, and attaches a bounded evidence receipt. Tally refuses silent zeros.
 
-This ecosystem spans three distinct repositories. Do not conflate them:
+Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](https://github.com/workspacejson).
 
-| Repository | Role | Owner |
-|---|---|---|
-| `workspacejson/*` (schema, `@workspacejson/cli`, producer) | The neutral standard and producer. Defines workspace.json, the four stable read paths, and neutral producer conformance. | workspacejson |
-| **`workspacejson/datahub-agent`** (this repo) | The DataHub **application**: orchestration, official DataHub MCP consumption, dbt/DataHub URN-to-source-file joins, OSS-safe writeback, evaluation, demo assets. | workspacejson |
-| External pipeline proof corpus | The public dbt/pipeline repository used as the measurement and demo surface. Selected and pinned at an immutable commit by [HAC-143](https://linear.app/marcelle-labs/issue/HAC-143). | n/a (external, third-party) |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/workspacejson/datahub-agent/main/public/assets/github/tally-github-readme.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/workspacejson/datahub-agent/main/public/assets/github/tally-github-readme.png">
+    <img src="https://raw.githubusercontent.com/workspacejson/datahub-agent/main/public/assets/github/tally-github-readme.png" alt="Tally — Change Impact Cockpit" width="760">
+  </picture>
+</p>
 
-This repository owns none of: the workspace.json schema, `@workspacejson/cli`, the four stable read paths, neutral producer conformance, private Vreko source, private Marcelle Labs swarm source, or workspace.json v0.5 design. Those live upstream in `workspacejson/*`.
+## Four questions Tally answers
 
-This repository is **not** the proof corpus. It consumes the proof corpus (once selected by HAC-143) as an external, read-only input — it does not vendor or embed it.
+- **Which repository file implements this DataHub dataset?** Tally resolves a dataset URN through the dbt manifest to a repository-root-relative source path, pinned to an immutable commit.
+- **What code and downstream data could the change affect?** Tally joins DataHub lineage (upstream and downstream edges) with workspace.json repository evidence, so a reviewer sees both catalog dependencies and behavioral coupling.
+- **Which conclusions were observed, resolved, complete, or explicitly unknown?** Every fact carries its origin (`datahub` or `workspacejson`) and its standing — read success, completeness, and absence are stated separately, never collapsed.
+- **What durable context was written back to DataHub?** Tally writes a commit-pinned source link and an evidence-tier structured property, then observes the before and after states to produce a receipt.
 
-## Ownership ruling
+## The problem
 
-Recorded per [HAC-214](https://linear.app/marcelle-labs/issue/HAC-214):
+DataHub knows a dataset's lineage, schema, and ownership. Git knows which files change together. Nobody joins them — so an agent working on a data pipeline sees the catalog or the repository, never both at once.
+
+The join sounds trivial. A dbt model is a file. Walk from the dataset URN to the model to the file, attach whatever the repository knows about it, done.
+
+It returns zero rows — silently, with no error.
+
+dbt reports `original_file_path` relative to the **dbt project root**. Repository evidence is keyed relative to the **git root**. The moment a dbt project lives in a subdirectory — `dbt/`, the common real-world layout — the two path representations differ by exactly that prefix, every lookup misses, and the join hands back an empty result that looks indistinguishable from "this dataset has no interesting history."
+
+## Measured silent failure
+
+| Measure | Value | Source |
+| -- | -- | -- |
+| Models matched, dbt project at repo root | 5/5 | Perturbation test, `test/integration/golden-fixture.test.ts` |
+| Models matched, dbt project nested under `dbt/` | 0/5 | Same perturbation test |
+| Corpus nodes silently discarded by `extractModels` | 23 of 28 | `evaluation/dbt-node-coverage.md` |
+| Process exit code on silent failure | 0 | Measured |
+
+A silent zero is the worst possible failure shape for a metadata join. It doesn't alert anyone. It quietly makes the integration useless. That is the problem Tally exists to close.
+
+See [`docs/claims.md`](docs/claims.md) for the claim ledger backing every figure above.
+
+## What Tally does
 
 ```
-REPOSITORY OWNER: workspacejson
-REPOSITORY PATH:  workspacejson/datahub-agent
-RATIONALE:        Public Apache-2.0 reference consumer of released workspace.json
-                   interfaces. The application advances ecosystem adoption and
-                   contains no private Marcelle Labs or Vreko implementation
-                   dependency.
-PROOF CORPUS:     HAC-143 (tracked separately, not part of this repository)
+DataHub dataset URN
+  → dbt manifest node         reconstructs database.schema.alias to match back
+  → original_file_path        every node accounted for, never silently dropped
+  → repo-root-relative key    the normalization that makes the join actually work
+  → workspace.json evidence   co-change partners, fileIndex membership
+  → change-impact event       lineage + code + evidence, joined and bounded
+  → writeback receipt         observed before/after states, not just mutation success
 ```
 
-## Dependency boundary
+Two properties matter more than feature count:
 
-- Consumes only **released, public** `@workspacejson/*` packages.
-- No source-level cross-org imports. See [`docs/clean-room.md`](docs/clean-room.md).
-- Must remain fully runnable **without** a Vreko daemon.
-- DataHub-specific consumption of `workspacejson signals datahub` is gated behind [HAC-213](https://linear.app/marcelle-labs/issue/HAC-213)'s Path-B ruling. Until that ruling records `PATH B: IN`, this repository does not depend on that surface.
-
-## Repository layout
+**Nothing vanishes.** Extraction reports every dbt node as *kept*, *excluded*, or *dropped*, under an invariant anyone can check:
 
 ```
-src/adapters/workspacejson/   the dbt/DataHub join: path normalization, URN
-                              resolution, fileIndex join  (see its README)
-test/                         tests and proof-corpus fixtures
-migration/                    parity harness for the adopted adapter
-scripts/                      fixture and probe generators
-docs/                         clean-room rule, adoption provenance, feedback log
-examples/                     runnable, judge-visible usage examples
-evaluation/                   proof corpus, node-type coverage, measurement
+nodes.length + dropped.length + sum(excluded) === total
 ```
 
-## Verifying this repository
+A node that is dataset-bearing but has no resolvable source file produces a warning that names it. A node excluded by policy (a dbt test is not a dataset) is counted, not hidden.
+
+**Every claim is pinned to evidence.** The proof corpus is frozen at an immutable commit. Fixtures are regenerated by a script that refuses to run against an unpinned checkout. Every coverage number is reproducible from that commit with one command, on any machine, with no warehouse and no credentials.
+
+## One concrete example
+
+Resolving `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)`:
+
+| Step | Value |
+| -- | -- |
+| DataHub dataset URN | `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)` |
+| dbt unique ID | `model.jaffle_shop.customers` |
+| dbt file path | `models/customers.sql` |
+| Project prefix | `""` (project at repo root) |
+| Repository-relative path | `models/customers.sql` |
+| workspace.json fileIndex | 36 keys, exact-match integrity |
+| Evidence tier | `VERIFIED` — 1 of 1 record(s) carry a check this harness executed |
+| Lineage | 12 upstream, 1 downstream, `not-established` completeness |
+| Writeback | `succeeded: true`, `bothStatesRead: true`, `noop: true` |
+
+This is the [golden root-level fixture](test/fixtures/golden/change-impact-event.root.json) — a real emitted event with an attached writeback receipt, committed so a judge can inspect it without running DataHub.
+
+## Why DataHub is essential
+
+DataHub provides what no repository tool can:
+
+- **Canonical asset identity.** The dataset URN is the stable identifier everything joins against. Without it, "which file produces the customers table" is a string match, not a resolution.
+- **Schema.** Field-level metadata tells a reviewer what columns exist and what they mean — context a repository cannot supply.
+- **Lineage.** Upstream and downstream edges are declared dependencies in the catalog. Tally carries them alongside repository evidence so a reviewer sees both what the catalog declares and how the code actually behaves.
+- **Governance context.** Owners, domains, and descriptions travel with the dataset. Tally preserves them through the join rather than dropping them.
+- **Writeback destination.** DataHub is where a commit-pinned source link and an evidence tier belong — visible to every consumer of the catalog, not buried in a tool-specific store.
+
+Tally writes back to DataHub because that is where the next agent or reviewer will look.
+
+## What workspace.json contributes
+
+[workspace.json](https://github.com/workspacejson) provides what no catalog can:
+
+- **Revision-bound repository paths.** The `fileIndex` is keyed by repository-root-relative POSIX paths, produced at a pinned commit. This is the coordinate system that makes the join work — and the one DataHub does not expose through MCP.
+- **Relationships.** Co-change partners, churn, and fragility signals are repository evidence, not catalog declarations. Tally keeps them separate from lineage so a reviewer can tell the difference.
+- **Evidence.** The workspace artifact carries its own provenance — producer identity, file count, repository, and revision — so Tally can verify the artifact describes the same corpus as the DataHub dataset before asserting anything.
+
+**Tally is the product joining both.** DataHub supplies the catalog; workspace.json supplies the repository; Tally resolves one through the other and attaches a bounded receipt.
+
+## DataHub-only versus joined context
+
+Tally's cockpit offers a toggle between two views of the same dataset:
+
+- **DataHub-only:** what an agent consuming only the DataHub MCP server sees. Repository evidence is withheld, and each removal is recorded as `not-queried` so the absence reads as scoped rather than empty.
+- **Joined:** DataHub context plus workspace.json evidence, with the exact repository-relative source path and pinned revision.
+
+The difference is measurable. In a [paired Qwen plan comparison](evaluation/hac-152/live-qwen-judge-run-bundle.json), the same model ran both conditions under identical task, prompt, and settings. The joined plan used the exact repository-relative path and revision; the DataHub-only plan explicitly refused the unknown source location. The comparison produced three deltas: added, removed, and constrained.
+
+The runner refuses a DataHub-only answer that does not explicitly acknowledge the missing source, and refuses a joined answer that does not use the exact path. A false positive in either direction is a rejected artifact, not a passed check.
+
+## Architecture
+
+```
+src/adapters/workspacejson/   URN resolution, dbt path normalization, fileIndex join
+src/integration/              change-impact event contract, MCP read, writeback,
+                              plan comparison, workspace evidence
+apps/cockpit/                 React UI: Impact → Change plan → Receipts
+scripts/                      emitter, writeback runner, fixture generators,
+                              paired plan comparison, proof assertions
+test/                         contract, writeback, join, cockpit, and fidelity suites
+test/fixtures/golden/         committed golden events with writeback receipts
+evaluation/                   proof corpus, node-type coverage, MCP field coverage,
+                              live evidence packages
+```
+
+The cockpit is a React 19 + Vite + Tailwind application. All source events cross Zod validation into a `CockpitViewModel`; components accept only that model. The three-view sequence — Impact, Change plan, Receipts — is the judge-facing surface. See [`docs/cockpit-architecture.md`](docs/cockpit-architecture.md).
+
+The change-impact event contract is at [`src/integration/change-impact-event.ts`](src/integration/change-impact-event.ts). It is versioned (currently 1.3), Zod-validated, and drift-guarded so the TypeScript interfaces and runtime schemas cannot diverge silently.
+
+## Evidence semantics and explicit gaps
+
+Every fact Tally emits carries the standing of the evidence behind it, on axes that are deliberately kept apart. The full terminology and invariants are in [`docs/evidence.md`](docs/evidence.md).
+
+**Did the catalog answer?** — `read`: `ok`, `failed`, or `not-queried`. `failed` and `not-queried` are not claims about the data. Collapsing them into "no data" is the error the whole contract exists to prevent.
+
+**Was the answer whole?** — `completeness`: `complete-against-pinned-manifest` or `not-established`. A read can succeed and still be partial. DataHub's lineage is search-index backed, and that index converges after ingest — so a query can return four edges of twelve, succeed, and look identical to a complete answer. `not-established` is the honest and usually correct state, not a shortfall.
+
+**Why is something missing?** — `unavailable[].reason`: `absent`, `not-queried`, `failed`, `indeterminate`, or `not-exposed-by-source`. `absent` is the strongest: asked, and reported nothing. `indeterminate` exists because the other three could not express it: the query succeeded, returned something, and completeness is unknown.
+
+**What backs a claim?** — `evidence.records[].checkExecuted` records that a check ran. It does not say the claim is true — that is what `observation` records and what a reviewer judges. The tier (`ASSERTED`, `OBSERVED`, `VERIFIED`) is a mechanical function of the records. `VERIFIED` is never rendered alone — it carries the record count that produced it.
+
+**Explicit gaps.** `externalUrl` is dropped at the MCP boundary — DataHub holds a commit-pinned source URL, but the official MCP server does not project it for datasets. Tally states this as `not-exposed-by-source` rather than working around it. The fix is filed upstream. See [`evaluation/mcp-field-coverage.md`](evaluation/mcp-field-coverage.md).
+
+## Writeback and observed receipt
+
+Tally writes two things to DataHub and nothing else:
+
+1. A labelled link from the dataset to the producing file, pinned to an immutable commit.
+2. An evidence-tier structured property (`workspacejson_evidence_tier`).
+
+Deliberately not written: risk scores, descriptions, editable properties, or anything under a `manual.*` path. A tool that overwrites human-authored fields destroys evidence it did not create.
+
+The receipt keeps five outcomes apart:
+
+| Fact | Field | What it means |
+| -- | -- | -- |
+| Success | `succeeded` + `noop` | Mutations accepted and intended state observed |
+| Noop | `noop` | Second run against already-enriched dataset |
+| Refusal | `refusedBecause` | Write declined, with reason |
+| Omission | `linkOmittedBecause` | Link deliberately not written (no commit-pinned URL) |
+| Accepted but not observed | `observation.status` | Mutation returned but intended state not yet visible |
+
+`bothStatesRead` says the before and after states were both read. `succeeded` requires the mutations to have been accepted **and** the intended state observed. A mutation returning cleanly is not evidence that the write is visible — DataHub serves stale reads for some seconds afterwards.
+
+See the [golden root-level fixture](test/fixtures/golden/change-impact-event.root.json) for a complete receipt, and [`evaluation/clean-quickstart-proof.md`](evaluation/clean-quickstart-proof.md) for a full end-to-end transcript.
+
+## Evaluation and reproducibility
+
+**Proof corpus.** Frozen at [`dbt-labs/jaffle_shop_duckdb@36bde6cb`](https://github.com/dbt-labs/jaffle_shop_duckdb/tree/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb). Runs on DuckDB — no warehouse, no credentials, no network. A judge can rebuild the exact manifest locally. See [`evaluation/proof-corpus.md`](evaluation/proof-corpus.md).
+
+**Node-type coverage.** `original_file_path` is populated for every dbt node type tested (model SQL, model Python, seed, snapshot, source, test) at dbt 1.12.0 — zero nulls. See [`evaluation/dbt-node-coverage.md`](evaluation/dbt-node-coverage.md).
+
+**Clean quickstart proof.** The read path, writeback, and reset run end-to-end against a DataHub instance that was destroyed and rebuilt immediately beforehand. Eleven conditions are asserted from the emitted JSON, not from console output. See [`evaluation/clean-quickstart-proof.md`](evaluation/clean-quickstart-proof.md).
+
+**Live evidence package.** A real MCP event, a writeback receipt, and a paired Qwen plan comparison, captured against a live DataHub instance with a nested dbt project. Checksums verified. See [`evaluation/hac-152/`](evaluation/hac-152/).
+
+**MCP field coverage.** What DataHub holds versus what an agent receives through the official MCP server. See [`evaluation/mcp-field-coverage.md`](evaluation/mcp-field-coverage.md).
+
+## Quickstart
+
+From a clean clone:
 
 ```bash
 npm install
@@ -60,119 +199,49 @@ npm run check:clean-room        # every dependency resolves to a published versi
 npm run parity:datahub-adapter  # 35/35 against the frozen migration baseline
 ```
 
-This used to claim a test count. It said "27" long after the real number had
-passed 400, which is the failure this project is built to refuse — a number
-asserted once and never re-checked, on the page a reader trusts most. The
-command reports its own count, and that count cannot go stale.
+For a local DataHub instance (requires Docker):
 
-The parity figure stays because it is a fixed baseline: 35 checks against a
-frozen artifact, where a change in the number *is* the finding.
+```bash
+python3 -m pip install --upgrade 'acryl-datahub[dbt]'
+datahub docker quickstart
+```
 
-## Reading the evidence
+See [`docs/quickstart.md`](docs/quickstart.md) for the full DataHub setup, MCP server installation, and enrichment workflow.
 
-Every claim this tool emits carries the standing of the evidence behind it, on
-axes that are deliberately kept apart. The words are narrow on purpose.
+For judge-verified paths from 60 seconds to 15 minutes, see [`JUDGING.md`](JUDGING.md).
 
-**Did the catalog answer?** — `read`
+## Examples and judge artifacts
 
-| value | meaning |
-| -- | -- |
-| `ok` | the catalog answered; the values beside this are its answer |
-| `failed` | it was asked and did not answer |
-| `not-queried` | it was not asked |
+Tally ships checked-in artifacts a judge can inspect without running anything:
 
-`failed` and `not-queried` are not claims about the data. Collapsing them into
-"no data" is the error the whole contract exists to prevent.
+- [Golden root-level fixture](test/fixtures/golden/change-impact-event.root.json) — real emitted event with writeback receipt, dbt project at repo root
+- [Golden nested fixture](test/fixtures/golden/change-impact-event.nested.json) — same, with `dbt/` prefix exercising the normalization
+- [Paired Qwen plan comparison](evaluation/hac-152/live-qwen-judge-run-bundle.json) — DataHub-only versus joined, three deltas
+- [Live MCP event](evaluation/hac-152/live-mcp-event.json) — read through the official DataHub MCP server
+- [Live writeback receipt](evaluation/hac-152/live-event-with-writeback.json) — observed before/after states
 
-**Was the answer whole?** — `completeness`
+See [`examples/README.md`](examples/README.md) for the full index with descriptions.
 
-| value | meaning |
-| -- | -- |
-| `complete-against-pinned-manifest` | compared against a named, pinned expected set and found equal to it |
-| `not-established` | nothing determined whether the answer is whole |
+## Known limitations
 
-A read can succeed and still be partial. DataHub's lineage is search-index
-backed, and that index converges after ingest — so a query can return four edges
-of twelve, succeed, and look identical to a complete answer.
+1. **No completeness claim.** Every lineage read carries `not-established`. Observed counts are not exhaustiveness claims. Deriving a pinned expected set is tracked but not yet landed.
+2. **`externalUrl` dropped at MCP boundary.** DataHub holds a commit-pinned source URL; the official MCP server does not project it for datasets. `code.sourceUrl` is null under MCP. The fix is filed upstream.
+3. **Shallow corpus history.** 92 commits over five years is thin for co-change and fragility evidence. Any such figure is illustrative, not statistical.
+4. **No co-change evidence from the producer.** The workspace.json producer withholds behavioral values by design. The join exercises key membership, not value reading.
+5. **Sources point at declaration YAML.** A dbt source's `original_file_path` points at the YAML that declares it, not a model file. Per-source fragility is not separable.
+6. **One subject, one corpus per golden fixture.** The nested corpus is exercised by a perturbation test and the live evidence package, not by the root-level golden fixture.
 
-**`not-established` is the honest and usually correct state, not a shortfall.**
-It does not mean the answer is wrong or that someone forgot to check. It means
-no attestation exists, which is true of every lineage read this repository
-currently emits. The stronger value requires a pinned manifest of expected URNs
-and matching digests; deriving those is tracked under
-[HAC-231](https://linear.app/marcelle-labs/issue/HAC-231), and until it lands
-nothing here claims it.
+## Ecosystem, provenance, and license
 
-**Why is something missing?** — `unavailable[].reason`
+**Tally** is the product. [workspace.json](https://github.com/workspacejson) is the neutral standard that produces the repository artifact. [DataHub](https://datahubproject.io/) is the data catalog. Tally joins both.
 
-`absent` is the strongest of these: asked, and reported nothing. It is only
-sayable about an answer established complete against a pinned manifest, because
-a converging index returning zero satisfies "asked and got nothing" while being
-no evidence at all. When completeness is unknown, the honest word is
-`indeterminate`.
+- **Pre-existing work:** The workspace.json standard, its producer CLI, and the dbt path-normalization adapter in `src/adapters/workspacejson/` were developed before the hackathon and adopted with full provenance. See [`docs/provenance.md`](docs/provenance.md) and [`HACKATHON_PROVENANCE.md`](HACKATHON_PROVENANCE.md).
+- **New work:** DataHub dataset-URN resolution, non-silent node extraction, the change-impact event contract, the MCP read path, writeback with observed receipts, the paired plan comparison, the cockpit, and all evaluation evidence.
+- **Clean-room boundary:** Tally consumes only released, published `@workspacejson/*` packages. No source-level cross-org imports. See [`docs/clean-room.md`](docs/clean-room.md).
+- **Upstream contributions:** The `externalUrl` MCP projection fix (filed against `acryldata/mcp-server-datahub`) and the `node:fs` type-stub masking defect (filed against `workspacejson/cli`).
 
-**What backs a claim?** — `evidence.records[].checkExecuted` and the derived tier
+**Challenge category:** Metadata-Aware Code Generation & Development
 
-`checkExecuted` records that this harness *ran* a check. It does not say the
-claim is true — that is what the adjacent `observation` field records and what a
-reviewer judges. The tier is a mechanical function of the records and is never
-rendered alone: `VERIFIED` is a fact about records that reads as a warrant about
-claims, so every surface shows it with the counts that produced it.
+**Technologies demonstrated:** DataHub, dbt, TypeScript, Node.js, DuckDB, Python, Vitest, React, Vite, Tailwind, Playwright
 
-**Did the writeback land?** — the receipt
-
-`bothStatesRead` says the before and after states were both read. It says
-nothing about whether they show what was intended; `succeeded` says that, and
-requires the mutations to have been accepted *and* the intended state to have
-been observed. A mutation returning cleanly is not evidence that the write is
-visible — DataHub serves stale reads for some seconds afterwards.
-
-The full contract, including what each invariant refuses, is
-[`src/integration/change-impact-event.ts`](src/integration/change-impact-event.ts).
-
-## How this reads DataHub
-
-Through the official DataHub MCP server (`acryldata/mcp-server-datahub`), spawned
-over stdio and called with its own `get_entities`, `get_lineage` and
-`list_schema_fields` tools.
-
-That sentence was here before the transport was. The read path issued GraphQL
-directly to GMS while restricting itself to the fields the MCP server projects,
-and called the result MCP-faithful. The restriction was real and measured field
-by field — and it was a different claim. "We ask for the fields MCP would"
-describes a request body; "we read through the official MCP server" describes a
-transport, and only one of them was true.
-
-The difference is structural rather than pedantic. A self-imposed projection is
-enforced by whoever last edited the query string; reading through the server
-means a dropped field cannot be asked for, because the process on the other end
-never sends it. That had already failed here once, when this repository read
-`externalUrl` while claiming to sit behind a boundary that drops it.
-
-`--transport gms` keeps the direct read and is honest about being exactly that.
-It stays because the comparison is the evidence — see
-[`docs/quickstart.md`](docs/quickstart.md) for what the two transports agree on
-and the two places they differ.
-
-## Local quickstart
-
-See [`docs/quickstart.md`](docs/quickstart.md) for running a local DataHub instance, installing the official MCP server, and enriching a dataset.
-
-## Status
-
-Bootstrapped under [HAC-214](https://linear.app/marcelle-labs/issue/HAC-214).
-
-Landed:
-
-- [META-248](https://linear.app/marcelle-labs/issue/META-248) — the workspace.json DataHub/dbt adapter is adopted as an internal module, parity preserved at 35/35 against the frozen migration baseline. See [`docs/provenance.md`](docs/provenance.md).
-- [HAC-143](https://linear.app/marcelle-labs/issue/HAC-143) — proof corpus frozen at [`dbt-labs/jaffle_shop_duckdb@36bde6cb`](https://github.com/dbt-labs/jaffle_shop_duckdb/tree/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb). See [`evaluation/proof-corpus.md`](evaluation/proof-corpus.md), including its recorded limitations.
-- [HAC-162](https://linear.app/marcelle-labs/issue/HAC-162) — `original_file_path` verified populated across every dbt node type the join uses. See [`evaluation/dbt-node-coverage.md`](evaluation/dbt-node-coverage.md).
-
-Not yet resolved, gating further work:
-
-- [HAC-213](https://linear.app/marcelle-labs/issue/HAC-213) — Path-B (`workspacejson signals datahub`) not yet ruled.
-- [HAC-163](https://linear.app/marcelle-labs/issue/HAC-163) — agent substrate (build on the DataHub Analytics Agent/LangGraph vs. own) not yet decided; gates [HAC-148](https://linear.app/marcelle-labs/issue/HAC-148), [HAC-149](https://linear.app/marcelle-labs/issue/HAC-149), [HAC-152](https://linear.app/marcelle-labs/issue/HAC-152).
-
-## License
-
-Apache License 2.0 — see [`LICENSE`](LICENSE).
+**License:** Apache License 2.0 — see [`LICENSE`](LICENSE).
