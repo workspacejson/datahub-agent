@@ -3,6 +3,7 @@ import { ChangePlanView } from "./ChangePlanView";
 import { DecisionRail } from "./DecisionRail";
 import { ImpactView } from "./ImpactView";
 import { ReceiptsView } from "./ReceiptsView";
+import { SourceTag } from "./SourceTag";
 
 const routes: Array<{ route: CockpitRoute; label: string }> = [
   { route: "impact", label: "Impact" },
@@ -28,7 +29,18 @@ function FirstFrame({ model }: { model: CockpitViewModel }) {
       <div className="first-frame__identity">
         <p className="eyebrow">Dataset under review</p>
         <h1 id="route-title">{model.title}</h1>
-        <p className="subject-urn mono">{model.datasetIdentity.text}</p>
+        {/*
+          The URN carries its own source tag here. It used to be repeated by a
+          `Dataset identity` card in the Impact row, which is where the
+          attribution lived; removing that duplication would otherwise have taken
+          the attribution with it, and an identifier on a judge surface without
+          the system that asserted it is exactly the collapse this cockpit
+          refuses.
+        */}
+        <p className="subject-urn">
+          <span className="mono">{model.datasetIdentity.text}</span>
+          <SourceTag source={model.datasetIdentity.source} />
+        </p>
         <p className="frame-summary">{model.summary}</p>
         {/*
           The strip changes when the route or the model changes, and neither

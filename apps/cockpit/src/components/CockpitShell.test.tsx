@@ -12,7 +12,7 @@ it("automatically warns for every placeholder frame and switches routes", async 
   let route = placeholder.route;
   render(<CockpitShell model={placeholder} route={route} onRouteChange={(next) => { route = next; }} />);
   expect(screen.getByRole("status").textContent).toContain("DESIGN PLACEHOLDER · NOT OBSERVED DATA");
-  await user.click(screen.getByRole("button", { name: "Review changed plan" }));
+  await user.click(screen.getByRole("button", { name: "Continue to change plan" }));
   expect(route).toBe("change-plan");
 });
 
@@ -69,5 +69,5 @@ it("does not present a placeholder warning for non-placeholder models", () => {
   const placeholder = provisionalStateAdapter("partial").read();
   render(<CockpitShell model={{ ...placeholder, sourceMode: "live" }} route="receipts" onRouteChange={() => undefined} />);
   expect(screen.queryByRole("status")).toBeNull();
-  expect(screen.queryByRole("button", { name: "Review changed plan" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Continue to change plan" })).toBeNull();
 });

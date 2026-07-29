@@ -57,7 +57,7 @@ for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport);
     await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
 
-    const cta = page.getByRole("button", { name: "Review changed plan" });
+    const cta = page.getByRole("button", { name: "Continue to change plan" });
     await expect(cta).toBeVisible();
 
     const box = await cta.boundingBox();
@@ -87,7 +87,7 @@ for (const viewport of VIEWPORTS) {
 test("the changed-plan destination shows the real evidence-backed delta", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
   await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
-  await page.getByRole("button", { name: "Review changed plan" }).click();
+  await page.getByRole("button", { name: "Continue to change plan" }).click();
 
   // Not "renders an empty list correctly". The bundle carries typed deltas, and
   // every one of them must reach the surface with the evidence behind it.

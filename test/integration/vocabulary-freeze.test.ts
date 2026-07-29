@@ -615,19 +615,23 @@ describe("V-4 · a naked tier token reaching a reader", () => {
     // `VERIFIED` alone is a fact about records that reads as a warrant about
     // claims. Every sanctioned rendering carries what produced it.
     for (const phrase of [describeTier([]), describeTier(records(2, 0)), describeTier(records(3, 1))]) {
-      expect(phrase).toMatch(/^(ASSERTED|OBSERVED|VERIFIED) — /);
+      // The separator is a colon, not an em dash. The house copy rules refuse
+      // em dashes anywhere, and this sentence is the most-read string in the
+      // product, so it is the last place to grant an exception.
+      expect(phrase).toMatch(/^(ASSERTED|OBSERVED|VERIFIED): /);
       expect(phrase).not.toMatch(/^(ASSERTED|OBSERVED|VERIFIED)$/);
+      expect(phrase).not.toContain("—");
     }
   });
 
   it("states how many records carry an executed check, so the tier can be checked against them", () => {
     expect(describeTier(records(3, 1))).toBe(
-      "VERIFIED — 1 of 3 record(s) carry a check this harness executed",
+      "VERIFIED: 1 of 3 record(s) carry a check this harness executed",
     );
     expect(describeTier(records(2, 0))).toBe(
-      "OBSERVED — 2 record(s), none of them a check this harness executed",
+      "OBSERVED: 2 record(s), none of them a check this harness executed",
     );
-    expect(describeTier([])).toBe("ASSERTED — no supporting record was captured");
+    expect(describeTier([])).toBe("ASSERTED: no supporting record was captured");
   });
 });
 

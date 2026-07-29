@@ -60,7 +60,15 @@ export function DecisionRail({ model, route, onRouteChange }: {
         <p className="rail-caveat">{caveat(model)}</p>
         {route === "impact" && (
           <>
-            <button className="cta" type="button" onClick={() => onRouteChange("change-plan")}>Review changed plan</button>
+            {/*
+              "Continue to change plan", not HAC-217's "Review changed plan".
+              HAC-217 froze that label before any screen existed; the approved
+              design named this one with the frame in front of it, and it says
+              what happens next rather than what you will do once you arrive.
+              HAC-218's issue text is amended to match rather than left to
+              contradict the artifact.
+            */}
+            <button className="cta" type="button" onClick={() => onRouteChange("change-plan")}>Continue to change plan</button>
             <button className="cta cta--secondary" type="button" onClick={() => onRouteChange("receipts")}>Stop, do not edit</button>
           </>
         )}

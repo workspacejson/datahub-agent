@@ -48,7 +48,25 @@ export const viewSourceSchema = z.discriminatedUnion("state", [
   }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
 ]);
-export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
+/**
+ * One lineage edge, with direction and degree carried structurally.
+ *
+ * These used to be flattened into `label` as `"upstream: name"` plus a prose
+ * `reason` ending in `"at degree 2"`, which meant the only way to lay the graph
+ * out by direction was to parse the strings back apart. A renderer that has to
+ * re-derive what the projector already knew will eventually disagree with it.
+ *
+ * `direction: "none"` and a null `degree` are the zero-edge row, which is a
+ * stated absence rather than a node and has no position in a topology.
+ */
+export const impactEdgeSchema = z.object({
+  node: z.string().min(1),
+  direction: z.enum(["upstream", "downstream", "none"]),
+  degree: z.number().int().positive().nullable(),
+  state: z.enum(["resolved", "unresolved", "excluded"]),
+  reason: z.string().min(1),
+  source: sourceSchema,
+});
 /**
  * One semantic plan change, and the way back to what produced it.
  *
@@ -382,6 +400,8 @@ export type CockpitStateName = z.infer<typeof cockpitStateNameSchema>;
 export type ClaimSource = z.infer<typeof claimSourceSchema>;
 export type PlanComparisonView = z.infer<typeof planComparisonSchema>;
 export type ViewSource = z.infer<typeof viewSourceSchema>;
+
+export type ImpactEdge = z.infer<typeof impactEdgeSchema>;
 export type MutationAcceptance = z.infer<typeof mutationAcceptanceSchema>;
 export type IntendedStateObservation = z.infer<typeof intendedStateObservationSchema>;
 export type TerminalWritebackDisposition = z.infer<typeof terminalWritebackDispositionSchema>;

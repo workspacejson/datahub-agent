@@ -98,7 +98,9 @@ function attribution(event: ChangeImpactEvent): SourceEvent["source"] {
 function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
   const directed = (kind: "upstream" | "downstream") =>
     (kind === "upstream" ? event.datahub.upstreams : event.datahub.downstreams).map((edge) => ({
-      label: `${kind}: ${edge.name ?? edge.urn}`,
+      node: edge.name ?? edge.urn,
+      direction: kind,
+      degree: edge.degree,
       state: "resolved" as const,
       reason: `Observed at degree ${edge.degree} by the catalog lineage read.`,
       source: "DataHub" as const,
@@ -112,7 +114,9 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
   // empty list that reads as a finding.
   const stated = event.unavailable.find((u) => u.field.startsWith("datahub."));
   return [{
-    label: "No lineage edges were observed",
+    node: "No lineage edges were observed",
+    direction: "none" as const,
+    degree: null,
     state: "unresolved" as const,
     reason: stated?.detail
       ?? "The lineage read returned nothing and its completeness was not established.",

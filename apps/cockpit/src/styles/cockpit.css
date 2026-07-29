@@ -164,20 +164,58 @@ nav.view-tabs button.active { color: var(--text-heading); border-bottom-color: v
 .claim--evidence > strong { font-family: var(--font-sans); font-weight: 400; line-height: var(--lh-normal); }
 .claim--identifier > strong { font-family: var(--font-mono); font-weight: 500; }
 
+/* The row that carries the join. Two cards rather than three: the third was a
+   `Dataset identity` card restating the URN already printed in the hero, which
+   spent a slot in this row on a repetition. Wider minimum than the generic grid,
+   because these two are the answer to "what does workspace.json add" and should
+   read as the dominant element on the screen. */
+.identity-grid--join { grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr)); }
+/* The attribution owns its own line. Inline, it collided with the View Source
+   link that follows it and the two read as one run-on control. */
+.identity-grid--join .source-tag { display: block; width: fit-content; margin-bottom: var(--sp-3); }
+.identity-grid--join details { margin: var(--sp-1) 0 0; }
+
 .view-source { display: inline-block; color: var(--wj-accent); font-weight: 700; }
 .view-source--unavailable { color: var(--wj-experimental); font-weight: 400; }
 .view-source__origin { margin-left: var(--sp-2); color: var(--text-muted); font-size: var(--fs-xs); }
 
-.impact-rail { margin: var(--sp-5) 0 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
-.impact-rail h2 { margin: 0 0 var(--sp-2); font-size: var(--fs-base); font-weight: 600; color: var(--text-heading); }
-.impact-rail > p { margin: 0 0 var(--sp-3); color: var(--text-muted); font-size: var(--fs-sm); line-height: var(--lh-relaxed); }
-.impact-rail ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
-.impact-rail li { border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--sp-3); font-size: var(--fs-xs); color: var(--text-muted); line-height: var(--lh-normal); overflow-wrap: anywhere; }
-/* The edge label and its reason are separate lines rather than run together on
-   one. They are different claims: the label is what was observed, the reason is
-   how. Joining them with a dash also puts an em dash on a judge surface, which
-   the house copy rules refuse. */
-.impact-rail li strong { display: block; margin-bottom: var(--sp-1); color: var(--text-body); font-family: var(--font-mono); font-weight: 500; }
+/* ── Lineage topology ─────────────────────────────────────────
+   Direction is the information in a lineage read, so direction is the layout.
+   This was ten near-identical cards in one column, each repeating the same
+   sentence with one number changed and the same source badge: half the primary
+   screen spent on catalog output, with the joined evidence pushed below it.
+
+   A CSS grid, deliberately. No force layout, no minimap, no drag: the
+   comprehension gate for an interactive node graph has not run, and HAC-218
+   requires the static rail until HAC-217 records that it has. */
+.lineage-band { margin: var(--sp-5) 0 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
+.lineage-band__head { display: flex; align-items: start; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+.lineage-band h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-base); font-weight: 600; color: var(--text-heading); }
+.lineage-band__head p { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+
+.topology { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr)); gap: var(--sp-3); align-items: start; }
+.topology__col { min-width: 0; }
+.topology__col--subject { border-inline: 1px solid var(--border-default); padding-inline: var(--sp-3); }
+.topology__nodes { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-1); }
+.topology__node {
+  min-width: 0;
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3);
+  /* Name left, meta right, so names align down the column and the eye reads the
+     list as one shape rather than eight. */
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: var(--sp-1) var(--sp-2);
+}
+.topology__name { min-width: 0; color: var(--text-body); font-family: var(--font-mono); font-size: var(--fs-caption); overflow-wrap: anywhere; }
+.topology__meta { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+/* The subject reads as the thing under review rather than as one more node. */
+.topology__node--subject { border-color: var(--wj-accent-low); background: var(--accent-wash-6); }
+.topology__node--subject .topology__name { color: var(--text-heading); font-size: var(--fs-xs); font-weight: 600; }
+.topology__node--stated { display: block; }
+.topology__reason { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+/* Degree is a count, so it is mono and neutral. It carries no resolution
+   meaning and must not borrow the treatments that do. */
+.chip--degree { border-color: transparent; background: var(--surface-sunken); color: var(--text-muted); }
 
 /* ── Change plan ──────────────────────────────────────────────
    Two panels, not tabs. The comparison is the argument, and a tab would hide
