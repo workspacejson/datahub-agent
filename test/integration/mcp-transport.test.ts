@@ -1,5 +1,8 @@
+import { EventEmitter } from "node:events";
+import { PassThrough, Writable } from "node:stream";
+import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { McpClient } from "../../src/integration/mcp-transport.js";
+import { McpClient, MCP_PROTOCOL_VERSION } from "../../src/integration/mcp-transport.js";
 
 /**
  * A stand-in MCP server, as a real child process.
@@ -296,8 +299,8 @@ describe("MCP stdio client", () => {
       function handle(m) {
         if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "chatty" } });
         for (let i = 0; i < 250; i++) process.stderr.write("INFO startup line " + i + "\\n");
-        process.stderr.write("Traceback: the actual cause\\n");
-        process.exit(7);
+        // Exit from the flush callback. See the note on the long-stream test below.
+        process.stderr.write("Traceback: the actual cause\\n", () => process.exit(7));
       }`),
     );
     await client.start();
@@ -314,13 +317,24 @@ describe("MCP stdio client", () => {
   });
 
   it("retains both ends of a long stderr stream and says how much it dropped", async () => {
+    // The fixture exits from the flush callback rather than on the line after the
+    // write, because `process.exit` does not flush what is still sitting in the
+    // stream's own buffer. Node's stdio to a pipe is asynchronous on POSIX, so
+    // this is true regardless of how much room the kernel pipe has — the 4395
+    // bytes written here fit inside a 65536-byte pipe several times over and were
+    // still lost. On a CI runner the child stopped emitting at "line 453" of 501,
+    // and the sibling test above lost its traceback after "line 172" of 251.
+    //
+    // Establishing that cost an intervention on the wrong end: draining stderr in
+    // the parent before composing the diagnostic changed nothing here, which is
+    // what rules the parent in as innocent for *this* failure. That drain is a
+    // real fix for a real defect (HAC-258) and it is not this one.
     const client = new McpClient(
       server(`${RESPOND}
       function handle(m) {
         if (m.method === "initialize") return reply(m.id, { protocolVersion: "2024-11-05", serverInfo: { name: "chatty" } });
         for (let i = 0; i < 500; i++) process.stderr.write("line " + i + "\\n");
-        process.stderr.write("LAST\\n");
-        process.exit(1);
+        process.stderr.write("LAST\\n", () => process.exit(1));
       }`),
     );
     await client.start();
@@ -387,5 +401,101 @@ describe("MCP stdio client", () => {
     expect(result.ok).toBe(false);
     expect(result.error).toContain("timed out");
     await client.stop();
+  });
+});
+
+/**
+ * A child process the test drives directly, so the exit ordering is asserted
+ * rather than raced.
+ *
+ * The defect these cover was found as a CI failure and did not reproduce on the
+ * author's machine at all — it is a function of when the runner schedules the
+ * parent, not of anything a test can ask for. Reproducing it with a real child
+ * would make the regression test a coin flip: green on a quiet machine whether
+ * or not the bug is present, which is the same "passes for the wrong reason"
+ * this repository refuses from its evidence. Driving the events directly asserts
+ * the contract instead — `data` that arrives after `exit` belongs in the
+ * diagnostic — and that is deterministic on every machine.
+ */
+function injectedChild() {
+  const stdout = new PassThrough({ encoding: "utf8" });
+  const stderr = new PassThrough({ encoding: "utf8" });
+  const stdin = new Writable({
+    write(chunk, _encoding, done) {
+      // Answer `initialize` as a real server would, so `start()` completes and
+      // the test reaches the exit path it is actually about.
+      for (const line of String(chunk).split("\n")) {
+        if (!line.trim()) continue;
+        const message = JSON.parse(line) as { id?: number; method?: string };
+        if (message.method === "initialize" && message.id !== undefined) {
+          stdout.write(
+            `${JSON.stringify({
+              jsonrpc: "2.0",
+              id: message.id,
+              result: { protocolVersion: MCP_PROTOCOL_VERSION, serverInfo: { name: "injected" } },
+            })}\n`,
+          );
+        }
+      }
+      done();
+    },
+  });
+
+  const child = Object.assign(new EventEmitter(), { stdout, stderr, stdin, pid: 4242, kill: () => true });
+  return { child: child as unknown as ChildProcessWithoutNullStreams, stderr };
+}
+
+describe("MCP stdio client, when the server dies", () => {
+  /** Start a client against an injected child, with a call already in flight. */
+  async function inFlight(stderrDrainMs: number) {
+    const { child, stderr } = injectedChild();
+    const client = new McpClient(
+      { command: "injected", args: [] },
+      { spawnProcess: () => child, stderrDrainMs },
+    );
+    await client.start();
+    const call = client.callTool("get_entities", { urns: ["urn:x"] });
+    return { child, stderr, client, call };
+  }
+
+  it("explains the death with stderr that arrived after the exit event", async () => {
+    const { child, stderr, client, call } = await inFlight(250);
+
+    // The ordering CI hit: the process is reaped, and the line that explains why
+    // is still queued behind the exit event. Composing on `exit` reported the
+    // death without its cause.
+    child.emit("exit", 7, null);
+    stderr.write("Traceback: the actual cause\n");
+    stderr.end();
+
+    const result = await call;
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("Traceback: the actual cause");
+    // The stream ended, so the tail is whole and nothing is caveated.
+    expect(result.error).not.toContain("stderr tail incomplete");
+
+    const stopped = client.stop();
+    child.emit("exit", 7, null);
+    await stopped;
+  });
+
+  it("marks the diagnostic incomplete when the stream never ended", async () => {
+    const { child, stderr, client, call } = await inFlight(50);
+
+    child.emit("exit", 7, null);
+    stderr.write("Traceback: the actual cause\n");
+    // No `end()`. This is the `npx`/`uvx` shape: a grandchild holds the write end
+    // of the pipe open, EOF never arrives, and the budget is what expires. The
+    // caveat is the whole point — a crash reason that dropped the rest of the
+    // tail in silence would be absence rendered as completeness.
+
+    const result = await call;
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("Traceback: the actual cause");
+    expect(result.error).toContain("stderr tail incomplete");
+
+    const stopped = client.stop();
+    child.emit("exit", 7, null);
+    await stopped;
   });
 });

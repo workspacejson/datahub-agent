@@ -34,6 +34,7 @@
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import type { Readable } from "node:stream";
 
 /** The protocol revision this client speaks. Sent in the handshake and checked. */
 export const MCP_PROTOCOL_VERSION = "2024-11-05" as const;
@@ -41,6 +42,37 @@ export const MCP_PROTOCOL_VERSION = "2024-11-05" as const;
 /** Retained stderr, from both ends of the stream. See `#retainStderr`. */
 const HEAD_LINES = 100;
 const TAIL_LINES = 100;
+
+/**
+ * How long the exit path keeps draining stderr before composing a diagnostic.
+ *
+ * See `#composeExitReason` for why this is spent on nearly every failure rather
+ * than only on unusual ones, and what the cost buys.
+ */
+const STDERR_DRAIN_MS = 250;
+
+/**
+ * How a child process is created.
+ *
+ * Injected only so the exit path can be tested against streams the test drives.
+ * Reproducing the real ordering depends on machine load — it reproduced on a CI
+ * runner and not on the author's laptop — so a test that raced it would be a
+ * coin flip that passes for the wrong reason. See `#composeExitReason`.
+ *
+ * Narrower than `typeof spawn` on purpose: the seam describes the one call this
+ * client makes, not the whole overload set, so a substitute has one shape to
+ * satisfy rather than eight. Piping all three streams is this client's
+ * requirement, not the caller's choice, so it stays in `spawnPiped`.
+ */
+export type SpawnProcess = (
+  command: string,
+  args: readonly string[],
+  options: { env: NodeJS.ProcessEnv },
+) => ChildProcessWithoutNullStreams;
+
+/** The real one. All three streams piped, because the client reads all three. */
+const spawnPiped: SpawnProcess = (command, args, options) =>
+  spawn(command, [...args], { stdio: ["pipe", "pipe", "pipe"], env: options.env });
 
 export interface McpServerCommand {
   command: string;
@@ -54,6 +86,10 @@ export interface McpClientOptions {
   requestTimeoutMs?: number;
   /** Where the server's stderr goes. Captured by default so a crash is legible. */
   onStderr?: (line: string) => void;
+  /** How long the exit path drains stderr before composing. See `#composeExitReason`. */
+  stderrDrainMs?: number;
+  /** Test seam for the exit path. See `SpawnProcess`. */
+  spawnProcess?: SpawnProcess;
 }
 
 /**
@@ -105,11 +141,15 @@ export class McpClient {
   readonly #server: McpServerCommand;
   readonly #requestTimeoutMs: number;
   readonly #onStderr: ((line: string) => void) | undefined;
+  readonly #stderrDrainMs: number;
+  readonly #spawnProcess: SpawnProcess;
 
   constructor(server: McpServerCommand, options: McpClientOptions = {}) {
     this.#server = server;
     this.#requestTimeoutMs = options.requestTimeoutMs ?? 60_000;
     this.#onStderr = options.onStderr;
+    this.#stderrDrainMs = options.stderrDrainMs ?? STDERR_DRAIN_MS;
+    this.#spawnProcess = options.spawnProcess ?? spawnPiped;
   }
 
   /**
@@ -153,6 +193,60 @@ export class McpClient {
   }
 
   /**
+   * Compose the death diagnostic once stderr has had a chance to arrive.
+   *
+   * `exit` fires when the process is reaped, which is not when its stdio is
+   * drained — `data` events already queued sit ahead of us in the event loop.
+   * Composing directly in the `exit` handler therefore reported whatever had
+   * been retained by that instant, and a server whose traceback is its final
+   * write could have that traceback missing from the one message that exists to
+   * carry it. That is the failure `#retainStderr` was written to end, reappearing
+   * one layer up: the buffer was right, it was read too early.
+   *
+   * What this waits on is worth stating precisely, because the event's name
+   * misleads about the common case. `end` fires on EOF, and EOF requires *every*
+   * write end of the pipe to be closed — so a server started through `npx` or
+   * `uvx`, which is how the official DataHub server is started, holds stderr open
+   * through its grandchildren and will never emit `end` here. The budget is the
+   * normal path, not the exceptional one. It is still the right shape, because
+   * the queued `data` events flush during the window and those were what went
+   * missing. This drains the event queue and uses `end` as an early exit; it does
+   * not await `end`.
+   *
+   * When the budget expires the diagnostic says so. A crash reason that quietly
+   * drops the tail is absence rendered as completeness — the shape this project
+   * refuses everywhere else, and indefensible in the code that renders that
+   * judgement about other systems.
+   */
+  #composeExitReason(stderr: Readable | null, how: string): void {
+    let settled = false;
+    const settle = (complete: boolean): void => {
+      if (settled) return;
+      settled = true;
+      const recent = this.#recentStderr(3);
+      this.#die(
+        `MCP server exited (${how})` +
+          (recent.length ? `: ${recent.join(" | ")}` : "") +
+          (complete ? "" : ` [stderr tail incomplete — stream did not end within ${this.#stderrDrainMs}ms]`),
+      );
+    };
+
+    // Already ended means every `data` event has already been emitted.
+    if (!stderr || stderr.readableEnded) {
+      settle(true);
+      return;
+    }
+
+    const budget = setTimeout(() => settle(false), this.#stderrDrainMs);
+    // A pending drain must not be the reason a process stays alive.
+    budget.unref?.();
+    stderr.once("end", () => {
+      clearTimeout(budget);
+      settle(true);
+    });
+  }
+
+  /**
    * Start the server and complete the MCP handshake.
    *
    * Throws rather than returning a status, because every subsequent call depends
@@ -163,8 +257,7 @@ export class McpClient {
   async start(): Promise<{ serverName: string | null; serverVersion: string | null }> {
     if (this.#child) throw new Error("MCP client already started");
 
-    const child = spawn(this.#server.command, [...this.#server.args], {
-      stdio: ["pipe", "pipe", "pipe"],
+    const child = this.#spawnProcess(this.#server.command, [...this.#server.args], {
       env: { ...process.env, ...this.#server.env },
     });
     this.#child = child;
@@ -194,11 +287,7 @@ export class McpClient {
     // failed with the cause, not left to time out into a less informative error.
     child.on("error", (error) => this.#die(`could not start "${this.#server.command}": ${error.message}`));
     child.on("exit", (code, signal) => {
-      const recent = this.#recentStderr(3);
-      this.#die(
-        `MCP server exited (${signal ? `signal ${signal}` : `code ${code}`})` +
-          (recent.length ? `: ${recent.join(" | ")}` : ""),
-      );
+      this.#composeExitReason(child.stderr, signal ? `signal ${signal}` : `code ${code}`);
     });
 
     // The child outlives an unhandled throw in the parent otherwise. Closing
