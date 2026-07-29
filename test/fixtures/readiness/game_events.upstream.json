@@ -1,0 +1,63 @@
+{
+  "expectedUrns": [
+    "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)"
+  ],
+  "queryParameters": {
+    "surface": "searchAcrossLineage",
+    "direction": "UPSTREAM",
+    "maxDegree": 4,
+    "query": "*",
+    "start": 0,
+    "count": 50
+  },
+  "_provenance": {
+    "subject": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+    "subjectDbtUniqueId": "model.transfermarkt_datasets.game_events",
+    "corpus": "https://github.com/dcaribou/transfermarkt-datasets",
+    "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+    "dbt_version": "1.12.0",
+    "adapter_type": "duckdb",
+    "ingestion_source": "acryl-datahub 1.6.0.16",
+    "derivation": "scripts/derive-readiness-manifest.mjs",
+    "command": "node scripts/derive-readiness-manifest.mjs <checkout-at-59fa295c> --subject model.transfermarkt_datasets.game_events --direction UPSTREAM --max-degree 4",
+    "urn_rule": "dbt_core.py:251-261 + dbt_common.py:1136-1157, 1173-1206",
+    "config": {
+      "targetPlatform": "duckdb",
+      "env": "PROD",
+      "useIdentifiers": false,
+      "includeDatabaseName": true,
+      "convertUrnsToLowercase": false,
+      "skipSourcesInLineage": false,
+      "dbtPlatform": "dbt"
+    },
+    "derivedFrom": "pinned dbt manifest.json — never from an observed DataHub response",
+    "degrees": {
+      "1": [
+        "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+        "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)"
+      ],
+      "2": [
+        "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+        "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)"
+      ],
+      "3": [
+        "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)"
+      ],
+      "4": [
+        "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)"
+      ]
+    },
+    "caveat": "convert_urns_to_lowercase is pinned to false, not inherited: the pinned source's config default (True) and DBTNode default (False) disagree. Every component in this corpus is lowercase, so no observation distinguishes them. The lowercase and quote-stripping branches of get_db_fqn are UNTESTED, not proven. Re-establish before porting to a mixed-case corpus or a case-sensitive platform.",
+    "expectedSetDigest": "888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6",
+    "manifestDigest": "770a1e8e46fc0f2fcdeb84b2f12decf2895c2182590fd3631f2a10f7972405d7"
+  }
+}
