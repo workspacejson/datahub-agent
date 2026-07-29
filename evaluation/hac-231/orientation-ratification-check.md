@@ -70,9 +70,20 @@ That is a consistency check against a prior claim, not an independent discovery 
 termination.
 
 The stronger statement — that nothing lies beyond degree 4 — rests on the dbt manifest,
-where `source.transfermarkt_datasets.transfermarkt_scraper.games` declares no
-dependencies and no node depends on the duckdb table beneath it. That is a property of
-the pinned corpus, verifiable without asking DataHub anything.
+not on DataHub. Checked against the pinned corpus rather than asserted:
+
+```
+source.transfermarkt_datasets.transfermarkt_scraper.games
+  declares depends_on: (field absent)
+  its own upstream nodes: (none — nothing lies beyond it)
+  nodes depending on it: base_game_events, base_games
+```
+
+The source declares no dependencies at all, so nothing in the corpus lies beyond it.
+The duckdb table beneath it is not a dbt node — DataHub synthesises it from the source
+— so no dbt node can depend on it either. That is a property of the pinned corpus,
+verifiable without asking DataHub anything, and it is what the termination claim
+actually stands on.
 
 ## Corroboration already on disk
 
