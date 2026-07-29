@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "source": "docs/claims.md",
   "claims": [
     {
@@ -24,17 +24,202 @@
     },
     {
       "id": "TALLY-CLAIM-005",
+      "claim": "dbt version tested",
+      "section": "Node-type coverage"
+    },
+    {
+      "id": "TALLY-CLAIM-006",
+      "claim": "Corpus commit (immutable)",
+      "section": "Proof corpus"
+    },
+    {
+      "id": "TALLY-CLAIM-007",
+      "claim": "History depth",
+      "section": "Proof corpus"
+    },
+    {
+      "id": "TALLY-CLAIM-008",
+      "claim": "Root fixture: `projectPrefix`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-009",
+      "claim": "Root fixture: `method`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-010",
+      "claim": "Root fixture: evidence tier",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-011",
+      "claim": "Root fixture: record count",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-012",
+      "claim": "Root fixture: `checkExecuted`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-013",
+      "claim": "Root fixture: `bothStatesRead`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-014",
+      "claim": "Root fixture: `succeeded`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-015",
+      "claim": "Root fixture: `noop`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-016",
+      "claim": "Root fixture: upstream count",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-017",
+      "claim": "Root fixture: downstream count",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-018",
+      "claim": "Root fixture: lineage completeness",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-019",
+      "claim": "Nested fixture: `projectPrefix`",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-020",
+      "claim": "Nested fixture: path difference",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-021",
+      "claim": "Contract version",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-022",
+      "claim": "Both fixtures pass contract validation",
+      "section": "Golden fixtures"
+    },
+    {
+      "id": "TALLY-CLAIM-023",
+      "claim": "Capture date",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-024",
+      "claim": "Subject URN",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-025",
+      "claim": "Resolved source",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-026",
+      "claim": "`code.sourceUrl` under MCP",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-027",
+      "claim": "Writeback: before tier",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-028",
+      "claim": "Writeback: after tier",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-029",
+      "claim": "Writeback: `bothStatesRead`",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-030",
+      "claim": "Plan comparison: model",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-031",
       "claim": "Plan comparison: deltas",
       "section": "Live evidence package (HAC-152)"
     },
     {
-      "id": "TALLY-CLAIM-006",
+      "id": "TALLY-CLAIM-032",
+      "claim": "Plan comparison: upstream observed",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-033",
+      "claim": "Plan comparison: downstream observed",
+      "section": "Live evidence package (HAC-152)"
+    },
+    {
+      "id": "TALLY-CLAIM-034",
       "claim": "Checksums valid",
       "section": "Live evidence package (HAC-152)"
     },
     {
-      "id": "TALLY-CLAIM-007",
+      "id": "TALLY-CLAIM-035",
+      "claim": "`externalUrl` held by DataHub",
+      "section": "MCP field coverage"
+    },
+    {
+      "id": "TALLY-CLAIM-036",
+      "claim": "`externalUrl` projected by MCP",
+      "section": "MCP field coverage"
+    },
+    {
+      "id": "TALLY-CLAIM-037",
+      "claim": "Conditions asserted from JSON",
+      "section": "Clean quickstart proof"
+    },
+    {
+      "id": "TALLY-CLAIM-038",
+      "claim": "Parity checks against frozen baseline",
+      "section": "Adapter parity"
+    },
+    {
+      "id": "TALLY-CLAIM-039",
       "claim": "No completeness claim",
+      "section": "Known limitations"
+    },
+    {
+      "id": "TALLY-CLAIM-040",
+      "claim": "`externalUrl` dropped at MCP boundary",
+      "section": "Known limitations"
+    },
+    {
+      "id": "TALLY-CLAIM-041",
+      "claim": "Shallow corpus history (92 commits)",
+      "section": "Known limitations"
+    },
+    {
+      "id": "TALLY-CLAIM-042",
+      "claim": "No co-change evidence from producer",
+      "section": "Known limitations"
+    },
+    {
+      "id": "TALLY-CLAIM-043",
+      "claim": "Sources point at declaration YAML",
+      "section": "Known limitations"
+    },
+    {
+      "id": "TALLY-CLAIM-044",
+      "claim": "One subject per golden fixture",
       "section": "Known limitations"
     }
   ]
