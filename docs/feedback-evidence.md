@@ -238,6 +238,77 @@ as a suggestion.
 
 ---
 
+## 2026-07-29 — Documentation defect: the stated scope of `upsertStructuredProperties`
+
+Same root cause as the `externalUrl` entry above, in a different medium: an
+operation whose **stated** scope does not match its **actual** scope. There the
+server assembled a field and the boundary discarded it. Here the documentation
+describes a destructive scope the implementation does not have.
+
+### What the docs say
+
+[Structured properties tutorial](https://docs.datahub.com/docs/api/tutorials/structured-properties#set-structured-property-to-a-dataset),
+"Set Structured Property To a Dataset", verbatim:
+
+> This action will set/replace all structured properties on the entity.
+
+### What the code does
+
+`UpsertStructuredPropertiesResolver.java` at tag `v1.5.0.6`, the version this
+project pins:
+
+| Line | Behaviour |
+| -- | -- |
+| `:87` | reads the entity's existing `structuredProperties` aspect |
+| `:91` | `updateExistingProperties` returns every current assignment untouched unless its URN appears in the input |
+| `:94` | `addNewProperties` appends only URNs not already present |
+| `:96` | ingests the merged array |
+
+The GraphQL mutation merges. Naming one property mutates that one property, and
+an assignment written by someone else survives. `upsertLink` is the same shape
+via `LinkUtils:156-175`.
+
+Our reading is that the quoted sentence is accurate for the **aspect-level
+OpenAPI write**, where replacing the aspect is the actual behaviour, and that it
+sits in a section a reader arrives at while looking for the GraphQL mutation.
+
+### What it cost, and the failure mode worth naming
+
+We filed this as a `P0` on the documented behaviour and scheduled a rewrite onto
+a property-scoped PATCH. Checking the resolver before writing code retired the
+premise; the documented risk does not exist on the pinned version.
+
+The sharper cost is the one we avoided. The planned remedy included a CI guard
+banning `upsertStructuredProperties` from production write paths. That guard
+would have forbidden the mutation that is actually safe, and the natural place
+for a maintainer to go next is the OpenAPI aspect PUT, which is the one surface
+where the documented replace does apply. **Acting on the documentation would have
+introduced the defect the documentation warns about.**
+
+A reader who trusts the sentence writes defensive read-modify-write code they do
+not need, or migrates to the genuinely replacing surface to avoid a
+non-existent clobber.
+
+### Suggested fix
+
+Scope the sentence to the surface it describes, and state the GraphQL behaviour
+where the GraphQL example appears. Something close to: *the OpenAPI aspect write
+replaces the entity's complete structured-property set; the GraphQL
+`upsertStructuredProperties` mutation merges by property URN, leaving
+assignments absent from the input untouched.*
+
+Small, verifiable against the resolver, and it removes a reason to reach for the
+destructive surface.
+
+### Scope of our claim
+
+Source inspection at one pinned tag, not observed behaviour. It does not
+establish transaction-level safety, since the merge is a server-side
+read-modify-write and concurrent writers can still lose an update, and it does
+not generalise across GMS versions.
+
+---
+
 ## Devpost draft state
 
 Tracked here so the submission fields are never reconstructed from memory.

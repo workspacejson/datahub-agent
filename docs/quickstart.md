@@ -120,13 +120,38 @@ key membership, not value reading.
 ## 4. Enrich
 
 The writeback annotates the dataset with the evidence tier, and with a
-commit-pinned link to the producing file when one is obtainable:
+commit-pinned link to the producing file when one is obtainable.
+
+It writes to `http://localhost:8080` unless `--gms URL` names another instance,
+so read the plan before sending it. A dry run prints the exact mutations and
+variables and contacts the catalog for nothing:
 
 ```bash
-node scripts/run-writeback.mjs event.json            # --dry-run to plan only
+node scripts/run-writeback.mjs event.json --dry-run
+```
+
+When the plan reads correctly, run it for real:
+
+```bash
+node scripts/run-writeback.mjs event.json
 ```
 
 It is idempotent, so the second run reports `noop`.
+
+On the pinned GMS `v1.5.0.6`, both mutations are additive. Reading the resolver
+sources at that tag shows `upsertStructuredProperties` merging into the
+properties already on the dataset, and `upsertLink` appending to institutional
+memory, so neither is written in a way that replaces metadata this tool does not
+own.
+
+That is source inspection at one pinned version, not observed behaviour, and it
+establishes less than it may appear to. It does not establish transaction-level
+safety: the merge is a server-side read-modify-write, so concurrent writers to
+the same dataset can still lose an update. It says nothing about other GMS
+versions, and DataHub's own tutorial describes an aspect-level replace instead,
+so the claim is scoped to the tag named here and needs rechecking if the pin
+moves. See the note in
+[`src/integration/writeback.ts`](../src/integration/writeback.ts).
 
 ## 5. Run the examples
 
