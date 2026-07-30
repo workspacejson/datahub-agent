@@ -282,14 +282,30 @@ describe("an instance that accepts a read and never answers", () => {
     expect(result.code).not.toBe(0);
   }, 60_000);
 
-  it("reports an elapsed time inside the bound it advertises", async () => {
-    // The receipt's own arithmetic has to hold. An elapsedMs above timeoutMs
-    // is the receipt admitting it did not apply the bound it names.
+  it("advertises the bound it was given and does not claim the catalog answered", async () => {
+    // This asserted `elapsedMs <= TIMEOUT_MS * 2` and flaked at 2202ms against
+    // 1800ms under full-suite load (HAC-285). The duration assertion is gone
+    // rather than widened a second time.
+    //
+    // Widening was the wrong move twice over. The sibling assertion above had
+    // already been loosened once for the same reason, and a bound loose enough
+    // to survive contention is no longer measuring the defect — it is measuring
+    // whether the machine was busy. The magnitude claim it was reaching for is
+    // carried by "gives up at the bound rather than at the request timeout"
+    // above, whose threshold is derived from the defect (10s against the 30s
+    // ceiling HAC-223 actually produced) rather than from the ideal 900ms, so it
+    // has a 3x margin and cannot flake on scheduling.
+    //
+    // What is left here is the part that does not need a clock: the receipt must
+    // advertise the bound it was handed, and must not report an observation
+    // status that claims the catalog answered when the read hung. `settled`
+    // would be exactly that claim.
     stub = await startStub({ hangReadsAfterMutation: true });
     const receipt = receiptFrom(await runCli(bounded(stub)));
 
     expect(receipt.observation?.timeoutMs).toBe(TIMEOUT_MS);
-    expect(receipt.observation?.elapsedMs).toBeLessThanOrEqual(TIMEOUT_MS * 2);
+    expect(receipt.observation?.status).not.toBe("settled");
+    expect(receipt.observation?.polls).toBeGreaterThan(0);
   }, 60_000);
 
   it("records the cancelled read as failed, with the cause preserved", async () => {
