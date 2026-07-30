@@ -107,10 +107,28 @@ function Coverage({ model }: { model: CockpitViewModel }) {
           ? "That set is complete against the pinned manifest."
           : "Whether that set is complete is not established, so an absent edge is not evidence of no impact."}
       </p>
+      {/*
+        "files", not "paths". This counter sits under a headline about lineage
+        completeness, and in that neighbourhood "path" reads as a graph path
+        between datasets. It is not: it counts datasets whose repository source
+        file was resolved, which is the other denominator entirely — the same
+        confusion the note's pronoun fixes, arriving by a different word.
+
+        "source paths resolved" was the obvious repair and is the one wording
+        that cannot ship: measured, it wraps the strip onto a second row. So does
+        "source files resolved" under a wide fallback face. "files resolved" is
+        the same length as the label it replaces and renders *narrower*, so the
+        strip keeps more slack than it has today under every face tested — which
+        matters because `tokens/fonts.css` resolves these through a system stack
+        on purpose, and the metrics move per machine.
+
+        The fourth counter stays "path resolution". It reads against the word
+        `exact` and is about resolution quality, not about a set of edges.
+      */}
       <dl className="coverage__counts">
         <div>
           <dt>{accounting.datasetsResolved}<span className="coverage__of">/{accounting.datasetsRequested}</span></dt>
-          <dd>paths resolved</dd>
+          <dd>files resolved</dd>
         </div>
         <div>
           <dt>{accounting.datasetsUnresolved}</dt>
