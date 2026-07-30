@@ -14,6 +14,18 @@ Everything here was observed against DataHub OSS `datahub docker quickstart`, GM
 `acryl-datahub` `1.6.0.15` and `1.6.0.16`. Two findings are backed by source
 inspection rather than a runtime observation, and say so.
 
+**Eleven findings and one open question.** The open question is paging, and it is
+kept separate because we could not reproduce it: our corpus never approached the
+result limit, so we are not going to assert a truncation from a parameter default.
+It is at the end, phrased for a maintainer to answer.
+
+One finding was **excluded** on inspection. A silent-drop defect we had recorded
+against the join path turned out to be our own adapter filtering on
+`resource_type === "model"`, not anything DataHub does. It is our bug and it is
+fixed on our side. We mention the exclusion rather than quietly dropping it,
+because a feedback document that misattributes one item earns a reader's right to
+discount the rest.
+
 ## The pattern
 
 **DataHub's operations do not carry their own scope.**
@@ -444,7 +456,7 @@ error.
 
 ---
 
-## Where "page truncation" sits
+## The open question: does a full page of lineage results say so?
 
 We expected to be able to report a paging finding here and cannot honestly do so.
 Our lineage reads used `count: 50` on `searchAcrossLineage` and `max_results: 50`
