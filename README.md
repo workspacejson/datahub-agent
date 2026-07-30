@@ -7,7 +7,11 @@ Tally resolves DataHub context to repository code, joins code and lineage impact
 Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](https://github.com/workspacejson).
 
 <p align="center">
-  <img src="public/assets/github/tally-github-readme.png" alt="Tally — Change Impact Cockpit" width="760">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/exports/github-hero-dark-1280x440/github-hero-dark-1280x440.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/exports/github-hero-light-1280x440/github-hero-light-1280x440.png">
+    <img src="assets/exports/github-hero-light-1280x440/github-hero-light-1280x440.png" alt="Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0." width="760">
+  </picture>
 </p>
 
 ## Four questions Tally answers
