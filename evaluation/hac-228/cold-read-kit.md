@@ -29,17 +29,27 @@ Before PR #51 no non-placeholder build was possible at all, so this command is
 new.
 
 ```bash
-COCKPIT_SOURCE_MODE=fixture npm run dev
+npm run dev
 ```
 
-`fixture` mode is required. A placeholder build shows invented values and would
-make the reader's answers meaningless — they would be reacting to
-`<dataset identity unavailable>`, not to evidence. The build refuses
-`COCKPIT_SOURCE_MODE=placeholder` for production, selection never returns the
-provisional adapter outside placeholder mode, and the view model refuses a
-non-placeholder model carrying placeholder values. Three guards, but check the
-first frame anyway — if you see angle-bracket tokens, stop and fix the build
-rather than running the session.
+**Amended 2026-07-30.** This command was `COCKPIT_SOURCE_MODE=fixture npm run dev`
+until the modes collapsed from three to two. `fixture` and `live` read the same
+committed bytes at build time and differed only in the label they baked in, so
+they became one mode named `committed`. Running the old command now fails the
+build with a message naming the replacement, which is deliberate: a stale mode
+should not produce a page.
+
+`committed` mode is required, and it is now the default, so the session needs no
+environment variable. A placeholder build shows invented values and would make
+the reader's answers meaningless: they would be reacting to
+`<dataset identity unavailable>`, not to evidence. Use `npm run dev:placeholder`
+only to inspect the design states, never for a session.
+
+Four guards now stand behind that: the build refuses an unrecognised mode, it
+refuses `placeholder` for any build, selection never returns the provisional
+adapter outside placeholder mode, and the view model refuses a non-placeholder
+model carrying placeholder values. Check the first frame anyway — if you see
+angle-bracket tokens, stop and fix the build rather than running the session.
 
 The artifact bundled by default is HAC-152's judge run,
 `evaluation/hac-152/live-qwen-judge-run-bundle.json`: a validated change-impact

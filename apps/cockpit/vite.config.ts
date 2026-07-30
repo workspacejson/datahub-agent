@@ -28,7 +28,31 @@ import { NO_COMPARISON_SUPPLIED, projectComparison } from "./src/model/project-c
  * *produced* is a per-evidence question, and the event's own `provenance` block
  * already answers it. This label answers only how this build got hold of it.
  */
+const SOURCE_MODES = ["placeholder", "committed"] as const;
 const sourceMode = process.env.COCKPIT_SOURCE_MODE ?? "committed";
+
+/**
+ * An unrecognised mode fails the build, rather than the page.
+ *
+ * This exists because the rename above can be outlived by a configuration nobody
+ * is looking at. A deploy environment or a shell profile still holding
+ * `COCKPIT_SOURCE_MODE=live` would take the `!== "placeholder"` branch, bind the
+ * event, build cleanly, and define `__COCKPIT_SOURCE_MODE__` as `"live"` — which
+ * `sourceModeSchema` no longer admits, so `normalize` would throw on first render
+ * and the judge would get a blank page from a green build.
+ *
+ * That is the worst available failure shape and the whole point of validating
+ * here: a stale value is a legible build error naming what to change, not a
+ * working pipeline producing a broken artifact.
+ */
+if (!(SOURCE_MODES as readonly string[]).includes(sourceMode)) {
+  throw new Error(
+    `COCKPIT_SOURCE_MODE=${sourceMode} is not a mode. Valid modes are ${SOURCE_MODES.join(" and ")}. ` +
+    "`fixture` and `live` were collapsed into `committed` on 2026-07-29: they read the same committed " +
+    "bytes at build time, so `live` claimed a connection that never happened. If this came from a " +
+    "deploy environment variable, remove it: `committed` is the default and needs no configuration.",
+  );
+}
 
 /**
  * The event a fixture or live build renders, resolved at build time.
