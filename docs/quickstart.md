@@ -138,12 +138,20 @@ node scripts/run-writeback.mjs event.json
 
 It is idempotent, so the second run reports `noop`.
 
-Both mutations are additive on the pinned GMS `v1.5.0.6`:
-`upsertStructuredProperties` merges into the properties already on the dataset,
-and `upsertLink` appends to institutional memory. Neither replaces metadata this
-tool did not write. That is read from the resolver sources at tag `v1.5.0.6`
-rather than from the tutorial prose, which describes an aspect-level replace;
-see the note in [`src/integration/writeback.ts`](../src/integration/writeback.ts).
+On the pinned GMS `v1.5.0.6`, both mutations are additive. Reading the resolver
+sources at that tag shows `upsertStructuredProperties` merging into the
+properties already on the dataset, and `upsertLink` appending to institutional
+memory, so neither is written in a way that replaces metadata this tool does not
+own.
+
+That is source inspection at one pinned version, not observed behaviour, and it
+establishes less than it may appear to. It does not establish transaction-level
+safety: the merge is a server-side read-modify-write, so concurrent writers to
+the same dataset can still lose an update. It says nothing about other GMS
+versions, and DataHub's own tutorial describes an aspect-level replace instead,
+so the claim is scoped to the tag named here and needs rechecking if the pin
+moves. See the note in
+[`src/integration/writeback.ts`](../src/integration/writeback.ts).
 
 ## 5. Run the examples
 
