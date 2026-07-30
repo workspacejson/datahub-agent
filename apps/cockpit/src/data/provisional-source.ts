@@ -11,6 +11,8 @@ export const provisionalSource = {
   unresolvedItems: ["<unresolved item>: not-queried"],
   datasetIdentity: { text: "<dataset identity unavailable>", source: "DataHub" },
   producerPath: { text: "<producer path unavailable>", source: "workspace.json" },
+  dbtFilePath: null,
+  projectPrefix: null,
   repositoryEvidence: { text: "<repository evidence unavailable>", source: "workspace.json" },
   // This was `https://example.invalid/evidence-binding-pending`. That domain is
   // RFC 2606 reserved and can never resolve, so it was not a working link — but

@@ -295,6 +295,8 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
       text: producerPath ?? "Producer file was not resolved.",
       source: "workspace.json",
     },
+    dbtFilePath: event.code.dbtFilePath,
+    projectPrefix: event.code.projectPrefix,
     repositoryEvidence: { text: partnerSummary, source: "workspace.json" },
     // Declared by the catalog when it says anything, constructed from recorded
     // provenance when it does not, and explicitly unavailable when neither is

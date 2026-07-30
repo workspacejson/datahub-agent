@@ -386,6 +386,20 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 .receipts-view details { border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--sp-3); }
 .receipts-view pre { overflow: auto; white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--fs-xs); }
 .receipts-view button { margin-right: var(--sp-2); }
+/* Shiki highlighted receipt: build-time HTML with inline styles, wrapped so it
+   scrolls and rounds the same way the plain pre did. Dual-theme CSS variables
+   switch with the cockpit's color scheme. */
+.shiki-receipt { max-height: 60vh; overflow: auto; border-radius: var(--radius-sm); }
+.shiki-receipt pre { margin: 0; padding: var(--sp-4); font-size: var(--fs-xs); line-height: var(--lh-relaxed); }
+@media (prefers-color-scheme: dark) {
+  .shiki, .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
 .receipts-view .accounting-table { margin-bottom: var(--sp-4); }
 .unresolved-list { margin: 0; padding-left: var(--sp-5); }
 .unresolved-list li { margin-bottom: var(--sp-2); overflow-wrap: anywhere; font-size: var(--fs-xs); }
@@ -474,6 +488,37 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   transition: var(--transition-interactive);
 }
 .spine__back:hover { color: var(--text-body); text-decoration-color: currentColor; }
+
+/* ── The silent zero: the failure before the repair ──────────
+   Quieter than the seam. Same card surface, but no bold path, no accent
+   colors. The failure is stated plainly; the seam below is where the
+   boldness goes. */
+.silent-zero {
+  margin: 0 0 var(--sp-3);
+  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  padding: var(--sp-4) var(--sp-5);
+}
+.silent-zero .eyebrow { color: var(--text-faint); }
+.silent-zero__row {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+}
+.silent-zero__row + .silent-zero__row { border-top: 1px solid var(--border-default); }
+.silent-zero__label {
+  font-family: var(--font-mono); font-size: var(--fs-caption);
+  letter-spacing: .04em; color: var(--text-muted);
+}
+.silent-zero__value {
+  font-family: var(--font-mono); font-size: var(--fs-sm);
+  color: var(--text-body); overflow-wrap: anywhere;
+}
+.silent-zero__result {
+  color: var(--text-faint); font-size: var(--fs-sm);
+  margin-top: var(--sp-3); margin-bottom: 0;
+}
 
 /* ── The seam: the one thing this screen is remembered by ─────
    What the catalog could not supply, directly above what the join did. Both

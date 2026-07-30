@@ -6,15 +6,17 @@ import { cockpitRouteSchema, cockpitStateNameSchema, type CockpitRoute } from ".
 
 function readLocation() {
   const query = new URLSearchParams(window.location.search);
+  const path = window.location.pathname.replace(/^\//, "");
   return {
-    route: cockpitRouteSchema.catch("impact").parse(query.get("view")),
+    route: cockpitRouteSchema.catch("impact").parse(path || "impact"),
     state: cockpitStateNameSchema.catch("loading").parse(query.get("state")),
   };
 }
 
 function writeLocation(route: CockpitRoute) {
   const url = new URL(window.location.href);
-  url.searchParams.set("view", route);
+  url.pathname = `/${route === "impact" ? "" : route}`;
+  url.searchParams.delete("view");
   window.history.pushState(null, "", url);
 }
 

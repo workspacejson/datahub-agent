@@ -31,7 +31,7 @@ const FOLD_HEADROOM = 48;
 for (const viewport of VIEWPORTS) {
   test(`first frame contains its own content at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
+    await page.goto(`${COMMITTED_ORIGIN}/impact`);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     const overflowing = await page.evaluate(() => {
@@ -68,7 +68,7 @@ for (const viewport of VIEWPORTS) {
 
   test(`the next action is readable without scrolling at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
+    await page.goto(`${COMMITTED_ORIGIN}/impact`);
 
     const cta = page.getByRole("button", { name: "Continue to change plan" });
     await expect(cta).toBeVisible();
@@ -106,7 +106,7 @@ for (const viewport of VIEWPORTS) {
 
   test(`the next action survives the copy that can actually grow at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
+    await page.goto(`${COMMITTED_ORIGIN}/impact`);
 
     // Headroom is a number; this is what the number is for. Only the strings
     // that can really vary are grown, because a test of impossible growth
@@ -151,7 +151,7 @@ for (const viewport of VIEWPORTS) {
 
 test("the changed-plan destination shows the real evidence-backed delta", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
-  await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
+  await page.goto(`${COMMITTED_ORIGIN}/impact`);
   await page.getByRole("button", { name: "Continue to change plan" }).click();
 
   // Not "renders an empty list correctly". The bundle carries typed deltas, and
@@ -169,7 +169,7 @@ test("the changed-plan destination shows the real evidence-backed delta", async 
 
 test("every receipt section is reachable, distinct, and highlights itself", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
-  await page.goto(`${COMMITTED_ORIGIN}/?view=receipts`);
+  await page.goto(`${COMMITTED_ORIGIN}/receipts`);
 
   // Receipts is far taller than the other two routes and holds six distinct
   // arguments; none of them appeared in any navigation, and the rail sat empty
@@ -240,7 +240,7 @@ test("the committed build renders the golden subject and never leaves its origin
     offOrigin.push(url);
   });
 
-  await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
+  await page.goto(`${COMMITTED_ORIGIN}/impact`);
 
   // The evidence is really the committed golden package, not an empty shell that
   // happens to render without erroring.

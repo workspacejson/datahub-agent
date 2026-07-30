@@ -3,6 +3,8 @@ import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
 
+declare const __COCKPIT_RECEIPT_HTML__: string | null;
+
 /**
  * One receipt value, rendered as what it is.
  *
@@ -248,7 +250,9 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
       <details>
         <summary>Raw evidence receipt</summary>
         {evaluation.rawEvidence.state === "observed"
-          ? <pre>{evaluation.rawEvidence.value}</pre>
+          ? (typeof __COCKPIT_RECEIPT_HTML__ === "string" && __COCKPIT_RECEIPT_HTML__
+            ? <div className="shiki-receipt" dangerouslySetInnerHTML={{ __html: __COCKPIT_RECEIPT_HTML__ }} />
+            : <pre>{evaluation.rawEvidence.value}</pre>)
           : <p><Evidence value={evaluation.rawEvidence} /></p>}
         {/*
           The controls stay disabled while the raw evidence is not an
