@@ -8,9 +8,9 @@ Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](ht
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/assets/github/github-hero-1280x440.png">
-    <source media="(prefers-color-scheme: light)" srcset="public/assets/github/github-hero-light-1280x440.png">
-    <img src="public/assets/github/github-hero-light-1280x440.png" alt="Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0." width="760">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/exports/github-hero-dark-1280x440/github-hero-dark-1280x440.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/exports/github-hero-light-1280x440/github-hero-light-1280x440.png">
+    <img src="assets/exports/github-hero-light-1280x440/github-hero-light-1280x440.png" alt="Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0." width="760">
   </picture>
 </p>
 

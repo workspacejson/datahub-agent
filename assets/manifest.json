@@ -1,16 +1,17 @@
 {
-  "registryVersion": 1,
+  "registryVersion": 2,
   "inventoryScope": {
     "repository": "workspacejson/datahub-agent",
     "scannedAtBaseRevision": "70a91e3681cf7f3f3c78d3d376ff1e7431a9e64e",
     "includedPaths": [
-      "public/assets/",
+      "assets/exports/",
       "apps/cockpit/public/"
     ],
     "excludedGeneratedPaths": [
       "apps/cockpit/test-results/",
       "apps/cockpit/playwright-report/"
-    ]
+    ],
+    "layoutAuthority": "HAC-277 canonical ownership: assets/manifest.json, assets/README.md, assets/source/, assets/exports/<asset-id>/. Exports moved out of public/assets/ on 2026-07-29; that directory no longer exists, so no asset has two homes."
   },
   "assets": [
     {
@@ -18,7 +19,7 @@
       "title": "Tally Devpost hero (1280 × 720)",
       "storyBeat": "Candidate Devpost hero presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
-      "canonicalPath": "public/assets/devpost/tally-devpost-hero-1280x720.png",
+      "canonicalPath": "assets/exports/tally-devpost-hero-1280x720/tally-devpost-hero-1280x720.png",
       "sha256": "7ea95e5fad83e20db81bd86d34e18f586f9e83f5b98dab2b754ca054b07d2663",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -27,7 +28,9 @@
         "format": "png",
         "width": 1280,
         "height": 720,
-        "aspectRatio": "16:9"
+        "aspectRatio": "16:9",
+        "colorMode": "RGB, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "proposedAltText": "Proposed: Tally Change Impact Cockpit interface.",
       "proposedCaption": "Proposed: Tally attaches DataHub and repository evidence to a change review.",
@@ -41,21 +44,45 @@
       "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
-        "No claim relationship has been approved."
+        "No claim relationship has been approved.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-29T09:05:45+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-devpost-thumbnail-1200x800-v2",
       "title": "Tally Devpost thumbnail v2 (1200 × 800)",
       "storyBeat": "Candidate Devpost thumbnail presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
-      "canonicalPath": "public/assets/devpost/tally-devpost-thumbnail-1200x800-v2.png",
+      "canonicalPath": "assets/exports/tally-devpost-thumbnail-1200x800-v2/tally-devpost-thumbnail-1200x800-v2.png",
       "sha256": "4620a0f127bdcb912208187e307b37bdc3531f8fc9e801d898f2f1ddc3dd19ff",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -64,7 +91,9 @@
         "format": "png",
         "width": 1200,
         "height": 800,
-        "aspectRatio": "3:2"
+        "aspectRatio": "3:2",
+        "colorMode": "RGBA, 16-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "proposedAltText": "Proposed: Tally Change Impact Cockpit thumbnail.",
       "proposedCaption": "Proposed: Review a data change with its catalog and repository evidence attached.",
@@ -78,14 +107,38 @@
       "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
-        "No claim relationship has been approved."
+        "No claim relationship has been approved.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-29T09:05:45+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-mark",
@@ -101,7 +154,9 @@
         "format": "svg",
         "width": 104,
         "height": 96,
-        "aspectRatio": "104:96"
+        "aspectRatio": "104:96",
+        "colorMode": "SVG; colour declared inline per element, no document profile",
+        "safeArea": null
       },
       "proposedAltText": "The tally mark: four counting strokes and a slash inside emerald brackets.",
       "proposedCaption": "The tally mark at full detail, for use at 24px and above.",
@@ -115,14 +170,37 @@
       "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
-        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "application-chrome",
+      "editableSource": {
+        "type": "self",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "apps/cockpit/public/brand/tally-mark.svg",
+        "sha256": "5e4e46cac60c5746584d34342b3e8f0e1f555754dd4f05a4aef2dfb2f4d635f9",
+        "detail": "The checked-in vector is itself the editable source; it has no separate origin file."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T02:01:42+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-mark-16",
@@ -138,7 +216,9 @@
         "format": "svg",
         "width": 104,
         "height": 96,
-        "aspectRatio": "104:96"
+        "aspectRatio": "104:96",
+        "colorMode": "SVG; colour declared inline per element, no document profile",
+        "safeArea": null
       },
       "proposedAltText": "The tally mark reduced to two strokes and a slash inside emerald brackets.",
       "proposedCaption": "The 16px optical variant, drawn heavier so the count still reads at favicon size.",
@@ -153,14 +233,37 @@
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
         "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
-        "Not a scaled copy of the full mark: stroke count and weight differ by design, so the two files are not interchangeable."
+        "Not a scaled copy of the full mark: stroke count and weight differ by design, so the two files are not interchangeable.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "application-chrome",
+      "editableSource": {
+        "type": "self",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "apps/cockpit/public/brand/tally-mark-16.svg",
+        "sha256": "7fe313481151319ab0b0a6fafc1bfa547b0343576da94f888129bf392bd1020f",
+        "detail": "The checked-in vector is itself the editable source; it has no separate origin file."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T02:01:42+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-lockup",
@@ -176,7 +279,9 @@
         "format": "svg",
         "width": 340,
         "height": 96,
-        "aspectRatio": "340:96"
+        "aspectRatio": "340:96",
+        "colorMode": "SVG; colour declared inline per element, no document profile",
+        "safeArea": null
       },
       "proposedAltText": "The tally mark beside the lowercase wordmark tally.",
       "proposedCaption": "The horizontal lockup, for contexts that need the mark and word as one file.",
@@ -191,14 +296,37 @@
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
         "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
-        "Sets the wordmark as a live SVG text node with a font-family, so it renders in a fallback face wherever Plus Jakarta Sans is unavailable and its metrics shift. The application chrome composes the mark with HTML text instead; prefer that where markup is possible."
+        "Sets the wordmark as a live SVG text node with a font-family, so it renders in a fallback face wherever Plus Jakarta Sans is unavailable and its metrics shift. The application chrome composes the mark with HTML text instead; prefer that where markup is possible.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "application-chrome",
+      "editableSource": {
+        "type": "self",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "apps/cockpit/public/brand/tally-lockup.svg",
+        "sha256": "6379cfb752fd7ac339276d2f307c56e23dfecff3d15338ba8f1f4c12139f4690",
+        "detail": "The checked-in vector is itself the editable source; it has no separate origin file."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T02:01:42+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-favicon-16",
@@ -214,7 +342,9 @@
         "format": "png",
         "width": 16,
         "height": 16,
-        "aspectRatio": "16:16"
+        "aspectRatio": "16:16",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "proposedAltText": "The tally mark as a 16 pixel browser tab icon.",
       "proposedCaption": "Raster fallback for browsers that do not take an SVG favicon.",
@@ -228,14 +358,38 @@
       "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
-        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "application-chrome",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T02:01:42+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-favicon-32",
@@ -251,7 +405,9 @@
         "format": "png",
         "width": 32,
         "height": 32,
-        "aspectRatio": "32:32"
+        "aspectRatio": "32:32",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "proposedAltText": "The tally mark as a 32 pixel browser tab icon.",
       "proposedCaption": "Raster fallback for browsers that do not take an SVG favicon.",
@@ -265,14 +421,38 @@
       "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
-        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "application-chrome",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T02:01:42+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "tally-apple-touch-icon",
@@ -288,7 +468,9 @@
         "format": "png",
         "width": 180,
         "height": 180,
-        "aspectRatio": "180:180"
+        "aspectRatio": "180:180",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "proposedAltText": "The tally mark as a 180 pixel home-screen icon.",
       "proposedCaption": "Home-screen and installed-app icon.",
@@ -302,21 +484,45 @@
       "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
-        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it."
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
         "github": "pending-owner-review",
         "video": "pending-owner-review"
-      }
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "application-chrome",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T02:01:42+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "explainer-01-zero",
       "title": "Explainer 01 of 05, A zero that looked like success",
       "storyBeat": "Opens the problem: an empty result that exited 0.",
       "intendedConclusion": "The same five dbt models resolve 5/5 at a repository root and 0/5 nested in a monorepo, and the run still exits 0.",
-      "canonicalPath": "public/assets/devpost/explainer-01-zero.png",
+      "canonicalPath": "assets/exports/explainer-01-zero/explainer-01-zero.png",
       "sha256": "7aee6512de6b8dacf8ace821823fe34253b4c0999c33c68136b688658659c839",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -325,7 +531,9 @@
         "format": "png",
         "width": 1600,
         "height": 900,
-        "aspectRatio": "16:9"
+        "aspectRatio": "16:9",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "pending",
       "publicUse": "pending",
@@ -339,7 +547,9 @@
         "No owner approval or public-use authorization is recorded.",
         "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
         "No claim relationship has been approved.",
-        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -348,14 +558,36 @@
         "video": "pending-owner-review"
       },
       "proposedAltText": "Proposed: Two panels compare the same five dbt models: 5 of 5 resolved with the project at the repository root, 0 of 5 resolved with the same project nested in a monorepo, above a banner reading exit 0, no error was raised.",
-      "proposedCaption": "Proposed: A path-normalization change turns five resolutions into none, and the command still reports success."
+      "proposedCaption": "Proposed: A path-normalization change turns five resolutions into none, and the command still reports success.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:52:43+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when any displayed measured value changes, or when the run it depicts is re-executed at a different revision.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "explainer-02-source",
       "title": "Explainer 02 of 05, From dataset to exact source",
       "storyBeat": "Shows the join: four coordinate systems resolved in order.",
       "intendedConclusion": "A dataset URN resolves through dbt metadata to a repository-relative path at a pinned revision, with each step carrying the value it produced.",
-      "canonicalPath": "public/assets/devpost/explainer-02-source.png",
+      "canonicalPath": "assets/exports/explainer-02-source/explainer-02-source.png",
       "sha256": "a479a1615f15e90d53ac39e4eaa3a695d559840a2ab6367e958557a4c2033c00",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -364,7 +596,9 @@
         "format": "png",
         "width": 1600,
         "height": 900,
-        "aspectRatio": "16:9"
+        "aspectRatio": "16:9",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "pending",
       "publicUse": "pending",
@@ -378,7 +612,9 @@
         "No owner approval or public-use authorization is recorded.",
         "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
         "No claim relationship has been approved.",
-        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -387,14 +623,36 @@
         "video": "pending-owner-review"
       },
       "proposedAltText": "Proposed: Four numbered panels in sequence: DataHub dataset game_events, dbt metadata original_file_path, repository path dbt/models/curated/game_events.sql, and workspace.json evidence resolved at revision 59fa295c.",
-      "proposedCaption": "Proposed: Each step carries the value it produced, so the chain can be checked rather than believed."
+      "proposedCaption": "Proposed: Each step carries the value it produced, so the chain can be checked rather than believed.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:52:43+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when any displayed measured value changes, or when the run it depicts is re-executed at a different revision.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "explainer-03-plan",
       "title": "Explainer 03 of 05, The plan changed with the evidence",
       "storyBeat": "The paired comparison: what joined evidence changed about an agent's plan.",
       "intendedConclusion": "One paired run in which the DataHub-only condition refuses to edit and the joined condition edits a named file at a pinned revision.",
-      "canonicalPath": "public/assets/devpost/explainer-03-plan.png",
+      "canonicalPath": "assets/exports/explainer-03-plan/explainer-03-plan.png",
       "sha256": "f932907e2b08a90ee8e3d752f1acc20a7ef86c513d41e8e5dd5148a4841e400a",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -403,7 +661,9 @@
         "format": "png",
         "width": 1600,
         "height": 900,
-        "aspectRatio": "16:9"
+        "aspectRatio": "16:9",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "pending",
       "publicUse": "pending",
@@ -417,7 +677,9 @@
         "No owner approval or public-use authorization is recorded.",
         "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
         "No claim relationship has been approved.",
-        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -426,14 +688,36 @@
         "video": "pending-owner-review"
       },
       "proposedAltText": "Proposed: A two-column table comparing a DataHub-only condition against DataHub joined to workspace.json: refuse to edit versus edit the named file, unknown source location versus dbt/models/curated/game_events.sql, no revision versus pinned 59fa295c. A banner notes this is one paired run and variance is not characterized.",
-      "proposedCaption": "Proposed: One paired run, three typed deltas, each cited. It shows the path works, not a universal effect size."
+      "proposedCaption": "Proposed: One paired run, three typed deltas, each cited. It shows the path works, not a universal effect size.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:52:43+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when any displayed measured value changes, or when the run it depicts is re-executed at a different revision.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "explainer-04-receipt",
       "title": "Explainer 04 of 05, A write is not proven until it is read back",
       "storyBeat": "The writeback receipt: a mutation response is not an observation.",
       "intendedConclusion": "One structured property moves from unset to VERIFIED, with the receipt's own verdict fields shown beside the scope of the claim.",
-      "canonicalPath": "public/assets/devpost/explainer-04-receipt.png",
+      "canonicalPath": "assets/exports/explainer-04-receipt/explainer-04-receipt.png",
       "sha256": "52072128f880d90333480fc1ec62606b57b2c77594a31872da628055c64ed538",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -442,7 +726,9 @@
         "format": "png",
         "width": 1600,
         "height": 900,
-        "aspectRatio": "16:9"
+        "aspectRatio": "16:9",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "pending",
       "publicUse": "pending",
@@ -456,7 +742,9 @@
         "No owner approval or public-use authorization is recorded.",
         "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
         "No claim relationship has been approved.",
-        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -465,14 +753,36 @@
         "video": "pending-owner-review"
       },
       "proposedAltText": "Proposed: A receipt showing the structured property workspacejson_evidence_tier moving from unset to VERIFIED, with succeeded true, no-op false, both states read true, and source link omitted because no pinned URL was available.",
-      "proposedCaption": "Proposed: VERIFIED describes that one property. Lineage completeness stays not-established and no link is written that could drift."
+      "proposedCaption": "Proposed: VERIFIED describes that one property. Lineage completeness stays not-established and no link is written that could drift.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:52:43+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when any displayed measured value changes, or when the run it depicts is re-executed at a different revision.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "explainer-05-gap",
       "title": "Explainer 05 of 05, When the proof ends, tally names the gap",
       "storyBeat": "Closes on the limits: three things the review could not establish.",
       "intendedConclusion": "Three named limits, each attributed to the system that could not supply it, using real artifact field names.",
-      "canonicalPath": "public/assets/devpost/explainer-05-gap.png",
+      "canonicalPath": "assets/exports/explainer-05-gap/explainer-05-gap.png",
       "sha256": "4ab2debe515ed0cf0ea43873a2f90eece2da8d017e4ced5d4fa079ffbda7590d",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -481,7 +791,9 @@
         "format": "png",
         "width": 1600,
         "height": 900,
-        "aspectRatio": "16:9"
+        "aspectRatio": "16:9",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "pending",
       "publicUse": "pending",
@@ -495,7 +807,9 @@
         "No owner approval or public-use authorization is recorded.",
         "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
         "No claim relationship has been approved.",
-        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -504,23 +818,47 @@
         "video": "pending-owner-review"
       },
       "proposedAltText": "Proposed: Three rows naming a source limit on code.repositoryRelativePath as not-exposed-by-source, a resolution limit on partners as indeterminate, and a completeness limit on lineage completeness as not-established, above the line unavailable is a result, not a silent zero.",
-      "proposedCaption": "Proposed: Each gap is attributed to the system that could not supply it, with real artifact fields and no fabricated node names."
+      "proposedCaption": "Proposed: Each gap is attributed to the system that could not supply it, with real artifact fields and no fabricated node names.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "devpost-gallery",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:52:43+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when any displayed measured value changes, or when the run it depicts is re-executed at a different revision.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "og-card-1200x630",
       "title": "Tally social card (1200 × 630)",
       "storyBeat": "Link-preview identity for shared Tally URLs.",
       "intendedConclusion": "Identifies the application to a reader who has not opened it. It supports no claim about evidence, coverage or resolution.",
-      "canonicalPath": "public/assets/social/og-1200x630.png",
+      "canonicalPath": "assets/exports/og-card-1200x630/og-card-1200x630.png",
       "sha256": "5b4f61bed6374d787f5839cb70a5a057fcd79e3cc908448a6fd52810855678e5",
       "claimIds": [],
       "sourceType": "checked-in-raster",
       "export": {
-        "filename": "og-1200x630.png",
+        "filename": "og-card-1200x630.png",
         "format": "png",
         "width": 1200,
         "height": 630,
-        "aspectRatio": "40:21"
+        "aspectRatio": "40:21",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "pending",
       "publicUse": "pending",
@@ -534,7 +872,9 @@
         "No owner approval or public-use authorization is recorded.",
         "No claim relationship has been approved.",
         "The owner named link sharing as the intended use on 2026-07-29 but has not recorded an approval. The registry's destination vocabulary has no share or social key, so no existing destination field expresses that intent and none is set.",
-        "Not referenced by any page yet: no meta og:image tag points at it, so shipping it requires a consumer as well as an approval."
+        "Not referenced by any page yet: no meta og:image tag points at it, so shipping it requires a consumer as well as an approval.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -543,23 +883,47 @@
         "video": "pending-owner-review"
       },
       "proposedAltText": "Proposed: The tally lockup above the line review a change with the evidence attached, on a dark card footed with built with DataHub, built on workspace.json, Apache 2.0.",
-      "proposedCaption": "Proposed: The Open Graph card used when a Tally link is shared."
+      "proposedCaption": "Proposed: The Open Graph card used when a Tally link is shared.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "link-preview",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:55:30+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published anywhere. No destination URL or upload receipt exists."
+      },
+      "supersedes": []
     },
     {
       "id": "github-hero-dark-1280x440",
       "title": "Tally GitHub hero, dark (1280 × 440)",
       "storyBeat": "Repository front-page identity in dark mode.",
       "intendedConclusion": "Identifies the application on its repository front page. It supports no claim about evidence, coverage or resolution.",
-      "canonicalPath": "public/assets/github/github-hero-1280x440.png",
+      "canonicalPath": "assets/exports/github-hero-dark-1280x440/github-hero-dark-1280x440.png",
       "sha256": "759ca2164236068d9bdc70620309a88f8bea7a94ab1c5001c577a3d1786593ad",
       "claimIds": [],
       "sourceType": "checked-in-raster",
       "export": {
-        "filename": "github-hero-1280x440.png",
+        "filename": "github-hero-dark-1280x440.png",
         "format": "png",
         "width": 1280,
         "height": 440,
-        "aspectRatio": "32:11"
+        "aspectRatio": "32:11",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "approved",
       "publicUse": "allowed",
@@ -572,7 +936,9 @@
       "limitations": [
         "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
         "The filename does not say dark. The unsuffixed file is the dark variant and the light one carries the light suffix, so the pair is asymmetrically named and easy to swap by mistake.",
-        "Approved for GitHub only. Website, Devpost and video use remain unreviewed."
+        "Approved for GitHub only. Website, Devpost and video use remain unreviewed.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -582,14 +948,38 @@
       },
       "proposedAltText": "Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0.",
       "proposedCaption": "The repository hero in dark mode, shown to readers whose system prefers dark colours.",
-      "approvalRecord": "Owner approved for GitHub README use on 2026-07-29, in the same instruction that directed replacing the previous README image with this theme-conditional pair. Scoped to GitHub: no other destination was authorized."
+      "approvalRecord": "Owner approved for GitHub README use on 2026-07-29, in the same instruction that directed replacing the previous README image with this theme-conditional pair. Scoped to GitHub: no other destination was authorized.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:55:23+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
+      },
+      "supersedes": [
+        "tally-github-readme"
+      ]
     },
     {
       "id": "github-hero-light-1280x440",
       "title": "Tally GitHub hero, light (1280 × 440)",
       "storyBeat": "Repository front-page identity in light mode.",
       "intendedConclusion": "Identifies the application on its repository front page. It supports no claim about evidence, coverage or resolution.",
-      "canonicalPath": "public/assets/github/github-hero-light-1280x440.png",
+      "canonicalPath": "assets/exports/github-hero-light-1280x440/github-hero-light-1280x440.png",
       "sha256": "01351184a4a41dc35b762e97c296a5b8b399ab9535a7d9b6e03ac2ef3aaf5aba",
       "claimIds": [],
       "sourceType": "checked-in-raster",
@@ -598,7 +988,9 @@
         "format": "png",
         "width": 1280,
         "height": 440,
-        "aspectRatio": "32:11"
+        "aspectRatio": "32:11",
+        "colorMode": "RGBA, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null
       },
       "approvalState": "approved",
       "publicUse": "allowed",
@@ -611,7 +1003,9 @@
       "limitations": [
         "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
         "Serves the light half of the README's theme-conditional pair; it is not a standalone hero.",
-        "Approved for GitHub only. Website, Devpost and video use remain unreviewed."
+        "Approved for GitHub only. Website, Devpost and video use remain unreviewed.",
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
@@ -621,7 +1015,31 @@
       },
       "proposedAltText": "Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0.",
       "proposedCaption": "The repository hero in light mode, shown to readers whose system prefers light colours.",
-      "approvalRecord": "Owner approved for GitHub README use on 2026-07-29, in the same instruction that directed replacing the previous README image with this theme-conditional pair. Scoped to GitHub: no other destination was authorized."
+      "approvalRecord": "Owner approved for GitHub README use on 2026-07-29, in the same instruction that directed replacing the previous README image with this theme-conditional pair. Scoped to GitHub: no other destination was authorized.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "none-in-repository",
+        "repository": null,
+        "commitOrRef": null,
+        "path": null,
+        "sha256": null,
+        "detail": "No editable source for this export is checked in. The registry therefore governs the export only, and regenerating it is not reproducible from this repository alone."
+      },
+      "generatedAt": {
+        "value": "2026-07-30T01:55:23+00:00",
+        "source": "Filesystem mtime at registration. No export event was recorded, so this is when the file was last written, not provably when it was produced."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
+      },
+      "supersedes": [
+        "tally-github-readme"
+      ]
     }
   ],
   "supportingInternalEvidencePaths": [
@@ -657,7 +1075,7 @@
     {
       "id": "tally-standalone-social-card",
       "status": "discovered-pending-approval",
-      "detail": "A dedicated social card now exists at public/assets/social/og-1200x630.png. It remains pending owner approval and is referenced by no page, so it is not yet a usable social asset."
+      "detail": "A dedicated social card now exists at assets/exports/og-card-1200x630/og-card-1200x630.png. It remains pending owner approval, no og:image tag points at it, and no destination has been verified logged out, so it is not yet a usable social asset."
     }
   ]
 }
