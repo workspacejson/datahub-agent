@@ -22,12 +22,12 @@ declare const __COCKPIT_COMPARISON__: SourceEvent["planComparison"] | null;
  * Until 2026-07-29 this threw for every mode except `placeholder` — "a fixture
  * or live build requires a bound source adapter" — which made placeholder the
  * *only* runnable mode. That reads as a guard and was in fact the missing swap:
- * `createAdapter` and `fixtureLiveParity` already existed in `cockpit-adapter`,
+ * `createAdapter` already existed in `cockpit-adapter`,
  * and nothing supplied them an event.
  *
  * Both halves are here on purpose, because only one of them is obvious.
  *
- * 1. **Fixture and live modes work.** The event arrives as a build-time constant
+ * 1. **Committed mode works.** The event arrives as a build-time constant
  *    so a judge needs no GMS, no network and no file server, and a build that
  *    cannot find its event fails where the message is readable.
  *
@@ -80,7 +80,7 @@ export function selectCockpitAdapter(
  * The shell-only state harness, for exercising each rendered state in dev.
  *
  * It is not a way around the rule above: outside placeholder mode it delegates
- * to `selectCockpitAdapter` and gets the real event, so a fixture or live build
+ * to `selectCockpitAdapter` and gets the real event, so a committed build
  * cannot reach the invented states by asking for one by name.
  */
 export function selectCockpitStateAdapter(state: CockpitStateName): CockpitSourceAdapter {

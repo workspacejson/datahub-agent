@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+
 import { expect, test } from "@playwright/test";
-import { FIXTURE_ORIGIN } from "../playwright.config";
+import { COMMITTED_ORIGIN } from "../playwright.config";
 
 /**
  * The two first-frame failures, asserted mechanically.
@@ -29,7 +31,7 @@ const FOLD_HEADROOM = 48;
 for (const viewport of VIEWPORTS) {
   test(`first frame contains its own content at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
+    await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     const overflowing = await page.evaluate(() => {
@@ -66,7 +68,7 @@ for (const viewport of VIEWPORTS) {
 
   test(`the next action is readable without scrolling at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
+    await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
 
     const cta = page.getByRole("button", { name: "Continue to change plan" });
     await expect(cta).toBeVisible();
@@ -104,7 +106,7 @@ for (const viewport of VIEWPORTS) {
 
   test(`the next action survives the copy that can actually grow at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
+    await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
 
     // Headroom is a number; this is what the number is for. Only the strings
     // that can really vary are grown, because a test of impossible growth
@@ -149,7 +151,7 @@ for (const viewport of VIEWPORTS) {
 
 test("the changed-plan destination shows the real evidence-backed delta", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
-  await page.goto(`${FIXTURE_ORIGIN}/?view=impact`);
+  await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
   await page.getByRole("button", { name: "Continue to change plan" }).click();
 
   // Not "renders an empty list correctly". The bundle carries typed deltas, and
@@ -167,7 +169,7 @@ test("the changed-plan destination shows the real evidence-backed delta", async 
 
 test("every receipt section is reachable, distinct, and highlights itself", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
-  await page.goto(`${FIXTURE_ORIGIN}/?view=receipts`);
+  await page.goto(`${COMMITTED_ORIGIN}/?view=receipts`);
 
   // Receipts is far taller than the other two routes and holds six distinct
   // arguments; none of them appeared in any navigation, and the rail sat empty
@@ -205,4 +207,46 @@ test("every receipt section is reachable, distinct, and highlights itself", asyn
   // the same breakpoint".
   expect(new Set(offsets).size).toBe(offsets.length);
   expect([...offsets]).toEqual([...offsets].sort((a, b) => a - b));
+});
+
+/**
+ * The committed build renders the golden evidence, and asks nothing outside its
+ * own origin for it.
+ *
+ * This is the pair of claims the old `live` source mode implied and never
+ * established. `fixture` and `live` read the same committed bytes at build time,
+ * so a build labelled `live` had contacted nothing, and no test compared the
+ * label against behaviour. Asserting the behaviour directly means the guarantee
+ * survives whatever the modes are called: the page shows the golden subject, and
+ * every request it makes is same-origin.
+ *
+ * The static half lives in `architecture-invariants.test.ts`, which refuses a
+ * network call anywhere in the browser's import graph. This is the runtime
+ * confirmation that nothing slipped past it, including through a stylesheet or a
+ * transitive dependency the walk could not follow.
+ */
+test("the committed build renders the golden subject and never leaves its origin", async ({ page }) => {
+  const golden = JSON.parse(
+    readFileSync(new URL("../../../test/fixtures/golden/change-impact-event.nested.json", import.meta.url), "utf8"),
+  ) as { subject: { urn: string } };
+
+  const offOrigin: string[] = [];
+  page.on("request", (request) => {
+    const url = request.url();
+    // `data:` and `blob:` carry no network hop: a blob URL is how the receipt
+    // download hands bytes to the browser, and failing on it would make the fix
+    // for HAC-287 look like a network dependency.
+    if (url.startsWith(COMMITTED_ORIGIN) || url.startsWith("data:") || url.startsWith("blob:")) return;
+    offOrigin.push(url);
+  });
+
+  await page.goto(`${COMMITTED_ORIGIN}/?view=impact`);
+
+  // The evidence is really the committed golden package, not an empty shell that
+  // happens to render without erroring.
+  await expect(page.getByText(golden.subject.urn, { exact: false }).first()).toBeVisible();
+  // And no placeholder build slipped onto this origin.
+  await expect(page.getByText("DESIGN PLACEHOLDER")).toHaveCount(0);
+
+  expect(offOrigin, `the cockpit requested ${offOrigin.length} off-origin URL(s)`).toEqual([]);
 });

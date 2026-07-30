@@ -23,7 +23,7 @@ afterEach(cleanup);
  * regression in the contract's own copy fails here too.
  */
 const ROUTES = cockpitRouteSchema.options;
-const model = () => createAdapter(contractEvent(), "fixture").read();
+const model = () => createAdapter(contractEvent(), "committed").read();
 
 /** Every text node the routes render, with the route it came from. */
 function renderedText(): Array<[string, string]> {

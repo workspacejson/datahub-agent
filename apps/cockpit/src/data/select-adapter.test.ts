@@ -27,20 +27,9 @@ describe("choosing what the cockpit renders", () => {
 
   it("renders the committed judge package in fixture mode", () => {
     // The half that did not work. Before the swap this threw.
-    const model = selectCockpitAdapter("fixture", nested).read();
-    expect(model.sourceMode).toBe("fixture");
+    const model = selectCockpitAdapter("committed", nested).read();
+    expect(model.sourceMode).toBe("committed");
     expect(model.datasetIdentity.text.length).toBeGreaterThan(0);
-  });
-
-  it("renders the same package in live mode, differing only in how it says it was sourced", () => {
-    // `fixtureLiveParity`'s premise, asserted rather than assumed: the two modes
-    // are the same projection with a different label, so a judge comparing them
-    // is comparing provenance and not content.
-    const { sourceMode: fixtureMode, ...fixture } = selectCockpitAdapter("fixture", nested).read();
-    const { sourceMode: liveMode, ...live } = selectCockpitAdapter("live", nested).read();
-    expect(fixtureMode).toBe("fixture");
-    expect(liveMode).toBe("live");
-    expect(live).toEqual(fixture);
   });
 
   describe("placeholder cannot reach a judge", () => {
@@ -48,15 +37,13 @@ describe("choosing what the cockpit renders", () => {
       // The failure that would matter: a fixture build silently degrading to the
       // provisional adapter and showing a judge values nobody observed. It
       // refuses instead, and says what to do.
-      expect(() => selectCockpitAdapter("fixture", null)).toThrow(/no fallback evidence is invented/i);
-      expect(() => selectCockpitAdapter("live", undefined)).toThrow(/renders a committed event and none was bound/);
+      expect(() => selectCockpitAdapter("committed", null)).toThrow(/no fallback evidence is invented/i);
+      expect(() => selectCockpitAdapter("committed", undefined)).toThrow(/renders a committed event and none was bound/);
     });
 
     it("never returns the provisional adapter outside placeholder mode", () => {
       const provisional = selectCockpitAdapter("placeholder").read();
-      for (const mode of ["fixture", "live"] as const) {
-        expect(selectCockpitAdapter(mode, nested).read()).not.toEqual(provisional);
-      }
+      expect(selectCockpitAdapter("committed", nested).read()).not.toEqual(provisional);
     });
   });
 
@@ -74,12 +61,12 @@ describe("choosing what the cockpit renders", () => {
         { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.a,PROD)", reason: "no producing node" },
       ],
     };
-    expect(() => selectCockpitAdapter("fixture", invalid)).toThrow(/does not satisfy the change-impact contract/);
+    expect(() => selectCockpitAdapter("committed", invalid)).toThrow(/does not satisfy the change-impact contract/);
   });
 
   it("names the offending path when it refuses, so a build failure is diagnosable", () => {
     const malformed = contractEvent();
     delete (malformed as { subject?: unknown }).subject;
-    expect(() => selectCockpitAdapter("fixture", malformed)).toThrow(/subject: is missing/);
+    expect(() => selectCockpitAdapter("committed", malformed)).toThrow(/subject: is missing/);
   });
 });

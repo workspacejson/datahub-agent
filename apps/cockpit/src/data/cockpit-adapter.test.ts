@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAdapter, fixtureLiveParity, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
+import { createAdapter, provisionalAdapter, provisionalStateAdapter } from "./cockpit-adapter";
 import { createComparisonAdapter } from "./comparison-adapter";
 import { cockpitViewModelSchema } from "../model/cockpit-view-model";
 import { contractEvent } from "../test/contract-event";
@@ -8,24 +8,12 @@ import { judgeRunBundle } from "../test/judge-run-bundle";
 describe("CockpitViewModel boundary", () => {
   it("marks the entire provisional model placeholder", () => expect(provisionalAdapter.read().sourceMode).toBe("placeholder"));
   it("refuses an invalid source axis rather than inferring a status", () => {
-    expect(() => cockpitViewModelSchema.parse({ ...provisionalAdapter.read(), sourceMode: "live", source: "verified" })).toThrow();
+    expect(() => cockpitViewModelSchema.parse({ ...provisionalAdapter.read(), sourceMode: "committed", source: "verified" })).toThrow();
   });
-  it("keeps fixture and live parity while excluding sourceMode", () => {
-    // Both modes now take a `ChangeImpactEvent`, not a view model. This test
-    // used to hand `createAdapter` the output of another adapter, which the
-    // `as SourceEvent` cast accepted — so it asserted parity between two
-    // projections of something that was never an event.
-    const event = contractEvent();
-    const fixture = createAdapter(event, "fixture").read();
-    const live = createAdapter(event, "live").read();
-    expect(fixtureLiveParity(fixture, live)).toBe(true);
-    expect(fixtureLiveParity(fixture, { ...live, read: "failed" })).toBe(false);
-  });
-
   it("normalizes a bundle into a model carrying its observed comparison", () => {
     const event = contractEvent();
-    const model = createComparisonAdapter(judgeRunBundle(event), "live").read();
-    expect(model.sourceMode).toBe("live");
+    const model = createComparisonAdapter(judgeRunBundle(event), "committed").read();
+    expect(model.sourceMode).toBe("committed");
     expect(model.planComparison.state).toBe("observed");
     expect(cockpitViewModelSchema.safeParse(model).success).toBe(true);
   });
@@ -35,10 +23,10 @@ describe("CockpitViewModel boundary", () => {
     // bad comparison is a state the view can show. Collapsing these would either
     // crash away a diagnosis or render a partial artifact as a confident one.
     const bundle = judgeRunBundle(contractEvent());
-    expect(() => createComparisonAdapter({ ...bundle, event: { eventVersion: "1.3" } }, "live"))
+    expect(() => createComparisonAdapter({ ...bundle, event: { eventVersion: "1.3" } }, "committed"))
       .toThrow(/does not satisfy the change-impact contract/);
 
-    const model = createComparisonAdapter({ ...bundle, comparison: { ...bundle.comparison, eventDigest: "sha256:wrong" } }, "live").read();
+    const model = createComparisonAdapter({ ...bundle, comparison: { ...bundle.comparison, eventDigest: "sha256:wrong" } }, "committed").read();
     expect(model.planComparison.state).toBe("unavailable");
   });
 
@@ -46,7 +34,7 @@ describe("CockpitViewModel boundary", () => {
     // The regression the cast permitted: anything shaped roughly right slid
     // through, including a model that had already been projected once.
     const alreadyProjected = provisionalStateAdapter("partial").read();
-    expect(() => createAdapter(alreadyProjected, "live")).toThrow(/does not satisfy the change-impact contract/);
+    expect(() => createAdapter(alreadyProjected, "committed")).toThrow(/does not satisfy the change-impact contract/);
   });
   it("refuses unsupported writeback success claims", () => {
     expect(() => cockpitViewModelSchema.parse({
@@ -101,15 +89,13 @@ describe("CockpitViewModel boundary", () => {
 
   it("refuses placeholder evidence in any build that is not a placeholder build", () => {
     // R-4. The placeholder banner is a render convention; this is the boundary.
-    // A fixture or live model carrying an invented value is rejected by name,
+    // A committed model carrying an invented value is rejected by name,
     // regardless of which adapter produced it.
     const placeholder = provisionalStateAdapter("partial").read();
     expect(placeholder.receipt.provenance.subjectRepository.state).toBe("placeholder");
 
-    for (const sourceMode of ["fixture", "live"] as const) {
-      expect(() => cockpitViewModelSchema.parse({ ...placeholder, sourceMode }))
-        .toThrow(/placeholder receipt value/);
-    }
+    expect(() => cockpitViewModelSchema.parse({ ...placeholder, sourceMode: "committed" }))
+      .toThrow(/placeholder receipt value/);
     // And the same model is accepted in the mode that is allowed to hold it.
     expect(cockpitViewModelSchema.parse(placeholder).sourceMode).toBe("placeholder");
   });

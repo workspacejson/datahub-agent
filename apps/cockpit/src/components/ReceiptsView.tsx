@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
@@ -88,6 +89,47 @@ function UnestablishedBand({ statedGaps }: { statedGaps: readonly StatedGap[] })
 export function ReceiptsView({ model }: { model: CockpitViewModel }) {
   const { accounting, unresolvedDatasets, statedGaps, provenance, writeback, evaluation } = model.receipt;
   const rawEvidenceBound = evaluation.rawEvidence.state === "observed";
+  const [exportNote, setExportNote] = useState<string | null>(null);
+
+  /**
+   * The exact bytes on screen, or null when there is nothing observed to export.
+   *
+   * Read through the same discriminant the buttons disable on, so "enabled" and
+   * "has something to export" cannot drift apart.
+   */
+  const exportable = evaluation.rawEvidence.state === "observed" ? evaluation.rawEvidence.value : null;
+
+  /**
+   * A filename a judge can still identify a week later, derived from the dataset
+   * the receipt is about rather than a constant, because a reviewer comparing two
+   * runs ends up with two files in one directory.
+   */
+  const filename = `tally-receipt-${model.datasetIdentity.text.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "receipt"}.json`;
+
+  const copyReceipt = async (): Promise<void> => {
+    if (exportable === null) return;
+    try {
+      await navigator.clipboard.writeText(exportable);
+      setExportNote("Raw receipt copied to the clipboard.");
+    } catch {
+      // Not a silent failure: the clipboard needs a secure context and a
+      // permission, and a judge who believes they copied a receipt they did not
+      // is worse off than one who is told it failed.
+      setExportNote("The browser refused clipboard access, so nothing was copied. Use Download receipt, or select the text above.");
+    }
+  };
+
+  const downloadReceipt = (): void => {
+    if (exportable === null) return;
+    const url = URL.createObjectURL(new Blob([exportable], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setExportNote(`Receipt downloaded as ${filename}.`);
+  };
+
   return <div className="receipts-view">
     <UnestablishedBand statedGaps={statedGaps} />
 
@@ -212,13 +254,30 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
           The controls stay disabled while the raw evidence is not an
           observation. Copying a placeholder off a judge-facing surface is how
           an invented value escapes the one module allowed to hold it.
+
+          They also *do* something, which they did not until HAC-287. Both
+          rendered enabled whenever evidence was bound and carried no handler at
+          all, so the one affordance this product offers for taking the evidence
+          away and checking it did nothing. Receipt export is the whole thesis:
+          a judge who cannot leave with the receipt has to take our word for it.
+
+          Both export `rawEvidence.value` verbatim, which is the same string the
+          `pre` above renders. Re-serialising here would let the file and the
+          screen disagree, and the file is the artifact someone checks later.
         */}
-        <button type="button" disabled={!rawEvidenceBound}>
+        <button type="button" disabled={!rawEvidenceBound} onClick={copyReceipt}>
           {rawEvidenceBound ? "Copy raw receipt" : "Copy raw receipt (no observed evidence to copy)"}
         </button>
-        <button type="button" disabled={!rawEvidenceBound}>
+        <button type="button" disabled={!rawEvidenceBound} onClick={downloadReceipt}>
           {rawEvidenceBound ? "Download receipt" : "Download receipt (no observed evidence to download)"}
         </button>
+        {/*
+          An export that silently fails is the defect this replaced, in a smaller
+          form. The clipboard needs a secure context and a permission, so it can
+          refuse; when it does, say so rather than leaving the button looking like
+          it worked.
+        */}
+        {exportNote !== null && <p role="status" className="export-note">{exportNote}</p>}
       </details>
     </section>
   </div>;
