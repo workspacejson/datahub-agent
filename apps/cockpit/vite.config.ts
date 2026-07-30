@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { codeToHtml } from "shiki";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -151,6 +152,25 @@ if (sourceMode !== "placeholder") {
 }
 
 /**
+ * Build-time syntax highlighting for the raw evidence receipt.
+ *
+ * Shiki runs in Node at build time, producing an HTML string with inline styles
+ * that is defined into the browser bundle as a constant. Zero runtime cost: the
+ * highlighter, its themes, and its WASM engine never reach the browser.
+ *
+ * Dual themes (light/dark) are emitted via CSS variables, so the receipt
+ * respects the cockpit's color scheme without a re-highlight.
+ */
+let highlightedReceipt: string | null = null;
+if (sourceMode !== "placeholder" && event !== null) {
+  const jsonString = JSON.stringify(event, null, 2);
+  highlightedReceipt = await codeToHtml(jsonString, {
+    lang: "json",
+    themes: { light: "vitesse-light", dark: "vitesse-dark" },
+  });
+}
+
+/**
  * The placeholder guard keys on `command`, not on `NODE_ENV`.
  *
  * It used to read `process.env.NODE_ENV === "production"`. That does fire under a
@@ -168,7 +188,7 @@ if (sourceMode !== "placeholder") {
  * invocation itself and cannot be set from the environment, which is the property
  * a guard on this needs.
  */
-export default defineConfig(({ command }) => {
+export default defineConfig(async ({ command }) => {
   if (command === "build" && sourceMode === "placeholder") {
     throw new Error(
       "A build rejects COCKPIT_SOURCE_MODE=placeholder: a placeholder artifact renders " +
@@ -189,6 +209,7 @@ export default defineConfig(({ command }) => {
       __COCKPIT_SOURCE_MODE__: JSON.stringify(sourceMode),
       __COCKPIT_EVENT__: JSON.stringify(event),
       __COCKPIT_COMPARISON__: JSON.stringify(planComparison),
+      __COCKPIT_RECEIPT_HTML__: JSON.stringify(highlightedReceipt),
     },
   };
 });

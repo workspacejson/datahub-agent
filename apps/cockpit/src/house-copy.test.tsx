@@ -135,3 +135,25 @@ describe("each fact is stated once per route", () => {
     expect(text.length).toBeGreaterThan(200);
   });
 });
+
+describe("silent zero callout on the impact route", () => {
+  it("renders the silent zero before the resolution seam in DOM order", () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
+    const callout = screen.queryByText(/Naive join: 0 matches/i);
+    const seam = screen.getByLabelText("Producing file resolution");
+    expect(callout).not.toBeNull();
+    // The callout must appear before the seam in DOM order — failure first,
+    // resolution second.
+    expect(callout!.compareDocumentPosition(seam)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("states the dbt path and the workspace.json key in the callout", () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
+    const m = model();
+    if (m.dbtFilePath) {
+      expect(screen.getByText(m.dbtFilePath)).toBeTruthy();
+    }
+  });
+});

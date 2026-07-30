@@ -15,6 +15,11 @@ declare const __COCKPIT_EVENT__: unknown;
  * when no bundle was bound. See `vite.config.ts`.
  */
 declare const __COCKPIT_COMPARISON__: SourceEvent["planComparison"] | null;
+/**
+ * Build-time syntax-highlighted HTML for the raw evidence receipt, or null in a
+ * placeholder build or when Shiki is unavailable. See `vite.config.ts`.
+ */
+declare const __COCKPIT_RECEIPT_HTML__: string | null;
 
 /**
  * Which adapter a build renders through.

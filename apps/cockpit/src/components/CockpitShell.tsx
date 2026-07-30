@@ -1,4 +1,5 @@
 import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model";
+import { MotionConfig } from "motion/react";
 import { ChangePlanView } from "./ChangePlanView";
 import { DecisionRail } from "./DecisionRail";
 import { ImpactView } from "./ImpactView";
@@ -137,7 +138,7 @@ export function CockpitShell({ model, route, onRouteChange }: {
   const step = routes.findIndex((item) => item.route === route);
   const previous = step > 0 ? routes[step - 1] : null;
 
-  return <main className="cockpit-shell">
+  return <MotionConfig reducedMotion="user"><main className="cockpit-shell">
     {model.sourceMode === "placeholder" && <p className="placeholder-banner" role="status">DESIGN PLACEHOLDER · NOT OBSERVED DATA</p>}
 
     <header className="product-header">
@@ -198,5 +199,5 @@ export function CockpitShell({ model, route, onRouteChange }: {
         <DecisionRail model={model} route={route} onRouteChange={onRouteChange} />
       </div>
     </section>
-  </main>;
+  </main></MotionConfig>;
 }

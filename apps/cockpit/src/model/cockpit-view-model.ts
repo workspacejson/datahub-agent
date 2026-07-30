@@ -370,6 +370,8 @@ const cockpitViewModelBaseSchema = z.object({
   unresolvedItems: z.array(z.string()),
   datasetIdentity: sourceClaimSchema,
   producerPath: sourceClaimSchema,
+  dbtFilePath: z.string().nullable(),
+  projectPrefix: z.string().nullable(),
   repositoryEvidence: sourceClaimSchema,
   /**
    * The commit-pinned link to the producing file, carrying where it came from.
