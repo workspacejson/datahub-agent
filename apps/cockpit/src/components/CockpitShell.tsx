@@ -90,11 +90,22 @@ function Coverage({ model }: { model: CockpitViewModel }) {
       <p className={`coverage__headline ${complete ? "" : "coverage__headline--open"}`}>
         {complete ? "Complete against pinned manifest" : "Completeness not established"}
       </p>
+      {/*
+        "that set", not "the set". The counters sit three inches below this
+        sentence, and a reader who has just crossed 1/1 supplies the nearest
+        referent for a bare "the set" — the path set, which is complete — and
+        reads the note as contradicting the headline. "that" is anaphoric and can
+        only bind to what the preceding sentence says the read returned, which is
+        the other denominator. The fix is the pronoun, not a qualifying clause:
+        the clause was already tried and rejected for the evidence tier, and a
+        sentence restating the counters is the double assertion this panel exists
+        to avoid.
+      */}
       <p className="coverage__note">
         The lineage read {READ_LABEL[model.read]}.{" "}
         {complete
-          ? "The set is complete against the pinned manifest."
-          : "Whether the set is complete is not established, so an absent edge is not evidence of no impact."}
+          ? "That set is complete against the pinned manifest."
+          : "Whether that set is complete is not established, so an absent edge is not evidence of no impact."}
       </p>
       <dl className="coverage__counts">
         <div>
