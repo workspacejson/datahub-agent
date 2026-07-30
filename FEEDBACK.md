@@ -21,10 +21,18 @@ It is at the end, phrased for a maintainer to answer.
 
 One finding was **excluded** on inspection. A silent-drop defect we had recorded
 against the join path turned out to be our own adapter filtering on
-`resource_type === "model"`, not anything DataHub does. It is our bug and it is
-fixed on our side. We mention the exclusion rather than quietly dropping it,
-because a feedback document that misattributes one item earns a reader's right to
-discount the rest.
+`resource_type === "model"`, not anything DataHub does.
+
+Precisely, because a maintainer who checks will find the filter still there: the
+join no longer uses that function. It runs through `extractDatasetNodes`, which
+accounts for every node under `nodes.length + dropped.length + sum(excluded) ===
+total` and separates nodes excluded by policy from nodes dropped unexpectedly. The
+original `extractModels` is **deliberately frozen byte-identical**, because a
+parity harness pins its behaviour, so it still filters and always will. Saying it
+was "fixed" would be wrong about the function and right only about the join.
+
+We mention the exclusion rather than quietly dropping it, because a feedback
+document that misattributes one item earns a reader's right to discount the rest.
 
 ## The pattern
 

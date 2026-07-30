@@ -11,8 +11,34 @@ A claim that cannot be reproduced is a claim that does not belong here.
 | -- | -- | -- | -- |
 | Models matched, dbt project at repo root | 5/5 | `test/integration/golden-fixture.test.ts` | `npm test` |
 | Models matched, dbt project nested under `dbt/` | 0/5 (without normalization) | `test/integration/golden-fixture.test.ts` — nested fixture exercises the prefix | `npm test` |
-| Corpus nodes silently discarded by `extractModels` | 23 of 28 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
 | Process exit code on silent failure | 0 | Measured — the join returns empty with no error | Run the emitter against a nested project without normalization |
+
+The `extractModels` node-drop figure used to sit in this table. It was moved to
+node accounting below on 2026-07-30, because it measures a different thing:
+adapter node-type filtering, not the path-normalization failure the rows above
+describe. Read beside `5/5`, it also invited an arithmetic contradiction that only
+the node-kind decomposition resolves.
+
+## Node accounting
+
+The join accounts for every node in the manifest, and the figures below are about
+that accounting rather than about a failure.
+
+| Claim | Value | Source | Verify |
+| -- | -- | -- | -- |
+| Proof-corpus nodes accounted for | 28 of 28 | `evaluation/dbt-node-coverage.md` | `npm test`, in `test/adapters/workspacejson/nodes-join.integration.test.ts` |
+| Kept, dataset-bearing | 8 (5 `model`, 3 `seed`) | Same | Same |
+| Excluded by policy, not datasets | 20 (`test`) | Same | Same |
+| Dropped, dataset-bearing with no `original_file_path` | 0 | Same | Same |
+| Dataset-bearing kinds | `model`, `seed`, `snapshot` | `src/adapters/workspacejson/nodes.ts` `DATASET_RESOURCE_TYPES` | Read the exported set |
+| Nodes kept by the legacy `extractModels` | 5 of 28, filtering `resource_type === "model"` | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
+
+`extractModels` is **not on the join path.** It is retained byte-identical because
+the META-248 parity harness pins it at 35/35, and the join runs through
+`extractDatasetNodes`, which enforces
+`nodes.length + dropped.length + sum(excluded) === total`. Its 5-of-28 filtering
+is a property of a frozen function, not a defect in the current pipeline, and it
+is listed here so the figure has one accurate home rather than an alarming one.
 
 ## Node-type coverage
 
