@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 it("derives the shell state from URL query state and writes navigation back to the URL", async () => {
-  window.history.replaceState(null, "", "/?view=receipts&state=success");
+  window.history.replaceState(null, "", "/receipts?state=success");
   const user = userEvent.setup();
   render(<App />);
 
@@ -19,6 +19,6 @@ it("derives the shell state from URL query state and writes navigation back to t
   expect(screen.getByLabelText("Coverage of this review").textContent).toContain("Complete against pinned manifest");
 
   await user.click(screen.getByRole("button", { name: "Change plan" }));
-  expect(new URLSearchParams(window.location.search).get("view")).toBe("change-plan");
+  expect(window.location.pathname).toBe("/change-plan");
   expect(new URLSearchParams(window.location.search).get("state")).toBe("success");
 });
