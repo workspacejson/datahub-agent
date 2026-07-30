@@ -18,7 +18,7 @@ export const provisionalSource = {
   // not it resolves, so it occupies the place where a reader looks for a source
   // and answers the question wrongly. Absence has to look like absence.
   viewSource: { state: "unavailable", reason: "evidence binding is pending; no corpus provenance is bound in placeholder mode" },
-  impactEdges: [{ label: "<lineage read not observed>", state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
+  impactEdges: [{ node: "<lineage read not observed>", platform: null, direction: "none", degree: null, state: "unresolved", reason: "Completeness is not established; zero edges does not prove absence.", source: "unavailable" }],
   // Not a placeholder delta. This used to be one `uncertainty-changed` entry
   // labelled `<joined plan unavailable>`, which spelled an absence as a plan
   // change — the shape of a finding, carrying none. The state now says it
@@ -33,7 +33,7 @@ export const provisionalSource = {
       state: "observed",
       records: [{ urn: "<unresolved dataset>", reason: "<reason unavailable in placeholder mode>" }],
     },
-    statedGaps: [{ field: "<unresolved item>", reason: "not-queried", detail: "Evidence binding is pending; nothing was read for this field." }],
+    statedGaps: [{ field: "<unresolved item>", source: "datahub", reason: "not-queried", detail: "Evidence binding is pending; nothing was read for this field." }],
     provenance: {
       subjectRepository: { state: "placeholder", value: "<subject repository>" },
       subjectRevision: { state: "placeholder", value: "<subject revision>" },

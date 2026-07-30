@@ -56,8 +56,14 @@ jobs:
       - name: Cockpit production build
         run: npm run build
 
-      - name: Install Chromium for cockpit browser checks
-        run: npx playwright install --with-deps chromium
+      # All three engines, because the suite runs all three. The route transition
+      # uses the View Transitions API, which Chromium has and WebKit and Firefox
+      # support unevenly by version, so the fallback path is part of the product
+      # and has to be exercised where it is actually taken. Installing only
+      # Chromium here left 20 tests failing on a missing executable rather than on
+      # anything about the app.
+      - name: Install browsers for cockpit browser checks
+        run: npx playwright install --with-deps chromium webkit firefox
 
       - name: Cockpit browser and accessibility checks
         run: npm run e2e

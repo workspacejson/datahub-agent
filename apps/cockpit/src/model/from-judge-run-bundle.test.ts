@@ -62,6 +62,10 @@ describe("projecting a JudgeRunBundle", () => {
       taskId: RUN.taskId,
       model: RUN.model,
       eventDigest: digestEvent(contractEvent()),
+      // Carried even when nothing differs: "both plans ran and agreed" is a
+      // result a reader can check only if both plans are on screen.
+      datahubOnlySteps: ["refuse: the producing file is unknown"],
+      joinedSteps: ["edit the resolved producing file"],
       deltas: [],
     });
 

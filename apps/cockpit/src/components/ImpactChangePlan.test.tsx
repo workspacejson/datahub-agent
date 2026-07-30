@@ -16,6 +16,8 @@ const observed = (deltas: PlanDelta[]): PlanComparisonView => ({
   taskId: "add-quality-check",
   model: "qwen-plus",
   eventDigest: "digest-under-test",
+  datahubOnlySteps: ["Refuse to edit an unknown source location."],
+  joinedSteps: ["Edit dbt/models/curated/game_events.sql."],
   deltas,
 });
 

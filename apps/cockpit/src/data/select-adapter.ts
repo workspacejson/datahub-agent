@@ -5,11 +5,16 @@ import {
   type CockpitSourceAdapter,
   type CockpitStateName,
 } from "./cockpit-adapter";
-import type { SourceMode } from "../model/cockpit-view-model";
+import type { SourceEvent, SourceMode } from "../model/cockpit-view-model";
 
 declare const __COCKPIT_SOURCE_MODE__: SourceMode;
 /** The build-time event, or null in a placeholder build. See `vite.config.ts`. */
 declare const __COCKPIT_EVENT__: unknown;
+/**
+ * The build-time comparison, already validated against the event above, or null
+ * when no bundle was bound. See `vite.config.ts`.
+ */
+declare const __COCKPIT_COMPARISON__: SourceEvent["planComparison"] | null;
 
 /**
  * Which adapter a build renders through.
@@ -53,6 +58,7 @@ declare const __COCKPIT_EVENT__: unknown;
 export function selectCockpitAdapter(
   mode: SourceMode = __COCKPIT_SOURCE_MODE__,
   event: unknown = __COCKPIT_EVENT__,
+  planComparison: SourceEvent["planComparison"] | null = __COCKPIT_COMPARISON__,
 ): CockpitSourceAdapter {
   if (mode === "placeholder") return provisionalAdapter;
 
@@ -67,7 +73,7 @@ export function selectCockpitAdapter(
   // Throws, with the offending contract paths, if the event does not satisfy the
   // schema *and* the invariants. A cockpit that rendered an unvalidated event
   // would be showing a judge claims nothing stands behind.
-  return createAdapter(event, mode);
+  return createAdapter(event, mode, planComparison);
 }
 
 /**

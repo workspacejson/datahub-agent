@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/workspace-json-design-system-b8d83ce8-fa46-4b07-8519-19c3ef0a739e/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/workspace-json-design-system-b8d83ce8-fa46-4b07-8519-19c3ef0a739e/tokens/colors.css">
+<link rel="stylesheet" href="_ds/workspace-json-design-system-b8d83ce8-fa46-4b07-8519-19c3ef0a739e/tokens/typography.css">
+<link rel="stylesheet" href="_ds/workspace-json-design-system-b8d83ce8-fa46-4b07-8519-19c3ef0a739e/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/workspace-json-design-system-b8d83ce8-fa46-4b07-8519-19c3ef0a739e/tokens/effects.css">
+<style>
+body{margin:0;background:#040a09;font-family:var(--font-sans,system-ui);color:#edf7f3}
+a{color:var(--wj-text-accent,#00c896);text-decoration:none}
+a:hover{color:var(--wj-accent-high,#86f7d0)}
+.dv-turn{padding:44px 48px 36px;border-bottom:1px solid rgba(255,255,255,.06)}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 22px}
+.dv-tid{font:600 10px var(--font-mono,monospace);padding:3px 7px;background:#00c896;color:#07100e;border-radius:4px}
+.dv-tname{font:600 13px/1.2 var(--font-sans,system-ui);color:#edf7f3}
+.dv-opts{display:flex;flex-direction:column;gap:44px;align-items:flex-start}
+.dv-opt{display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px var(--font-mono,monospace);padding:3px 7px;background:rgba(255,255,255,.08);color:#edf7f3;border-radius:5px}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 11.5px/1.3 var(--font-sans,system-ui);color:#8da69c}
+.dv-card{background:#07100e;border:1px solid #173028;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden}
+.dv-opt:target .dv-oid{background:#00c896;color:#07100e}
+.dv-next{margin:26px 0 0;font:12px/1.6 var(--font-sans,system-ui);color:#8da69c}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">workspace.json change impact cockpit: annotated frames, 1440 demo target</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Foundations: copy spec, evidence encoding, resolution accounting, primitive map</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px;padding:32px 36px 36px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.28em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Foundations</div>
+<h2 style="font:800 32px/1.15 var(--font-sans);letter-spacing:-.05em;margin:0 0 8px">Reading rules before any frame</h2>
+<p style="font:400 15px/1.65 var(--font-sans);color:#bfcdc6;margin:0 0 28px;max-width:78ch;text-wrap:pretty">This surface is pre-edit review. It states what the catalog declares, what the repository resolved, what was not asked, and what could not be determined. It does not state confidence. No fixture exists yet, so every value in every frame is a placeholder slot.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Evidence vocabulary, exact words</div>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font:400 13.5px/1.5 var(--font-sans)">
+<dt style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3;white-space:nowrap">Declared</dt><dd style="margin:0;color:#8da69c">asserted by DataHub metadata, or human-authored in the committed artifact</dd>
+<dt style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3;white-space:nowrap">Resolved</dt><dd style="margin:0;color:#8da69c">mechanically computed by the producer</dd>
+<dt style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3;white-space:nowrap">Not queried</dt><dd style="margin:0;color:#8da69c">we did not ask</dd>
+<dt style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3;white-space:nowrap">Unresolved</dt><dd style="margin:0;color:#8da69c">we asked and could not determine</dd>
+</dl>
+<div style="height:1px;background:var(--border-default);margin:16px 0"></div>
+<p style="margin:0;font:400 13px/1.6 var(--font-sans);color:#8da69c">Coverage is stated as <span style="font-family:var(--font-mono);font-size:12px;color:#edf7f3">Complete against pinned manifest</span> or <span style="font-family:var(--font-mono);font-size:12px;color:#edf7f3">Completeness not established</span>. The word "verified" never appears. No percentage, no progress bar, no risk score.</p>
+</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Copy spec, inherited and corrected</div>
+<ul style="margin:0;padding-left:18px;font:400 13px/1.7 var(--font-sans);color:#8da69c">
+<li><span style="color:#edf7f3">workspace.json</span> is always lowercase, even sentence-initial. Headings are sentence case.</li>
+<li>No em dashes anywhere: colons, commas, parentheses instead. No emoji. No icon font.</li>
+<li>RFC register: short, declarative, third person. Binary contrast framing (declared against resolved, DataHub-only against joined).</li>
+<li>Paths, URNs, field names, counts and revisions are mono. Human-readable names lead; URNs and paths are copyable but secondary.</li>
+<li style="color:#bfcdc6">Attribution: the specification is maintained by Marcelle Labs under a single-steward model. No commercial product is named as author. The neutral producer is <span style="font-family:var(--font-mono);font-size:12px;color:#edf7f3">@workspacejson/cli@0.5.1</span>, and the org is <span style="font-family:var(--font-mono);font-size:12px;color:#edf7f3">workspacejson</span>, unhyphenated.</li>
+<li style="color:#bfcdc6">The artifact is not described as supplying per-file fragility or co-change clusters. It supplies what its disposition says it emits, and nothing more.</li>
+</ul>
+</div>
+</div>
+
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:22px 24px;margin-bottom:22px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:6px">Encoding legend</div>
+<p style="margin:0 0 18px;font:400 13px/1.6 var(--font-sans);color:#8da69c;max-width:88ch">Two independent axes. Source is who contributed the material. Resolution is what is known about it. They are never collapsed: DataHub material can be unresolved, workspace.json material can be declared.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px">
+<div>
+<div style="font:600 12px/1 var(--font-sans);color:#edf7f3;margin-bottom:12px">Axis 1: source, text first</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:3px;border:1px solid rgba(56,189,248,.45);color:#9adcf9;background:rgba(56,189,248,.08)"><span style="width:7px;height:7px;background:#38bdf8"></span>DataHub</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">square corners, square pip, sky tint</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:999px;border:1px solid rgba(0,200,150,.5);color:#86f7d0;background:rgba(0,200,150,.08)"><span style="width:7px;height:7px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">pill, round pip, emerald tint</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:3px 999px 999px 3px;border:1px solid #36544b;color:#e0efe9;background:linear-gradient(90deg,rgba(56,189,248,.12),rgba(0,200,150,.12))"><span style="width:7px;height:7px;transform:rotate(45deg);background:#bfcdc6"></span>Joined</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">half-square half-pill, diamond pip</span></div>
+<p style="margin:6px 0 0;font:400 12px/1.6 var(--font-sans);color:#5d7a70">Colour reinforces only. Shape and the literal word carry it, so the distinction survives greyscale, and workspace.json material never renders in DataHub's product blue.</p>
+</div>
+</div>
+<div>
+<div style="font:600 12px/1 var(--font-sans);color:#edf7f3;margin-bottom:12px">Axis 2: resolution, equal weight</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:7px;font:500 11px/1 var(--font-mono);letter-spacing:.06em;padding:5px 10px;border:1px solid #36544b;border-radius:6px;color:#edf7f3;background:#0e1a16"><span style="width:9px;height:9px;border-radius:50%;background:#bfcdc6"></span>Declared</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">solid outline, filled disc</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:7px;font:500 11px/1 var(--font-mono);letter-spacing:.06em;padding:5px 10px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:6px;color:#edf7f3;background:#0e1a16"><span style="width:9px;height:9px;background:#bfcdc6"></span>Resolved</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">solid outline plus 2px left rule, filled square</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:7px;font:500 11px/1 var(--font-mono);letter-spacing:.06em;padding:5px 10px;border:1.5px dashed #8da69c;border-radius:6px;color:#edf7f3;background:#0e1a16"><span style="width:9px;height:9px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg)"></span>Unresolved</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">dashed outline, open arc, same text weight and luminance as resolved</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;gap:7px;font:500 11px/1 var(--font-mono);letter-spacing:.06em;padding:5px 10px;border:1px dotted #36544b;border-radius:6px;color:#5d7a70;background:transparent"><span style="width:9px;height:9px;border:1.5px dotted #5d7a70;border-radius:50%"></span>Not queried</span><span style="font:400 12.5px/1.5 var(--font-sans);color:#8da69c">dotted outline, dotted ring, dimmed: absence of a question, not of an answer</span></div>
+<p style="margin:6px 0 0;font:400 12px/1.6 var(--font-sans);color:#5d7a70">Emerald is the brand accent, so it is withheld from resolution entirely. Resolution runs on the neutral ramp: resolved and unresolved sit at the same luminance and the same type weight, and only <span style="color:#8da69c">not queried</span> is dimmed. Amber and red keep their meanings (experimental, error) and never touch unresolved. Unresolved is an honest terminal state, so it is stated, counted, and named.</p>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Resolution accounting, the three states</div>
+<div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1.6 var(--font-sans);color:#8da69c">
+<div><span style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3">complete</span> renders as "Complete against pinned manifest, &lt;total&gt; of &lt;total&gt;". One line, no chart.</div>
+<div><span style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3">partial</span> always names its residue. The count is never shown without the list, because a bare count is not renderable under the contract.</div>
+<div><span style="font-family:var(--font-mono);font-size:12.5px;color:#edf7f3">not-established</span> shows its reason string verbatim, in the same position the count would occupy. The reason is never truncated or tucked behind disclosure.</div>
+<div style="height:1px;background:var(--border-default)"></div>
+<div>Prohibited by construction: per-file fragility score, risk number, confidence percentage, progress bar. Nothing in the type contract can populate them.</div>
+</div>
+</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Primitive map, and what is not in the list</div>
+<div style="font:400 13px/1.7 var(--font-sans);color:#8da69c">
+<div style="margin-bottom:10px">Identity header: <span style="color:#edf7f3">Card</span>, <span style="color:#edf7f3">Badge</span>, <span style="color:#edf7f3">Tooltip</span>, <span style="color:#edf7f3">Separator</span>. Spine: <span style="color:#edf7f3">Tabs</span>. Rail nodes: <span style="color:#edf7f3">Card</span> plus <span style="color:#edf7f3">Badge</span>. Degraded banners: <span style="color:#edf7f3">Alert</span>. Accounting: <span style="color:#edf7f3">Table</span>. Residue and limitations: <span style="color:#edf7f3">Collapsible</span>. Inspect evidence: <span style="color:#edf7f3">Sheet</span>. Confirm and abandon: <span style="color:#edf7f3">Dialog</span>. In-flight: <span style="color:#edf7f3">Skeleton</span>.</div>
+<div style="padding:12px 14px;border:1px dashed #36544b;border-radius:8px;color:#bfcdc6">Called out as outside the approved list: (1) the impact rail's connector lines are plain CSS borders inside a static grid, not a control and not a graph library; (2) the paired evaluation spread is a bounded inline SVG, not a chart component. Both are declared here rather than drawn as bespoke controls.</div>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why this comes first</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">The differentiator is honesty about coverage, so the vocabulary is the product. If a reviewer cannot tell "we did not ask" from "we asked and could not tell", every frame after this one is decoration.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 14px">The palette problem is solved by subtraction rather than by adding a hue. Emerald is the brand accent, and it was going to make resolved read as the good outcome everywhere it appeared. Resolution therefore runs entirely on the neutral ramp, distinguished by outline style and glyph, which leaves emerald free to mean "workspace.json contributed this" (a source fact, not a verdict) and leaves amber and red their existing meanings.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0">Open item for you: the Impact view's single decision. I have assumed it is "proceed to change plan, or stop", with coverage stated immediately beside the button rather than as a separate step. The alternative is making coverage itself the hero and demoting the action. See <a class="dv-oid" href="#1b">1b</a> and overrule me there.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Impact, default state: 1440 &times; 900</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border-default);background:#08120f">
+<div style="display:flex;align-items:baseline;gap:14px">
+<span style="font:800 16px/1 var(--font-sans);letter-spacing:-.04em;color:#f5faf8">workspace<span style="color:#00c896">.json</span></span>
+<span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70">change impact cockpit</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px">
+<button style="font:500 12px/1 var(--font-sans);color:#bfcdc6;background:transparent;border:1px solid var(--border-default);border-radius:999px;padding:9px 16px;cursor:pointer">Inspect evidence</button>
+</div>
+</div>
+
+<div style="padding:22px 24px 18px;border-bottom:1px solid var(--border-default)">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:28px">
+<div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.28em;text-transform:uppercase;color:#5d7a70;margin-bottom:10px">Dataset under review</div>
+<h1 style="font:800 30px/1.1 var(--font-sans);letter-spacing:-.05em;margin:0 0 10px;color:#f0f7f4">&lt;dataset-name&gt;</h1>
+<div style="display:flex;align-items:center;gap:10px;font:400 12.5px/1 var(--font-mono);color:#8da69c">
+<span>&lt;urn:li:dataset:(&lt;platform&gt;,&lt;name&gt;,&lt;env&gt;)&gt;</span>
+<button style="font:500 10px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:#8da69c;background:#162922;border:1px solid var(--border-default);border-radius:4px;padding:4px 7px;cursor:pointer">Copy</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+<span style="display:inline-flex;align-items:center;gap:7px;font:500 11px/1 var(--font-mono);padding:6px 10px;border-radius:3px;border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#9adcf9"><span style="width:7px;height:7px;background:#38bdf8"></span>DataHub</span>
+<span style="display:inline-flex;align-items:center;gap:7px;font:500 11px/1 var(--font-mono);padding:6px 10px;border:1px solid #36544b;border-radius:6px;color:#edf7f3;background:#0e1a16"><span style="width:9px;height:9px;border-radius:50%;background:#bfcdc6"></span>Declared</span>
+<span style="font:400 12.5px/1 var(--font-mono);color:#8da69c;align-self:center">domain &lt;domain-name&gt; &middot; owner &lt;owner-name&gt;</span>
+</div>
+</div>
+<div style="min-width:330px;background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:16px 18px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:10px">Coverage of this review</div>
+<div style="display:flex;align-items:center;gap:9px;font:600 14px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:8px"><span style="width:10px;height:10px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg);flex:none"></span>Completeness not established</div>
+<p style="margin:0 0 12px;font:400 12.5px/1.6 var(--font-sans);color:#8da69c">Reason: &lt;reason-string-from-producer&gt;</p>
+<div style="height:1px;background:var(--border-default);margin-bottom:12px"></div>
+<div style="display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font:400 12px/1.4 var(--font-mono);color:#8da69c">
+<span style="color:#edf7f3">&lt;n&gt;/&lt;total&gt;</span><span>producer paths resolved</span>
+<span style="color:#edf7f3">&lt;n&gt;</span><span>unresolved, named below</span>
+<span style="color:#5d7a70">&lt;n&gt;</span><span style="color:#5d7a70">not queried</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border-default);background:#08120f">
+<div style="padding:13px 18px;border-bottom:2px solid #00c896;font:600 13px/1 var(--font-sans);color:#f0f7f4">Impact</div>
+<div style="padding:13px 18px;border-bottom:2px solid transparent;font:500 13px/1 var(--font-sans);color:#8da69c">Change plan</div>
+<div style="padding:13px 18px;border-bottom:2px solid transparent;font:500 13px/1 var(--font-sans);color:#8da69c">Receipts</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 330px;gap:0">
+<div style="padding:24px;border-right:1px solid var(--border-default)">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
+<h2 style="font:700 17px/1.2 var(--font-sans);letter-spacing:-.02em;margin:0;color:#f0f7f4">Impact rail</h2>
+<span style="font:400 12px/1.4 var(--font-sans);color:#8da69c">Static left to right. Declared lineage and behavioural code coupling are separate bands, never merged.</span>
+</div>
+
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Band 1: declared lineage</div>
+<div style="display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:stretch;gap:0;margin-bottom:26px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Upstream</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;upstream-dataset-1&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#5d7a70;margin-bottom:10px">&lt;urn&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:3px;border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#9adcf9"><span style="width:6px;height:6px;background:#38bdf8"></span>DataHub</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;border-radius:50%;background:#bfcdc6"></span>Declared</span></div>
+</div>
+<div style="background:var(--surface-card);border:1px dotted #36544b;border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#8da69c;margin-bottom:5px">&lt;upstream-dataset-2&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#5d7a70;margin-bottom:10px">&lt;urn&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:3px;border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#9adcf9"><span style="width:6px;height:6px;background:#38bdf8"></span>DataHub</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px dotted #36544b;border-radius:5px;color:#5d7a70"><span style="width:8px;height:8px;border:1.5px dotted #5d7a70;border-radius:50%"></span>Not queried</span></div>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:center;font:400 14px/1 var(--font-mono);color:#36544b">&rarr;</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Under review</div>
+<div style="background:#0e1a16;border:1px solid #36544b;border-radius:12px;padding:13px 14px;box-shadow:0 0 0 1px rgba(0,200,150,.18)">
+<div style="font:700 14px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;dataset-name&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#5d7a70;margin-bottom:10px">&lt;urn&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:3px 999px 999px 3px;border:1px solid #36544b;background:linear-gradient(90deg,rgba(56,189,248,.12),rgba(0,200,150,.12));color:#e0efe9"><span style="width:6px;height:6px;transform:rotate(45deg);background:#bfcdc6"></span>Joined</span></div>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:center;font:400 14px/1 var(--font-mono);color:#36544b">&rarr;</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Downstream</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;downstream-dataset-1&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#5d7a70;margin-bottom:10px">&lt;urn&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:3px;border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#9adcf9"><span style="width:6px;height:6px;background:#38bdf8"></span>DataHub</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;border-radius:50%;background:#bfcdc6"></span>Declared</span></div>
+</div>
+<div style="background:var(--surface-card);border:1.5px dashed #8da69c;border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;downstream-dataset-2&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#5d7a70;margin-bottom:10px">&lt;urn&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:3px;border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#9adcf9"><span style="width:6px;height:6px;background:#38bdf8"></span>DataHub</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1.5px dashed #8da69c;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg)"></span>Unresolved</span></div>
+<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:9px">Edge returned, target could not be matched to a producer path.</div>
+</div>
+</div>
+</div>
+
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Band 2: producer file and code partners</div>
+<div style="display:grid;grid-template-columns:1fr 28px 1fr;align-items:stretch">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Producer file</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-left:2px solid #bfcdc6;border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;model-name&gt;</div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font:400 11.5px/1.4 var(--font-mono);color:#8da69c">&lt;path/to/model.sql&gt;</span><a href="#1b" style="font:500 10px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:#86f7d0;border:1px solid #36544b;border-radius:4px;padding:4px 7px">View source</a></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:999px;border:1px solid rgba(0,200,150,.45);background:rgba(0,200,150,.07);color:#86f7d0"><span style="width:6px;height:6px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;background:#bfcdc6"></span>Resolved</span></div>
+<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:9px">Mechanically matched from the URN against the pinned revision &lt;sha&gt;. Immutable link.</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:center;font:400 14px/1 var(--font-mono);color:#36544b">&rarr;</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Code partners, not in declared lineage</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-left:2px solid #bfcdc6;border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;partner-file-1&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#8da69c;margin-bottom:10px">&lt;path/to/partner-1.py&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:999px;border:1px solid rgba(0,200,150,.45);background:rgba(0,200,150,.07);color:#86f7d0"><span style="width:6px;height:6px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;background:#bfcdc6"></span>Resolved</span></div>
+<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:9px">Reason: &lt;plain-language-reason-from-artifact&gt;. This coupling is behavioural, and DataHub does not declare it.</div>
+</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:13px 14px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:5px">&lt;partner-file-2&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#8da69c;margin-bottom:10px">&lt;path/to/partner-2.yml&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:999px;border:1px solid rgba(0,200,150,.45);background:rgba(0,200,150,.07);color:#86f7d0"><span style="width:6px;height:6px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;border-radius:50%;background:#bfcdc6"></span>Declared</span></div>
+<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:9px">Reason: &lt;human-authored-note-in-committed-artifact&gt;.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+<div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:10px">Unresolved, named</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="border:1.5px dashed #8da69c;border-radius:8px;padding:10px 12px"><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;urn-a&gt;</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#8da69c;margin-top:4px">&lt;why-it-could-not-be-determined&gt;</div></div>
+<div style="border:1.5px dashed #8da69c;border-radius:8px;padding:10px 12px"><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;path/to/unresolved-b&gt;</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#8da69c;margin-top:4px">&lt;why-it-could-not-be-determined&gt;</div></div>
+</div>
+</div>
+<div style="height:1px;background:var(--border-default)"></div>
+<div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:10px">Not queried</div>
+<div style="border:1px dotted #36544b;border-radius:8px;padding:10px 12px"><div style="font:400 12px/1.4 var(--font-mono);color:#5d7a70">&lt;n&gt; entities were not asked about</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#5d7a70;margin-top:4px">Reason: &lt;scope-rule&gt;. This is not evidence of absence.</div></div>
+</div>
+<div style="margin-top:auto;padding-top:8px">
+<div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6;margin-bottom:10px">Coverage is not established, and &lt;n&gt; items are unresolved. Proceeding accepts that.</div>
+<button style="width:100%;font:600 13px/1 var(--font-sans);color:#07100e;background:#00c896;border:0;border-radius:999px;padding:13px 18px;cursor:pointer">Continue to change plan</button>
+<button style="width:100%;margin-top:8px;font:500 12.5px/1 var(--font-sans);color:#bfcdc6;background:transparent;border:1px solid var(--border-default);border-radius:999px;padding:12px 18px;cursor:pointer">Stop, do not edit</button>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Five-second hierarchy</div>
+<ol style="margin:0 0 16px;padding-left:20px;font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6">
+<li><span style="color:#f0f7f4">The dataset name</span>, at 30px. A cold reviewer must know what is about to be edited before anything else.</li>
+<li><span style="color:#f0f7f4">The coverage card</span>, top right, at the same optical weight as the title. "Completeness not established" plus its reason string is the second thing read, deliberately ahead of any content.</li>
+<li><span style="color:#f0f7f4">The two rail bands</span>, labelled declared lineage and producer file plus code partners, so the joined contribution is legible as structure rather than as colour.</li>
+</ol>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">One decision</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 16px">Continue, or stop. Both are buttons, and the caveat sentence sits above them so the accept-the-gap acknowledgement is unavoidable. Assumption flagged in <a class="dv-oid" href="#1a">1a</a>: if the reviewer's real job here is auditing coverage rather than gating, the right column becomes the hero and the buttons move to change plan.</p>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">Decisions worth noting</div>
+<ul style="margin:0;padding-left:18px;font:400 13px/1.7 var(--font-sans);color:#8da69c">
+<li>Unresolved and not queried have dedicated regions in the right rail, at body size. They are not tooltips and not a footnote.</li>
+<li>The rail is a CSS grid with arrow glyphs. No force layout, no drag, no minimap: the comprehension gate for a node graph has not run.</li>
+<li>Every node carries a source tag and a resolution tag as two separate chips. A DataHub node can read Unresolved, and a workspace.json node can read Declared.</li>
+<li>Raw JSON and tool traces live only behind Inspect evidence, top right.</li>
+</ul>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Change plan: DataHub-only against joined context</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border-default);background:#08120f">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:800 15px/1 var(--font-sans);letter-spacing:-.04em;color:#f5faf8">&lt;dataset-name&gt;</span><span style="font:400 11.5px/1 var(--font-mono);color:#5d7a70">&lt;urn&gt;</span><span style="display:inline-flex;align-items:center;gap:7px;font:500 10.5px/1 var(--font-mono);color:#f0f7f4"><span style="width:9px;height:9px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg)"></span>Completeness not established</span></div>
+<button style="font:500 12px/1 var(--font-sans);color:#bfcdc6;background:transparent;border:1px solid var(--border-default);border-radius:999px;padding:9px 16px;cursor:pointer">Inspect evidence</button>
+</div>
+<div style="display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border-default);background:#08120f">
+<div style="padding:13px 18px;border-bottom:2px solid transparent;font:500 13px/1 var(--font-sans);color:#8da69c">Impact</div>
+<div style="padding:13px 18px;border-bottom:2px solid #00c896;font:600 13px/1 var(--font-sans);color:#f0f7f4">Change plan</div>
+<div style="padding:13px 18px;border-bottom:2px solid transparent;font:500 13px/1 var(--font-sans);color:#8da69c">Receipts</div>
+</div>
+
+<div style="padding:20px 24px 0">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:20px;background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:12px 16px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70">Held constant across both modes</div>
+<div style="display:flex;gap:18px;font:400 11.5px/1.4 var(--font-mono);color:#8da69c"><span>task &lt;task-id&gt;</span><span>model &lt;model-id&gt;</span><span>prompt &lt;prompt-digest&gt;</span><span>revision &lt;sha&gt;</span><span>DataHub snapshot &lt;snapshot-id&gt;</span></div>
+</div>
+</div>
+
+<div style="padding:20px 24px 24px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div style="border:1px solid var(--border-default);border-radius:14px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#08120f;border-bottom:1px solid var(--border-default)">
+<span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:3px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.08);color:#9adcf9"><span style="width:7px;height:7px;background:#38bdf8"></span>DataHub only</span>
+<span style="font:400 12px/1.4 var(--font-sans);color:#8da69c">Declared context alone</span>
+</div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#8da69c;border:1px solid #36544b;border-radius:4px;padding:4px 7px;flex:none">Step 1</span><div><div style="font:500 13px/1.5 var(--font-sans);color:#edf7f3">Edit &lt;path/to/model.sql&gt;</div></div></div>
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#8da69c;border:1px solid #36544b;border-radius:4px;padding:4px 7px;flex:none">Step 2</span><div><div style="font:500 13px/1.5 var(--font-sans);color:#edf7f3">Update &lt;path/to/schema.yml&gt;</div></div></div>
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#8da69c;border:1px solid #36544b;border-radius:4px;padding:4px 7px;flex:none">Step 3</span><div><div style="font:500 13px/1.5 var(--font-sans);color:#edf7f3">Open pull request</div></div></div>
+<div style="height:1px;background:var(--border-default);margin:4px 0"></div>
+<div style="font:400 12px/1.6 var(--font-sans);color:#8da69c">Constraints: none stated. Uncertainty: none stated.</div>
+</div>
+</div>
+<div style="border:1px solid #36544b;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,200,150,.16)">
+<div style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#0b1714;border-bottom:1px solid var(--border-default)">
+<span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:3px 999px 999px 3px;border:1px solid #36544b;background:linear-gradient(90deg,rgba(56,189,248,.12),rgba(0,200,150,.12));color:#e0efe9"><span style="width:7px;height:7px;transform:rotate(45deg);background:#bfcdc6"></span>Joined context</span>
+<span style="font:400 12px/1.4 var(--font-sans);color:#8da69c">Declared context plus repository evidence</span>
+</div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#edf7f3;border:1px solid #36544b;border-radius:4px;padding:4px 7px;flex:none">Step 1</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font:500 13px/1.5 var(--font-sans);color:#edf7f3">Update &lt;path/to/partner-1.py&gt; first</span><span style="font:600 9.5px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#07100e;background:#86f7d0;border-radius:3px;padding:4px 6px">Added</span><span style="font:600 9.5px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#edf7f3;border:1px solid #8da69c;border-radius:3px;padding:3px 6px">Reordered</span></div><div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6;margin-top:5px">Reason: &lt;reason-string&gt;. <span style="display:inline-flex;align-items:center;gap:5px;font:500 9.5px/1 var(--font-mono);padding:3px 7px;border-radius:999px;border:1px solid rgba(0,200,150,.45);color:#86f7d0"><span style="width:5px;height:5px;border-radius:50%;background:#00c896"></span>workspace.json</span> <span style="display:inline-flex;align-items:center;gap:5px;font:500 9.5px/1 var(--font-mono);padding:3px 7px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:4px;color:#edf7f3"><span style="width:7px;height:7px;background:#bfcdc6"></span>Resolved</span></div></div></div>
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#edf7f3;border:1px solid #36544b;border-radius:4px;padding:4px 7px;flex:none">Step 2</span><div style="flex:1"><div style="font:500 13px/1.5 var(--font-sans);color:#edf7f3">Edit &lt;path/to/model.sql&gt;</div></div></div>
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#edf7f3;border:1px solid #36544b;border-radius:4px;padding:4px 7px;flex:none">Step 3</span><div style="flex:1"><div style="font:500 13px/1.5 var(--font-sans);color:#edf7f3">Update &lt;path/to/schema.yml&gt;</div></div></div>
+<div style="display:flex;gap:10px"><span style="font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#8da69c;border:1px dashed #5d7a70;border-radius:4px;padding:4px 7px;flex:none">Cut</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font:500 13px/1.5 var(--font-sans);color:#8da69c;text-decoration:line-through">&lt;removed-step&gt;</span><span style="font:600 9.5px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#edf7f3;border:1px solid #8da69c;border-radius:3px;padding:3px 6px">Removed</span></div><div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6;margin-top:5px">Reason: &lt;reason-string&gt;. <span style="display:inline-flex;align-items:center;gap:5px;font:500 9.5px/1 var(--font-mono);padding:3px 7px;border-radius:3px 999px 999px 3px;border:1px solid #36544b;color:#e0efe9"><span style="width:5px;height:5px;transform:rotate(45deg);background:#bfcdc6"></span>Joined</span></div></div></div>
+<div style="height:1px;background:var(--border-default);margin:4px 0"></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:flex-start;gap:8px"><span style="font:600 9.5px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#07100e;background:#86f7d0;border-radius:3px;padding:4px 6px;flex:none;margin-top:2px">Constraint</span><div style="font:400 12.5px/1.6 var(--font-sans);color:#edf7f3">&lt;constraint-statement&gt;. Reason: &lt;reason-string&gt;.</div></div>
+<div style="display:flex;align-items:flex-start;gap:8px"><span style="font:600 9.5px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#edf7f3;border:1.5px dashed #8da69c;border-radius:3px;padding:3px 6px;flex:none;margin-top:2px">Uncertainty</span><div style="font:400 12.5px/1.6 var(--font-sans);color:#edf7f3">&lt;n&gt; items unresolved, so &lt;named-item&gt; may also require change. Named in full on Impact.</div></div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:20px;padding:16px 18px;border:1px solid var(--border-default);border-radius:12px;background:var(--surface-card)">
+<div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70;margin-bottom:8px">Delta summary, reasons first</div>
+<div style="font:400 13px/1.6 var(--font-sans);color:#bfcdc6;max-width:82ch">Joining repository evidence added &lt;n&gt; step, reordered &lt;n&gt;, removed &lt;n&gt;, and added &lt;n&gt; constraint. Every change carries a reason string and a source tag. Nothing here is scored.</div>
+</div>
+<div style="display:flex;gap:10px;flex:none">
+<button style="font:500 12.5px/1 var(--font-sans);color:#bfcdc6;background:transparent;border:1px solid var(--border-default);border-radius:999px;padding:12px 18px;cursor:pointer">Back to impact</button>
+<button style="font:600 13px/1 var(--font-sans);color:#07100e;background:#00c896;border:0;border-radius:999px;padding:12px 20px;cursor:pointer">Review receipts</button>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Five-second hierarchy</div>
+<ol style="margin:0 0 16px;padding-left:20px;font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6">
+<li><span style="color:#f0f7f4">Two columns, two labels.</span> The comparison is structural, so the reviewer sees "which system contributed what" before reading a word of plan.</li>
+<li><span style="color:#f0f7f4">The change tags</span> (added, removed, reordered, constraint, uncertainty) sit inline on the step they describe.</li>
+<li><span style="color:#f0f7f4">The reason line</span> under each changed step. Reasons lead; counts appear once, in the summary strip at the bottom.</li>
+</ol>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">One decision</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 16px">Accept the joined plan and go to receipts, or go back. The toggle between modes is a comparison, not a choice, so it is rendered as two panels rather than as tabs: a tab would hide half the evidence, which is the whole argument.</p>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">Decisions worth noting</div>
+<ul style="margin:0;padding-left:18px;font:400 13px/1.7 var(--font-sans);color:#8da69c">
+<li>Parity strip pinned above both panels. If task, model, prompt, revision or snapshot ever differ, the comparison is void, so the values are shown rather than asserted.</li>
+<li>Uncertainty is a first-class row in the joined plan, using the same dashed treatment as unresolved elsewhere. A joined plan that knows less is allowed to say so.</li>
+<li>Domain-specific semantic diff, not a code diff. No line numbers, no gutters.</li>
+<li>At a 1280 laptop width the two panels stack, DataHub-only first, and the parity strip wraps to two rows.</li>
+</ul>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Receipts: resolution accounting, provenance, writeback proof</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border-default);background:#08120f">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:800 15px/1 var(--font-sans);letter-spacing:-.04em;color:#f5faf8">&lt;dataset-name&gt;</span><span style="font:400 11.5px/1 var(--font-mono);color:#5d7a70">&lt;urn&gt;</span></div>
+<button style="font:500 12px/1 var(--font-sans);color:#bfcdc6;background:transparent;border:1px solid var(--border-default);border-radius:999px;padding:9px 16px;cursor:pointer">Inspect evidence</button>
+</div>
+<div style="display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border-default);background:#08120f">
+<div style="padding:13px 18px;border-bottom:2px solid transparent;font:500 13px/1 var(--font-sans);color:#8da69c">Impact</div>
+<div style="padding:13px 18px;border-bottom:2px solid transparent;font:500 13px/1 var(--font-sans);color:#8da69c">Change plan</div>
+<div style="padding:13px 18px;border-bottom:2px solid #00c896;font:600 13px/1 var(--font-sans);color:#f0f7f4">Receipts</div>
+</div>
+
+<div style="padding:24px;display:grid;grid-template-columns:1.15fr 1fr;gap:20px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<h2 style="font:700 16px/1.2 var(--font-sans);letter-spacing:-.02em;margin:0 0 4px;color:#f0f7f4">Resolution accounting</h2>
+<p style="font:400 12.5px/1.6 var(--font-sans);color:#8da69c;margin:0 0 16px">Three states only, and no percentage. Partial always names its residue.</p>
+<table style="width:100%;border-collapse:collapse;font:400 13px/1.5 var(--font-sans)">
+<tbody>
+<tr style="border-bottom:1px solid var(--border-default)"><td style="padding:9px 0;color:#8da69c">Total in scope</td><td style="padding:9px 0;text-align:right;font-family:var(--font-mono);color:#edf7f3">&lt;total&gt;</td></tr>
+<tr style="border-bottom:1px solid var(--border-default)"><td style="padding:9px 0;color:#8da69c">Resolved</td><td style="padding:9px 0;text-align:right;font-family:var(--font-mono);color:#edf7f3">&lt;n&gt;</td></tr>
+<tr style="border-bottom:1px solid var(--border-default)"><td style="padding:9px 0;color:#8da69c">Excluded by scope rule</td><td style="padding:9px 0;text-align:right;font-family:var(--font-mono);color:#edf7f3">&lt;n&gt;</td></tr>
+<tr style="border-bottom:1px solid var(--border-default)"><td style="padding:9px 0;color:#8da69c">Not queried</td><td style="padding:9px 0;text-align:right;font-family:var(--font-mono);color:#5d7a70">&lt;n&gt;</td></tr>
+<tr><td style="padding:9px 0;color:#edf7f3">Unresolved</td><td style="padding:9px 0;text-align:right;font-family:var(--font-mono);color:#edf7f3">&lt;n&gt;</td></tr>
+</tbody>
+</table>
+<div style="margin-top:14px;border:1.5px dashed #8da69c;border-radius:10px;padding:14px 16px">
+<div style="display:flex;align-items:center;gap:8px;font:600 13px/1 var(--font-sans);color:#f0f7f4;margin-bottom:10px"><span style="width:10px;height:10px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg)"></span>Unresolved items, all named</div>
+<ul style="margin:0;padding-left:16px;font:400 12px/1.8 var(--font-mono);color:#edf7f3"><li>&lt;urn-a&gt;: &lt;reason&gt;</li><li>&lt;path/to/unresolved-b&gt;: &lt;reason&gt;</li><li>&lt;urn-c&gt;: &lt;reason&gt;</li></ul>
+</div>
+<div style="margin-top:12px;padding:12px 14px;border:1px solid var(--border-default);border-radius:10px;font:400 12.5px/1.6 var(--font-sans);color:#bfcdc6">Coverage: <span style="color:#f0f7f4">Completeness not established</span>. Reason: &lt;reason-string&gt;. The nested-path proof is shown only where the pinned manifest still applies.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<h2 style="font:700 16px/1.2 var(--font-sans);letter-spacing:-.02em;margin:0 0 14px;color:#f0f7f4">Provenance</h2>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font:400 12.5px/1.5 var(--font-sans)">
+<dt style="color:#8da69c">Repository revision</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;sha&gt;</dd>
+<dt style="color:#8da69c">Artifact pinned revision</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;sha&gt;</dd>
+<dt style="color:#8da69c">Producer</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">@workspacejson/cli@&lt;version&gt;</dd>
+<dt style="color:#8da69c">Algorithm version</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;algorithm-version&gt;</dd>
+<dt style="color:#8da69c">Input digest</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;digest&gt;</dd>
+<dt style="color:#8da69c">Artifact digest</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;digest&gt;</dd>
+<dt style="color:#8da69c">DataHub read</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;snapshot-id&gt; at &lt;timestamp&gt;</dd>
+<dt style="color:#8da69c">Producer path</dt><dd style="margin:0;font-family:var(--font-mono);color:#edf7f3">&lt;path/to/model.sql&gt;</dd>
+</dl>
+</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 22px">
+<h2 style="font:700 16px/1.2 var(--font-sans);letter-spacing:-.02em;margin:0 0 14px;color:#f0f7f4">Writeback proof</h2>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-default);border:1px solid var(--border-default);border-radius:10px;overflow:hidden;margin-bottom:14px">
+<div style="background:#0e1a16;padding:11px 12px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:6px">Before</div><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;before-value&gt;</div></div>
+<div style="background:#0e1a16;padding:11px 12px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:6px">Intent</div><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;intended-value&gt;</div></div>
+<div style="background:#0e1a16;padding:11px 12px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:6px">Mutation response</div><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;response-code&gt;</div></div>
+<div style="background:#0e1a16;padding:11px 12px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:6px">Observed on re-read</div><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;observed-value&gt;</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;font:400 12.5px/1.6 var(--font-sans);color:#bfcdc6"><span style="display:inline-flex;align-items:center;gap:7px;font:600 11px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:6px;color:#edf7f3;flex:none"><span style="width:8px;height:8px;background:#bfcdc6"></span>&lt;receipt-status&gt;</span>Succeeded requires both a successful mutation and an observation matching intent. Noop is intent-relative. Dry run and not read stay distinct from failed.</div>
+<div style="margin-top:14px;display:flex;gap:10px"><button style="font:500 11.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#bfcdc6;background:#162922;border:1px solid var(--border-default);border-radius:999px;padding:9px 14px;cursor:pointer">Copy raw receipt</button><button style="font:500 11.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#bfcdc6;background:#162922;border:1px solid var(--border-default);border-radius:999px;padding:9px 14px;cursor:pointer">Download receipt</button></div>
+</div>
+</div>
+</div>
+<div style="padding:0 24px 24px;display:grid;grid-template-columns:1.15fr 1fr;gap:20px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 22px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Paired spread, reasons first</div>
+<div style="display:flex;align-items:flex-end;gap:22px;height:74px;padding-bottom:4px;border-bottom:1px solid var(--border-default)">
+<div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:54px;height:38px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.1)"></div><span style="font:400 10.5px/1 var(--font-mono);color:#8da69c">DataHub only</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:54px;height:58px;border:1px solid #36544b;background:linear-gradient(180deg,rgba(0,200,150,.16),rgba(0,200,150,.06))"></div><span style="font:400 10.5px/1 var(--font-mono);color:#8da69c">Joined</span></div>
+<div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6;align-self:center">&lt;paired-metric-name&gt;: &lt;n&gt; against &lt;n&gt; over &lt;n&gt; paired runs. Limitations stated below the figure, not beside it.</div>
+</div>
+<div style="font:400 12px/1.6 var(--font-sans);color:#8da69c;margin-top:12px">Limitations: &lt;limitation-string&gt;. Compact LOC baseline: &lt;n&gt; against &lt;n&gt;.</div>
+</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 22px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Behind Inspect evidence</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border-default);border-radius:8px;font:400 12.5px/1 var(--font-sans);color:#bfcdc6"><span style="font-family:var(--font-mono);color:#5d7a70">+</span>Raw validated receipt, JSON</div>
+<div style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border-default);border-radius:8px;font:400 12.5px/1 var(--font-sans);color:#bfcdc6"><span style="font-family:var(--font-mono);color:#5d7a70">+</span>DataHub read trace</div>
+<div style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border-default);border-radius:8px;font:400 12.5px/1 var(--font-sans);color:#bfcdc6"><span style="font-family:var(--font-mono);color:#5d7a70">+</span>Producer invocation and artifact</div>
+<div style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border-default);border-radius:8px;font:400 12.5px/1 var(--font-sans);color:#bfcdc6"><span style="font-family:var(--font-mono);color:#5d7a70">+</span>Limitations and known gaps</div>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Five-second hierarchy</div>
+<ol style="margin:0 0 16px;padding-left:20px;font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6">
+<li><span style="color:#f0f7f4">Resolution accounting</span>, left and widest. This is the honesty claim, so it outranks provenance and writeback.</li>
+<li><span style="color:#f0f7f4">The named unresolved list</span>, inside the accounting card in a dashed frame. The count above it is meaningless without it.</li>
+<li><span style="color:#f0f7f4">Writeback proof as four cells</span>: before, intent, mutation response, observed on re-read. The status word is derived from those four and printed after them, never before.</li>
+</ol>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">One decision</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 16px">Is this defensible enough to hand on. The only actions are copy and download the raw receipt, because there is nothing left to approve here.</p>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">Decisions worth noting</div>
+<ul style="margin:0;padding-left:18px;font:400 13px/1.7 var(--font-sans);color:#8da69c">
+<li>Native semantics throughout: table for accounting, description list for provenance, collapsible rows for raw evidence. No JSON viewer on the primary route.</li>
+<li>The paired spread is two bars and a sentence. Reasons and limitations are set at body size; the numbers are not enlarged.</li>
+<li>Repository revision and artifact pinned revision are adjacent, so a mismatch is visible here as well as in the banner (<a class="dv-oid" href="#1h">1h</a>).</li>
+</ul>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Degraded 1: dataset found, no declared lineage returned</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="padding:22px 24px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Impact, band 1 region</div>
+<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:1.5px dashed #8da69c;border-radius:12px;background:#0e1a16;margin-bottom:18px">
+<span style="width:11px;height:11px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg);flex:none;margin-top:4px"></span>
+<div>
+<div style="font:700 15px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">No declared lineage was returned for this dataset</div>
+<p style="margin:0;font:400 13px/1.65 var(--font-sans);color:#bfcdc6;max-width:96ch">The dataset was found. The lineage read completed and returned nothing. That is not a statement that this dataset has no dependencies: it means DataHub declared none at &lt;snapshot-id&gt;. Completeness not established, reason: &lt;reason-string&gt;.</p>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:stretch;margin-bottom:18px">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Upstream</div><div style="border:1.5px dashed #8da69c;border-radius:12px;padding:22px 14px;background:repeating-linear-gradient(135deg,transparent,transparent 7px,rgba(141,166,156,.07) 7px,rgba(141,166,156,.07) 14px);text-align:center;font:500 12px/1.5 var(--font-mono);color:#edf7f3">Nothing declared<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:6px">Not the same as nothing upstream</div></div></div>
+<div style="display:flex;align-items:center;justify-content:center;font:400 14px/1 var(--font-mono);color:#36544b">&#8901;&#8901;</div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Under review</div><div style="background:#0e1a16;border:1px solid #36544b;border-radius:12px;padding:13px 14px"><div style="font:700 14px/1.3 var(--font-sans);color:#f0f7f4">&lt;dataset-name&gt;</div><div style="font:400 11.5px/1.4 var(--font-mono);color:#5d7a70;margin-top:5px">&lt;urn&gt;</div></div></div>
+<div style="display:flex;align-items:center;justify-content:center;font:400 14px/1 var(--font-mono);color:#36544b">&#8901;&#8901;</div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#8da69c">Downstream</div><div style="border:1.5px dashed #8da69c;border-radius:12px;padding:22px 14px;background:repeating-linear-gradient(135deg,transparent,transparent 7px,rgba(141,166,156,.07) 7px,rgba(141,166,156,.07) 14px);text-align:center;font:500 12px/1.5 var(--font-mono);color:#edf7f3">Nothing declared<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:6px">Not the same as nothing downstream</div></div></div>
+</div>
+<div style="padding:14px 16px;border:1px solid var(--border-default);border-radius:12px;background:var(--surface-card);font:400 13px/1.65 var(--font-sans);color:#bfcdc6">Band 2 still renders: the producer file resolved from the URN, and &lt;n&gt; code partners from the committed artifact. With no declared lineage, repository evidence is the only material on this screen, and it is labelled as such rather than promoted.</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why it looks like this</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">The failure mode to design out is a clean graph. An empty rail with tidy spacing reads as "no dependencies, safe to proceed", which is the opposite of what happened. So the empty slots keep their full size, take a dashed outline and a hatched fill, and carry a literal sentence: nothing declared, not the same as nothing upstream.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 14px">The connectors degrade from arrows to dotted stubs. There is no edge to draw, and drawing one would assert a relationship nobody returned.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0">Read state and completeness stay independent here: the read succeeded, the count is zero, and completeness is still not established. Zero observed edges never renders as proof of absence.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1f">
+<div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Degraded 2: partial resolution, every unresolved item named</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="padding:22px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Resolution accounting, partial</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px"><span style="font:800 26px/1 var(--font-mono);letter-spacing:-.02em;color:#f0f7f4">&lt;resolved&gt;/&lt;total&gt;</span><span style="font:600 13px/1 var(--font-sans);color:#edf7f3">resolved</span></div>
+<div style="font:400 12.5px/1.6 var(--font-sans);color:#bfcdc6;margin-bottom:16px">Partial resolution. The remaining &lt;n&gt; are listed in full below, because a count without its items is not renderable.</div>
+<div style="display:flex;gap:4px;margin-bottom:18px">
+<div style="flex:3;height:8px;border-radius:2px;background:#8da69c"></div>
+<div style="flex:1;height:8px;border-radius:2px;border:1.5px dashed #8da69c;background:repeating-linear-gradient(135deg,transparent,transparent 4px,rgba(141,166,156,.25) 4px,rgba(141,166,156,.25) 8px)"></div>
+</div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:10px">Unresolved, named</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="border:1.5px dashed #8da69c;border-radius:8px;padding:10px 12px"><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;urn-a&gt;</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:4px">We asked. &lt;reason-string&gt;.</div></div>
+<div style="border:1.5px dashed #8da69c;border-radius:8px;padding:10px 12px"><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;path/to/unresolved-b&gt;</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:4px">We asked. &lt;reason-string&gt;.</div></div>
+<div style="border:1.5px dashed #8da69c;border-radius:8px;padding:10px 12px"><div style="font:400 12px/1.4 var(--font-mono);color:#edf7f3">&lt;urn-c&gt;</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6;margin-top:4px">We asked. &lt;reason-string&gt;.</div></div>
+</div>
+</div>
+</div>
+<div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">Two states that are not this one</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="display:flex;align-items:center;gap:9px;font:600 14px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:8px"><span style="width:9px;height:9px;background:#bfcdc6;flex:none"></span>Complete against pinned manifest</div>
+<div style="font:400 12.5px/1.6 var(--font-sans);color:#bfcdc6">&lt;total&gt;/&lt;total&gt; resolved at revision &lt;sha&gt;. One line, no list, no bar.</div>
+</div>
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="display:flex;align-items:center;gap:9px;font:600 14px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:8px"><span style="width:10px;height:10px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg);flex:none"></span>Completeness not established</div>
+<div style="font:400 12.5px/1.6 var(--font-sans);color:#bfcdc6">Reason: &lt;reason-string&gt;. The reason occupies the position the count would have taken. No count is shown, because none is defensible.</div>
+</div>
+<div style="padding:14px 16px;border:1px dotted #36544b;border-radius:12px;font:400 12.5px/1.65 var(--font-sans);color:#8da69c">The split bar is a two-part accounting of a known total, not a progress indicator: it never animates, never fills, and disappears entirely in the other two states.</div>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why it looks like this</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">The type contract makes the named list mandatory, so the component is built as list-first: the fraction is a heading for the list underneath it, not a standalone figure. If the array is empty the state is not partial and this component does not render.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 14px">The resolved and unresolved segments use one neutral tone at one luminance, differing only in fill: solid against hatched. Neither segment is the good one.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0">All three states are shown side by side because they are easy to conflate in implementation. Complete is one line. Not established shows a reason where the number would be. Partial is a fraction plus a full list.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1g">
+<div class="dv-olabel"><a class="dv-oid" href="#1g">1g</a>Degraded 3: contradictory evidence between sources</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="padding:22px 24px">
+<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:1px solid #f59e0b;border-radius:12px;background:rgba(245,158,11,.06);margin-bottom:18px">
+<span style="width:11px;height:11px;flex:none;margin-top:4px;background:#f59e0b;transform:rotate(45deg)"></span>
+<div>
+<div style="font:700 15px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">Sources disagree about &lt;claim-subject&gt;</div>
+<p style="margin:0;font:400 13px/1.65 var(--font-sans);color:#bfcdc6;max-width:96ch">Both statements are shown. Neither is preferred, and no merged value is produced. A reviewer resolves this, not the product.</p>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;gap:0">
+<div style="border:1px solid rgba(56,189,248,.45);border-radius:12px;padding:16px 18px;background:rgba(56,189,248,.05)">
+<div style="display:flex;gap:8px;margin-bottom:12px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:3px;border:1px solid rgba(56,189,248,.5);background:rgba(56,189,248,.1);color:#9adcf9"><span style="width:7px;height:7px;background:#38bdf8"></span>DataHub</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);padding:5px 9px;border:1px solid #36544b;border-radius:6px;color:#edf7f3"><span style="width:8px;height:8px;border-radius:50%;background:#bfcdc6"></span>Declared</span></div>
+<div style="font:400 13px/1.6 var(--font-mono);color:#edf7f3;margin-bottom:10px">&lt;datahub-stated-value&gt;</div>
+<div style="font:400 12px/1.6 var(--font-sans);color:#8da69c">Asserted in metadata at &lt;snapshot-id&gt;, &lt;timestamp&gt;. Owner &lt;owner-name&gt;.</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;font:600 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#f59e0b"><span style="font-size:15px">&#8800;</span>Conflict</div>
+<div style="border:1px solid rgba(0,200,150,.45);border-radius:12px;padding:16px 18px;background:rgba(0,200,150,.05)">
+<div style="display:flex;gap:8px;margin-bottom:12px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:999px;border:1px solid rgba(0,200,150,.5);background:rgba(0,200,150,.1);color:#86f7d0"><span style="width:7px;height:7px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--font-mono);padding:5px 9px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:6px;color:#edf7f3"><span style="width:8px;height:8px;background:#bfcdc6"></span>Resolved</span></div>
+<div style="font:400 13px/1.6 var(--font-mono);color:#edf7f3;margin-bottom:10px">&lt;repository-resolved-value&gt;</div>
+<div style="font:400 12px/1.6 var(--font-sans);color:#8da69c">Computed by &lt;producer&gt; at revision &lt;sha&gt;, &lt;timestamp&gt;.</div>
+</div>
+</div>
+<div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div style="padding:14px 16px;border:1px solid var(--border-default);border-radius:12px;background:var(--surface-card);font:400 12.5px/1.65 var(--font-sans);color:#bfcdc6">Effect on the plan: any step that depended on &lt;claim-subject&gt; is marked with an uncertainty tag on change plan and keeps both values in its reason line. No step silently picks a winner.</div>
+<div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><button style="font:500 12.5px/1 var(--font-sans);color:#bfcdc6;background:transparent;border:1px solid var(--border-default);border-radius:999px;padding:12px 18px;cursor:pointer">Inspect both records</button><button style="font:600 13px/1 var(--font-sans);color:#07100e;background:#00c896;border:0;border-radius:999px;padding:12px 20px;cursor:pointer">Continue, conflict noted</button></div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why it looks like this</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">Symmetry is the design. Equal width, equal padding, equal type. The moment one panel is larger or brighter, the product has adjudicated, and it is not entitled to.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 14px">Amber appears here and only here on this frame, on the conflict marker between the panels rather than on either panel. Amber means unsettled, which is accurate: a conflict is neither an error nor an unresolved lookup.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0">Each panel states who said it, when, and against what revision or snapshot, because a conflict is usually a staleness argument and the reviewer needs the timestamps to settle it.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1h">
+<div class="dv-olabel"><a class="dv-oid" href="#1h">1h</a>Degraded 4: repository revision does not match the artifact's pinned revision</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 24px;border-bottom:1px solid #f59e0b;background:rgba(245,158,11,.08)">
+<span style="width:11px;height:11px;flex:none;margin-top:4px;background:#f59e0b;transform:rotate(45deg)"></span>
+<div style="flex:1">
+<div style="font:700 15px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">Repository revision does not match the artifact's pinned revision</div>
+<p style="margin:0 0 10px;font:400 13px/1.65 var(--font-sans);color:#bfcdc6;max-width:100ch">Repository is at &lt;sha-head&gt;. The committed artifact was produced against &lt;sha-pinned&gt;. Everything sourced from workspace.json on this screen describes the pinned revision, and file paths may have moved since. Nothing is hidden, and nothing is re-derived.</p>
+<div style="display:flex;gap:10px"><button style="font:500 11.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#bfcdc6;background:#162922;border:1px solid #36544b;border-radius:999px;padding:9px 14px;cursor:pointer">View pinned revision</button><button style="font:500 11.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#bfcdc6;background:#162922;border:1px solid #36544b;border-radius:999px;padding:9px 14px;cursor:pointer">Re-run producer at head</button></div>
+</div>
+</div>
+<div style="padding:22px 24px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:14px">How affected material renders while the mismatch stands</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-left:2px solid #f59e0b;border-radius:12px;padding:14px 16px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">&lt;partner-file-1&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#8da69c;margin-bottom:10px">&lt;path/to/partner-1.py&gt; at &lt;sha-pinned&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:999px;border:1px solid rgba(0,200,150,.45);background:rgba(0,200,150,.07);color:#86f7d0"><span style="width:6px;height:6px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;background:#bfcdc6"></span>Resolved</span><span style="font:500 10px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border:1px solid #f59e0b;border-radius:5px;color:#f8c974">At pinned revision</span></div>
+<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6">Path validity at head: not established. The producer was not re-run.</div>
+</div>
+<div style="background:var(--surface-card);border:1px solid rgba(56,189,248,.35);border-radius:12px;padding:14px 16px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">&lt;upstream-dataset-1&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#8da69c;margin-bottom:10px">&lt;urn&gt; at &lt;snapshot-id&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:3px;border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#9adcf9"><span style="width:6px;height:6px;background:#38bdf8"></span>DataHub</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;border-radius:50%;background:#bfcdc6"></span>Declared</span></div>
+<div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6">Unaffected by the mismatch: this material is not revision-scoped.</div>
+</div>
+</div>
+<div style="margin-top:16px;padding:14px 16px;border:1px dotted #36544b;border-radius:12px;font:400 12.5px/1.65 var(--font-sans);color:#8da69c">Consequence for the plan: joined-context steps that name a pinned path carry the same "at pinned revision" marker, and the plan cannot be approved until the reviewer either accepts the pin or re-runs the producer. Receipts show both revisions adjacent (<a class="dv-oid" href="#1d">1d</a>).</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why it looks like this</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">This is the one degraded state that changes the meaning of material already on screen, so it takes a full-width banner pinned under the chrome rather than an inline note. It is not dismissible.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 14px">Scope is shown, not implied: revision-scoped cards take an amber left rule and an "at pinned revision" marker, and cards that are not revision-scoped are explicitly labelled unaffected. A reviewer should not have to reason about which half of the screen went stale.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0">Amber, not red. Nothing failed. The evidence is intact and describes a different commit, which is a staleness condition with two legitimate resolutions, both offered as buttons.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1i">
+<div class="dv-olabel"><a class="dv-oid" href="#1i">1i</a>Degraded 5: writeback accepted, intended state not observed on re-read</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="padding:22px 24px">
+<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:1.5px dashed #8da69c;border-radius:12px;background:#0e1a16;margin-bottom:18px">
+<span style="width:11px;height:11px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg);flex:none;margin-top:4px"></span>
+<div>
+<div style="font:700 15px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">Mutation accepted. Intended state not observed.</div>
+<p style="margin:0;font:400 13px/1.65 var(--font-sans);color:#bfcdc6;max-width:100ch">DataHub returned &lt;response-code&gt;. The re-read at &lt;timestamp&gt; did not return &lt;intended-value&gt;. This receipt is not a success, and it is not a failure either: the mutation call succeeded and the outcome is unresolved.</p>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-default);border:1px solid var(--border-default);border-radius:12px;overflow:hidden;margin-bottom:16px">
+<div style="background:#0e1a16;padding:14px 16px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:7px">Before</div><div style="font:400 12.5px/1.4 var(--font-mono);color:#edf7f3">&lt;before-value&gt;</div></div>
+<div style="background:#0e1a16;padding:14px 16px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:7px">Intent</div><div style="font:400 12.5px/1.4 var(--font-mono);color:#edf7f3">&lt;intended-value&gt;</div></div>
+<div style="background:#0e1a16;padding:14px 16px"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:7px">Mutation response</div><div style="font:400 12.5px/1.4 var(--font-mono);color:#edf7f3">&lt;response-code&gt; accepted</div></div>
+<div style="background:#0e1a16;padding:14px 16px;border-left:2px dashed #8da69c"><div style="font:500 9.5px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#5d7a70;margin-bottom:7px">Observed on re-read</div><div style="font:400 12.5px/1.4 var(--font-mono);color:#edf7f3">&lt;observed-value&gt;, does not match intent</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+<span style="display:inline-flex;align-items:center;gap:8px;font:600 12px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;padding:9px 14px;border:1.5px dashed #8da69c;border-radius:8px;color:#edf7f3"><span style="width:10px;height:10px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg)"></span>Outcome unresolved</span>
+<span style="font:400 12.5px/1.6 var(--font-sans);color:#8da69c">Never rendered as succeeded. Succeeded requires observation matching intent.</span>
+</div>
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">The other receipt outcomes, for contrast</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+<div style="border:1px solid var(--border-default);border-left:2px solid #bfcdc6;border-radius:10px;padding:12px 13px"><div style="font:600 12px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#edf7f3;margin-bottom:7px">Succeeded</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#8da69c">Mutation accepted and re-read matches intent.</div></div>
+<div style="border:1px solid var(--border-default);border-radius:10px;padding:12px 13px"><div style="font:600 12px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#edf7f3;margin-bottom:7px">Noop</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#8da69c">Before state already matched intent. Intent-relative, never a fallback.</div></div>
+<div style="border:1px dotted #36544b;border-radius:10px;padding:12px 13px"><div style="font:600 12px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#5d7a70;margin-bottom:7px">Dry run</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#5d7a70">Nothing was sent. Distinct from failed.</div></div>
+<div style="border:1px dotted #36544b;border-radius:10px;padding:12px 13px"><div style="font:600 12px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#5d7a70;margin-bottom:7px">Not read</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#5d7a70">Mutation sent, no re-read attempted. Distinct from failed.</div></div>
+<div style="border:1px solid #f2545b;border-radius:10px;padding:12px 13px;background:rgba(242,84,91,.06)"><div style="font:600 12px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#f8a1a5;margin-bottom:7px">Rejected</div><div style="font:400 11.5px/1.5 var(--font-sans);color:#bfcdc6">DataHub refused the mutation. Response body shown verbatim.</div></div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why it looks like this</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">The four cells are the argument. Before, intent, mutation response, observed. The status word is printed after them and reads as a conclusion drawn in front of the reviewer, which is the opposite of a status chip at the top with the evidence buried under disclosure.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0 0 14px">This state reuses the unresolved treatment exactly: dashed outline, open arc, same luminance. It is the same fact as an unresolved lineage lookup, applied to an outcome. A reviewer who learned the encoding once does not learn it twice.</p>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#8da69c;margin:0">All six outcomes are shown together because the failure mode here is collapsing them: accepted becoming succeeded, or dry run becoming failed. Red belongs to rejected alone.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<div class="dv-opt" id="1j">
+<div class="dv-olabel"><a class="dv-oid" href="#1j">1j</a>Remaining degraded states, region frames</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div class="dv-card" style="width:1440px">
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 20px;background:repeating-linear-gradient(135deg,#0f1a17,#0f1a17 8px,#0b1512 8px,#0b1512 16px);border-bottom:1px solid #36544b;font:500 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#bfcdc6"><span style="width:7px;height:7px;border:1.5px dashed #8da69c;border-radius:50%"></span>No fixture. All values are placeholders.</div>
+</sc-if>
+<div style="padding:22px 24px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Lineage found, no source URL available</div>
+<div style="border:1px solid var(--border-default);border-left:2px solid #bfcdc6;border-radius:10px;padding:13px 15px">
+<div style="font:600 13.5px/1.3 var(--font-sans);color:#f0f7f4;margin-bottom:6px">&lt;model-name&gt;</div>
+<div style="font:400 11.5px/1.4 var(--font-mono);color:#8da69c;margin-bottom:10px">&lt;path/to/model.sql&gt;</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border-radius:999px;border:1px solid rgba(0,200,150,.45);background:rgba(0,200,150,.07);color:#86f7d0"><span style="width:6px;height:6px;border-radius:50%;background:#00c896"></span>workspace.json</span><span style="display:inline-flex;align-items:center;gap:6px;font:500 10px/1 var(--font-mono);padding:4px 8px;border:1px solid #36544b;border-left:2px solid #bfcdc6;border-radius:5px;color:#edf7f3"><span style="width:8px;height:8px;background:#bfcdc6"></span>Resolved</span></div>
+<div style="display:inline-flex;align-items:center;gap:7px;font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#edf7f3;border:1.5px dashed #8da69c;border-radius:6px;padding:7px 11px"><span style="width:9px;height:9px;border:1.5px solid #edf7f3;border-radius:50%;border-right-color:transparent;border-top-color:transparent;transform:rotate(-45deg)"></span>No immutable source URL</div>
+<div style="font:400 11.5px/1.55 var(--font-sans);color:#bfcdc6;margin-top:10px">The path resolved, and no permalink could be constructed. Reason: &lt;reason-string&gt;. The path is copyable. The View source action is absent, never a dead control.</div>
+</div>
+</div>
+
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Source file found, no workspace.json artifact present</div>
+<div style="border:1px dotted #36544b;border-radius:10px;padding:13px 15px;background:repeating-linear-gradient(135deg,transparent,transparent 7px,rgba(141,166,156,.05) 7px,rgba(141,166,156,.05) 14px)">
+<div style="display:inline-flex;align-items:center;gap:7px;font:500 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#5d7a70;border:1px dotted #5d7a70;border-radius:6px;padding:7px 11px;margin-bottom:12px"><span style="width:9px;height:9px;border:1.5px dotted #5d7a70;border-radius:50%"></span>Not queried</div>
+<div style="font:600 13.5px/1.4 var(--font-sans);color:#f0f7f4;margin-bottom:7px">No committed artifact at &lt;path/to/.agents/workspace.json&gt;</div>
+<div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6">Repository evidence was not asked for, because there is nothing to ask. Code partners and behavioural coupling are absent from this review, and that absence is a gap in the review rather than a property of the code. DataHub-declared material renders normally. This screen is DataHub-only, and it says so.</div>
+</div>
+</div>
+
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Connection lost mid-run</div>
+<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 15px;border:1px solid #f2545b;border-radius:10px;background:rgba(242,84,91,.06);margin-bottom:12px">
+<span style="width:10px;height:10px;flex:none;margin-top:4px;background:#f2545b;border-radius:2px"></span>
+<div><div style="font:600 13.5px/1.35 var(--font-sans);color:#f0f7f4;margin-bottom:5px">Connection lost after &lt;n&gt; of &lt;total&gt; reads</div><div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6">Everything already returned stays on screen and stays usable. The rest becomes not queried, not empty. Completeness not established, reason: run did not finish.</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--border-default);border-radius:8px;font:400 12px/1 var(--font-mono);color:#edf7f3"><span style="width:8px;height:8px;border-radius:50%;background:#bfcdc6;flex:none"></span>&lt;n&gt; reads returned, retained</div>
+<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px dotted #36544b;border-radius:8px;font:400 12px/1 var(--font-mono);color:#5d7a70"><span style="width:8px;height:8px;border:1.5px dotted #5d7a70;border-radius:50%;flex:none"></span>&lt;n&gt; reads not queried</div>
+<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--border-default);border-radius:8px;background:#162922;font:400 12px/1 var(--font-mono);color:#bfcdc6"><span style="width:60px;height:8px;border-radius:2px;background:linear-gradient(90deg,#1d3a31,#294f43);flex:none"></span>Skeleton rows never persist as zeros</div>
+</div>
+<div style="margin-top:12px"><button style="font:500 11.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#bfcdc6;background:#162922;border:1px solid var(--border-default);border-radius:999px;padding:9px 14px;cursor:pointer">Resume run</button></div>
+</div>
+
+<div style="background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 20px">
+<div style="font:500 10.5px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Writeback rejected by DataHub</div>
+<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 15px;border:1px solid #f2545b;border-radius:10px;background:rgba(242,84,91,.06);margin-bottom:12px">
+<span style="width:10px;height:10px;flex:none;margin-top:4px;background:#f2545b;border-radius:2px"></span>
+<div><div style="font:600 13.5px/1.35 var(--font-sans);color:#f0f7f4;margin-bottom:5px">Rejected: &lt;response-code&gt;</div><div style="font:400 12px/1.6 var(--font-sans);color:#bfcdc6">Nothing was written. The before state stands, and it is re-read and shown rather than assumed.</div></div>
+</div>
+<div style="border:1px solid var(--border-default);border-radius:10px;padding:12px 14px;background:#0c1915;font:400 11.5px/1.6 var(--font-mono);color:#bfcdc6">&lt;verbatim-response-body&gt;</div>
+<div style="font:400 11.5px/1.6 var(--font-sans);color:#8da69c;margin-top:10px">Red is used here and for a lost connection only: an error is something that went wrong. Unresolved and not queried never borrow it.</div>
+</div>
+
+</div>
+</div>
+<sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+<aside style="width:400px;padding:8px 0 0">
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin-bottom:12px">Why these four are compact</div>
+<p style="font:400 13.5px/1.7 var(--font-sans);color:#bfcdc6;margin:0 0 14px">Each is local to one region and needs no new hierarchy: they reuse treatments already established, so a region frame is the honest amount of design. They are still designed states, not error handling: every one has a labelled treatment and copy that distinguishes what happened from what is true.</p>
+<div style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70;margin:0 0 10px">The rule they share</div>
+<p style="font:400 13px/1.7 var(--font-sans);color:#8da69c;margin:0">Red means something went wrong: rejected, and connection lost. Amber means unsettled: conflict, and revision mismatch. Dashed and open means we asked and could not tell. Dotted and dim means we did not ask. Nothing borrows another state's treatment, so the four words in the vocabulary stay learnable in one pass.</p>
+</aside>
+</sc-if>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "the Impact decision is coverage audit, not gating, redo <a class="dv-oid" href="#1b">1b</a>" &middot; "turn the spine in <a class="dv-oid" href="#1b">1b</a> into a clickable shell at 1280" &middot; "add the loading and in-flight frame"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showAnnotations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Frame options&quot;},&quot;showBanner&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Frame options&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showAnnotations: this.props.showAnnotations ?? true,
+      showBanner: this.props.showBanner ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

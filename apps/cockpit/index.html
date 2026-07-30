@@ -1,5 +1,30 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Change Impact Cockpit</title></head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      The title leads with the dataset, not the product. A reviewer with six tabs
+      open is comparing datasets, not applications, so `tally · game_events` is
+      the useful order. `App.tsx` rewrites it from the bound model; this value is
+      the pre-hydration fallback and the placeholder-build title.
+    -->
+    <title>tally · change impact cockpit</title>
+    <meta name="description" content="Review a data change with its catalog and repository evidence attached." />
+    <!-- Matches the app canvas, so mobile browser chrome does not flash white. -->
+    <meta name="theme-color" content="#07100e" />
+    <meta name="color-scheme" content="dark light" />
+    <!--
+      The 16px favicon is a separate optimised glyph, not the mark scaled down:
+      at that size the five-stroke tally collapses into a hatch pattern, so it
+      drops to two strokes and a slash at heavier weight. SVG is offered first
+      for browsers that take it, with the PNGs as the declared fallbacks.
+    -->
+    <link rel="icon" href="/brand/tally-mark-16.svg" type="image/svg+xml" sizes="any" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
   <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>

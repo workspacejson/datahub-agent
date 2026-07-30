@@ -1,26 +1,26 @@
+/* ─────────────────────────────────────────────────────────────
+   Cockpit stylesheet entry point. This file only imports.
+
+   Order matters and is the whole reason the split exists:
+
+     1. tailwind          preflight, so its resets cannot land on our rules
+     2. tokens/*          the design system, copied verbatim
+     3. tokens/app-*      our stated deviations from it, which must win
+     4. base              element defaults expressed in those tokens
+     5. cockpit           component rules
+
+   `tokens/` holds design values and nothing else, so syncing with the design
+   system is a diff of copied files rather than an audit of a stylesheet.
+   ───────────────────────────────────────────────────────────── */
+
 @import "tailwindcss";
 
-:root { color: #eff4f7; background: #101a22; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
-button { font: inherit; }
-button:focus-visible { outline: 3px solid #91e7d6; outline-offset: 3px; }
-.cockpit-shell { min-height: 100vh; padding: 32px clamp(20px, 5vw, 80px); background: radial-gradient(circle at top right, #183548, #101a22 56%); }
-.placeholder-banner { margin: -32px clamp(-80px, -5vw, -20px) 28px; padding: 11px; text-align: center; background: #f7c85b; color: #1b2228; font-weight: 800; letter-spacing: .08em; }
-.product-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid #466172; padding-bottom: 24px; }
-.eyebrow { margin: 0; color: #91e7d6; font-size: .75rem; font-weight: 800; letter-spacing: .12em; }
-nav { display: flex; gap: 8px; } nav button { border: 1px solid transparent; border-radius: 999px; background: transparent; color: #c6d4dc; padding: 9px 14px; cursor: pointer; } nav button.active, nav button:hover { border-color: #91e7d6; color: #fff; }
-.state-strip { display: flex; flex-wrap: wrap; gap: 8px; padding: 24px 0; } .state-strip span { border: 1px dashed #6d8796; border-radius: 999px; padding: 5px 9px; color: #dbe5ea; font-size: .8rem; }
-.route-slot { max-width: 900px; border: 1px solid #466172; border-radius: 18px; padding: clamp(28px, 6vw, 72px); background: rgba(19, 35, 46, .82); } h1 { max-width: 18ch; margin: 16px 0; font-size: clamp(2.2rem, 7vw, 5rem); line-height: 1; } .route-slot > p:not(.eyebrow) { max-width: 55ch; color: #c6d4dc; font-size: 1.1rem; line-height: 1.6; }.deferred-surface { margin: 30px 0; border: 1px dashed #6d8796; border-radius: 12px; padding: 20px; color: #c6d4dc; }.cta { border: 0; border-radius: 8px; background: #91e7d6; color: #10202b; padding: 13px 18px; font-weight: 800; cursor: pointer; }
-@media (max-width: 640px) { .product-header { align-items: flex-start; flex-direction: column; } .cockpit-shell { padding-top: 24px; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
-.receipts-view { display: grid; gap: 36px; margin-top: 36px; }.receipts-view h2 { margin: 8px 0 14px; }.accounting-table { width: 100%; border-collapse: collapse; }.accounting-table th, .accounting-table td { border: 1px solid #466172; padding: 9px; text-align: left; }.accounting-table caption { padding-bottom: 8px; text-align: left; color: #c6d4dc; }.provenance-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.provenance-list > div { border: 1px solid #466172; padding: 10px; }.provenance-list dt { color: #91e7d6; font-size: .76rem; font-weight: 800; }.provenance-list dd { margin: 6px 0 0; overflow-wrap: anywhere; }.source-tag { border: 1px solid #91e7d6; border-radius: 999px; color: #91e7d6; padding: 2px 8px; }.receipts-view details { border: 1px solid #466172; padding: 12px; }.receipts-view pre { overflow: auto; white-space: pre-wrap; }.receipts-view button { margin-right: 8px; }.receipts-view .accounting-table { margin-bottom: 18px; }.receipts-view h3 { margin: 22px 0 8px; font-size: 1rem; }.evidence--unavailable { color: #f0c674; }.unresolved-list { margin: 0; padding-left: 20px; }.unresolved-list li { margin-bottom: 6px; overflow-wrap: anywhere; }.unresolved-list__reason { color: #c6d4dc; }.evidence--placeholder { color: #e79a91; }.evidence--placeholder em { font-style: normal; font-weight: 800; } @media (max-width: 640px) { .provenance-list { grid-template-columns: 1fr; } }
-/* An absent comparison takes the same amber as every other stated absence
-   (`.evidence--unavailable`), so "unavailable" reads the same wherever it
-   appears. A comparison that ran and found no delta is deliberately *not* amber:
-   it is a result, not an absence, and colouring it as one would undo at the
-   visual layer the distinction the view model exists to make. */
-.comparison-unavailable { color:#f0c674; }
-.comparison-no-delta { color:#c6d4dc; }
-.evidence-refs { display:block; margin-top:4px; color:#c6d4dc; font-size:.76rem; overflow-wrap:anywhere; }
-.identity-grid,.comparison { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:24px 0; }.claim,.impact-rail,.comparison { border:1px solid #466172;border-radius:12px;padding:16px;background:#13232e; }.source-tag { display:inline-block;border-radius:999px;padding:3px 7px;background:#274859;color:#dffbf5;font-size:.72rem;font-weight:800; }.view-source { display:inline-block;margin-bottom:14px;color:#91e7d6;font-weight:800; }.view-source__origin { margin-left:6px;color:#c6d4dc;font-size:.78rem;font-weight:600; } details { margin:0 0 18px;color:#c6d4dc; } code { overflow-wrap:anywhere; } @media(max-width:720px){.identity-grid,.comparison{grid-template-columns:1fr;}}
+@import "./styles/tokens/fonts.css";
+@import "./styles/tokens/colors.css";
+@import "./styles/tokens/typography.css";
+@import "./styles/tokens/spacing.css";
+@import "./styles/tokens/effects.css";
+@import "./styles/tokens/app-overrides.css";
+
+@import "./styles/base.css";
+@import "./styles/cockpit.css";

@@ -1,0 +1,21 @@
+/* ─────────────────────────────────────────────────────────────
+   FONTS — workspace.json
+   Adapted, and the only token file that is not a verbatim copy.
+
+   The design system's `fonts.css` is two `@import url(...)` rules against
+   fonts.googleapis.com. That is a render-time network dependency, and the
+   cockpit binds its evidence at build time precisely so a judge can open it with
+   no GMS, no network and no file server. A page that renders its evidence
+   offline and then blocks on a font CDN has given that back for a typeface.
+
+   So the families are declared and left to resolve locally: installed brand
+   faces are used where present, and the stack falls through to system faces
+   where they are not. Nothing here fetches.
+
+   To ship the brand faces properly, self-host the woff2 files under
+   `public/fonts/` and add `@font-face` rules here with `font-display: swap`.
+   That keeps the offline guarantee, which linking the CDN does not.
+   ───────────────────────────────────────────────────────────── */
+
+/* Families are defined in typography.css as --font-sans / --font-mono. This
+   file exists to hold face loading, and deliberately loads none. */

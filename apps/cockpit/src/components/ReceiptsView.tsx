@@ -1,18 +1,29 @@
-import type { CockpitViewModel, EvidenceValue } from "../model/cockpit-view-model";
+import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
+import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
 
 /**
  * One receipt value, rendered as what it is.
  *
  * An `unavailable` field shows the stated reason, not an empty cell and not a
- * dash — a judge acts differently on "the catalog does not expose this" than on
+ * dash. A judge acts differently on "the catalog does not expose this" than on
  * "nobody looked", and a blank tells them neither. A `placeholder` field says so
  * on its face; it can only reach here in a placeholder build, because the view
  * model refuses one anywhere else.
  */
 function Evidence({ value }: { value: EvidenceValue }) {
   if (value.state === "unavailable") {
-    return <span className="evidence evidence--unavailable">Unavailable — {value.reason}</span>;
+    // Amber marks the state, not the sentence. Six lines of amber 12px mono read
+    // as an error for what is a legitimate, deliberately stated absence, and it
+    // put the caution colour and the absence colour on the same treatment so the
+    // two meanings collided. The tag carries the amber; the explanation is sans
+    // at body size in muted grey, which is also the fastest text to read.
+    return (
+      <span className="evidence evidence--unavailable">
+        <span className="evidence__tag">Unavailable</span>
+        <span className="evidence__reason">{value.reason}</span>
+      </span>
+    );
   }
   if (value.state === "placeholder") {
     return <span className="evidence evidence--placeholder">{value.value} <em>(placeholder, not observed)</em></span>;
@@ -32,13 +43,68 @@ const provenanceRows = [
   ["dataHubReadParameters", "DataHub read parameters"],
   ["producerPath", "Producer path"],
   ["immutableSourceUrl", "Immutable source URL"],
-  ["limitations", "Limitations"],
+  // `limitations` is deliberately absent. It is the source-capability limits
+  // joined into one string, which is the same content as the gap band at the top
+  // of this receipt, minus the per-row source the band adds. Rendering both put
+  // the same two reasons on the page twice, at the weight of any other row.
 ] as const;
+
+/**
+ * Everything the event could not establish, banded and placed first.
+ *
+ * These were distributed through a twelve-row provenance grid at the same visual
+ * weight as "Subject repository", which reads as noise. They are the opposite of
+ * noise: a stated absence with a named cause is the claim no competing surface
+ * makes, and it is the reason this receipt can be trusted about the rows that
+ * *are* filled in.
+ *
+ * Each row names the system that could not supply the field, because "the
+ * catalog does not expose this" and "the artifact could not resolve it" are
+ * different findings with different fixes.
+ */
+function UnestablishedBand({ statedGaps }: { statedGaps: readonly StatedGap[] }) {
+  return (
+    <section aria-labelledby="unestablished-title">
+      <p className="eyebrow">What is not established</p>
+      <h2 id="unestablished-title">Absence is stated, never omitted</h2>
+      {statedGaps.length === 0
+        ? <p>The event states no gaps. Every field this receipt carries was observed.</p>
+        : (
+          <ul className="gap-band">
+            {statedGaps.map((gap) => (
+              <li className="gap" key={gap.field}>
+                <span className="gap__system">{GAP_SOURCE_LABEL[gap.source]}</span>
+                <span className="gap__field mono">{gap.field}</span>
+                <span className="gap__reason">{gap.reason}</span>
+                <span className="gap__detail">{gap.detail}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+    </section>
+  );
+}
 
 export function ReceiptsView({ model }: { model: CockpitViewModel }) {
   const { accounting, unresolvedDatasets, statedGaps, provenance, writeback, evaluation } = model.receipt;
   const rawEvidenceBound = evaluation.rawEvidence.state === "observed";
   return <div className="receipts-view">
+    <UnestablishedBand statedGaps={statedGaps} />
+
+    <section aria-labelledby="evidence-title">
+      <p className="eyebrow">Evidence standing</p>
+      <h2 id="evidence-title">The tier is a count, not a warrant</h2>
+      {/*
+        The tier lives here rather than in the first frame. Rendered as the hero
+        it read as a verdict over the whole screen, all-caps and directly above
+        "Completeness not established", so the two most prominent statements on
+        the page appeared to contradict each other and resolving them meant
+        reading a qualifying clause. Its actual meaning is narrow and countable,
+        and it belongs beside the records it counts.
+      */}
+      <p className="evidence-standing">{model.summary}</p>
+    </section>
+
     <section aria-labelledby="accounting-title">
       <p className="eyebrow">Resolution accounting</p>
       <h2 id="accounting-title">Resolution remains bounded by the pinned manifest</h2>
@@ -57,7 +123,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
         </tr></tbody>
       </table>
       <table className="accounting-table">
-        <caption>dbt nodes in the manifest — a separate denominator, never added to the dataset counts.</caption>
+        <caption>dbt nodes in the manifest. A separate denominator, never added to the dataset counts.</caption>
         <thead><tr><th>Dropped</th><th>Excluded by policy</th></tr></thead>
         <tbody><tr>
           <td>{accounting.nodesDropped}</td>
@@ -70,7 +136,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
         <h3 id="unresolved-title">Unresolved datasets ({accounting.datasetsUnresolved})</h3>
         {unresolvedDatasets.state === "observed"
           ? (unresolvedDatasets.records.length === 0
-            ? <p>None. The empty list is the complete list — every requested dataset resolved.</p>
+            ? <p>None. The empty list is the complete list: every requested dataset resolved.</p>
             : (
               <ul className="unresolved-list">
                 {unresolvedDatasets.records.map((record) => (
@@ -79,19 +145,15 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
                     {/* The reason sits beside the name rather than behind a
                         tooltip: a name alone does not establish scope, which is
                         the whole reason the record carries one. */}
-                    <span className="unresolved-list__reason"> — {record.reason}</span>
+                    <span className="unresolved-list__reason">{record.reason}</span>
                   </li>
                 ))}
               </ul>
             ))
-          : <p className="evidence evidence--unavailable">Unavailable — {unresolvedDatasets.reason}</p>}
-      </section>
-      <section aria-labelledby="gaps-title">
-        <h3 id="gaps-title">Stated gaps ({statedGaps.length})</h3>
-        {statedGaps.length === 0
-          ? <p>The event states no gaps.</p>
-          : <dl className="provenance-list">{statedGaps.map((gap) =>
-            <div key={gap.field}><dt>{gap.field} — {gap.reason}</dt><dd>{gap.detail}</dd></div>)}</dl>}
+          : <p className="evidence evidence--unavailable">
+              <span className="evidence__tag">Unavailable</span>
+              <span className="evidence__reason">{unresolvedDatasets.reason}</span>
+            </p>}
       </section>
     </section>
 
@@ -107,7 +169,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
       */}
       {provenance.immutableSourceUrl.state === "observed"
         ? <a className="view-source" href={provenance.immutableSourceUrl.value} target="_blank" rel="noreferrer">View immutable source</a>
-        : <p className="view-source view-source--unavailable">No immutable source link is offered — see the Immutable source URL row for the reason.</p>}
+        : <p className="view-source view-source--unavailable">No immutable source link is offered. The Immutable source URL row states why.</p>}
     </section>
 
     <section aria-labelledby="writeback-title">
@@ -129,7 +191,14 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
     <section aria-labelledby="disclosure-title">
       <p className="eyebrow">Evaluation and disclosure</p>
       <h2 id="disclosure-title">Limitations lead</h2>
-      <p><Evidence value={evaluation.limitations} /></p>
+      {/*
+        They lead literally: every stated gap opens this receipt, each naming the
+        system that could not supply it. `evaluation.limitations` restated the
+        gap count and the tier sentence that "The tier is a count, not a warrant"
+        already carries, so rendering it here put the same sentence on the page
+        twice, reordered. The value is still in the raw receipt below.
+      */}
+      <p>Stated in full at the top of this receipt, each with the system that could not supply it.</p>
       <dl className="provenance-list">
         <div><dt>Paired evaluation spread</dt><dd><Evidence value={evaluation.pairedSpread} /></dd></div>
         <div><dt>LOC baseline</dt><dd><Evidence value={evaluation.locBaseline} /></dd></div>

@@ -1,0 +1,581 @@
+/* ─────────────────────────────────────────────────────────────
+   COCKPIT — the app's own component rules.
+
+   Hand-rolled rather than mounted from the design system's component bundle,
+   which exposes Button, Badge, Card and friends for the design tool's runtime
+   rather than for a React app. The rules below therefore have one obligation:
+   every value comes from a token in `tokens/`, so the two cannot drift on
+   colour, spacing, radius or type.
+
+   Two encodings carry meaning here and are not decorative:
+
+     emerald   reserved for workspace.json attribution and the primary CTA. It
+               never carries resolution meaning, because "resolved" in the brand
+               colour reads as "we generated this".
+     dashed /  unresolved / not queried, on the neutral ramp. Shape and the
+     dotted    literal word carry the state, so it survives greyscale.
+   ───────────────────────────────────────────────────────────── */
+
+/* Flat. The atmosphere is contained to the hero band rather than washing the
+   whole page, so a card two thirds down is not sitting on a gradient. */
+.cockpit-shell {
+  min-height: 100vh;
+  padding: var(--sp-6) clamp(var(--sp-5), 4vw, var(--sp-10)) var(--sp-10);
+  background: var(--surface-page);
+}
+
+.placeholder-banner {
+  margin: calc(var(--sp-6) * -1) clamp(calc(var(--sp-10) * -1), -4vw, calc(var(--sp-5) * -1)) var(--sp-5);
+  padding: var(--sp-3);
+  text-align: center;
+  background: var(--wj-experimental);
+  color: #1b2228;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+/* ── Chrome ───────────────────────────────────────────────────
+   The application is tally. `workspace.json` is the substrate it is built on, so
+   it is an endorsement on the right rather than the wordmark on the left, which
+   is where it used to sit and where it read as the product's name. */
+.product-header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6);
+  border-bottom: 1px solid var(--border-default); padding-bottom: var(--sp-4);
+}
+
+/* Clear space is the bracket arm length on all four sides, which at a 24px mark
+   resolves to the 18px the spec calls for in a 60px header.
+
+   Spacing is per-element rather than a single flex `gap`, because the interval
+   inside the lockup and the interval separating it from the descriptor are doing
+   opposite jobs and cannot be one value. With a uniform 12px gap the three
+   measured intervals came out 13.4 / 16 / 16: near enough to equal that the eye
+   parsed four peer elements instead of a lockup followed by a caption, so the
+   grouping did not exist.
+
+   It also broke the mark's own rule. The word is set to the bracket *interior* so
+   the brackets read as containing it; at 13px the brackets read as a separate
+   glyph standing nearby, which is the exact failure that rule exists to prevent.
+   The bracket's right arm and the `t` ascender are also two heavy verticals, and
+   at an ambiguous distance they compete. Decisive tightness resolves both. */
+.wordmark { display: flex; align-items: center; margin: 0; padding-left: 18px; color: var(--text-heading); }
+/* 6px of margin plus the 1.4px of internal padding the viewBox carries on this
+   side lands the visual interval at roughly 7px, against 16px at the divider. */
+.wordmark__mark { flex: none; display: block; margin-right: 6px; }
+/* Not tinted emerald: emerald is load bearing in this UI and means workspace.json
+   contributed the material. Not set in mono: mono is data. The mark's own
+   brackets are emerald and its strokes take `currentColor` from this rule. */
+.wordmark__word { font-size: var(--fs-lg); font-weight: 800; letter-spacing: var(--ls-tight); line-height: 1; }
+/* Unchanged at 16px a side. The external interval is the one that was already
+   correct; only the internal one moved. */
+.wordmark__rule { width: 1px; align-self: stretch; margin: 0 var(--sp-4); background: var(--border-strong); }
+/* A caption on the brand, never a second brand. */
+.wordmark__product {
+  color: var(--text-muted); font-family: var(--font-mono);
+  font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+}
+
+.endorsement {
+  margin: 0; flex: none;
+  border: 1px solid var(--border-default); border-radius: var(--radius-pill);
+  padding: var(--sp-1) var(--sp-3);
+  color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption);
+}
+.endorsement b { color: var(--wj-accent); font-weight: 500; }
+
+@media (max-width: 1100px) {
+  /* Below the nav range the caption drops and only the lockup stays. */
+  .wordmark__rule, .wordmark__product { display: none; }
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+}
+
+
+/* ── Hero band ────────────────────────────────────────────────
+   Identity left, the one coverage verdict right, on the same baseline grid. Both
+   are above the fold at 1440x900 and 1280x800; `first-frame.spec.ts` asserts that
+   mechanically rather than trusting this comment.
+
+   The dataset name stays the largest element. Setting the coverage verdict as
+   display type was considered and rejected: it makes a *limitation* the biggest
+   thing on the screen and demotes the subject to a caption, so a reviewer's first
+   impression becomes "this tool did not establish much" when the claim being made
+   is that resolution succeeded exactly and coverage is bounded. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+  gap: var(--sp-8);
+  align-items: center;
+  padding: var(--sp-5) 0 var(--sp-5);
+  /* The glow and the scanline grid live in this band only, so the eye reads the
+     band as chrome and everything below it as data. */
+  margin: 0 calc(-1 * clamp(var(--sp-5), 4vw, var(--sp-10)));
+  padding-inline: clamp(var(--sp-5), 4vw, var(--sp-10));
+  background: var(--glow-page), var(--surface-page);
+  border-bottom: 1px solid var(--border-default);
+}
+.hero__identity { min-width: 0; }
+.hero h1 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-size: clamp(2rem, 3.4vw, var(--fs-3xl));
+  font-weight: 800;
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+  color: var(--text-heading);
+  overflow-wrap: anywhere;
+}
+.subject-urn { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: 0; color: var(--text-muted); font-size: var(--fs-xs); }
+
+
+/* ── Chips: two independent axes, never collapsed ─────────────
+   Source says who contributed the material. Resolution says what is known about
+   it. They are separate elements with separate treatments, so a DataHub node can
+   read unresolved and a workspace.json node can read declared.
+
+   Emerald is reserved: attribution to workspace.json, and the primary CTA. It
+   never carries resolution meaning, because "resolved" rendered in the brand
+   colour reads as "we generated this". Resolution uses the neutral ramp, plus
+   dashed for unresolved and dotted for not queried, so the state survives
+   greyscale on shape and word alone. */
+.chip {
+  display: inline-block; border-radius: var(--radius-pill); padding: var(--sp-1) var(--sp-3);
+  font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em;
+  border: 1px solid var(--border-strong); color: var(--text-muted); background: transparent;
+}
+.chip--source-workspacejson { border-color: var(--wj-accent); color: var(--wj-accent); }
+.chip--source-joined { border-color: var(--wj-accent-high); color: var(--wj-accent-high); }
+.chip--source-datahub { border-color: var(--border-strong); color: var(--wj-gray-2); }
+.chip--source-unavailable { border-style: dashed; border-color: var(--border-strong); color: var(--text-faint); }
+.chip--resolution { background: var(--surface-sunken); border-color: transparent; color: var(--wj-gray-2); }
+.chip--unresolved { border-style: dashed; border-color: var(--border-strong); background: transparent; }
+.chip--not-queried { border-style: dotted; border-color: var(--border-strong); background: transparent; color: var(--text-faint); }
+
+.source-tag { /* retained name: the two source-tag call sites predate `.chip` */
+  display: inline-block; border-radius: var(--radius-pill); padding: 2px var(--sp-2);
+  border: 1px solid var(--border-strong); color: var(--wj-gray-2);
+  font-family: var(--font-mono); font-size: var(--fs-caption);
+}
+
+/* ── Route body: content, and a rail that carries the decision ─ */
+.route-slot { padding: var(--sp-4) 0 0; }
+.route-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 20rem); gap: var(--sp-6); align-items: start; }
+.route-body > * { min-width: 0; }
+
+.decision-rail { position: sticky; top: var(--sp-4); display: grid; gap: var(--sp-2); }
+.rail-group { border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-3) var(--sp-4); }
+/* The named gaps scroll inside the rail rather than pushing the decision below
+   the fold. The cap is deliberately tight: this list is a reference, the full
+   statement of every gap with its cause is the leading band on Receipts, and the
+   decision is what this frame exists to carry. `first-frame.spec.ts` grows the
+   list past the cap and asserts the decision is still readable. */
+.rail-group ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-2); max-height: 8rem; overflow-y: auto; }
+.rail-group li { font-size: var(--fs-xs); color: var(--text-muted); line-height: var(--lh-normal); overflow-wrap: anywhere; }
+.rail-group li strong { display: block; color: var(--text-body); font-family: var(--font-mono); font-weight: 500; }
+.rail-group__reason { display: block; color: var(--text-muted); }
+/* The consequence of proceeding, not a second statement of coverage. Coverage is
+   asserted once, in the hero. */
+.rail-caveat { margin: 0; color: var(--text-body); font-size: var(--fs-sm); line-height: var(--lh-normal); }
+
+/* ── Receipt section index ────────────────────────────────────
+   Wayfinding for the one route long enough to need it. The active state is the
+   design system's 2px accent left border, which is the same device the coverage
+   verdict uses for "unsettled", here meaning "you are here": both are a rule in
+   the margin rather than a fill, so neither reads as a status on the text. */
+.rail-index ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: 0; max-height: none; overflow: visible; }
+.rail-index li { border-left: 2px solid transparent; }
+.rail-index a {
+  display: block; padding: var(--sp-2) var(--sp-3);
+  color: var(--text-muted); font-size: var(--fs-xs); text-decoration: none;
+  transition: var(--transition-interactive);
+}
+.rail-index a:hover { color: var(--text-body); }
+.rail-index .is-active { border-left-color: var(--wj-accent); }
+.rail-index .is-active a { color: var(--text-heading); }
+
+/* The one decision. A single primary action per view; the caveat sits directly
+   above it so accepting the stated gap is unavoidable rather than incidental. */
+.cta {
+  min-height: var(--tap-target);
+  width: 100%;
+  border: 0; border-radius: var(--radius-pill);
+  background: var(--wj-accent); color: #04120d;
+  padding: var(--sp-3) var(--sp-5); font-weight: 700; cursor: pointer;
+  transition: var(--transition-interactive);
+}
+.cta:hover { background: var(--wj-accent-high); }
+.rail-caveat + .cta { margin-top: var(--sp-3); }
+.cta + .cta { margin-top: var(--sp-2); }
+.cta--secondary { background: transparent; border: 1px solid var(--border-strong); color: var(--text-body); }
+.cta--secondary:hover { background: var(--surface-sunken); }
+
+/* ── Impact evidence ──────────────────────────────────────────
+   `repeat(3, 1fr)` here rendered 953px of card into a 754px container and
+   pushed the workspace.json card outside the panel: `1fr` is `minmax(auto, 1fr)`
+   and a column will not shrink below an unbreakable URN. `minmax(0, …)` plus
+   `auto-fit` lets the row reflow instead of overflowing. */
+.identity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-5); }
+.claim { min-width: 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
+.claim > p { margin: 0 0 var(--sp-2); color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
+.claim > strong { display: block; margin-bottom: var(--sp-3); color: var(--text-heading); font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; }
+.claim--evidence > strong { display: block; margin-bottom: var(--sp-3); font-family: var(--font-sans); font-size: var(--fs-sm); font-weight: 400; line-height: var(--lh-relaxed); }
+.claim--identifier > strong { font-family: var(--font-mono); font-weight: 500; }
+
+/* The row that carries the join. Two cards rather than three: the third was a
+   `Dataset identity` card restating the URN already printed in the hero, which
+   spent a slot in this row on a repetition. Wider minimum than the generic grid,
+   because these two are the answer to "what does workspace.json add" and should
+   read as the dominant element on the screen. */
+.identity-grid--join { grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr)); }
+/* The attribution owns its own line. Inline, it collided with the View Source
+   link that follows it and the two read as one run-on control. */
+.identity-grid--join .source-tag { display: block; width: fit-content; margin-bottom: var(--sp-3); }
+.identity-grid--join details { margin: var(--sp-1) 0 0; }
+
+.view-source { display: inline-block; color: var(--wj-accent); font-weight: 700; }
+.view-source--unavailable { color: var(--wj-experimental); font-weight: 400; }
+.view-source__origin { margin-left: var(--sp-2); color: var(--text-muted); font-size: var(--fs-xs); }
+
+/* ── Lineage topology ─────────────────────────────────────────
+   Direction is the information in a lineage read, so direction is the layout.
+   This was ten near-identical cards in one column, each repeating the same
+   sentence with one number changed and the same source badge: half the primary
+   screen spent on catalog output, with the joined evidence pushed below it.
+
+   A CSS grid, deliberately. No force layout, no minimap, no drag: the
+   comprehension gate for an interactive node graph has not run, and HAC-218
+   requires the static rail until HAC-217 records that it has. */
+.lineage-band { margin: var(--sp-5) 0 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
+.lineage-band__head { display: flex; align-items: start; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+.lineage-band h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-base); font-weight: 600; color: var(--text-heading); }
+.lineage-band__head p { margin: 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+
+/* Proportioned to their roles rather than split equally. Upstream carries the
+   most nodes and the longest names, the subject carries one short name, so equal
+   thirds wrapped the fully-qualified duckdb names onto two lines and made a
+   structured column look ragged. The roles are fixed, so the proportions can be. */
+.topology { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .85fr) minmax(0, 1.15fr); gap: var(--sp-4); align-items: stretch; }
+/* Columns are as tall as the longest, so the single-node ones centre their
+   contents rather than leaving two thirds of the band looking unfinished. The
+   eyebrow stays pinned to the top so the three headings still align and the
+   band reads as one row. */
+.topology__col { min-width: 0; display: flex; flex-direction: column; }
+.topology__col > .eyebrow { flex: none; }
+.topology__col .topology__nodes { flex: 1; align-content: center; }
+.topology__col--subject { border-inline: 1px solid var(--border-default); padding-inline: var(--sp-3); }
+.topology__nodes { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-1); }
+.topology__node {
+  min-width: 0;
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3);
+  /* Name left, meta right, so names align down the column and the eye reads the
+     list as one shape rather than eight. */
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: var(--sp-1) var(--sp-2);
+}
+.topology__name { min-width: 0; color: var(--text-body); font-family: var(--font-mono); font-size: var(--fs-caption); overflow-wrap: anywhere; }
+.topology__meta { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+/* The subject reads as the thing under review rather than as one more node. */
+.topology__node--subject { border-color: var(--wj-accent-low); background: var(--accent-wash-6); }
+.topology__node--subject .topology__name { color: var(--text-heading); font-size: var(--fs-xs); font-weight: 600; }
+.topology__node--stated { display: block; }
+.topology__reason { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+/* Degree is a count, so it is mono and neutral. It carries no resolution
+   meaning and must not borrow the treatments that do. */
+/* Degree is a count and platform is an identity. Both are neutral: neither
+   carries resolution meaning, so neither may borrow the treatments that do. */
+.chip--degree { border-color: transparent; background: var(--surface-sunken); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.chip--platform { border-color: var(--border-default); background: transparent; color: var(--text-faint); }
+.lineage-band__key { display: flex; align-items: center; gap: var(--sp-3); flex: none; }
+.lineage-band__legend { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; white-space: nowrap; }
+
+/* ── Change plan ──────────────────────────────────────────────
+   Two panels, not tabs. The comparison is the argument, and a tab would hide
+   half of it. The parity strip shows the values that must match rather than
+   asserting they do. */
+.parity-strip { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 0 0 var(--sp-4); border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); }
+.parity-strip div { min-width: 0; }
+.parity-strip dt, .parity-strip .parity-label { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
+.parity-strip .parity-value { display: block; color: var(--text-body); font-family: var(--font-mono); font-size: var(--fs-xs); overflow-wrap: anywhere; }
+
+.comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-5); }
+.plan-panel { min-width: 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
+.plan-panel--joined { border-color: var(--wj-accent-low); }
+.plan-panel h3 { margin: var(--sp-2) 0; font-size: var(--fs-sm); font-weight: 600; color: var(--text-heading); }
+/* Numbered explicitly, because Tailwind's preflight strips list markers and step
+   order is load-bearing here: `reordered` is one of the delta kinds, and a
+   reader cannot check a claim about order against an unordered list. */
+.plan-panel ol { counter-reset: step; list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); }
+.plan-panel li { counter-increment: step; color: var(--text-body); font-size: var(--fs-xs); line-height: var(--lh-normal); overflow-wrap: anywhere; }
+.plan-panel li::before {
+  content: "Step " counter(step);
+  display: block; margin-bottom: var(--sp-1);
+  color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption);
+  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+}
+.plan-panel p { margin: var(--sp-2) 0 0; color: var(--text-muted); font-size: var(--fs-xs); }
+
+.delta-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); }
+.delta { border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-card); padding: var(--sp-4); }
+.delta__kind { display: inline-block; margin-bottom: var(--sp-2); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 1px var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; text-transform: uppercase; color: var(--wj-gray-2); }
+.delta__label { display: block; color: var(--text-heading); font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; }
+.delta__reason { margin: var(--sp-2) 0; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-relaxed); }
+.evidence-refs { display: block; margin-top: var(--sp-1); color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); overflow-wrap: anywhere; }
+
+/* Amber is unsettled, and an absent comparison is unsettled. A comparison that
+   ran and found nothing is deliberately not amber: it is a result, and colouring
+   it as an absence would undo at the visual layer the distinction the view model
+   exists to make. */
+.comparison-unavailable { color: var(--wj-experimental); }
+.comparison-no-delta { color: var(--text-muted); }
+
+/* ── Amber marks the state, not the sentence ──────────────────
+   Amber was carrying two meanings at once: deliberate, stated absence and
+   caution. That is the palette breaking the project's own rule that colour may
+   only reinforce a distinction the shape and the word already make, so the two
+   collided and long amber prose read as an error.
+   Now the tag is amber and short; the explanation is sans at body size in muted
+   grey, which is also the fastest text on the screen to read. Mono stays for
+   field names and paths, which are data. */
+.evidence--unavailable { display: block; color: var(--text-muted); }
+.evidence__tag {
+  display: inline-block; margin-right: var(--sp-2);
+  border: 1px solid var(--wj-experimental); border-radius: var(--radius-sm);
+  padding: 0 var(--sp-2);
+  color: var(--wj-experimental); font-family: var(--font-mono); font-size: var(--fs-caption);
+  white-space: nowrap;
+}
+.evidence__reason { color: var(--text-muted); font-family: var(--font-sans); font-size: var(--fs-sm); line-height: var(--lh-normal); }
+.evidence--placeholder { color: var(--wj-danger); }
+.evidence--placeholder em { font-style: normal; font-weight: 700; }
+
+.deferred-surface { margin: var(--sp-5) 0; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: var(--sp-5); color: var(--text-muted); }
+details { margin: 0 0 var(--sp-4); color: var(--text-muted); font-size: var(--fs-xs); }
+/* `display: flex` here removed the disclosure triangle, which left the control
+   looking like static text. The default `list-item` display keeps the marker;
+   padding carries the 44px tap target instead. */
+summary { cursor: pointer; padding: var(--sp-3) 0; }
+
+/* ── Receipts ─────────────────────────────────────────────── */
+.receipts-view { display: grid; gap: var(--sp-8); margin-top: var(--sp-6); }
+.receipts-view h2 { margin: var(--sp-2) 0 var(--sp-3); font-size: var(--fs-lg); color: var(--text-heading); }
+.receipts-view h3 { margin: var(--sp-5) 0 var(--sp-2); font-size: var(--fs-base); color: var(--text-heading); }
+.accounting-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.accounting-table th, .accounting-table td { border: 1px solid var(--border-default); padding: var(--sp-2) var(--sp-3); text-align: left; }
+.accounting-table td { font-family: var(--font-mono); }
+.accounting-table caption { padding-bottom: var(--sp-2); text-align: left; color: var(--text-muted); font-size: var(--fs-xs); }
+.provenance-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: var(--sp-2); }
+.provenance-list > div { min-width: 0; border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--sp-3); }
+.provenance-list dt { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
+.provenance-list dd { margin: var(--sp-2) 0 0; font-family: var(--font-mono); font-size: var(--fs-xs); overflow-wrap: anywhere; }
+.receipts-view details { border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--sp-3); }
+.receipts-view pre { overflow: auto; white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--fs-xs); }
+.receipts-view button { margin-right: var(--sp-2); }
+.receipts-view .accounting-table { margin-bottom: var(--sp-4); }
+.unresolved-list { margin: 0; padding-left: var(--sp-5); }
+.unresolved-list li { margin-bottom: var(--sp-2); overflow-wrap: anywhere; font-size: var(--fs-xs); }
+/* Its own line, since the separator that used to divide it from the URN was an
+   em dash and the house copy rules refuse those. */
+.unresolved-list__reason { display: block; color: var(--text-muted); }
+
+@media (max-width: 1100px) {
+  /* Below the two asserted breakpoints the rail stops being a column and becomes
+     the first thing under the identity, so the decision stays reachable. */
+  .hero, .route-body { grid-template-columns: minmax(0, 1fr); }
+  .decision-rail { position: static; }
+  .spine { flex-wrap: wrap; }
+}
+@media (max-width: 640px) {
+  .product-header { align-items: flex-start; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* ── Coverage: the single epistemic statement ─────────────────
+   This replaces three stacked registers that all said the same thing: a prose
+   tier line, four bare chips, and this panel. The chips lost because `exact` and
+   `not-established` standing alone had no visible subject; their axes survive
+   here as labelled rows. */
+/* No border. It is the right half of the hero, on the hero's own surface, rather
+   than a card floating in the top-right corner. */
+.coverage { min-width: 0; }
+.coverage__headline { margin: var(--sp-2) 0 var(--sp-2); color: var(--text-heading); font-size: var(--fs-xl); font-weight: 600; letter-spacing: var(--ls-snug); line-height: var(--lh-snug); }
+/* Amber is unsettled, and unestablished coverage is unsettled. It is a hairline
+   marker rather than coloured text: the word carries the state, the colour only
+   reinforces it, and the statement has to survive greyscale. */
+.coverage__headline--open { padding-left: var(--sp-3); border-left: 2px solid var(--wj-experimental); }
+.coverage__note { margin: 0 0 var(--sp-4); max-width: 44ch; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-relaxed); }
+
+/* Four figures on one rule, not a bordered panel with a nested grid. They are one
+   line of information, so they get one line and no second border. */
+.coverage__counts {
+  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-6);
+  margin: 0; padding-top: var(--sp-3);
+  border-top: 1px solid var(--border-default);
+}
+.coverage__counts > div { min-width: 0; }
+.coverage__counts dt { color: var(--text-heading); font-family: var(--font-mono); font-size: var(--fs-lg); font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
+/* The gap count is the one figure that carries an unsettled state, so it is the
+   one that takes amber. The others are neutral because they are just counts. */
+.coverage__count--open { color: var(--wj-experimental); }
+.coverage__count--word { font-size: var(--fs-base); }
+.coverage__of { color: var(--text-faint); font-size: var(--fs-sm); }
+.coverage__counts dd { margin: var(--sp-1) 0 0; color: var(--text-muted); font-size: var(--fs-caption); }
+
+/* ── Spine ────────────────────────────────────────────────────
+   The only navigation on the page. Numbered because the three views are a
+   sequence the primary action advances; every step stays reachable and marks
+   itself visited, so a reviewer can see where they are and that nothing is
+   locked. Going back is a text link here rather than a button in the decision
+   card, where it had the weight of a secondary action and competed with the one
+   real choice. */
+.spine { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin: var(--sp-4) 0 0; border-bottom: 1px solid var(--border-default); }
+.spine ol { display: flex; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
+.spine button {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  min-height: var(--tap-target);
+  border: 0; border-bottom: 2px solid transparent; background: transparent;
+  padding: 0 var(--sp-4); cursor: pointer;
+  color: var(--text-muted); font-size: var(--fs-sm);
+  transition: var(--transition-interactive);
+}
+.spine__index { font-family: var(--font-mono); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.spine button:hover { color: var(--text-body); }
+/* Three legible steps on the neutral ramp: upcoming muted, visited brighter,
+   current brightest with the accent underline. Visited was `--wj-accent-low`,
+   which measures 1.43:1 on the canvas at 11px and axe failed the frame on it.
+   The ramp also avoids spending emerald on "you have been here", which is not an
+   attribution and must not read as one. */
+.spine .is-done button { color: var(--wj-gray-2); }
+.spine .is-current button { color: var(--text-heading); border-bottom-color: var(--wj-accent); }
+.spine .is-current .spine__index { color: var(--wj-accent); }
+
+.spine__back {
+  flex: none;
+  border: 0; background: transparent; padding: 0 var(--sp-2); cursor: pointer;
+  color: var(--text-muted); font-size: var(--fs-xs);
+  text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px;
+  transition: var(--transition-interactive);
+}
+.spine__back:hover { color: var(--text-body); text-decoration-color: currentColor; }
+
+/* ── The seam: the one thing this screen is remembered by ─────
+   What the catalog could not supply, directly above what the join did. Both
+   halves are recorded fields, so the contrast is exhibited rather than asserted.
+   Everything around it is deliberately quiet; this is where the boldness goes. */
+.seam {
+  margin: 0 0 var(--sp-3);
+  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  padding: var(--sp-4) var(--sp-5);
+}
+.seam__row { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); gap: var(--sp-4); padding: var(--sp-4) 0; }
+.seam__row:first-child { padding-top: var(--sp-3); }
+.seam__row:last-child { padding-bottom: 0; }
+.seam__row + .seam__row { border-top: 1px solid var(--border-default); }
+.seam__row--withheld { color: var(--text-faint); }
+.seam__system { min-width: 0; font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; color: var(--text-muted); }
+.seam__value { min-width: 0; }
+.seam__field { display: block; color: var(--text-muted); font-size: var(--fs-xs); text-decoration: line-through; text-decoration-color: var(--wj-gray-5); }
+.seam__reason { display: block; margin-top: var(--sp-1); color: var(--text-faint); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+/* The resolved path is the largest text in the body of this screen, because it
+   is the fact the whole pipeline exists to produce. */
+.seam__path { display: block; color: var(--text-heading); font-size: var(--fs-xl); font-weight: 500; line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.seam__row--resolved .view-source { margin-top: var(--sp-3); }
+
+/* ── Receipts: the unestablished, banded and first ────────────
+   Distributed through the provenance grid at the weight of any other row, these
+   read as noise. Banded, they read as the discipline they are. */
+.gap-band { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: grid; gap: var(--sp-2); }
+.gap {
+  display: grid; grid-template-columns: minmax(0, 7rem) minmax(0, 1fr); gap: var(--sp-1) var(--sp-4);
+  border: 1px solid var(--border-default); border-left: 2px solid var(--wj-experimental);
+  border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4);
+}
+.gap__system { grid-row: span 3; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption); }
+.gap__field { color: var(--text-body); font-size: var(--fs-xs); }
+.gap__reason { color: var(--wj-experimental); font-family: var(--font-mono); font-size: var(--fs-caption); }
+.gap__detail { color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+.evidence-standing { margin: var(--sp-2) 0 0; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+/* ── Motion ───────────────────────────────────────────────────
+   Three moments, and no more. An interface that animates everything reads as a
+   demo of animation; the restraint is the taste.
+
+     1. route change   a cross-fade with a 6px rise, on the panel that actually
+                       changed. Driven by the View Transitions API rather than a
+                       library, because the shell, spine and rail persist and
+                       only the body should appear to move.
+     2. first paint    one staged rise, via @starting-style. Once, on load.
+     3. interaction    colour and border on hover, a 1px press on the CTA.
+
+   Durations sit in the design system's 120-200ms band. Nothing here is
+   scroll-triggered, nothing scales, and nothing bounces. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Only the changing panel is named, so the browser cross-fades that and leaves
+     the persistent chrome alone. */
+  .route-body__main { view-transition-name: route-body; }
+
+  ::view-transition-old(route-body) { animation: route-out var(--dur-fast, 120ms) var(--ease-standard) both; }
+  ::view-transition-new(route-body) { animation: route-in var(--dur-slow, 200ms) var(--ease-standard) both; }
+
+  @keyframes route-out { to { opacity: 0; transform: translateY(-4px); } }
+  @keyframes route-in { from { opacity: 0; transform: translateY(6px); } }
+
+  /* One staged entry on first paint. The identity resolves before the coverage
+     that qualifies it, which is the order the page wants to be read in. */
+  .hero__identity, .coverage, .spine, .route-body { transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard); }
+  @starting-style {
+    .hero__identity { opacity: 0; transform: translateY(6px); }
+    .coverage { opacity: 0; transform: translateY(6px); }
+    .spine { opacity: 0; }
+    .route-body { opacity: 0; transform: translateY(6px); }
+  }
+  .coverage { transition-delay: 60ms; }
+  .spine { transition-delay: 100ms; }
+  .route-body { transition-delay: 140ms; }
+
+  .cta { transition: var(--transition-interactive), translate var(--dur-fast) var(--ease-standard); }
+  .cta:active { translate: 0 1px; }
+  .seam { transition: border-color var(--dur-base) var(--ease-standard); }
+  .topology__node { transition: border-color var(--dur-base) var(--ease-standard); }
+  .topology__node:hover { border-color: var(--border-strong); }
+}
+
+/* The DOM still swaps at full speed; only the animation is removed. A reader who
+   asked for no motion gets navigation that works, not navigation that is slow. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* ── Anchor reachability ──────────────────────────────────────
+   Anchor targets clear the top of the viewport rather than butting against it. */
+.receipts-view h2 { scroll-margin-top: var(--sp-6); }
+
+/* The last section is given enough height for its own heading to reach the
+   reading line.
+
+   Without it the document ended 521px too early: max scroll was 1658 while the
+   final two headings needed 1855 and 2179 to reach the top, so the index offered
+   six destinations and the page could only deliver four. Clicking either of the
+   last two landed at the same maximum offset, and neither could ever be "scrolled
+   past", so neither ever highlighted.
+
+   Fixing the index instead, by highlighting a section the reader cannot actually
+   reach, would have left the click still inert. An index that lists a destination
+   has to be able to go there, so the page provides the room.
+
+   `100dvh` rather than a guessed pixel padding: the shortfall is exactly one
+   viewport minus the reading line, so this is self-adjusting and correct at any
+   window size. `first-frame.spec.ts` asserts every entry is reachable. */
+.receipts-view > section:last-of-type { min-height: calc(100dvh - var(--sp-6) - 2rem); }

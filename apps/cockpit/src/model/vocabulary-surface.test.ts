@@ -40,7 +40,7 @@ describe("V-4 · no naked tier token reaches the rendered model", () => {
         // Wherever a tier appears in prose, the phrase that bounds it must
         // appear too. `describeTier` is the only sanctioned producer.
         expect(value, `${path} presents a bare ${tier}`).toMatch(
-          new RegExp(`${tier} — .*record`),
+          new RegExp(`${tier}: .*record`),
         );
       }
     }
@@ -48,7 +48,7 @@ describe("V-4 · no naked tier token reaches the rendered model", () => {
 
   it("carries the bounded phrase on the summary a judge reads first", () => {
     const model = projectEvent(contractEvent(), "impact");
-    expect(model.summary).toMatch(/(ASSERTED|OBSERVED|VERIFIED) — .*record/);
+    expect(model.summary).toMatch(/(ASSERTED|OBSERVED|VERIFIED): .*record/);
   });
 
   it("would catch a summary reverted to the bare token", () => {
@@ -58,7 +58,7 @@ describe("V-4 · no naked tier token reaches the rendered model", () => {
     const regressed = { ...model, summary: "VERIFIED evidence from 3 record(s); 1 stated gap(s)." };
     const offending = stringLeaves(regressed)
       .filter(([path]) => !path.endsWith("rawEvidence.value"))
-      .filter(([, v]) => TIERS.some((t) => v.includes(t) && !new RegExp(`${t} — .*record`).test(v)));
+      .filter(([, v]) => TIERS.some((t) => v.includes(t) && !new RegExp(`${t}: .*record`).test(v)));
     expect(offending.length).toBeGreaterThan(0);
   });
 });

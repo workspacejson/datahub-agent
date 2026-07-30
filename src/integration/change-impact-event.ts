@@ -692,12 +692,12 @@ export function deriveTier(records: readonly EvidenceRecord[]): EvidenceTier {
 export function describeTier(records: readonly EvidenceRecord[]): string {
   const tier = deriveTier(records);
   if (tier === "ASSERTED") {
-    return "ASSERTED — no supporting record was captured";
+    return "ASSERTED: no supporting record was captured";
   }
   const executed = records.filter((r) => r.checkExecuted).length;
   return tier === "VERIFIED"
-    ? `VERIFIED — ${executed} of ${records.length} record(s) carry a check this harness executed`
-    : `OBSERVED — ${records.length} record(s), none of them a check this harness executed`;
+    ? `VERIFIED: ${executed} of ${records.length} record(s) carry a check this harness executed`
+    : `OBSERVED: ${records.length} record(s), none of them a check this harness executed`;
 }
 
 /**

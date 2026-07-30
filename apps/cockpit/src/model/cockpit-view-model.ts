@@ -48,7 +48,37 @@ export const viewSourceSchema = z.discriminatedUnion("state", [
   }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
 ]);
-export const impactEdgeSchema = z.object({ label: z.string().min(1), state: z.enum(["resolved", "unresolved", "excluded"]), reason: z.string().min(1), source: sourceSchema });
+/**
+ * One lineage edge, with direction and degree carried structurally.
+ *
+ * These used to be flattened into `label` as `"upstream: name"` plus a prose
+ * `reason` ending in `"at degree 2"`, which meant the only way to lay the graph
+ * out by direction was to parse the strings back apart. A renderer that has to
+ * re-derive what the projector already knew will eventually disagree with it.
+ *
+ * `direction: "none"` and a null `degree` are the zero-edge row, which is a
+ * stated absence rather than a node and has no position in a topology.
+ */
+export const impactEdgeSchema = z.object({
+  node: z.string().min(1),
+  /**
+   * The DataHub platform the node belongs to, read from its URN.
+   *
+   * Without it the upstream column reads as untidy rather than structured: the
+   * fixture holds four dbt models and the four duckdb datasets they are built
+   * from, so half the names are bare and half are fully qualified, and the only
+   * inference available to a cold reader is that the list was not cleaned up.
+   * The distinction is load-bearing and was invisible.
+   *
+   * Null when the URN does not carry one, rather than guessed.
+   */
+  platform: z.string().min(1).nullable(),
+  direction: z.enum(["upstream", "downstream", "none"]),
+  degree: z.number().int().positive().nullable(),
+  state: z.enum(["resolved", "unresolved", "excluded"]),
+  reason: z.string().min(1),
+  source: sourceSchema,
+});
 /**
  * One semantic plan change, and the way back to what produced it.
  *
@@ -88,6 +118,13 @@ export const planDeltaSchema = z.object({
  * `eventDigest`, `taskId` and `model` are not decoration — they are what lets a
  * reader check that both plans answered the same question against the same
  * evidence.
+ *
+ * Both plans travel with it too. The deltas say what changed; `datahubOnlySteps`
+ * and `joinedSteps` are the two things that differ, and a frame arguing that
+ * joining repository evidence changed the plan has to show them side by side or
+ * it is asserting the difference rather than exhibiting it. They are steps as
+ * the run produced them, so an empty joined plan is a real (and visible) result
+ * rather than a rendering gap.
  */
 export const planComparisonSchema = z.discriminatedUnion("state", [
   z.object({
@@ -96,6 +133,8 @@ export const planComparisonSchema = z.discriminatedUnion("state", [
     taskId: z.string().min(1),
     model: z.string().min(1),
     eventDigest: z.string().min(1),
+    datahubOnlySteps: z.array(z.string().min(1)),
+    joinedSteps: z.array(z.string().min(1)),
   }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
 ]);
@@ -180,11 +219,38 @@ export const unresolvedDatasetsSchema = z.discriminatedUnion("state", [
 ]);
 
 /** An absence the event stated. Always named — that is what `unavailable` is for. */
+/**
+ * One field the event states it could not supply, and which system could not.
+ *
+ * `source` is carried because a gap without it cannot say *whose* gap it is, and
+ * that distinction is the product's whole argument: "the catalog does not expose
+ * this" and "the artifact could not resolve it" are different findings with
+ * different fixes. The contract records it on `unavailable[].source`; dropping it
+ * in projection made every gap read as an anonymous absence.
+ */
 export const statedGapSchema = z.object({
   field: z.string().min(1),
+  /*
+   * Exactly the contract's `ContextSource`, which is two values.
+   *
+   * This carried a third, `joined`, which no producer can emit: the contract's
+   * `contextSourceSchema` is `z.enum(["datahub", "workspacejson"])` inside a
+   * `z.strictObject`, so an event with any other value is rejected before the
+   * cockpit sees it. The extra member made both renderers carry a branch that
+   * could never execute, which is a value nothing writes rendering as a real
+   * case. Narrowed to match, so widening the contract is a compile error here
+   * rather than a silently unreachable branch.
+   */
+  source: z.enum(["datahub", "workspacejson"]),
   reason: z.string().min(1),
   detail: z.string().min(1),
 });
+
+/** The sanctioned rendering of a gap's source. One table, two consumers. */
+export const GAP_SOURCE_LABEL: Record<z.infer<typeof statedGapSchema>["source"], string> = {
+  datahub: "DataHub",
+  workspacejson: "workspace.json",
+};
 
 export const receiptSchema = z.object({
   accounting: resolutionAccountingSchema,
@@ -373,6 +439,10 @@ export type CockpitStateName = z.infer<typeof cockpitStateNameSchema>;
 export type ClaimSource = z.infer<typeof claimSourceSchema>;
 export type PlanComparisonView = z.infer<typeof planComparisonSchema>;
 export type ViewSource = z.infer<typeof viewSourceSchema>;
+
+export type ImpactEdge = z.infer<typeof impactEdgeSchema>;
+
+export type StatedGap = z.infer<typeof statedGapSchema>;
 export type MutationAcceptance = z.infer<typeof mutationAcceptanceSchema>;
 export type IntendedStateObservation = z.infer<typeof intendedStateObservationSchema>;
 export type TerminalWritebackDisposition = z.infer<typeof terminalWritebackDispositionSchema>;

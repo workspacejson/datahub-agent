@@ -1,0 +1,17 @@
+/* ─────────────────────────────────────────────────────────────
+   BASE — element defaults for the cockpit.
+   Everything here is an element or global rule. Component rules live in
+   `cockpit.css`; design values live in `tokens/`.
+   ───────────────────────────────────────────────────────────── */
+
+:root { color: var(--text-body); background: var(--surface-page); font-family: var(--font-sans); }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button { font: inherit; }
+:where(a, button, summary, [tabindex]):focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+code { font-family: var(--font-mono); overflow-wrap: anywhere; }
+
+/* Paths, URNs, digests, revisions and counts are mono; prose is not. A URN set
+   in a proportional face is a URN a reader cannot compare character by
+   character, which is the only thing anyone does with one. */
+.mono { font-family: var(--font-mono); overflow-wrap: anywhere; }

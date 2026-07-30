@@ -24,8 +24,9 @@ finding lands after the video and becomes a limitation instead of a fix.
 
 ## Setup
 
-Verified working 2026-07-29 against `main` at `1f7f3ea`. Before PR #51 no
-non-placeholder build was possible at all, so this command is new.
+Verified working 2026-07-29, most recently on the HAC-218 first-frame branch.
+Before PR #51 no non-placeholder build was possible at all, so this command is
+new.
 
 ```bash
 COCKPIT_SOURCE_MODE=fixture npm run dev
@@ -40,8 +41,21 @@ non-placeholder model carrying placeholder values. Three guards, but check the
 first frame anyway — if you see angle-bracket tokens, stop and fix the build
 rather than running the session.
 
-The event bundled by default is the nested Transfermarkt package,
-`test/fixtures/golden/change-impact-event.nested.json`.
+The artifact bundled by default is HAC-152's judge run,
+`evaluation/hac-152/live-qwen-judge-run-bundle.json`: a validated change-impact
+event **plus** the DataHub-only/joined plan comparison derived from it.
+
+It is bound as one artifact rather than as two chosen files. The comparison
+carries the digest of the event it came from, and `validateBundle` refuses the
+pair if they disagree, so an event picked independently could only ever produce a
+comparison the view has to report as unavailable. Setting `COCKPIT_EVENT` still
+works and still renders that event; it simply carries no comparison, and the
+change-plan view states that in a sentence rather than showing an empty list.
+
+The bundle's event is a later producer run than
+`test/fixtures/golden/change-impact-event.nested.json` and states **three** gaps
+rather than two, so the first frame reads `3 stated gap(s)`. Same subject, same
+corpus.
 
 **Viewport: 1440 × 900.** Fixed, because HAC-218's Playwright route is asserted
 at 1440×900 and 1280×800, and a reader on an arbitrary window size is testing a
@@ -102,7 +116,7 @@ viewport: 1440x900
 route: impact
 sourceMode: fixture
 buildRevision: <git rev-parse HEAD>
-event: test/fixtures/golden/change-impact-event.nested.json
+artifact: evaluation/hac-152/live-qwen-judge-run-bundle.json
 
 q1_datahub_supplies:
   answer: "<their words>"

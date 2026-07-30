@@ -27,39 +27,13 @@
  * invariants.test.ts` fails the suite if anything reachable from `App.tsx`
  * imports a `node:` builtin, so this cannot regress by being imported back in.
  */
-import { toComparisonState, type PlanComparisonArtifact } from "@comparison";
+import { toComparisonState } from "@comparison";
 
 import type { CockpitRoute, SourceEvent } from "./cockpit-view-model";
-import { NO_COMPARISON_SUPPLIED, readChangeImpactEvent } from "./from-change-impact-event";
+import { readChangeImpactEvent } from "./from-change-impact-event";
+import { NO_COMPARISON_SUPPLIED, projectComparison } from "./project-comparison";
 
-/**
- * Project the comparison half of a bundle.
- *
- * Every delta is tagged `Joined`, and that is a claim about how deltas come to
- * exist rather than a default. A delta is the difference between a plan made
- * without repository evidence and one made with it: neither side alone produces
- * it, so neither `DataHub` nor `workspace.json` is the honest tag. Reading a
- * finer source out of `evidenceRefs` would invent precision the comparison never
- * asserted — the refs are carried through instead, so a reader follows them to
- * the evidence rather than trusting a label derived from them.
- */
-export function projectComparison(comparison: PlanComparisonArtifact): SourceEvent["planComparison"] {
-  return {
-    state: "observed",
-    // Both plans are checked to share one run identity by `validateBundle`, so
-    // reading the joined side is not a choice of sides.
-    taskId: comparison.joinedPlan.run.taskId,
-    model: comparison.joinedPlan.run.model,
-    eventDigest: comparison.eventDigest,
-    deltas: comparison.deltas.map((delta) => ({
-      kind: delta.kind,
-      label: delta.label,
-      reason: delta.reason,
-      source: "Joined" as const,
-      evidenceRefs: [...delta.evidenceRefs],
-    })),
-  };
-}
+export { projectComparison } from "./project-comparison";
 
 /**
  * Read a bundle into a projected view.

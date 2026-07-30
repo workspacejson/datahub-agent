@@ -96,9 +96,16 @@ function attribution(event: ChangeImpactEvent): SourceEvent["source"] {
  * the contract keeps them apart.
  */
 function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
+  // `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)`. Read
+  // rather than inferred from the name shape, and null when absent.
+  const platformOf = (urn: string) => /urn:li:dataPlatform:([^,)]+)/.exec(urn)?.[1] ?? null;
+
   const directed = (kind: "upstream" | "downstream") =>
     (kind === "upstream" ? event.datahub.upstreams : event.datahub.downstreams).map((edge) => ({
-      label: `${kind}: ${edge.name ?? edge.urn}`,
+      node: edge.name ?? edge.urn,
+      platform: platformOf(edge.urn),
+      direction: kind,
+      degree: edge.degree,
       state: "resolved" as const,
       reason: `Observed at degree ${edge.degree} by the catalog lineage read.`,
       source: "DataHub" as const,
@@ -112,7 +119,10 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
   // empty list that reads as a finding.
   const stated = event.unavailable.find((u) => u.field.startsWith("datahub."));
   return [{
-    label: "No lineage edges were observed",
+    node: "No lineage edges were observed",
+    platform: null,
+    direction: "none" as const,
+    degree: null,
     state: "unresolved" as const,
     reason: stated?.detail
       ?? "The lineage read returned nothing and its completeness was not established.",
@@ -139,13 +149,13 @@ function impactEdges(event: ChangeImpactEvent): SourceEvent["impactEdges"] {
 /**
  * Why a view built from an event alone has no comparison.
  *
- * One constant, used both by `projectEvent` and as `toComparisonState`'s
- * null-bundle reason, so the two paths cannot come to describe the same absence
- * in two different ways.
+ * Defined in `project-comparison.ts` and re-exported here so existing importers
+ * keep their path. It moved because `vite.config.ts` needs the same sentence at
+ * build time and cannot import this module: everything here reaches `@contract`,
+ * and a Vite config resolves no app aliases while it is being compiled.
  */
-export const NO_COMPARISON_SUPPLIED =
-  "this view was built from a change-impact event alone. The event contract carries evidence, not plans: " +
-  "a DataHub-only/joined comparison is a separate artifact bound to the event by digest, and none was supplied";
+export { NO_COMPARISON_SUPPLIED } from "./project-comparison";
+import { NO_COMPARISON_SUPPLIED } from "./project-comparison";
 
 /** An observation, tagged with the system that made it. */
 const observed = (value: string, source: ClaimSource): EvidenceValue =>
@@ -211,7 +221,7 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes): SourceEv
         state: "unavailable",
         reason: `${event.accounting.datasetsUnresolved} dataset(s) went unresolved. This event predates the accounting.unresolvedRecords field, so it records the count without per-dataset names, and none are invented here.`,
       },
-    statedGaps: event.unavailable.map((u) => ({ field: u.field, reason: u.reason, detail: u.detail })),
+    statedGaps: event.unavailable.map((u) => ({ field: u.field, source: u.source, reason: u.reason, detail: u.detail })),
     provenance: {
       subjectRepository: fromNullable(event.provenance.corpus.repository, "Joined", "The event states no subject repository, so no workspace claim on it can be checked."),
       subjectRevision: fromNullable(event.provenance.corpus.commit, "Joined", "The event states no subject revision, so no claim about it is revision-bound."),

@@ -13,8 +13,10 @@ it("derives the shell state from URL query state and writes navigation back to t
   const user = userEvent.setup();
   render(<App />);
 
-  expect(screen.getByRole("button", { name: "Receipts" }).getAttribute("aria-current")).toBe("page");
-  expect(screen.getByLabelText("Evidence state").textContent).toContain("complete-against-pinned-manifest");
+  expect(screen.getByRole("button", { name: "Receipts" }).getAttribute("aria-current")).toBe("step");
+  // The panel states completeness in words with a subject rather than as the
+  // bare contract token, which had no visible referent on the frame.
+  expect(screen.getByLabelText("Coverage of this review").textContent).toContain("Complete against pinned manifest");
 
   await user.click(screen.getByRole("button", { name: "Change plan" }));
   expect(new URLSearchParams(window.location.search).get("view")).toBe("change-plan");

@@ -6,9 +6,11 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 1280, height: 800
     await page.setViewportSize(viewport);
     await page.goto("/");
     await expect(page.getByRole("status")).toContainText("DESIGN PLACEHOLDER");
-    await expect(page.getByRole("navigation", { name: "Cockpit views" })).toBeVisible();
-    await page.getByRole("button", { name: "Change plan" }).click();
-    await page.getByRole("button", { name: "Receipts" }).click();
+    await expect(page.getByRole("navigation", { name: "Review sequence" })).toBeVisible();
+    // `exact` because role-name matching is substring by default, and the
+    // decision rail now offers "Review receipts" alongside the "Receipts" tab.
+    await page.getByRole("button", { name: "Change plan", exact: true }).click();
+    await page.getByRole("button", { name: "Receipts", exact: true }).click();
     await expect(page.getByRole("heading", { name: /resolution remains bounded/i })).toBeVisible();
     await page.getByText("Raw evidence receipt", { exact: true }).click();
     await expect(page.getByRole("button", { name: /copy raw receipt/i })).toBeDisabled();
