@@ -8,14 +8,36 @@ impossible self-reference.
 
 ## Scope and states
 
-The inventory scans checked-in files under `public/assets/`. Browser-test output
-and generated reports are excluded. Supporting fixtures and checksum manifests
-are recorded separately as evidence; they are not display assets and cannot
-authorize public use.
+The inventory scans checked-in files under `public/assets/` and
+`apps/cockpit/public/`, including their subdirectories: `devpost/`, `github/` and
+`social/`. Browser-test output and generated reports are excluded. Supporting
+fixtures and checksum manifests are recorded separately as evidence; they are not
+display assets and cannot authorize public use.
 
 Every discovered display asset begins as both `approvalState: "pending"` and
 `publicUse: "pending"`. A repository path, public repository, recent commit, or
 proposed caption does not change either state.
+
+`inventoryScope.scannedAtBaseRevision` names the revision the original scan ran
+against. Records added after that scan were entered by hand under owner
+direction rather than discovered, so the field is deliberately not advanced: it
+describes when a scan happened, not when the registry was last edited.
+
+An `approvalRecord` field appears on any record whose `approvalState` is
+`approved`, naming who authorized it, when, and for which destination. An
+approval with no such record is unattributed and should be treated as suspect.
+
+## What this registry cannot tell you
+
+`npm run validate:asset-registry` walks the records and checks each declared file
+against its hash. **It never enumerates the filesystem, so it cannot report a
+checked-in asset that no record declares.** Eight images were added under
+`assets/` on 2026-07-29 and the gate stayed green throughout, because an
+undeclared file is invisible to a validator that only reads declarations.
+
+Until that is closed, adding an asset means adding its record in the same change.
+A green registry validation is evidence that the declared assets are intact, not
+evidence that every checked-in asset is declared.
 
 Allowed `approvalState` values are:
 

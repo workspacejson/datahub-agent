@@ -15,7 +15,7 @@
   "assets": [
     {
       "id": "tally-devpost-hero-1280x720",
-      "title": "Tally Devpost hero (1280 \u00d7 720)",
+      "title": "Tally Devpost hero (1280 × 720)",
       "storyBeat": "Candidate Devpost hero presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
       "canonicalPath": "public/assets/devpost/tally-devpost-hero-1280x720.png",
@@ -52,7 +52,7 @@
     },
     {
       "id": "tally-devpost-thumbnail-1200x800-v2",
-      "title": "Tally Devpost thumbnail v2 (1200 \u00d7 800)",
+      "title": "Tally Devpost thumbnail v2 (1200 × 800)",
       "storyBeat": "Candidate Devpost thumbnail presentation; website use has not been reviewed.",
       "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
       "canonicalPath": "public/assets/devpost/tally-devpost-thumbnail-1200x800-v2.png",
@@ -68,43 +68,6 @@
       },
       "proposedAltText": "Proposed: Tally Change Impact Cockpit thumbnail.",
       "proposedCaption": "Proposed: Review a data change with its catalog and repository evidence attached.",
-      "approvalState": "pending",
-      "publicUse": "pending",
-      "productEvidenceRevision": {
-        "productRevision": "0b5e1eef55e564615c972b8a970555795f6b926a",
-        "evidenceRevision": null
-      },
-      "isQuantitative": false,
-      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
-      "limitations": [
-        "No owner approval or public-use authorization is recorded.",
-        "No claim relationship has been approved."
-      ],
-      "destinationEligibility": {
-        "website": "pending-owner-review",
-        "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
-        "video": "pending-owner-review"
-      }
-    },
-    {
-      "id": "tally-github-readme",
-      "title": "Tally GitHub README image (1774 \u00d7 887)",
-      "storyBeat": "Existing GitHub README presentation; website use has not been reviewed.",
-      "intendedConclusion": "Pending owner review; this file is not approved to support a public conclusion.",
-      "canonicalPath": "public/assets/github/tally-github-readme.png",
-      "sha256": "bc6a36a29c8bcc3b2bb91a580ca54e0feddb6eb7fd188bdd9ec58e6fabbbdf21",
-      "claimIds": [],
-      "sourceType": "checked-in-raster",
-      "export": {
-        "filename": "tally-github-readme.png",
-        "format": "png",
-        "width": 1774,
-        "height": 887,
-        "aspectRatio": "2:1"
-      },
-      "proposedAltText": "Proposed: Tally \u2014 Change Impact Cockpit.",
-      "proposedCaption": "Proposed: Tally resolves a data asset to repository evidence and records the resulting review.",
       "approvalState": "pending",
       "publicUse": "pending",
       "productEvidenceRevision": {
@@ -347,6 +310,318 @@
         "github": "pending-owner-review",
         "video": "pending-owner-review"
       }
+    },
+    {
+      "id": "explainer-01-zero",
+      "title": "Explainer 01 of 05, A zero that looked like success",
+      "storyBeat": "Opens the problem: an empty result that exited 0.",
+      "intendedConclusion": "The same five dbt models resolve 5/5 at a repository root and 0/5 nested in a monorepo, and the run still exits 0.",
+      "canonicalPath": "public/assets/devpost/explainer-01-zero.png",
+      "sha256": "7aee6512de6b8dacf8ace821823fe34253b4c0999c33c68136b688658659c839",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "explainer-01-zero.png",
+        "format": "png",
+        "width": 1600,
+        "height": 900,
+        "aspectRatio": "16:9"
+      },
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
+        "No claim relationship has been approved.",
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proposed: Two panels compare the same five dbt models: 5 of 5 resolved with the project at the repository root, 0 of 5 resolved with the same project nested in a monorepo, above a banner reading exit 0, no error was raised.",
+      "proposedCaption": "Proposed: A path-normalization change turns five resolutions into none, and the command still reports success."
+    },
+    {
+      "id": "explainer-02-source",
+      "title": "Explainer 02 of 05, From dataset to exact source",
+      "storyBeat": "Shows the join: four coordinate systems resolved in order.",
+      "intendedConclusion": "A dataset URN resolves through dbt metadata to a repository-relative path at a pinned revision, with each step carrying the value it produced.",
+      "canonicalPath": "public/assets/devpost/explainer-02-source.png",
+      "sha256": "a479a1615f15e90d53ac39e4eaa3a695d559840a2ab6367e958557a4c2033c00",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "explainer-02-source.png",
+        "format": "png",
+        "width": 1600,
+        "height": 900,
+        "aspectRatio": "16:9"
+      },
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
+        "No claim relationship has been approved.",
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proposed: Four numbered panels in sequence: DataHub dataset game_events, dbt metadata original_file_path, repository path dbt/models/curated/game_events.sql, and workspace.json evidence resolved at revision 59fa295c.",
+      "proposedCaption": "Proposed: Each step carries the value it produced, so the chain can be checked rather than believed."
+    },
+    {
+      "id": "explainer-03-plan",
+      "title": "Explainer 03 of 05, The plan changed with the evidence",
+      "storyBeat": "The paired comparison: what joined evidence changed about an agent's plan.",
+      "intendedConclusion": "One paired run in which the DataHub-only condition refuses to edit and the joined condition edits a named file at a pinned revision.",
+      "canonicalPath": "public/assets/devpost/explainer-03-plan.png",
+      "sha256": "f932907e2b08a90ee8e3d752f1acc20a7ef86c513d41e8e5dd5148a4841e400a",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "explainer-03-plan.png",
+        "format": "png",
+        "width": 1600,
+        "height": 900,
+        "aspectRatio": "16:9"
+      },
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
+        "No claim relationship has been approved.",
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proposed: A two-column table comparing a DataHub-only condition against DataHub joined to workspace.json: refuse to edit versus edit the named file, unknown source location versus dbt/models/curated/game_events.sql, no revision versus pinned 59fa295c. A banner notes this is one paired run and variance is not characterized.",
+      "proposedCaption": "Proposed: One paired run, three typed deltas, each cited. It shows the path works, not a universal effect size."
+    },
+    {
+      "id": "explainer-04-receipt",
+      "title": "Explainer 04 of 05, A write is not proven until it is read back",
+      "storyBeat": "The writeback receipt: a mutation response is not an observation.",
+      "intendedConclusion": "One structured property moves from unset to VERIFIED, with the receipt's own verdict fields shown beside the scope of the claim.",
+      "canonicalPath": "public/assets/devpost/explainer-04-receipt.png",
+      "sha256": "52072128f880d90333480fc1ec62606b57b2c77594a31872da628055c64ed538",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "explainer-04-receipt.png",
+        "format": "png",
+        "width": 1600,
+        "height": 900,
+        "aspectRatio": "16:9"
+      },
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
+        "No claim relationship has been approved.",
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proposed: A receipt showing the structured property workspacejson_evidence_tier moving from unset to VERIFIED, with succeeded true, no-op false, both states read true, and source link omitted because no pinned URL was available.",
+      "proposedCaption": "Proposed: VERIFIED describes that one property. Lineage completeness stays not-established and no link is written that could drift."
+    },
+    {
+      "id": "explainer-05-gap",
+      "title": "Explainer 05 of 05, When the proof ends, tally names the gap",
+      "storyBeat": "Closes on the limits: three things the review could not establish.",
+      "intendedConclusion": "Three named limits, each attributed to the system that could not supply it, using real artifact field names.",
+      "canonicalPath": "public/assets/devpost/explainer-05-gap.png",
+      "sha256": "4ab2debe515ed0cf0ea43873a2f90eece2da8d017e4ced5d4fa079ffbda7590d",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "explainer-05-gap.png",
+        "format": "png",
+        "width": 1600,
+        "height": 900,
+        "aspectRatio": "16:9"
+      },
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "Displays measured output from a recorded run. Approval requires an evidence revision under the registry's own rule for approved quantitative assets, and none is recorded.",
+        "No claim relationship has been approved.",
+        "The owner named Devpost as the intended destination on 2026-07-29 but has not recorded an approval, so no destination is authorized."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proposed: Three rows naming a source limit on code.repositoryRelativePath as not-exposed-by-source, a resolution limit on partners as indeterminate, and a completeness limit on lineage completeness as not-established, above the line unavailable is a result, not a silent zero.",
+      "proposedCaption": "Proposed: Each gap is attributed to the system that could not supply it, with real artifact fields and no fabricated node names."
+    },
+    {
+      "id": "og-card-1200x630",
+      "title": "Tally social card (1200 × 630)",
+      "storyBeat": "Link-preview identity for shared Tally URLs.",
+      "intendedConclusion": "Identifies the application to a reader who has not opened it. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "public/assets/social/og-1200x630.png",
+      "sha256": "5b4f61bed6374d787f5839cb70a5a057fcd79e3cc908448a6fd52810855678e5",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "og-1200x630.png",
+        "format": "png",
+        "width": 1200,
+        "height": 630,
+        "aspectRatio": "40:21"
+      },
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "No claim relationship has been approved.",
+        "The owner named link sharing as the intended use on 2026-07-29 but has not recorded an approval. The registry's destination vocabulary has no share or social key, so no existing destination field expresses that intent and none is set.",
+        "Not referenced by any page yet: no meta og:image tag points at it, so shipping it requires a consumer as well as an approval."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proposed: The tally lockup above the line review a change with the evidence attached, on a dark card footed with built with DataHub, built on workspace.json, Apache 2.0.",
+      "proposedCaption": "Proposed: The Open Graph card used when a Tally link is shared."
+    },
+    {
+      "id": "github-hero-dark-1280x440",
+      "title": "Tally GitHub hero, dark (1280 × 440)",
+      "storyBeat": "Repository front-page identity in dark mode.",
+      "intendedConclusion": "Identifies the application on its repository front page. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "public/assets/github/github-hero-1280x440.png",
+      "sha256": "759ca2164236068d9bdc70620309a88f8bea7a94ab1c5001c577a3d1786593ad",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "github-hero-1280x440.png",
+        "format": "png",
+        "width": 1280,
+        "height": 440,
+        "aspectRatio": "32:11"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "The filename does not say dark. The unsuffixed file is the dark variant and the light one carries the light suffix, so the pair is asymmetrically named and easy to swap by mistake.",
+        "Approved for GitHub only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0.",
+      "proposedCaption": "The repository hero in dark mode, shown to readers whose system prefers dark colours.",
+      "approvalRecord": "Owner approved for GitHub README use on 2026-07-29, in the same instruction that directed replacing the previous README image with this theme-conditional pair. Scoped to GitHub: no other destination was authorized."
+    },
+    {
+      "id": "github-hero-light-1280x440",
+      "title": "Tally GitHub hero, light (1280 × 440)",
+      "storyBeat": "Repository front-page identity in light mode.",
+      "intendedConclusion": "Identifies the application on its repository front page. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "public/assets/github/github-hero-light-1280x440.png",
+      "sha256": "01351184a4a41dc35b762e97c296a5b8b399ab9535a7d9b6e03ac2ef3aaf5aba",
+      "claimIds": [],
+      "sourceType": "checked-in-raster",
+      "export": {
+        "filename": "github-hero-light-1280x440.png",
+        "format": "png",
+        "width": 1280,
+        "height": 440,
+        "aspectRatio": "32:11"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "ff53ece0b744aaaaa912f6f7a6e322bd25326bd8",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes.",
+      "limitations": [
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "Serves the light half of the README's theme-conditional pair; it is not a standalone hero.",
+        "Approved for GitHub only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0.",
+      "proposedCaption": "The repository hero in light mode, shown to readers whose system prefers light colours.",
+      "approvalRecord": "Owner approved for GitHub README use on 2026-07-29, in the same instruction that directed replacing the previous README image with this theme-conditional pair. Scoped to GitHub: no other destination was authorized."
     }
   ],
   "supportingInternalEvidencePaths": [
@@ -354,7 +629,20 @@
     "test/fixtures/golden/",
     "apps/cockpit/public/site.webmanifest"
   ],
-  "rejectedOrSupersededAssets": [],
+  "rejectedOrSupersededAssets": [
+    {
+      "id": "tally-github-readme",
+      "status": "superseded",
+      "title": "Tally GitHub README image (1774 × 887)",
+      "formerCanonicalPath": "public/assets/github/tally-github-readme.png",
+      "sha256AtSupersession": "bc6a36a29c8bcc3b2bb91a580ca54e0feddb6eb7fd188bdd9ec58e6fabbbdf21",
+      "supersededBy": [
+        "github-hero-dark-1280x440",
+        "github-hero-light-1280x440"
+      ],
+      "detail": "Removed from the repository on 2026-07-29 and replaced in README.md by a theme-conditional pair. It was never approved, so nothing published depended on it."
+    }
+  ],
   "knownMissingAssetFamilies": [
     {
       "id": "tally-website-approved-public-asset",
@@ -368,8 +656,8 @@
     },
     {
       "id": "tally-standalone-social-card",
-      "status": "not-discovered",
-      "detail": "No separately declared social-card asset was discovered; existing Devpost exports remain pending and are not selected as substitutes."
+      "status": "discovered-pending-approval",
+      "detail": "A dedicated social card now exists at public/assets/social/og-1200x630.png. It remains pending owner approval and is referenced by no page, so it is not yet a usable social asset."
     }
   ]
 }
