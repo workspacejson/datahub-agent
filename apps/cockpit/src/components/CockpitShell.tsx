@@ -142,7 +142,31 @@ export function CockpitShell({ model, route, onRouteChange }: {
 
     <header className="product-header">
       <Wordmark />
-      <p className="endorsement">built on <b>workspace.json</b></p>
+      {/*
+        The endorsement names a standard, so it resolves to the standard.
+
+        It was a bare <b>: the one term on this page a reader is least likely to
+        already know, styled like a proper noun and pointing nowhere. A judge
+        asking "what is workspace.json" had to leave and search for it.
+
+        A plain followed link, deliberately — no rel="nofollow". This is a
+        first-party reference to the specification the product is built on, and
+        the anchor text is the term itself, which is what a reader and a crawler
+        both need it to say. New tab because the cockpit is a working surface and
+        a reviewer mid-review should not lose their place; the accessible name
+        keeps the visible text as its prefix, so speech input still matches it.
+      */}
+      <p className="endorsement">
+        built on{" "}
+        <a
+          href="https://github.com/workspacejson/standard"
+          target="_blank"
+          rel="noopener"
+          aria-label="workspace.json standard on GitHub, opens in a new tab"
+        >
+          workspace.json
+        </a>
+      </p>
     </header>
 
     {/*

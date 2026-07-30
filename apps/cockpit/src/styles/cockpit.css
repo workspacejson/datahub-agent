@@ -82,7 +82,14 @@
   padding: var(--sp-1) var(--sp-3);
   color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption);
 }
-.endorsement b { color: var(--wj-accent); font-weight: 500; }
+/* The term resolves to the standard. Underline discipline is the spine's back
+   link: a hairline rule that firms up on hover and focus, so the affordance is
+   visible at rest without the accent reading as a second CTA. */
+.endorsement a {
+  color: var(--wj-accent); font-weight: 500;
+  text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px;
+}
+.endorsement a:hover, .endorsement a:focus-visible { text-decoration-color: currentColor; }
 
 @media (max-width: 1100px) {
   /* Below the nav range the caption drops and only the lockup stays. */
