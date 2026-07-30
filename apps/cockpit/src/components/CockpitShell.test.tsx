@@ -68,7 +68,7 @@ it("announces evidence-state changes, which happen without a reload", () => {
 
 it("does not present a placeholder warning for non-placeholder models", () => {
   const placeholder = provisionalStateAdapter("partial").read();
-  render(<CockpitShell model={{ ...placeholder, sourceMode: "live" }} route="receipts" onRouteChange={() => undefined} />);
+  render(<CockpitShell model={{ ...placeholder, sourceMode: "committed" }} route="receipts" onRouteChange={() => undefined} />);
   expect(screen.queryByRole("status")).toBeNull();
   expect(screen.queryByRole("button", { name: "Continue to change plan" })).toBeNull();
 });

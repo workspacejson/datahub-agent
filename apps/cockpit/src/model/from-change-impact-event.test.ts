@@ -15,7 +15,7 @@ describe("projecting the frozen contract onto the cockpit", () => {
     const result = readChangeImpactEvent(contractEvent(), "impact");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(cockpitViewModelSchema.safeParse({ ...result.event, sourceMode: "fixture" }).success).toBe(true);
+    expect(cockpitViewModelSchema.safeParse({ ...result.event, sourceMode: "committed" }).success).toBe(true);
   });
 
   it("names the offending path when an event violates the contract", () => {
@@ -204,7 +204,7 @@ describe("projecting the frozen contract onto the cockpit", () => {
     // documented `writeback` extension is not one of its keys, so parsing a
     // golden fixture against it fails with `Unrecognized key: "writeback"`.
     // Every fixture this repository emits carries that key, so the cockpit was
-    // refusing precisely the events a fixture or live build exists to render.
+    // refusing precisely the events a committed build exists to render.
     expect(changeImpactEventSchema.safeParse({ ...contractEvent(), writeback: { succeeded: true } }).success).toBe(false);
     expect(readChangeImpactEvent({ ...contractEvent(), writeback: { succeeded: true } }, "receipts").ok).toBe(true);
   });
@@ -218,7 +218,7 @@ describe("the receipt projection", () => {
     // submission rests on rendered nothing.
     const model = projectEvent(contractEvent(), "receipts");
     expect(model.receipt).toBeDefined();
-    expect(cockpitViewModelSchema.safeParse({ ...model, sourceMode: "fixture" }).success).toBe(true);
+    expect(cockpitViewModelSchema.safeParse({ ...model, sourceMode: "committed" }).success).toBe(true);
   });
 
   it("uses the contract's accounting vocabulary verbatim, with no synthesised total", () => {

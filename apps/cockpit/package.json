@@ -4,8 +4,10 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "COCKPIT_SOURCE_MODE=live vite build",
+    "dev": "COCKPIT_SOURCE_MODE=committed vite",
+    "dev:placeholder": "COCKPIT_SOURCE_MODE=placeholder vite",
+    "build": "COCKPIT_SOURCE_MODE=committed vite build",
+    "build:placeholder": "COCKPIT_SOURCE_MODE=placeholder vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --config vitest.config.ts",
     "e2e": "playwright test --config playwright.config.ts"

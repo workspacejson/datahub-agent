@@ -93,9 +93,3 @@ export function createAdapter(
   const projected = planComparison ? { ...result.event, planComparison } : result.event;
   return { read: () => normalize(projected, sourceMode) };
 }
-
-export function fixtureLiveParity(fixture: CockpitViewModel, live: CockpitViewModel): boolean {
-  const { sourceMode: _fixtureMode, ...fixtureComparable } = fixture;
-  const { sourceMode: _liveMode, ...liveComparable } = live;
-  return JSON.stringify(fixtureComparable) === JSON.stringify(liveComparable);
-}

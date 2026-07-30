@@ -10,7 +10,7 @@ afterEach(cleanup);
 
 /** A projected real event, in the mode a fixture build would render it. */
 function projected() {
-  return { ...projectEvent(contractEvent(), "receipts"), sourceMode: "fixture" as const };
+  return { ...projectEvent(contractEvent(), "receipts"), sourceMode: "committed" as const };
 }
 
 /** No jest-dom in this project, so the DOM property is read directly. */
@@ -36,7 +36,7 @@ it("offers no immutable source link when the event carries no commit-pinned URL"
 it("links the immutable source when, and only when, the event observed one", () => {
   const event = contractEvent();
   event.code = { ...event.code, sourceUrl: "https://github.com/example/repo/blob/abc123/models/x.sql" };
-  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "fixture" }} />);
+  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "committed" }} />);
   expect(screen.getByRole("link", { name: "View immutable source" }).getAttribute("href"))
     .toBe("https://github.com/example/repo/blob/abc123/models/x.sql");
 });
@@ -82,7 +82,7 @@ it("does not present an accepted mutation as success", () => {
 it("does not let an empty unresolved list read as a finding when names are unavailable", () => {
   const event = contractEvent();
   event.accounting = { ...event.accounting, datasetsRequested: 3, datasetsResolved: 1, datasetsUnresolved: 2 };
-  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "fixture" }} />);
+  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "committed" }} />);
   expect(screen.getByRole("heading", { name: /Unresolved datasets \(2\)/ })).toBeTruthy();
   expect(screen.getByText(/without per-dataset names/)).toBeTruthy();
 });
@@ -103,7 +103,7 @@ it("renders each unresolved dataset with the reason it did not resolve", () => {
       { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.b,PROD)", reason: "two candidate paths matched; the join refused to pick" },
     ],
   };
-  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "fixture" }} />);
+  render(<ReceiptsView model={{ ...projectEvent(event, "receipts"), sourceMode: "committed" }} />);
 
   // Scoped to the section deliberately. The view also renders the whole event
   // as raw JSON for copy/download, so an unscoped text match finds every reason

@@ -9,7 +9,6 @@
 
 import { describe, expect, it } from "vitest";
 
-import { createAdapter, fixtureLiveParity } from "../data/cockpit-adapter";
 import { contractEvent } from "../test/contract-event";
 import { projectEvent } from "./from-change-impact-event";
 
@@ -60,40 +59,5 @@ describe("V-4 · no naked tier token reaches the rendered model", () => {
       .filter(([path]) => !path.endsWith("rawEvidence.value"))
       .filter(([, v]) => TIERS.some((t) => v.includes(t) && !new RegExp(`${t}: .*record`).test(v)));
     expect(offending.length).toBeGreaterThan(0);
-  });
-});
-
-describe("V-6 · fixture and live must not diverge beyond sourceMode", () => {
-  const event = contractEvent();
-
-  it("holds parity between the two modes for one event", () => {
-    const fixture = createAdapter(event, "fixture").read();
-    const live = createAdapter(event, "live").read();
-    expect(fixture.sourceMode).toBe("fixture");
-    expect(live.sourceMode).toBe("live");
-    expect(fixtureLiveParity(fixture, live)).toBe(true);
-  });
-
-  it("notices a divergence on the completeness axis specifically", () => {
-    // The axis this issue renamed. A parity check that ignored it would let the
-    // fixture and the live read disagree about how far an answer can be trusted
-    // — which is the one disagreement that changes what a judge concludes.
-    const fixture = createAdapter(event, "fixture").read();
-    const live = createAdapter(event, "live").read();
-    expect(
-      fixtureLiveParity(fixture, { ...live, completeness: "complete-against-pinned-manifest" }),
-    ).toBe(false);
-  });
-
-  it("notices a divergence on the read axis", () => {
-    const fixture = createAdapter(event, "fixture").read();
-    const live = createAdapter(event, "live").read();
-    expect(fixtureLiveParity(fixture, { ...live, read: "failed" })).toBe(false);
-  });
-
-  it("notices a divergence in the rendered summary, not only in the enums", () => {
-    const fixture = createAdapter(event, "fixture").read();
-    const live = createAdapter(event, "live").read();
-    expect(fixtureLiveParity(fixture, { ...live, summary: "something else entirely" })).toBe(false);
   });
 });

@@ -24,7 +24,17 @@ export const resolutionDispositionSchema = z.enum([
 export const mutationAcceptanceSchema = z.enum(["not-attempted", "accepted", "rejected"]);
 export const intendedStateObservationSchema = z.enum(["not-attempted", "observed", "not-observed"]);
 export const terminalWritebackDispositionSchema = z.enum(["not-applicable", "success", "accepted-not-observed", "failed", "noop", "indeterminate", "contradictory"]);
-export const sourceModeSchema = z.enum(["placeholder", "fixture", "live"]);
+/**
+ * Two modes, not three.
+ *
+ * `fixture` and `live` were the same behaviour under two names: both read the
+ * same committed bytes at build time and produced the same projection, so the
+ * label was the only difference and `live` asserted a connection that never
+ * happened. `committed` says how the build acquired its evidence, which is the
+ * only thing a build can honestly claim. How the evidence was produced lives in
+ * the event's own provenance block.
+ */
+export const sourceModeSchema = z.enum(["placeholder", "committed"]);
 export const cockpitRouteSchema = z.enum(["impact", "change-plan", "receipts"]);
 export const claimSourceSchema = z.enum(["DataHub", "workspace.json", "Joined"]);
 export const sourceClaimSchema = z.object({ text: z.string().min(1), source: claimSourceSchema });
@@ -418,8 +428,8 @@ export const cockpitViewModelSchema = cockpitViewModelBaseSchema.superRefine((mo
   // Placeholder evidence is refused at the boundary, not merely labelled above
   // it. `selectCockpitAdapter` already refuses to *select* the provisional
   // adapter outside placeholder mode; this refuses a model that carries
-  // invented values regardless of which adapter produced it, so a fixture or
-  // live build cannot show a judge a value nobody observed.
+  // invented values regardless of which adapter produced it, so a committed
+  // build cannot show a judge a value nobody observed.
   if (model.sourceMode !== "placeholder") {
     const invented = evidenceValues(model.receipt).filter((value) => value.state === "placeholder");
     if (invented.length > 0) {

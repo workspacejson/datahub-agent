@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 const shell = () => render(
   <CockpitShell
-    model={createAdapter(contractEvent(), "fixture").read()}
+    model={createAdapter(contractEvent(), "committed").read()}
     route="impact"
     onRouteChange={() => {}}
   />,
@@ -20,7 +20,7 @@ describe("the Impact frame spends its space on the join", () => {
     // It used to appear twice: once in the hero and again in a `Dataset
     // identity` card a hundred pixels below, which spent one of three slots in
     // the row that carries the join on a repetition.
-    const model = createAdapter(contractEvent(), "fixture").read();
+    const model = createAdapter(contractEvent(), "committed").read();
     shell();
 
     const urn = model.datasetIdentity.text;
@@ -42,7 +42,7 @@ describe("the Impact frame spends its space on the join", () => {
   });
 
   it("lays lineage out by direction rather than as one flat list", () => {
-    const model = createAdapter(contractEvent(), "fixture").read();
+    const model = createAdapter(contractEvent(), "committed").read();
     shell();
 
     const band = screen.getByLabelText("Lineage topology");
@@ -62,7 +62,7 @@ describe("the Impact frame spends its space on the join", () => {
     // Every node carrying a source is the rule that keeps a *mixed* read
     // readable. Repeating one value ten times distinguishes nothing and cost the
     // space the argument needed.
-    const model = createAdapter(contractEvent(), "fixture").read();
+    const model = createAdapter(contractEvent(), "committed").read();
     const sources = new Set(model.impactEdges.map((edge) => edge.source));
     expect(sources.size, "fixture should have one lineage source").toBe(1);
 

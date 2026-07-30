@@ -118,7 +118,7 @@ describe("projecting a JudgeRunBundle", () => {
   it("produces a model the view-model schema accepts", () => {
     const result = readJudgeRunBundle(judgeRunBundle(), "change-plan");
     if (!result.ok) throw new Error(result.problems.join("; "));
-    expect(cockpitViewModelSchema.safeParse({ ...result.event, sourceMode: "live" }).success).toBe(true);
+    expect(cockpitViewModelSchema.safeParse({ ...result.event, sourceMode: "committed" }).success).toBe(true);
   });
 
   it("renders the committed live bundle, deltas and all", () => {
@@ -137,6 +137,6 @@ describe("projecting a JudgeRunBundle", () => {
     expect(view.model).toBe("qwen-plus");
     expect(view.deltas.map((delta) => delta.kind)).toEqual(["added", "removed", "constrained"]);
     expect(view.deltas.every((delta) => delta.evidenceRefs.length > 0)).toBe(true);
-    expect(cockpitViewModelSchema.safeParse({ ...result.event, sourceMode: "live" }).success).toBe(true);
+    expect(cockpitViewModelSchema.safeParse({ ...result.event, sourceMode: "committed" }).success).toBe(true);
   });
 });
