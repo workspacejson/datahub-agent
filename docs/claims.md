@@ -33,7 +33,7 @@ that accounting rather than about a failure.
 | Excluded by policy, not datasets | 20 (`test`) | Same | Same |
 | Dropped, dataset-bearing with no `original_file_path` | 0 | Same | Same |
 | Dataset-bearing kinds | `model`, `seed`, `snapshot` | `src/adapters/workspacejson/nodes.ts` `DATASET_RESOURCE_TYPES` | Read the exported set |
-| Nodes kept by the legacy `extractModels` | 5 of 28, filtering `resource_type === "model"` | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
+| Nodes kept by the legacy `extractModels` | 5 of 28, filtering `resource_type === "model"` | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
 
 `extractModels` is **not on the join path.** It is retained byte-identical because
 the adapter adoption parity harness pins it at 35/35, and the join runs through
@@ -46,12 +46,12 @@ is listed here so the figure has one accurate home rather than an alarming one.
 
 | Claim | Value | Source | Verify |
 | -- | -- | -- | -- |
-| `original_file_path` nulls (model SQL) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
-| `original_file_path` nulls (model Python) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
-| `original_file_path` nulls (seed) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
-| `original_file_path` nulls (snapshot) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
-| `original_file_path` nulls (source) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
-| `original_file_path` nulls (test) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
+| `original_file_path` nulls (model SQL) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
+| `original_file_path` nulls (model Python) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
+| `original_file_path` nulls (seed) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
+| `original_file_path` nulls (snapshot) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
+| `original_file_path` nulls (source) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
+| `original_file_path` nulls (test) | 0 | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` *(manual — not in CI)* |
 | dbt version tested | 1.12.0 | `evaluation/dbt-node-coverage.md` | — |
 
 ## Proof corpus
@@ -129,7 +129,7 @@ is listed here so the figure has one accurate home rather than an alarming one.
 
 | Claim | Value | Source | Verify |
 | -- | -- | -- | -- |
-| Parity checks against frozen baseline | 35/35 | `migration/parity-datahub-shim.mjs` | `npm run parity:datahub-adapter` |
+| Parity checks against frozen baseline | 35/35 | `migration/parity-datahub-shim.mjs` | `npm run parity:datahub-adapter` *(manual — not in CI)* |
 
 ## Clean-room audit
 
@@ -149,3 +149,4 @@ is listed here so the figure has one accurate home rather than an alarming one.
 | No co-change evidence from producer | `docs/provenance.md` — producer withholds behavioral values |
 | Sources point at declaration YAML | `evaluation/dbt-node-coverage.md` |
 | One subject per golden fixture | `test/fixtures/golden/` — root and nested, one dataset each |
+| Artifact fidelity regeneration | SKIP — requires `WORKSPACEJSON_CORPUS_*` env var pointing at a live checkout; see `test/integration/artifact-fidelity.test.ts:220` |

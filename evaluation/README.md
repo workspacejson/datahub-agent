@@ -26,9 +26,10 @@ routes a public claim to its scoped artifact, verification command, and status.
 From a clean clone:
 
 ```bash
-npm install
+npm ci
 npm run verify:judging
 ```
 
-This runs typecheck, clean-room audit, the full test suite, and adapter parity
-in sequence. See [`JUDGING.md`](../JUDGING.md) for guided evaluation paths.
+This runs typecheck, clean-room audit, the full test suite, cockpit production
+build, and adapter parity in sequence. See [`JUDGING.md`](../JUDGING.md) for
+guided evaluation paths.

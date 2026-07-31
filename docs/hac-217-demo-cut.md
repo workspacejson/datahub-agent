@@ -69,3 +69,12 @@ required frame/state disappears, if a mandatory demo state is changed to
 deferred, if the revision-mismatch decision is absent, or if this UX ledger
 approves the evidence-dependent hero sentence. It is a documentation-contract
 test, not a claim that the UI or final evidence has landed.
+
+## Deferral: HAC-262 demo ledger
+
+The demo ledger ratification (HAC-262) is **formally deferred** to the
+pre-submission re-verification pass. The test at `test/docs/hac-217-demo-cut.test.ts`
+passes and verifies the ledger's structural integrity, but the full demo
+evidence package has not been produced against fresh infrastructure. This
+deferral is recorded in the annotated tag `v0.0.1-hac-259` and in the Linear
+comment on HAC-262.

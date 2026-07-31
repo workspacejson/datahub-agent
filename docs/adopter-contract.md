@@ -116,7 +116,7 @@ through the MCP server. It exists for comparison, not for production use.
 
 One line in `entity_details.gql`, matching how `Dashboard` and `Chart` already
 request `externalUrl`. Filed as an upstream PR to project `Dataset.externalUrl`
-through the MCP server. See [`evaluation/mcp-field-coverage.md`](../evaluation/mcp-field-coverage.md).
+through the MCP server: [acryldata/mcp-server-datahub#149](https://github.com/acryldata/mcp-server-datahub/pull/149). See [`evaluation/mcp-field-coverage.md`](../evaluation/mcp-field-coverage.md).
 
 ## What is separate application vs upstream candidate
 

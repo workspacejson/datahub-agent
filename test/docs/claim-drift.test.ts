@@ -81,9 +81,7 @@ describe("docs/adopter-contract.md references only existing files", () => {
     .filter((p) => !p.startsWith("http") && !p.startsWith("#"));
 
   it.each(paths)("%s exists on disk", (relPath) => {
-    const abs = relPath.startsWith("../")
-      ? join(repoRoot, "docs", relPath)
-      : join(repoRoot, "docs", relPath);
+    const abs = join(repoRoot, "docs", relPath);
     expect(existsSync(abs), `docs/adopter-contract.md references ${relPath} but it does not exist`).toBe(true);
   });
 });

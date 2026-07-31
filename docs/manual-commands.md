@@ -122,4 +122,4 @@ node scripts/build-nodetype-probe.mjs
 ## Re-verification before submission
 
 Run all commands above against fresh infrastructure before handoff. The
-follow-up issue (HAC-293) tracks this re-verification.
+pre-submission re-verification task tracks this work.

@@ -42,7 +42,7 @@ minutes of work first.
 
   You have an API key and model and do want the full package:
 
-      export HAC152_QWEN_CONFIG=1  # any non-empty value (gate variable)
+      export HAC152_RUN_LLM=1  # any non-empty value (gate variable)
       export OPENAI_API_KEY=sk-...
       export QWEN_MODEL=qwen2.5-72b-instruct
 

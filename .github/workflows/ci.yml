@@ -93,3 +93,6 @@ jobs:
 
       - name: Cockpit browser and accessibility checks
         run: npm run e2e
+
+      - name: Judge verification ledger
+        run: npm run verify:judging
