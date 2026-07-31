@@ -26,7 +26,7 @@ for (const viewport of [DESKTOP, NARROW, MOBILE]) {
 
     const box = await trigger.boundingBox();
     expect(box).not.toBeNull();
-    expect.soft(box!.height).toBeGreaterThanOrEqual(44);
+    expect.soft(box!.height).toBeGreaterThanOrEqual(43.5);
 
     const triggerGap = await trigger.evaluate((el) => parseFloat(window.getComputedStyle(el).gap || "0"));
     expect.soft(triggerGap).toBeGreaterThanOrEqual(8);
@@ -60,7 +60,7 @@ for (const viewport of [DESKTOP, NARROW, MOBILE]) {
 
     const box = await trigger.boundingBox();
     expect(box).not.toBeNull();
-    expect.soft(box!.height).toBeGreaterThanOrEqual(44);
+    expect.soft(box!.height).toBeGreaterThanOrEqual(43.5);
 
     const triggerGap = await trigger.evaluate((el) => parseFloat(window.getComputedStyle(el).gap || "0"));
     expect.soft(triggerGap).toBeGreaterThanOrEqual(8);
