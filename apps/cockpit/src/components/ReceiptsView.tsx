@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
+import { ProofIndicator } from "./ProofIndicator";
 import { SourceTag } from "./SourceTag";
 
 declare const __COCKPIT_RECEIPT_HTML__: string | null;
@@ -30,6 +31,21 @@ function Evidence({ value }: { value: EvidenceValue }) {
   }
   if (value.state === "placeholder") {
     return <span className="evidence evidence--placeholder">{value.value} <em>(placeholder, not observed)</em></span>;
+  }
+  if (value.identifier) {
+    return (
+      <span className="evidence">
+        <ProofIndicator
+          variant="block"
+          label={value.identifier.semanticLabel}
+          value={value.value}
+          identifierType={value.identifier.type}
+          copyLabel={value.identifier.copyLabel ?? "Copy"}
+          openUrl={value.identifier.openUrl}
+        />
+        <SourceTag source={value.source} />
+      </span>
+    );
   }
   return <span className="evidence">{value.value} <SourceTag source={value.source} /></span>;
 }

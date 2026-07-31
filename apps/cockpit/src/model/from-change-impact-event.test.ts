@@ -288,14 +288,22 @@ describe("the receipt projection", () => {
     }
   });
 
-  it("reports a null source URL as unavailable with a reason, never as a URL", () => {
-    // R-2. The receipt reintroduced `z.string().url()` one level below the view
-    // model, so the fix on the top-level field would have been undone here.
-    const { immutableSourceUrl } = projectEvent(contractEvent(), "receipts").receipt.provenance;
-    expect(immutableSourceUrl.state).toBe("unavailable");
-    if (immutableSourceUrl.state !== "unavailable") return;
-    expect(immutableSourceUrl.reason).toContain("externalUrl");
-    expect(immutableSourceUrl).not.toHaveProperty("value");
+  it("reports a null source URL as a constructed link from corpus provenance, not as unavailable", () => {
+    // R-2. The receipt and the Impact view must agree. When `code.sourceUrl` is
+    // null (the MCP read path), `resolveViewSource` constructs a commit-pinned
+    // link from corpus provenance. The receipt's `immutableSourceUrl` row now
+    // carries that same constructed link, tagged `workspace.json`, rather than
+    // saying "no link is offered" while the Impact screen shows one.
+    const event = contractEvent();
+    expect(event.code.sourceUrl).toBeNull();
+    const model = projectEvent(event, "receipts");
+    const { immutableSourceUrl } = model.receipt.provenance;
+    expect(immutableSourceUrl.state).toBe("observed");
+    if (immutableSourceUrl.state !== "observed") return;
+    expect(immutableSourceUrl.source).toBe("workspace.json");
+    // The URL matches what the Impact view's viewSource shows.
+    if (model.viewSource.state !== "constructed") throw new Error("expected constructed");
+    expect(immutableSourceUrl.value).toBe(model.viewSource.url);
   });
 
   it("carries a commit-pinned URL as an observation when the catalog exposes one", () => {
