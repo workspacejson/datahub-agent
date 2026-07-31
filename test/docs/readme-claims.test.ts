@@ -36,8 +36,8 @@ type GoldenFixture = {
   writeback: { succeeded: boolean; bothStatesRead: boolean; noop: boolean } | null;
 };
 
-const goldenRoot: GoldenFixture = JSON.parse(
-  readFileSync(join(repoRoot, "test/fixtures/golden/change-impact-event.root.json"), "utf8"),
+const goldenNested: GoldenFixture = JSON.parse(
+  readFileSync(join(repoRoot, "test/fixtures/golden/change-impact-event.nested.json"), "utf8"),
 );
 
 describe("the README makes no perishable count claim", () => {
@@ -102,49 +102,47 @@ describe("the README explains the evidence vocabulary a cold reader will meet", 
   });
 });
 
-describe("the README's concrete-example figures match the root golden fixture", () => {
+describe("the README's concrete-example figures match the nested golden fixture", () => {
   // The README's "One concrete example" table states specific values for the
-  // root-level golden fixture. Those values are the ones a judge reads most
-  // carefully. If the fixture is re-emitted and a value changes, the README
-  // must be updated deliberately — not silently. This test pins each stated
-  // figure to the fixture's actual value so drift fails CI.
+  // nested golden fixture (Transfermarkt corpus). Those values are the ones a
+  // judge reads most carefully. If the fixture is re-emitted and a value
+  // changes, the README must be updated deliberately — not silently. This test
+  // pins each stated figure to the fixture's actual value so drift fails CI.
   //
   // This is the insurance against the "27 tests" defect recurring in a new
   // shape: a number written once in prose, never re-checked against the
   // artifact it describes.
 
   it("states the upstream count the fixture carries", () => {
-    expect(README).toContain(`${goldenRoot.datahub.lineageObservation.upstreams.observedCount} upstream`);
-    expect(goldenRoot.datahub.upstreams.length).toBe(goldenRoot.datahub.lineageObservation.upstreams.observedCount);
+    expect(README).toContain(`${goldenNested.datahub.lineageObservation.upstreams.observedCount} upstream`);
+    expect(goldenNested.datahub.upstreams.length).toBe(goldenNested.datahub.lineageObservation.upstreams.observedCount);
   });
 
   it("states the downstream count the fixture carries", () => {
-    expect(README).toContain(`${goldenRoot.datahub.lineageObservation.downstreams.observedCount} downstream`);
-    expect(goldenRoot.datahub.downstreams.length).toBe(goldenRoot.datahub.lineageObservation.downstreams.observedCount);
+    expect(README).toContain(`${goldenNested.datahub.lineageObservation.downstreams.observedCount} downstream`);
+    expect(goldenNested.datahub.downstreams.length).toBe(goldenNested.datahub.lineageObservation.downstreams.observedCount);
   });
 
   it("states the evidence tier and record count the fixture carries", () => {
-    expect(README).toContain(goldenRoot.evidence.tier);
-    expect(README).toContain(`${goldenRoot.evidence.records.length} of ${goldenRoot.evidence.records.length} record`);
+    expect(README).toContain(goldenNested.evidence.tier);
+    expect(README).toContain(`${goldenNested.evidence.records.length} of ${goldenNested.evidence.records.length} record`);
   });
 
   it("states the fileIndex key count the fixture carries", () => {
-    expect(README).toContain(`${goldenRoot.provenance.workspaceArtifact?.fileIndexKeys} keys`);
+    expect(README).toContain(`${goldenNested.provenance.workspaceArtifact?.fileIndexKeys} keys`);
   });
 
   it("states the project prefix the fixture carries", () => {
-    const prefix = goldenRoot.code.projectPrefix;
-    const expected = prefix === "" ? `""` : prefix;
-    expect(README).toContain(expected);
+    expect(README).toContain(goldenNested.code.projectPrefix);
   });
 
   it("states the dbt file path the fixture carries", () => {
-    expect(README).toContain(goldenRoot.code.dbtFilePath);
+    expect(README).toContain(goldenNested.code.dbtFilePath);
   });
 
   it("states the writeback outcomes the fixture carries", () => {
-    expect(README).toContain(`succeeded: ${goldenRoot.writeback?.succeeded}`);
-    expect(README).toContain(`bothStatesRead: ${goldenRoot.writeback?.bothStatesRead}`);
-    expect(README).toContain(`noop: ${goldenRoot.writeback?.noop}`);
+    expect(README).toContain(`succeeded: ${goldenNested.writeback?.succeeded}`);
+    expect(README).toContain(`bothStatesRead: ${goldenNested.writeback?.bothStatesRead}`);
+    expect(README).toContain(`noop: ${goldenNested.writeback?.noop}`);
   });
 });

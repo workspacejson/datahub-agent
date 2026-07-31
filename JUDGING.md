@@ -8,14 +8,18 @@ without running anything.
 
 ## 60 seconds — what is this?
 
-**Read:** the [README](README.md) top section and the root-level golden fixture.
+**Read:** the [README](README.md) top section and the nested golden fixture.
 
-1. Open [`test/fixtures/golden/change-impact-event.root.json`](test/fixtures/golden/change-impact-event.root.json).
+**Corpus split.** Two corpora appear on judge surfaces. Transfermarkt (`dcaribou/transfermarkt-datasets@59fa295c`) is the judge-facing demo subject — it exercises the nested `dbt/` project layout where a naive join silently returns zero rows. Jaffle Shop DuckDB (`dbt-labs/jaffle_shop_duckdb@36bde6cb`) is the regression and proof corpus — it backs the node-coverage audit and the clean-room quickstart. A judge who sees both without being told which is the subject cannot read either.
+
+1. Open [`test/fixtures/golden/change-impact-event.nested.json`](test/fixtures/golden/change-impact-event.nested.json).
    This is a real emitted `ChangeImpactEvent` for
-   `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)`,
+   `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)`,
    with an attached writeback receipt.
-2. Check the `code` block: `repositoryRelativePath: "models/customers.sql"`,
-   `method: "manifest-join"`. The dataset URN resolved to a repository file.
+2. Check the `code` block: `repositoryRelativePath: "dbt/models/curated/game_events.sql"`,
+   `method: "manifest-join"`, `projectPrefix: "dbt"`. The dataset URN resolved
+   to a repository file — and the `dbt/` prefix is the normalization that makes
+   the join work when the project is nested.
 3. Check the `evidence` block: `tier: "VERIFIED"`, one record with
    `checkExecuted: true`. The tier is a function of the records, not an
    assertion.
@@ -37,16 +41,16 @@ without running anything.
 
 **Read:** the README, the golden fixtures, and the node-type coverage evaluation.
 
-1. Open the [root-level fixture](test/fixtures/golden/change-impact-event.root.json)
-   and the [nested fixture](test/fixtures/golden/change-impact-event.nested.json).
-2. In the root fixture: `projectPrefix: ""`, `dbtFilePath: "models/customers.sql"`,
-   `repositoryRelativePath: "models/customers.sql"`. Project at repo root —
-   paths coincide.
-3. In the nested fixture: `projectPrefix: "dbt"`,
+1. Open the [nested fixture](test/fixtures/golden/change-impact-event.nested.json)
+   and the [root-level fixture](test/fixtures/golden/change-impact-event.root.json).
+2. In the nested fixture: `projectPrefix: "dbt"`,
    `dbtFilePath: "models/curated/game_events.sql"`,
    `repositoryRelativePath: "dbt/models/curated/game_events.sql"`. Project
    nested under `dbt/` — paths differ by exactly the prefix. This is the case
    where a naive join silently returns zero rows.
+3. In the root fixture: `projectPrefix: ""`, `dbtFilePath: "models/customers.sql"`,
+   `repositoryRelativePath: "models/customers.sql"`. Project at repo root —
+   paths coincide. This is the Jaffle regression corpus.
 4. Open [`evaluation/dbt-node-coverage.md`](evaluation/dbt-node-coverage.md).
    `original_file_path` is populated for every dbt node type tested — model
    SQL, model Python, seed, snapshot, source, test — at dbt 1.12.0, with zero

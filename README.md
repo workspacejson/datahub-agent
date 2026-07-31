@@ -67,21 +67,22 @@ On the proof corpus that is 28 of 28 nodes accounted for: 8 kept (5 `model`, 3 `
 
 ## One concrete example
 
-Resolving `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)`:
+Resolving `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)`:
 
 | Step | Value |
 | -- | -- |
-| DataHub dataset URN | `urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)` |
-| dbt unique ID | `model.jaffle_shop.customers` |
-| dbt file path | `models/customers.sql` |
-| Project prefix | `""` (project at repo root) |
-| Repository-relative path | `models/customers.sql` |
-| workspace.json fileIndex | 36 keys, exact-match integrity |
+| DataHub dataset URN | `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)` |
+| dbt file path | `models/curated/game_events.sql` |
+| Project prefix | `dbt` (project nested under `dbt/`) |
+| Repository-relative path | `dbt/models/curated/game_events.sql` |
+| workspace.json fileIndex | 131 keys, exact-match integrity |
 | Evidence tier | `VERIFIED` — 1 of 1 record(s) carry a check this harness executed |
-| Lineage | 12 upstream, 1 downstream, `not-established` completeness |
+| Lineage | 8 upstream, 1 downstream, `not-established` completeness |
 | Writeback | `succeeded: true`, `bothStatesRead: true`, `noop: true` |
 
-This is the [golden root-level fixture](test/fixtures/golden/change-impact-event.root.json) — a real emitted event with an attached writeback receipt, committed so a judge can inspect it without running DataHub.
+This is the [golden nested fixture](test/fixtures/golden/change-impact-event.nested.json) — a real emitted event with an attached writeback receipt, committed so a judge can inspect it without running DataHub.
+
+**Corpus split.** The judge-facing golden fixture uses the Transfermarkt corpus (`dcaribou/transfermarkt-datasets@59fa295c`), which exercises the nested `dbt/` project layout where a naive join silently returns zero rows. The Jaffle Shop DuckDB corpus (`dbt-labs/jaffle_shop_duckdb@36bde6cb`) is the regression and proof corpus — it backs the node-coverage audit and the clean-room quickstart, and its [root-level fixture](test/fixtures/golden/change-impact-event.root.json) exercises the project-at-repo-root layout. Both corpora stay visible on judge surfaces; Transfermarkt is the demo subject, Jaffle is the regression proof.
 
 ## Why DataHub is essential
 
@@ -170,7 +171,7 @@ The receipt keeps five outcomes apart:
 
 `bothStatesRead` says the before and after states were both read. `succeeded` requires the mutations to have been accepted **and** the intended state observed. A mutation returning cleanly is not evidence that the write is visible — DataHub serves stale reads for some seconds afterwards.
 
-See the [golden root-level fixture](test/fixtures/golden/change-impact-event.root.json) for a complete receipt, and [`evaluation/clean-quickstart-proof.md`](evaluation/clean-quickstart-proof.md) for a full end-to-end transcript.
+See the [golden nested fixture](test/fixtures/golden/change-impact-event.nested.json) for a complete receipt, and [`evaluation/clean-quickstart-proof.md`](evaluation/clean-quickstart-proof.md) for a full end-to-end transcript.
 
 ## Evaluation and reproducibility
 
