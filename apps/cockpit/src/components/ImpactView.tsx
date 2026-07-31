@@ -146,7 +146,7 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
     <section className="lineage-band" aria-label="Lineage topology">
       <header className="lineage-band__head">
         <div>
-          <p className="eyebrow">Declared lineage</p>
+          <p className="eyebrow">Declared lineage (which datasets feed and depend on this one)</p>
           {/*
             The head stays; the sentence under it moved to the coverage band in
             the hero. It is the answer to "can I trust the set in front of me",
@@ -234,6 +234,7 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
       animate="visible"
       variants={reduce ? undefined : containerVariants}
     >
+      <p className="route-intro">What broke: the catalog cannot resolve this dataset to a file.</p>
       <ResolutionSeam model={model} gap={producerGap} />
 
       <motion.article className="claim claim--evidence" variants={reduce ? undefined : itemVariants}>
