@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { CockpitShell } from "./components/CockpitShell";
-import { selectCockpitAdapter, selectCockpitStateAdapter } from "./data/select-adapter";
+import { DATASET_OPTIONS, selectCockpitAdapterByKey, selectCockpitStateAdapter } from "./data/select-adapter";
 import { cockpitRouteSchema, cockpitStateNameSchema, type CockpitRoute } from "./model/cockpit-view-model";
 
 function readLocation() {
@@ -23,7 +23,11 @@ function writeLocation(route: CockpitRoute) {
 export function App() {
   const initial = readLocation();
   const [location, setLocation] = useState(initial);
-  const model = (import.meta.env.DEV ? selectCockpitStateAdapter(location.state) : selectCockpitAdapter()).read();
+  const [datasetKey, setDatasetKey] = useState(DATASET_OPTIONS[0].key);
+  const model = useMemo(
+    () => (import.meta.env.DEV ? selectCockpitStateAdapter(location.state) : selectCockpitAdapterByKey(datasetKey)).read(),
+    [location.state, datasetKey],
+  );
 
   useEffect(() => {
     const onPopState = () => setLocation(readLocation());
@@ -67,5 +71,5 @@ export function App() {
     document.startViewTransition(() => flushSync(commit));
   };
 
-  return <CockpitShell model={model} route={location.route} onRouteChange={goTo} />;
+  return <CockpitShell model={model} route={location.route} onRouteChange={goTo} datasetKey={datasetKey} datasetOptions={import.meta.env.DEV ? undefined : DATASET_OPTIONS} onDatasetChange={setDatasetKey} />;
 }

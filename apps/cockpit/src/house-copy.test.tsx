@@ -154,7 +154,7 @@ describe("silent zero callout on the impact route", () => {
     render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
     const m = model();
     if (m.dbtFilePath) {
-      expect(screen.getByText(m.dbtFilePath)).toBeTruthy();
+      expect(screen.getAllByText(new RegExp(m.dbtFilePath)).length).toBeGreaterThan(0);
     }
   });
 });

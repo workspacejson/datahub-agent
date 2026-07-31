@@ -130,6 +130,19 @@
   background: var(--glow-page), var(--surface-page);
   border-bottom: 1px solid var(--border-default);
 }
+.hero__stakes-group {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+}
+.hero__stakes {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--text-heading);
+}
 .hero__identity { min-width: 0; }
 .hero h1 {
   margin: var(--sp-2) 0 var(--sp-3);
@@ -439,6 +452,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   }
   .cockpit-shell { padding: var(--sp-4) var(--sp-3) var(--sp-6); }
   .hero {
+    grid-template-columns: 1fr;
     gap: var(--sp-5);
     padding: var(--sp-3) 0; margin-inline: calc(-1 * var(--sp-3)); padding-inline: var(--sp-3);
   }
@@ -761,6 +775,86 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 }
 .proof-popover__open:hover { text-decoration: underline; }
 .proof-popover__status { color: var(--text-muted); font-size: var(--fs-caption); }
+.silent-zero--inline {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+.silent-zero__path {
+  margin: var(--sp-1) 0 0;
+  font-family: var(--font-mono); font-size: var(--fs-caption);
+  color: var(--text-muted); overflow-wrap: anywhere;
+}
+.silent-zero__gloss {
+  margin: var(--sp-2) 0 0;
+  color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal);
+}
+.silent-zero__gloss code { font-family: var(--font-mono); font-size: var(--fs-caption); }
+.silent-zero__consequence {
+  margin: var(--sp-3) 0 0;
+  color: var(--text-body); font-size: var(--fs-sm); font-weight: 500;
+}
+
+/* ── Dataset selector ───────────────────────────────────────── */
+.dataset-selector {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+.dataset-selector__label {
+  font-family: var(--font-mono); font-size: var(--fs-caption);
+  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+  color: var(--text-faint);
+}
+.dataset-selector__select {
+  border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+  padding: var(--sp-1) var(--sp-3); background: var(--surface-card);
+  color: var(--text-body); font-family: var(--font-sans); font-size: var(--fs-sm);
+  cursor: pointer; min-height: var(--tap-target);
+}
+.dataset-selector__select:hover { border-color: var(--wj-accent); }
+
+/* ── Endorsement subtitle ───────────────────────────────────── */
+.endorsement__subtitle {
+  margin-left: var(--sp-2);
+  color: var(--text-faint);
+}
+
+/* ── Spine subtitle ─────────────────────────────────────────── */
+.spine__subtitle {
+  display: block;
+  font-family: var(--font-sans); font-size: var(--fs-xs);
+  color: var(--text-muted); font-weight: 400;
+  letter-spacing: normal; text-transform: none;
+  margin-top: var(--sp-1);
+}
+
+/* ── Rail verify link ───────────────────────────────────────── */
+.rail-verify {
+  display: inline-block; margin-top: var(--sp-2);
+  color: var(--wj-accent); font-weight: 600; font-size: var(--fs-xs);
+  text-decoration: underline; text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.rail-verify:hover { text-decoration-color: currentColor; }
+
+/* ── Evidence tier badge ────────────────────────────────────── */
+.evidence-tier-badge {
+  display: inline-block; border-radius: var(--radius-pill);
+  padding: var(--sp-1) var(--sp-3); margin-right: var(--sp-2);
+  border: 1px solid var(--border-strong); background: var(--surface-sunken);
+  color: var(--wj-gray-2); font-family: var(--font-mono);
+  font-size: var(--fs-caption); font-weight: 700;
+  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+}
+
+/* ── Proof ledger gloss ─────────────────────────────────────── */
+.proof-ledger-gloss {
+  margin: var(--sp-2) 0 0;
+  color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal);
+}
+
 [data-state="open"].proof-popover__panel,
 [data-state="closed"].proof-popover__panel {
   transition: none;

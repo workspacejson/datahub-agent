@@ -155,6 +155,7 @@ export function DecisionRail({ model, route, onRouteChange }: {
         ) : (
           <button className="cta" type="button" onClick={() => onRouteChange("receipts")}>Review receipts</button>
         )}
+        <a className="rail-verify" href="https://github.com/workspacejson/datahub-agent/blob/main/JUDGING.md" target="_blank" rel="noopener">Verify this yourself</a>
       </div>
     </aside>
   );
