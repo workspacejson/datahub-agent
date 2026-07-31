@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
+import { Icon } from "./Icon";
 import { ProofIndicator } from "./ProofIndicator";
 import { SourceTag } from "./SourceTag";
 
@@ -242,7 +244,7 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
         from a branch, or from nothing, is a claim the event does not support.
       */}
       {provenance.immutableSourceUrl.state === "observed"
-        ? <a className="view-source" href={provenance.immutableSourceUrl.value} target="_blank" rel="noreferrer">View immutable source</a>
+        ? <a className="view-source" href={provenance.immutableSourceUrl.value} target="_blank" rel="noreferrer">View immutable source <Icon icon={ExternalLink} className="semantic-icon" /></a>
         : <p className="view-source view-source--unavailable">No immutable source link is offered. The Immutable source URL row states why.</p>}
     </section>
 

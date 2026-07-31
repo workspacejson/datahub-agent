@@ -1,5 +1,5 @@
 import type { CockpitViewModel } from "../model/cockpit-view-model";
-import { Link2 } from "lucide-react";
+import { Database, FileSearch2, GitMerge, Link2 } from "lucide-react";
 import { Icon } from "./Icon";
 import { ProofPopover } from "./ProofPopover";
 import { SourceTag } from "./SourceTag";
@@ -44,15 +44,16 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
           <span className="parity-label">Model</span>
           <span className="parity-value">{comparison.model}</span>
         </div>
-        <div>
+        <div className="parity-strip__binding">
           <span className="parity-label"><Icon icon={Link2} className="semantic-icon" /> <span>Bound to this analysis event</span></span>
           {comparison.eventDigestIdentifier ? (
             <ProofPopover
-              label={comparison.eventDigestIdentifier.semanticLabel}
+              label="Inspect proof"
               value={comparison.eventDigest}
               identifierType={comparison.eventDigestIdentifier.type}
               copyLabel={comparison.eventDigestIdentifier.copyLabel ?? "Copy digest"}
               openUrl={comparison.eventDigestIdentifier.openUrl}
+              icon={FileSearch2}
             />
           ) : (
             <span className="parity-value">{comparison.eventDigest}</span>
@@ -62,14 +63,14 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
 
       <div className="comparison">
         <article className="plan-panel">
-          <p className="eyebrow">DataHub only</p>
+          <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub only</span></p>
           <h3>Declared context alone</h3>
           {/* Index keys: two plan steps may legitimately carry identical text, and the
               list is static per render, so position is the stable identity. */}
           <ol>{comparison.datahubOnlySteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
         </article>
         <article className="plan-panel plan-panel--joined">
-          <p className="eyebrow">Joined context</p>
+          <p className="eyebrow"><Icon icon={GitMerge} className="semantic-icon" /> <span>Joined context</span></p>
           <h3>Declared context plus repository evidence</h3>
           <ol>{comparison.joinedSteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
         </article>

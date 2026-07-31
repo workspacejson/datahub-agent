@@ -1,5 +1,5 @@
 import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model";
-import { Database } from "lucide-react";
+import { CircleDashed, Database } from "lucide-react";
 import { MotionConfig } from "motion/react";
 import { ChangePlanView } from "./ChangePlanView";
 import { DecisionRail } from "./DecisionRail";
@@ -93,7 +93,7 @@ const READ_LABEL: Record<CockpitViewModel["read"], string> = {
 function Wordmark() {
   return (
     <p className="wordmark">
-      <svg className="wordmark__mark" viewBox="0 0 104 96" width="24" height="22" aria-hidden="true" focusable="false">
+      <svg className="wordmark__mark" viewBox="0 0 104 96" width="36" height="33" aria-hidden="true" focusable="false">
         <g fill="#00c896">
           <rect x="6" y="6" width="7" height="84" /><rect x="6" y="6" width="22" height="7" /><rect x="6" y="83" width="22" height="7" />
           <rect x="91" y="6" width="7" height="84" /><rect x="76" y="6" width="22" height="7" /><rect x="76" y="83" width="22" height="7" />
@@ -134,7 +134,7 @@ function Coverage({ model }: { model: CockpitViewModel }) {
     <div className="coverage" aria-label="Coverage of this review" aria-live="polite">
       <p className="eyebrow">Coverage of this review</p>
       <p className={`coverage__headline ${complete ? "" : "coverage__headline--open"}`}>
-        {complete ? "Complete against pinned manifest" : "Completeness not established"}
+        {complete ? "Complete against pinned manifest" : <><Icon icon={CircleDashed} className="semantic-icon" /> <span>Completeness not established</span></>}
       </p>
       {/*
         "that set", not "the set". The counters sit three inches below this

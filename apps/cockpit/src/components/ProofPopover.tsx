@@ -1,4 +1,5 @@
 import { Fingerprint } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
 import { Icon } from "./Icon";
@@ -12,6 +13,8 @@ export interface ProofPopoverProps {
   identifierType: IdentifierType;
   copyLabel?: string;
   openUrl?: string;
+  icon?: LucideIcon;
+  iconStrokeWidth?: number;
 }
 
 export function ProofPopover({
@@ -20,6 +23,8 @@ export function ProofPopover({
   identifierType,
   copyLabel = "Copy",
   openUrl,
+  icon = Fingerprint,
+  iconStrokeWidth = 1.5,
 }: ProofPopoverProps) {
   const { copyStatus, copy } = useCopyFeedback(value, copyLabel);
 
@@ -27,7 +32,7 @@ export function ProofPopover({
     <Popover.Root>
       <Popover.Trigger asChild>
         <button className="proof-popover__trigger" type="button">
-          <Icon icon={Fingerprint} className="semantic-icon" />
+          <Icon icon={icon} strokeWidth={iconStrokeWidth} className="semantic-icon" />
           <span>{label}</span>
         </button>
       </Popover.Trigger>

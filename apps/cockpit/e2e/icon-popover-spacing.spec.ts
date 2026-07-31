@@ -55,7 +55,7 @@ for (const viewport of [DESKTOP, NARROW, MOBILE]) {
     await page.setViewportSize(viewport);
     await page.goto(`${COMMITTED_ORIGIN}/change-plan`);
 
-    const trigger = page.getByRole("button", { name: /View binding proof/ });
+    const trigger = page.getByRole("button", { name: /Inspect proof/ });
     await expect(trigger).toBeVisible();
 
     const box = await trigger.boundingBox();
