@@ -1,4 +1,5 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, describe, it } from "vitest";
 
 import { CockpitShell } from "./CockpitShell";
@@ -16,20 +17,27 @@ const shell = () => render(
 );
 
 describe("the Impact frame spends its space on the join", () => {
-  it("prints the subject URN once, with its source", () => {
+  it("reveals the subject URN behind proof-on-demand, with its source visible", async () => {
     // It used to appear twice: once in the hero and again in a `Dataset
     // identity` card a hundred pixels below, which spent one of three slots in
-    // the row that carries the join on a repetition.
+    // the row that carries the join on a repetition. Now it appears zero times
+    // in the visible text — it is behind a popover trigger (proof-on-demand).
     const model = createAdapter(contractEvent(), "committed").read();
     shell();
 
     const urn = model.datasetIdentity.text;
+    // The URN is not in the DOM until the popover is opened.
+    expect(screen.queryByText(urn)).toBeNull();
+
+    // Open the popover to reveal the canonical identifier.
+    const hero = screen.getByLabelText("Dataset under review");
+    const trigger = within(hero).getByRole("button", { name: /View dataset identity/ });
+    await userEvent.click(trigger);
     expect(screen.getAllByText(urn)).toHaveLength(1);
 
     // Removing the card must not take the attribution with it. An identifier on
     // a judge surface without the system that asserted it is the collapse this
     // cockpit exists to refuse.
-    const hero = screen.getByLabelText("Dataset under review");
     expect(within(hero).getByText(model.datasetIdentity.source)).toBeTruthy();
   });
 

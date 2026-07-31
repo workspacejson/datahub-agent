@@ -406,9 +406,31 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   .hero, .route-body { grid-template-columns: minmax(0, 1fr); }
   .decision-rail { position: static; }
   .spine { flex-wrap: wrap; }
+  /* The three-column topology grid reflows to a single column so upstream and
+     downstream nodes are not squeezed into unreadable widths. The subject
+     column loses its side borders, which were visual separators between columns
+     and serve no purpose when there is only one. */
+  .topology { grid-template-columns: minmax(0, 1fr); }
+  .topology__col--subject { border-inline: 0; padding-inline: 0; }
 }
 @media (max-width: 640px) {
   .product-header { align-items: flex-start; flex-direction: column; }
+  /* Tighter spacing on the first-screen elements so the silent zero, the seam,
+     and the CTA are all reachable without scrolling on a phone. */
+  .cockpit-shell { padding: var(--sp-4) var(--sp-3) var(--sp-6); }
+  .hero { padding: var(--sp-3) 0; margin-inline: calc(-1 * var(--sp-3)); padding-inline: var(--sp-3); }
+  .silent-zero { padding: var(--sp-3); }
+  .seam { padding: var(--sp-3); }
+  .seam__row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
+  .lineage-band { padding: var(--sp-3); }
+  /* The legend's `white-space: nowrap` and the key's `flex: none` prevent
+     shrinking below their content width, which overflows by ~35px at 390px.
+     Letting both yield on a phone keeps the band inside its column. */
+  .lineage-band__key { min-width: 0; flex: 1 1 auto; flex-wrap: wrap; }
+  .lineage-band__legend { white-space: normal; }
+  /* The seam's producing-file path is the most important line on this screen.
+     At narrow widths it stays readable but does not dominate the frame. */
+  .seam__path { font-size: var(--fs-lg); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
@@ -624,3 +646,90 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    viewport minus the reading line, so this is self-adjusting and correct at any
    window size. `first-frame.spec.ts` asserts every entry is reachable. */
 .receipts-view > section:last-of-type { min-height: calc(100dvh - var(--sp-6) - 2rem); }
+
+/* ── Proof indicator ─────────────────────────────────────────
+   Meaning-first, proof-on-demand. The semantic label is always visible in
+   the summary; the canonical identifier, its type, and copy/open actions are
+   revealed on expansion. No animation, no tooltip. */
+.proof-indicator { margin: 0; color: var(--text-body); font-size: var(--fs-xs); }
+.proof-indicator--compact { display: inline-block; }
+.proof-indicator--block { display: block; width: 100%; }
+.proof-indicator__summary { cursor: pointer; padding: var(--sp-1) 0; }
+.proof-indicator__label { font-family: var(--font-sans); font-size: var(--fs-sm); color: var(--text-body); }
+.proof-indicator__panel { padding: var(--sp-2) 0 var(--sp-1); display: flex; flex-direction: column; gap: var(--sp-2); }
+.proof-indicator__type {
+  display: inline-block; width: fit-content; border-radius: var(--radius-pill);
+  padding: 2px var(--sp-2); border: 1px solid var(--border-strong);
+  color: var(--wj-gray-2); font-family: var(--font-mono); font-size: var(--fs-caption);
+  text-transform: uppercase; letter-spacing: var(--ls-eyebrow);
+}
+.proof-indicator__value { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--fs-xs); }
+.proof-indicator__actions { display: flex; align-items: center; gap: var(--sp-2); }
+.proof-indicator__copy {
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3); background: transparent; color: var(--text-body);
+  font-family: var(--font-sans); font-size: var(--fs-xs); cursor: pointer;
+}
+.proof-indicator__copy:hover { border-color: var(--border-strong); }
+.proof-indicator__open {
+  color: var(--wj-accent); font-weight: 700; font-size: var(--fs-xs);
+  text-decoration: none;
+}
+.proof-indicator__open:hover { text-decoration: underline; }
+.proof-indicator__status { color: var(--text-muted); font-size: var(--fs-caption); }
+
+/* ── Semantic icon ───────────────────────────────────────────
+   Decorative inline icon paired with a visible text label. The
+   icon reinforces meaning; the text carries it. Never icon-only. */
+.semantic-icon { display: inline-flex; vertical-align: middle; flex-shrink: 0; color: currentColor; }
+.semantic-icon + span { margin-left: var(--sp-1); }
+
+/* ── Proof popover ───────────────────────────────────────────
+   Anchored popover for compact identifier proof. Replaces
+   <details>/summary for inline proof surfaces (hero, parity strip)
+   where layout reflow from native disclosure was the problem.
+   No animation on open/close, per the design rule. */
+.proof-popover__trigger {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  border: none; background: transparent; color: var(--text-body);
+  font-family: var(--font-sans); font-size: var(--fs-sm);
+  cursor: pointer; padding: var(--sp-1) 0;
+}
+.proof-popover__trigger:hover { color: var(--text-heading); }
+.proof-popover__panel {
+  max-width: min(32rem, calc(100vw - 2rem), var(--radix-popover-content-available-width));
+  max-height: var(--radix-popover-content-available-height, 80vh);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  padding: var(--sp-3);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.proof-popover__arrow { fill: var(--surface-card); stroke: var(--border-default); }
+.proof-popover__type {
+  display: inline-block; width: fit-content; border-radius: var(--radius-pill);
+  padding: 2px var(--sp-2); border: 1px solid var(--border-strong);
+  color: var(--wj-gray-2); font-family: var(--font-mono); font-size: var(--fs-caption);
+  text-transform: uppercase; letter-spacing: var(--ls-eyebrow);
+}
+.proof-popover__value { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--fs-xs); }
+.proof-popover__actions { display: flex; align-items: center; gap: var(--sp-2); }
+.proof-popover__copy {
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3); background: transparent; color: var(--text-body);
+  font-family: var(--font-sans); font-size: var(--fs-xs); cursor: pointer;
+}
+.proof-popover__copy:hover { border-color: var(--border-strong); }
+.proof-popover__open {
+  color: var(--wj-accent); font-weight: 700; font-size: var(--fs-xs);
+  text-decoration: none;
+}
+.proof-popover__open:hover { text-decoration: underline; }
+.proof-popover__status { color: var(--text-muted); font-size: var(--fs-caption); }
+[data-state="open"].proof-popover__panel,
+[data-state="closed"].proof-popover__panel {
+  transition: none;
+}

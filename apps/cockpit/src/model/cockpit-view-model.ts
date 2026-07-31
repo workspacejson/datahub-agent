@@ -38,6 +38,46 @@ export const sourceModeSchema = z.enum(["placeholder", "committed"]);
 export const cockpitRouteSchema = z.enum(["impact", "change-plan", "receipts"]);
 export const claimSourceSchema = z.enum(["DataHub", "workspace.json", "Joined"]);
 export const sourceClaimSchema = z.object({ text: z.string().min(1), source: claimSourceSchema });
+
+/**
+ * The kind of identifier a value carries, for progressive disclosure.
+ *
+ * Each type maps to a fixed human-readable label in the UI. The type is carried
+ * structurally so the disclosure can say "Git commit" or "Event digest" rather
+ * than a generic "identifier" — collapsing types would lose the distinction
+ * between a revision pin and a content digest, which are different evidence.
+ *
+ * `evidence-path` is a dotted/bracket path into the event (e.g.
+ * `evidence.records[0]`), not RFC 6901 JSON Pointer. The type name reflects what
+ * it is.
+ */
+export const identifierTypeSchema = z.enum([
+  "git-commit-sha",
+  "event-digest",
+  "set-digest",
+  "manifest-digest",
+  "dataset-urn",
+  "evidence-path",
+  "patch-digest",
+]);
+
+/**
+ * Metadata for progressive disclosure of an identifier.
+ *
+ * `semanticLabel` is what a reader sees first — a meaning-first label, not the
+ * raw identifier. The canonical value stays in `EvidenceValue.value` and is
+ * revealed on demand. No `fullValue` duplication: it would disagree with `value`.
+ *
+ * `openUrl` is only present when a real, constructable URL exists. `copyLabel`
+ * customises the copy button text (e.g. "Copy SHA" vs "Copy URN").
+ */
+export const identifierMetaSchema = z.object({
+  type: identifierTypeSchema,
+  semanticLabel: z.string().min(1),
+  copyLabel: z.string().optional(),
+  openUrl: z.string().url().optional(),
+});
+
 /**
  * A commit-pinned source link and its origin. See `resolveViewSource`.
  *
@@ -143,6 +183,7 @@ export const planComparisonSchema = z.discriminatedUnion("state", [
     taskId: z.string().min(1),
     model: z.string().min(1),
     eventDigest: z.string().min(1),
+    eventDigestIdentifier: identifierMetaSchema.optional(),
     datahubOnlySteps: z.array(z.string().min(1)),
     joinedSteps: z.array(z.string().min(1)),
   }),
@@ -171,11 +212,13 @@ export const cockpitStateNameSchema = z.enum([
  *   render-time convention.
  */
 export const evidenceValueSchema = z.discriminatedUnion("state", [
-  z.object({ state: z.literal("observed"), value: z.string().min(1), source: claimSourceSchema }),
+  z.object({ state: z.literal("observed"), value: z.string().min(1), source: claimSourceSchema, identifier: identifierMetaSchema.optional() }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
   z.object({ state: z.literal("placeholder"), value: z.string().min(1) }),
 ]);
 export type EvidenceValue = z.infer<typeof evidenceValueSchema>;
+export type IdentifierType = z.infer<typeof identifierTypeSchema>;
+export type IdentifierMeta = z.infer<typeof identifierMetaSchema>;
 
 const count = z.number().int().nonnegative();
 
@@ -369,6 +412,7 @@ const cockpitViewModelBaseSchema = z.object({
   summary: z.string().min(1),
   unresolvedItems: z.array(z.string()),
   datasetIdentity: sourceClaimSchema,
+  datasetIdentityIdentifier: identifierMetaSchema.optional(),
   producerPath: sourceClaimSchema,
   dbtFilePath: z.string().nullable(),
   projectPrefix: z.string().nullable(),

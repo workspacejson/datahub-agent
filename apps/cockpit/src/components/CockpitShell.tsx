@@ -1,8 +1,11 @@
 import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model";
+import { Database } from "lucide-react";
 import { MotionConfig } from "motion/react";
 import { ChangePlanView } from "./ChangePlanView";
 import { DecisionRail } from "./DecisionRail";
+import { Icon } from "./Icon";
 import { ImpactView } from "./ImpactView";
+import { ProofPopover } from "./ProofPopover";
 import { ReceiptsView } from "./ReceiptsView";
 import { SourceTag } from "./SourceTag";
 
@@ -152,10 +155,20 @@ export function CockpitShell({ model, route, onRouteChange }: {
     */}
     <section className="hero" aria-label="Dataset under review">
       <div className="hero__identity">
-        <p className="eyebrow">Dataset under review</p>
+        <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>
         <h1 id="route-title">{model.title}</h1>
         <p className="subject-urn">
-          <span className="mono">{model.datasetIdentity.text}</span>
+          {model.datasetIdentityIdentifier ? (
+            <ProofPopover
+              label={model.datasetIdentityIdentifier.semanticLabel}
+              value={model.datasetIdentity.text}
+              identifierType={model.datasetIdentityIdentifier.type}
+              copyLabel={model.datasetIdentityIdentifier.copyLabel ?? "Copy URN"}
+              openUrl={model.datasetIdentityIdentifier.openUrl}
+            />
+          ) : (
+            <span className="mono">{model.datasetIdentity.text}</span>
+          )}
           <SourceTag source={model.datasetIdentity.source} />
         </p>
       </div>

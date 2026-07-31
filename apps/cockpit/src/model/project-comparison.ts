@@ -56,6 +56,11 @@ export function projectComparison(comparison: PlanComparisonArtifact): SourceEve
     taskId: comparison.joinedPlan.run.taskId,
     model: comparison.joinedPlan.run.model,
     eventDigest: comparison.eventDigest,
+    eventDigestIdentifier: {
+      type: "event-digest",
+      semanticLabel: "View binding proof",
+      copyLabel: "Copy digest",
+    },
     datahubOnlySteps: comparison.datahubOnlyPlan.steps.map((step) => step.action),
     joinedSteps: comparison.joinedPlan.steps.map((step) => step.action),
     deltas: comparison.deltas.map((delta) => ({
