@@ -85,7 +85,7 @@ node --import tsx scripts/run-paired-plan-comparison.mjs \
 
 ## 5. Parity check
 
-Verify the adopted adapter matches the pre-migration baseline at 35/35 checks.
+Verify the adopted adapter matches the pre-migration baseline at 34/35 checks (one pre-existing failure in the 'declares NO generate command' check; see `docs/provenance.md` for details).
 
 ```bash
 npm run parity:datahub-adapter
