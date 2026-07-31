@@ -40,6 +40,7 @@ function runGate(label, cmd, args, opts) {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, FORCE_COLOR: "0" },
+      maxBuffer: 10 * 1024 * 1024,
     });
     return { name: label, status: "PASS", detail: "exit 0", required };
   } catch (err) {
