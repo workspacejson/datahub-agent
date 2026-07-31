@@ -62,7 +62,7 @@
 .wordmark { display: flex; align-items: center; margin: 0; padding-left: 18px; color: var(--text-heading); }
 /* 6px of margin plus the 1.4px of internal padding the viewBox carries on this
    side lands the visual interval at roughly 7px, against 16px at the divider. */
-.wordmark__mark { flex: none; display: block; margin-right: 6px; }
+.wordmark__mark { flex: none; display: block; margin-right: 9px; }
 /* Not tinted emerald: emerald is load bearing in this UI and means workspace.json
    contributed the material. Not set in mono: mono is data. The mark's own
    brackets are emerald and its strokes take `currentColor` from this rule. */
@@ -261,6 +261,7 @@
 .identity-grid--join details { margin: var(--sp-1) 0 0; }
 
 .view-source { display: inline-block; color: var(--wj-accent); font-weight: 700; }
+.view-source .semantic-icon { margin-left: var(--sp-1); }
 .view-source--unavailable { color: var(--wj-experimental); font-weight: 400; }
 .view-source__origin { margin-left: var(--sp-2); color: var(--text-muted); font-size: var(--fs-xs); }
 
@@ -325,6 +326,8 @@
 .parity-strip div { min-width: 0; }
 .parity-strip dt, .parity-strip .parity-label { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
 .parity-strip .parity-value { display: block; color: var(--text-body); font-family: var(--font-mono); font-size: var(--fs-xs); overflow-wrap: anywhere; }
+.parity-strip__binding { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); flex: 1 1 auto; }
+.parity-strip__binding .proof-popover__trigger { margin-inline-start: auto; }
 
 .comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: var(--sp-3); margin: 0 0 var(--sp-5); }
 .plan-panel { min-width: 0; border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-4); }
@@ -496,6 +499,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    marker rather than coloured text: the word carries the state, the colour only
    reinforces it, and the statement has to survive greyscale. */
 .coverage__headline--open { padding-left: var(--sp-3); border-left: 2px solid var(--wj-experimental); }
+.coverage__headline--open .semantic-icon { color: var(--wj-experimental); }
 .coverage__note { margin: 0 0 var(--sp-4); max-width: 44ch; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-relaxed); }
 
 /* Four figures on one rule, not a bordered panel with a nested grid. They are one
@@ -742,6 +746,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    icon reinforces meaning; the text carries it. Never icon-only. */
 .semantic-icon { display: inline-flex; vertical-align: middle; flex-shrink: 0; color: currentColor; }
 .semantic-icon + span { margin-left: var(--sp-2); }
+.proof-popover__trigger .semantic-icon + span { margin-left: 0; }
 
 /* ── Proof popover ───────────────────────────────────────────
    Anchored popover for compact identifier proof. Replaces
