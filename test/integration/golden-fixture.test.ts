@@ -275,3 +275,34 @@ describe("the fixtures cover both project layouts", () => {
     expect(FIXTURES.root.code.projectPrefix).not.toBe(FIXTURES.nested.code.projectPrefix);
   });
 });
+
+describe("the nested fixture carries manifest-backed completeness", () => {
+  const nested = FIXTURES.nested;
+  const upstreamManifest = JSON.parse(
+    readFileSync(join(goldenDir, "../readiness/game_events.upstream.json"), "utf8"),
+  ) as { _provenance: { manifestDigest: string; expectedSetDigest: string } };
+  const downstreamManifest = JSON.parse(
+    readFileSync(join(goldenDir, "../readiness/game_events.downstream.json"), "utf8"),
+  ) as { _provenance: { manifestDigest: string; expectedSetDigest: string } };
+
+  it("claims complete-against-pinned-manifest for both upstreams and downstreams", () => {
+    expect(nested.datahub.lineageObservation.upstreams.completeness).toBe("complete-against-pinned-manifest");
+    expect(nested.datahub.lineageObservation.downstreams.completeness).toBe("complete-against-pinned-manifest");
+  });
+
+  it("carries verification with matching expected and observed set digests for upstreams", () => {
+    const v = nested.datahub.lineageObservation.upstreams.verification;
+    expect(v).toBeDefined();
+    expect(v?.expectedSetDigest).toBe(v?.observedSetDigest);
+    expect(v?.manifestDigest).toBe(upstreamManifest._provenance.manifestDigest);
+    expect(v?.expectedSetDigest).toBe(upstreamManifest._provenance.expectedSetDigest);
+  });
+
+  it("carries verification with matching expected and observed set digests for downstreams", () => {
+    const v = nested.datahub.lineageObservation.downstreams.verification;
+    expect(v).toBeDefined();
+    expect(v?.expectedSetDigest).toBe(v?.observedSetDigest);
+    expect(v?.manifestDigest).toBe(downstreamManifest._provenance.manifestDigest);
+    expect(v?.expectedSetDigest).toBe(downstreamManifest._provenance.expectedSetDigest);
+  });
+});

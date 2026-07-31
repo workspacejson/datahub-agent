@@ -199,45 +199,7 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
   );
 }
 
-/**
- * The silent zero, made visible.
- *
- * The product's thesis is that a naive join between DataHub's dbt-relative path
- * and workspace.json's repo-relative key returns zero matches with no error. The
- * seam below shows the resolution; this callout shows the failure that makes the
- * resolution necessary. Three rows: what dbt reports, what workspace.json keys
- * on, and the naive join result. The path mismatch is the whole story in three
- * lines.
- *
- * When the event carries no dbt file path (e.g. the catalog resolved the file by
- * a different method), the callout is omitted rather than fabricated — the same
- * rule the seam follows.
- */
-function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
-  const dbtPath = model.dbtFilePath;
-  const prefix = model.projectPrefix;
-
-  if (!dbtPath || !prefix) return null;
-
-  return (
-    <motion.article className="silent-zero" aria-label="Silent zero: naive join failure" variants={silentZeroItemVariants}>
-      <p className="eyebrow">Before Tally</p>
-      <div className="silent-zero__row">
-        <span className="silent-zero__label">dbt reports</span>
-        <span className="silent-zero__value">{dbtPath}</span>
-      </div>
-      <div className="silent-zero__row">
-        <span className="silent-zero__label">workspace.json keys on</span>
-        <span className="silent-zero__value">{prefix ? `${prefix}/` : ""}{dbtPath}</span>
-      </div>
-      <p className="silent-zero__result">
-        Naive join: 0 matches. No error. No warning. Exit code 0.
-      </p>
-    </motion.article>
-  );
-}
-
-const silentZeroItemVariants: Variants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
@@ -272,16 +234,15 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
       animate="visible"
       variants={reduce ? undefined : containerVariants}
     >
-      <SilentZeroCallout model={model} />
       <ResolutionSeam model={model} gap={producerGap} />
 
-      <motion.article className="claim claim--evidence" variants={reduce ? undefined : silentZeroItemVariants}>
+      <motion.article className="claim claim--evidence" variants={reduce ? undefined : itemVariants}>
         <p className="eyebrow">Repository evidence</p>
         <strong>{model.repositoryEvidence.text}</strong>
         <SourceTag source={model.repositoryEvidence.source} />
       </motion.article>
 
-      <motion.div variants={reduce ? undefined : silentZeroItemVariants}>
+      <motion.div variants={reduce ? undefined : itemVariants}>
         <TopologyBand model={model} />
       </motion.div>
     </motion.section>

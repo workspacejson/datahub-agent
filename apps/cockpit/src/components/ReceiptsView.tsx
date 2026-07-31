@@ -104,7 +104,7 @@ function UnestablishedBand({ statedGaps }: { statedGaps: readonly StatedGap[] })
   );
 }
 
-export function ReceiptsView({ model }: { model: CockpitViewModel }) {
+export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; datasetKey?: string }) {
   const { accounting, unresolvedDatasets, statedGaps, provenance, writeback, evaluation } = model.receipt;
   const rawEvidenceBound = evaluation.rawEvidence.state === "observed";
   const [exportNote, setExportNote] = useState<string | null>(null);
@@ -162,7 +162,21 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
         reading a qualifying clause. Its actual meaning is narrow and countable,
         and it belongs beside the records it counts.
       */}
-      <p className="evidence-standing">{model.summary}</p>
+      <p className="evidence-standing">
+        {(() => {
+          const sep = model.summary.indexOf(": ");
+          if (sep === -1) return <span>{model.summary}</span>;
+          const tier = model.summary.slice(0, sep);
+          const rest = model.summary.slice(sep + 2);
+          return (
+            <>
+              <span className="evidence-tier-badge" aria-label="Evidence tier">{tier}</span>
+              {rest}
+            </>
+          );
+        })()}
+      </p>
+      <p className="proof-ledger-gloss">A proof ledger is the full chain of evidence: every claim above is tied to a verification command in the raw receipt below.</p>
     </section>
 
     <section aria-labelledby="accounting-title">
@@ -266,7 +280,7 @@ export function ReceiptsView({ model }: { model: CockpitViewModel }) {
       <details>
         <summary>Raw evidence receipt</summary>
         {evaluation.rawEvidence.state === "observed"
-          ? (typeof __COCKPIT_RECEIPT_HTML__ === "string" && __COCKPIT_RECEIPT_HTML__
+          ? (typeof __COCKPIT_RECEIPT_HTML__ === "string" && __COCKPIT_RECEIPT_HTML__ && datasetKey === "nested"
             ? <div className="shiki-receipt" dangerouslySetInnerHTML={{ __html: __COCKPIT_RECEIPT_HTML__ }} />
             : <pre>{evaluation.rawEvidence.value}</pre>)
           : <p><Evidence value={evaluation.rawEvidence} /></p>}

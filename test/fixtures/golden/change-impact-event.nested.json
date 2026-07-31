@@ -81,13 +81,25 @@
     "lineageObservation": {
       "upstreams": {
         "read": "ok",
-        "completeness": "not-established",
-        "observedCount": 8
+        "completeness": "complete-against-pinned-manifest",
+        "observedCount": 8,
+        "verification": {
+          "manifestDigest": "770a1e8e46fc0f2fcdeb84b2f12decf2895c2182590fd3631f2a10f7972405d7",
+          "expectedSetDigest": "888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6",
+          "observedSetDigest": "888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6",
+          "queryParameters": { "surface": "searchAcrossLineage", "direction": "UPSTREAM", "maxDegree": 4, "query": "*", "start": 0, "count": 50 }
+        }
       },
       "downstreams": {
         "read": "ok",
-        "completeness": "not-established",
-        "observedCount": 1
+        "completeness": "complete-against-pinned-manifest",
+        "observedCount": 1,
+        "verification": {
+          "manifestDigest": "125169f39fd1dfc3b1c8783c2db78db8dfdb63680c06eee2eb582cbdf51303ef",
+          "expectedSetDigest": "0bd210967c1a5c17de6d45d166c9f38ec934026a37579d49ab37292a7457c260",
+          "observedSetDigest": "0bd210967c1a5c17de6d45d166c9f38ec934026a37579d49ab37292a7457c260",
+          "queryParameters": { "surface": "searchAcrossLineage", "direction": "DOWNSTREAM", "maxDegree": 4, "query": "*", "start": 0, "count": 50 }
+        }
       }
     },
     "schemaFieldCount": 2,

@@ -7,6 +7,18 @@ import {
 } from "./cockpit-adapter";
 import type { SourceEvent, SourceMode } from "../model/cockpit-view-model";
 
+export interface DatasetOption {
+  key: string;
+  label: string;
+}
+
+// Eager glob import: Vite resolves these at build time. In placeholder mode
+// (which tests run in) the fixtures are never read.
+const fixtures = import.meta.glob<{ default: unknown }>(
+  "../../../../test/fixtures/golden/change-impact-event.*.json",
+  { eager: true },
+);
+
 declare const __COCKPIT_SOURCE_MODE__: SourceMode;
 /** The build-time event, or null in a placeholder build. See `vite.config.ts`. */
 declare const __COCKPIT_EVENT__: unknown;
@@ -20,6 +32,54 @@ declare const __COCKPIT_COMPARISON__: SourceEvent["planComparison"] | null;
  * placeholder build or when Shiki is unavailable. See `vite.config.ts`.
  */
 declare const __COCKPIT_RECEIPT_HTML__: string | null;
+
+/** The datasets a judge can switch between in the cockpit. */
+export const DATASET_OPTIONS: DatasetOption[] = [
+  { key: "nested", label: "game_events (Transfermarkt)" },
+  { key: "root", label: "customers (Jaffle Shop)" },
+];
+
+/** The fixture for a given dataset key. */
+function fixtureForKey(key: string): unknown {
+  const path = key === "root"
+    ? "../../../../test/fixtures/golden/change-impact-event.root.json"
+    : key === "nested"
+      ? "../../../../test/fixtures/golden/change-impact-event.nested.json"
+      : null;
+  if (path === null) {
+    throw new Error(
+      `Unknown dataset key "${key}". Known keys: ${DATASET_OPTIONS.map((o) => o.key).join(", ")}.`,
+    );
+  }
+  return fixtures[path]?.default;
+}
+
+/** The adapter for a given dataset key, or the default build-time event. */
+export function selectCockpitAdapterByKey(
+  key: string = "nested",
+  mode: SourceMode = __COCKPIT_SOURCE_MODE__,
+): CockpitSourceAdapter {
+  if (mode === "placeholder") return provisionalAdapter;
+
+  const event = key === "nested" ? __COCKPIT_EVENT__ : fixtureForKey(key);
+  const comparison = key === "nested" ? __COCKPIT_COMPARISON__ : null;
+
+  if (event === null || event === undefined) {
+    if (key === "nested") {
+      throw new Error(
+        `A ${mode} build renders a committed event and none was bound. ` +
+        "Set COCKPIT_EVENT to a change-impact event, or build with COCKPIT_SOURCE_MODE=placeholder. " +
+        "No fallback evidence is invented.",
+      );
+    }
+    throw new Error(
+      `Fixture for dataset key "${key}" was not found. ` +
+      `Known keys: ${DATASET_OPTIONS.map((o) => o.key).join(", ")}.`,
+    );
+  }
+
+  return createAdapter(event, mode, comparison);
+}
 
 /**
  * Which adapter a build renders through.

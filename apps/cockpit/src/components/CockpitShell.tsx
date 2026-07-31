@@ -8,6 +8,48 @@ import { ImpactView } from "./ImpactView";
 import { ProofPopover } from "./ProofPopover";
 import { ReceiptsView } from "./ReceiptsView";
 import { SourceTag } from "./SourceTag";
+import type { DatasetOption } from "../data/select-adapter";
+
+function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
+  const dbtPath = model.dbtFilePath;
+  const prefix = model.projectPrefix;
+
+  if (!dbtPath || !prefix) return null;
+
+  return (
+    <article className="silent-zero silent-zero--inline" aria-label="Silent zero: naive join failure">
+      <p className="silent-zero__result">
+        Naive join: 0 matches. No error. No warning. Exit code 0.
+      </p>
+      <p className="silent-zero__path">
+        dbt: {dbtPath} | workspace.json: {prefix}/{dbtPath}
+      </p>
+    </article>
+  );
+}
+
+function DatasetSelector({ datasetKey, options, onChange }: {
+  datasetKey?: string;
+  options?: DatasetOption[];
+  onChange?(key: string): void;
+}) {
+  if (!options || options.length < 2) return null;
+  return (
+    <div className="dataset-selector" aria-label="Dataset under review">
+      <label className="dataset-selector__label" htmlFor="dataset-select">Dataset under review</label>
+      <select
+        id="dataset-select"
+        className="dataset-selector__select"
+        value={datasetKey}
+        onChange={(e) => onChange?.(e.target.value)}
+      >
+        {options.map((opt) => (
+          <option key={opt.key} value={opt.key}>{opt.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 /**
  * The three views are a sequence, and only the sequence navigates.
@@ -151,10 +193,13 @@ function Coverage({ model }: { model: CockpitViewModel }) {
   );
 }
 
-export function CockpitShell({ model, route, onRouteChange }: {
+export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetOptions, onDatasetChange }: {
   model: CockpitViewModel;
   route: CockpitRoute;
   onRouteChange(route: CockpitRoute): void;
+  datasetKey?: string;
+  datasetOptions?: DatasetOption[];
+  onDatasetChange?(key: string): void;
 }) {
   const step = routes.findIndex((item) => item.route === route);
   const previous = step > 0 ? routes[step - 1] : null;
@@ -188,7 +233,9 @@ export function CockpitShell({ model, route, onRouteChange }: {
         >
           workspace.json
         </a>
+        <span className="endorsement__subtitle">a repo-evidence artifact at a pinned commit</span>
       </p>
+      <DatasetSelector datasetKey={datasetKey} options={datasetOptions} onChange={onDatasetChange} />
     </header>
 
     {/*
@@ -196,6 +243,10 @@ export function CockpitShell({ model, route, onRouteChange }: {
       reads the band as chrome and everything below it as data.
     */}
     <section className="hero" aria-label="Dataset under review">
+      <div className="hero__stakes-group">
+        <p className="hero__stakes">DataHub says where data flows; git says what breaks together; joining them silently returns nothing. Here is the proof.</p>
+        <SilentZeroCallout model={model} />
+      </div>
       <div className="hero__identity">
         <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>
         <h1 id="route-title">{model.title}</h1>
@@ -228,6 +279,7 @@ export function CockpitShell({ model, route, onRouteChange }: {
             >
               <span className="spine__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <span className="spine__label">{label}</span>
+              {itemRoute === "receipts" && <span className="spine__subtitle" aria-hidden="true">every claim tied to a verification command</span>}
             </button>
           </li>
         ))}
@@ -249,7 +301,7 @@ export function CockpitShell({ model, route, onRouteChange }: {
         <div className="route-body__main">
           {route === "impact" ? <ImpactView model={model} />
             : route === "change-plan" ? <ChangePlanView model={model} />
-            : <ReceiptsView model={model} />}
+            : <ReceiptsView model={model} datasetKey={datasetKey} />}
         </div>
         <DecisionRail model={model} route={route} onRouteChange={onRouteChange} />
       </div>
