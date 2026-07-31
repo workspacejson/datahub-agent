@@ -473,6 +473,16 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
 
+@media (max-width: 1300px) {
+  .cockpit-shell { padding-top: var(--sp-4); }
+  .product-header { padding-bottom: var(--sp-3); }
+  .hero { padding: var(--sp-3) 0 var(--sp-3); }
+  .hero__stakes-group { margin-bottom: var(--sp-1); gap: 2px; }
+  .silent-zero--inline { padding: var(--sp-1) var(--sp-3); }
+  .silent-zero__result { margin-top: var(--sp-1); }
+  .route-slot { padding-top: var(--sp-2); }
+}
+
 /* ── Coverage: the single epistemic statement ─────────────────
    This replaces three stacked registers that all said the same thing: a prose
    tier line, four bare chips, and this panel. The chips lost because `exact` and
@@ -544,9 +554,13 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 /* The second half of the mobile first-frame pass. These two live here rather
    than in the block above because `.coverage__note` and `.spine` are declared
    after it and, at equal specificity, would win on source order. */
+@media (max-width: 1300px) {
+  .spine { margin-top: var(--sp-3); }
+}
 @media (max-width: 640px) {
   .coverage__note { margin-bottom: var(--sp-2); }
   .spine { margin-top: var(--sp-2); }
+  .spine button { padding: 0 var(--sp-2); }
 }
 
 /* ── The silent zero: the failure before the repair ──────────
