@@ -1,11 +1,3 @@
-# Tally — Change Impact Cockpit
-
-**Review a change with the evidence attached.**
-
-Tally resolves DataHub context to repository code, joins code and lineage impact, and attaches a bounded evidence receipt. Tally refuses silent zeros.
-
-Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](https://github.com/workspacejson).
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/exports/github-hero-dark-1280x440/github-hero-dark-1280x440.png">
@@ -13,6 +5,11 @@ Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](ht
     <img src="assets/exports/github-hero-light-1280x440/github-hero-light-1280x440.png" alt="Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0." width="760">
   </picture>
 </p>
+
+Tally resolves DataHub context to repository code, joins code and lineage impact, and attaches a bounded evidence receipt. Tally refuses silent zeros.
+
+Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](https://github.com/workspacejson).
+
 
 ## Four questions Tally answers
 
