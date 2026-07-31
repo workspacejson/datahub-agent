@@ -197,6 +197,11 @@ npm run check:clean-room        # every dependency resolves to a published versi
 npm run parity:datahub-adapter  # 35/35 against the frozen migration baseline
 ```
 
+> **Parity prerequisite:** `npm run parity:datahub-adapter` fetches the public
+> `workspace-json/agents-audit` repository into `.parity-cache/` on first run.
+> It requires network access to GitHub. Set `PARITY_OLD_SIDE` to point at an
+> existing checkout to skip the fetch.
+
 For a local DataHub instance (requires Docker):
 
 ```bash
@@ -236,7 +241,7 @@ See [`examples/README.md`](examples/README.md) for the full index with descripti
 - **Pre-existing work:** The workspace.json standard, its producer CLI, and the dbt path-normalization adapter in `src/adapters/workspacejson/` were developed before the hackathon and adopted with full provenance. See [`docs/provenance.md`](docs/provenance.md) and [`HACKATHON_PROVENANCE.md`](HACKATHON_PROVENANCE.md).
 - **New work:** Non-silent node extraction, the change-impact event contract, the MCP read path, writeback with observed receipts, the paired plan comparison, the cockpit, and all evaluation evidence.
 - **Clean-room boundary:** Tally consumes only released, published `@workspacejson/*` packages. No source-level cross-org imports. See [`docs/clean-room.md`](docs/clean-room.md).
-- **Upstream contributions:** The `externalUrl` MCP projection fix (filed against `acryldata/mcp-server-datahub`) and the `node:fs` type-stub masking defect (filed against `workspacejson/cli`).
+- **Upstream contributions:** The [`externalUrl` MCP projection fix](https://github.com/acryldata/mcp-server-datahub/pull/149) (filed against `acryldata/mcp-server-datahub`) and the [`node:fs` type-stub masking defect](https://github.com/workspacejson/cli/issues) (filed against `workspacejson/cli`).
 
 **Challenge category:** Metadata-Aware Code Generation & Development
 

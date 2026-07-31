@@ -5,7 +5,7 @@ set -euo pipefail
 # This script writes only to a temporary directory and the explicitly selected
 # local GMS instance. It never reads, prints, or persists a secret value.
 #
-# It requires this project's Doppler tenant, because the last step runs a paired
+# It requires a funded OPENAI_API_KEY, because the last step runs a paired
 # LLM plan comparison. Most readers do not want that step and cannot run it.
 #
 # If you are here to rebuild the Transfermarkt demo corpus, you want
@@ -24,8 +24,10 @@ if [ -z "${HAC152_QWEN_CONFIG:-}" ]; then
 reproduce-hac-152-live.sh needs HAC152_QWEN_CONFIG and did not find it.
 
 This script rebuilds the full HAC-152 evidence package, and its final step runs a
-paired plan comparison through an LLM. That step needs this project's private
-Doppler tenant (`--project dev_week_26_openai`) and a funded `OPENAI_API_KEY2`.
+paired plan comparison through an LLM. That step needs:
+  - a funded OPENAI_API_KEY environment variable
+  - a QWEN_MODEL or OPENAI_MODEL environment variable (the model ID to call)
+
 Without them the run cannot complete, so it stops here rather than doing several
 minutes of work first.
 
@@ -38,9 +40,11 @@ minutes of work first.
   ingest recipe, with no credential required. It is the path to use if you are
   reproducing the evidence in evaluation/hac-152/.
 
-  You are inside the tenant and do want the full package:
+  You have an API key and model and do want the full package:
 
-      export HAC152_QWEN_CONFIG=<doppler config name>
+      export HAC152_RUN_LLM=1  # any non-empty value (gate variable)
+      export OPENAI_API_KEY=sk-...
+      export QWEN_MODEL=qwen2.5-72b-instruct
 
 Nothing has been created or modified.
 MSG
@@ -49,7 +53,6 @@ fi
 
 run_dir="${HAC152_RUN_DIR:-$(mktemp -d /tmp/hac-152-live.XXXXXX)}"
 gms="${HAC152_GMS:-http://localhost:8080}"
-config="$HAC152_QWEN_CONFIG"
 python_bin="${HAC152_PYTHON:-python3.11}"
 urn='urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)'
 revision='59fa295c51fc23466f3a71542f8bf3d1335daa83'
@@ -93,11 +96,11 @@ node "$repo_root/scripts/emit-change-impact-event.mjs" "$urn" --gms "$gms" \
   --subject-repository "$repository" --subject-revision "$revision" \
   --workspace-artifact "$repo_root/test/fixtures/proof-corpus-transfermarkt/workspace.json"
 node "$repo_root/scripts/run-writeback.mjs" "$run_dir/event.json" --gms "$gms" --out "$run_dir/event-with-writeback.json"
-doppler run --project dev_week_26_openai --config "$config" -- \
-  node --import tsx "$repo_root/scripts/run-paired-plan-comparison.mjs" \
+node --import tsx "$repo_root/scripts/run-paired-plan-comparison.mjs" \
   --event "$run_dir/event-with-writeback.json" --out "$run_dir/judge-run-bundle.json" \
   --task-id add-quality-check \
   --prompt 'Add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed.' \
-  --settings '{"temperature":0}' --api-key-env OPENAI_API_KEY2
+  --settings '{"temperature":0}' --api-key-env OPENAI_API_KEY \
+  --model "${QWEN_MODEL:-${OPENAI_MODEL:?set QWEN_MODEL or OPENAI_MODEL to the model ID}}"
 shasum -a 256 "$run_dir/event.json" "$run_dir/event-with-writeback.json" "$run_dir/judge-run-bundle.json"
 printf 'HAC-152 artifacts: %s\n' "$run_dir"

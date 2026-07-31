@@ -138,7 +138,7 @@ describe("node extraction → source path → fileIndex join", () => {
 describe("HAC-162: dropped nodes warn, they do not vanish", () => {
   it("the adopted extractModels silently discards 23 of the corpus's 28 nodes", () => {
     // Not a defect being fixed in place — this is the pinned parity behavior
-    // (META-248, 35/35). Asserted so the contrast below is anchored in fact.
+    // (adapter adoption ruling, 35/35). Asserted so the contrast below is anchored in fact.
     const total = Object.keys(manifest.nodes).length;
     expect(total).toBe(28);
     expect(extractModels(manifest)).toHaveLength(5);

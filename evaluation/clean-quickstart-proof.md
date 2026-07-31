@@ -1,5 +1,7 @@
 # Clean-quickstart proof
 
+> **Type:** Evidence | **Status:** Current | **Scope:** End-to-end quickstart verification
+
 The read path, the writeback and the reset, run end to end against a DataHub
 that was destroyed and rebuilt immediately beforehand. Everything below is one
 transcript from one run.
@@ -115,7 +117,7 @@ and two consecutive equal reads is the same shape of check
 `src/integration/readiness.ts` applies. **It is still not a completeness claim.**
 Both events below carry `completeness: "not-established"`, which is correct:
 nothing here holds a pinned expected set to compare against. That is
-[HAC-231](https://linear.app/marcelle-labs/issue/HAC-231).
+HAC-231.
 
 ## `externalUrl` is dropped at the MCP boundary
 

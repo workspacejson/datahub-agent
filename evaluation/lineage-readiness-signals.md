@@ -1,12 +1,14 @@
 # Lineage readiness signals — what DataHub actually exposes
 
+> **Type:** Evidence | **Status:** Current | **Scope:** DataHub index-convergence signals
+
 Investigated 2026-07-29 against local quickstart GMS `v1.5.0.6`
 (`d0fce948555c06b3083479d40e8fa270d156c71f`), 66 datasets ingested (33 dbt /
 33 duckdb, transfermarkt corpus only).
 
-Supports [HAC-241](https://linear.app/marcelle-labs/issue/HAC-241) and the
+Supports HAC-241 and the
 governance section of
-[HAC-231](https://linear.app/marcelle-labs/issue/HAC-231).
+HAC-231.
 
 ## The rule this document exists to state
 
@@ -21,7 +23,7 @@ always passes is strictly worse than no gate, because it converts an unchecked
 read into an apparently-checked one.
 
 Cheapest way to retire this caveat, at zero cost: sample the endpoint during
-[HAC-145](https://linear.app/marcelle-labs/issue/HAC-145)'s clean-clone
+HAC-145's clean-clone
 reproduction. That run ingests against fresh state, so MCL traffic is
 guaranteed, no catalog mutation is spent on the validation, and no committed
 evidence is at risk. Re-ingesting the existing pinned corpus is *not* a

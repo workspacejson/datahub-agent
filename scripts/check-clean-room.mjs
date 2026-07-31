@@ -40,7 +40,7 @@ console.log("Clean-room import rule — docs/clean-room.md\n");
 console.log(`  manifests   package.json, package-lock.json (lockfileVersion ${lock.lockfileVersion})`);
 console.log(`  packages    ${Object.keys(lock.packages ?? {}).length - 1} resolved`);
 
-console.log("\n  Controlled dependencies (workspacejson / Marcelle Labs / Vreko origin):");
+console.log("\n  Controlled dependencies (workspacejson / private repository origin):");
 if (controlled.length === 0) {
   console.log("    (none declared)");
 } else {

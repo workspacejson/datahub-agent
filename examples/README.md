@@ -76,6 +76,8 @@ migration baseline.
 | [`docs/quickstart.md`](../docs/quickstart.md) | Full DataHub setup, MCP server installation, enrichment workflow |
 | [`docs/provenance.md`](../docs/provenance.md) | Adapter adoption provenance: source, identity, parity checks |
 | [`docs/clean-room.md`](../docs/clean-room.md) | Clean-room import rule: only published `@workspacejson/*` packages |
+| [`docs/adopter-contract.md`](../docs/adopter-contract.md) | DataHub integration and compatibility contract: extension surfaces, fields read/written, credentials, degraded behavior, contract versions |
+| [`docs/manual-commands.md`](../docs/manual-commands.md) | Manual verification commands requiring external services (DataHub, Docker, network) |
 | [`docs/feedback-evidence.md`](../docs/feedback-evidence.md) | Development feedback log: what worked, what caused delays, bugs and resolutions |
 | [`HACKATHON_PROVENANCE.md`](../HACKATHON_PROVENANCE.md) | Pre-existing vs new work separation for hackathon judges |
 

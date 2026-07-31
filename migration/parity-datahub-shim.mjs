@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Parity proof for the adopted DataHub/dbt adapter (META-248).
+// Parity proof for the adopted DataHub/dbt adapter (adapter adoption ruling).
 //
 // Ported from `workspacejson/cli@c60447fc` `migration/parity-datahub-shim.mjs`,
 // re-pointed at the DataHub-owned candidate: `src/adapters/workspacejson/`.
@@ -9,9 +9,9 @@
 // local cache on first run; set PARITY_OLD_SIDE to use an existing checkout.
 //
 // ---------------------------------------------------------------------------
-// SUBSTITUTIONS — read this before trusting the count (META-248 ruling)
+// SUBSTITUTIONS — read this before trusting the count (adapter adoption ruling)
 // ---------------------------------------------------------------------------
-// META-248 ratified the target shape as an INTERNAL MODULE, not a package.
+// The adapter adoption ruling ratified the target shape as an INTERNAL MODULE, not a package.
 // Section 1 of the original harness asserted on `package.json` fields. An
 // internal module has no manifest, so 7 of the 35 original checks are
 // structurally unsatisfiable as written. Each is restated below as the
@@ -86,7 +86,7 @@ const oldSrc = join(OLD_SIDE, "src");
 
 // ---------------------------------------------------------------------------
 console.log("==============================================================");
-console.log(" 0. SOURCE IDENTITY ACROSS THE MIGRATION CHAIN (new, META-248)");
+console.log(" 0. SOURCE IDENTITY ACROSS THE MIGRATION CHAIN (new, adapter adoption ruling)");
 console.log("==============================================================");
 console.log(" Not part of the 35. A stronger claim than behavioral parity:");
 console.log(" the adopted files are byte-identical to the pre-migration ones,");

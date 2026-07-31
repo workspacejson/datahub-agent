@@ -1,5 +1,7 @@
 # Cockpit architecture boundary (HAC-224)
 
+> **Type:** Reference | **Status:** Current | **Scope:** Cockpit application boundary
+
 `apps/cockpit` is the one native npm-workspace UI application. It uses React 19,
 TypeScript, Vite 8, Tailwind 4, Radix/shadcn-compatible primitives, Zod 4,
 Vitest/React Testing Library, and Playwright/axe. URL/local React state is the

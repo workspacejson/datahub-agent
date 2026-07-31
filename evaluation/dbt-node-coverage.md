@@ -1,7 +1,9 @@
 # `original_file_path` coverage by dbt node type
 
-Verification for [HAC-162](https://linear.app/marcelle-labs/issue/HAC-162), the
-join-key foundation under [HAC-147](https://linear.app/marcelle-labs/issue/HAC-147).
+> **Type:** Evidence | **Status:** Current | **Scope:** dbt node-type field coverage
+
+Verification for HAC-162, the
+join-key foundation under HAC-147.
 
 **Verdict: CLEAN — with the coverage split across two sources, and one
 correction to the issue's stated method.**
@@ -26,7 +28,7 @@ Environment: dbt-core **1.12.0**, dbt-duckdb **1.10.1**, Python 3.12.12.
 ## Source A — the frozen proof corpus
 
 `dbt-labs/jaffle_shop_duckdb@36bde6cba69d962b83be1d52fc65a0dce1cb4ebb`
-([HAC-143](https://linear.app/marcelle-labs/issue/HAC-143)), after
+(HAC-143), after
 `dbt seed && dbt run && dbt docs generate`.
 
 HAC-162's first command, verbatim:
@@ -144,7 +146,7 @@ Both conditions drop silently — no warning, no count, no exit code. Measured:
 On the probe it discards precisely the node types HAC-162 exists to protect.
 
 **Resolution.** `extractModels` is left byte-identical — it is the behavior the
-META-248 parity harness pins at 35/35. `src/adapters/workspacejson/nodes.ts`
+adapter adoption parity harness pins at 35/35. `src/adapters/workspacejson/nodes.ts`
 adds `extractDatasetNodes`, which the join uses instead. It accounts for every
 node under a checkable invariant:
 

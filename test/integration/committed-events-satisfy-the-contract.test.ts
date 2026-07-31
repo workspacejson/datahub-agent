@@ -91,6 +91,16 @@ describe("every committed event satisfies the contract as it stands now", () => 
     expect(candidates.map((c) => c.path)).toContain("test/fixtures/golden/change-impact-event.root.json");
   });
 
+  it("covers the hac-267 unresolved-records fixture by name", () => {
+    // Named explicitly because the hac-267 fixture is the only committed event
+    // that populates accounting.unresolvedRecords. If it is moved or deleted,
+    // the count drops from 8 to 7 — still >= 6, so the guard above would pass
+    // silently. This containment check makes the deletion visible.
+    expect(candidates.map((c) => c.path)).toContain(
+      "evaluation/hac-267/unresolved-repository-mismatch.json",
+    );
+  });
+
   describe.each(candidates)("$path", ({ event }) => {
     it("is shaped as the emitter produces one", () => {
       const parsed = emittedEventSchema.safeParse(event);
