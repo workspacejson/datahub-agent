@@ -111,10 +111,28 @@ function Coverage({ model }: { model: CockpitViewModel }) {
           ? "That set is complete against the pinned manifest."
           : "Whether that set is complete is not established, so an absent edge is not evidence of no impact."}
       </p>
+      {/*
+        "files", not "paths". This counter sits under a headline about lineage
+        completeness, and in that neighbourhood "path" reads as a graph path
+        between datasets. It is not: it counts datasets whose repository source
+        file was resolved, which is the other denominator entirely — the same
+        confusion the note's pronoun fixes, arriving by a different word.
+
+        "source paths resolved" was the obvious repair and is the one wording
+        that cannot ship: measured, it wraps the strip onto a second row. So does
+        "source files resolved" under a wide fallback face. "files resolved" is
+        the same length as the label it replaces and renders *narrower*, so the
+        strip keeps more slack than it has today under every face tested — which
+        matters because `tokens/fonts.css` resolves these through a system stack
+        on purpose, and the metrics move per machine.
+
+        The fourth counter stays "path resolution". It reads against the word
+        `exact` and is about resolution quality, not about a set of edges.
+      */}
       <dl className="coverage__counts">
         <div>
           <dt>{accounting.datasetsResolved}<span className="coverage__of">/{accounting.datasetsRequested}</span></dt>
-          <dd>paths resolved</dd>
+          <dd>files resolved</dd>
         </div>
         <div>
           <dt>{accounting.datasetsUnresolved}</dt>
@@ -146,7 +164,31 @@ export function CockpitShell({ model, route, onRouteChange }: {
 
     <header className="product-header">
       <Wordmark />
-      <p className="endorsement">built on <b>workspace.json</b></p>
+      {/*
+        The endorsement names a standard, so it resolves to the standard.
+
+        It was a bare <b>: the one term on this page a reader is least likely to
+        already know, styled like a proper noun and pointing nowhere. A judge
+        asking "what is workspace.json" had to leave and search for it.
+
+        A plain followed link, deliberately — no rel="nofollow". This is a
+        first-party reference to the specification the product is built on, and
+        the anchor text is the term itself, which is what a reader and a crawler
+        both need it to say. New tab because the cockpit is a working surface and
+        a reviewer mid-review should not lose their place; the accessible name
+        keeps the visible text as its prefix, so speech input still matches it.
+      */}
+      <p className="endorsement">
+        built on{" "}
+        <a
+          href="https://github.com/workspacejson/standard"
+          target="_blank"
+          rel="noopener"
+          aria-label="workspace.json standard on GitHub, opens in a new tab"
+        >
+          workspace.json
+        </a>
+      </p>
     </header>
 
     {/*
