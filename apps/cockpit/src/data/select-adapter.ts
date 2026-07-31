@@ -6,7 +6,11 @@ import {
   type CockpitStateName,
 } from "./cockpit-adapter";
 import type { SourceEvent, SourceMode } from "../model/cockpit-view-model";
-import type { DatasetOption } from "../components/CockpitShell";
+
+export interface DatasetOption {
+  key: string;
+  label: string;
+}
 
 // Eager glob import: Vite resolves these at build time. In placeholder mode
 // (which tests run in) the fixtures are never read.
@@ -61,10 +65,16 @@ export function selectCockpitAdapterByKey(
   const comparison = key === "nested" ? __COCKPIT_COMPARISON__ : null;
 
   if (event === null || event === undefined) {
+    if (key === "nested") {
+      throw new Error(
+        `A ${mode} build renders a committed event and none was bound. ` +
+        "Set COCKPIT_EVENT to a change-impact event, or build with COCKPIT_SOURCE_MODE=placeholder. " +
+        "No fallback evidence is invented.",
+      );
+    }
     throw new Error(
-      `A ${mode} build renders a committed event and none was bound. ` +
-      "Set COCKPIT_EVENT to a change-impact event, or build with COCKPIT_SOURCE_MODE=placeholder. " +
-      "No fallback evidence is invented.",
+      `Fixture for dataset key "${key}" was not found. ` +
+      `Known keys: ${DATASET_OPTIONS.map((o) => o.key).join(", ")}.`,
     );
   }
 

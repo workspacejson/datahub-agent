@@ -8,11 +8,7 @@ import { ImpactView } from "./ImpactView";
 import { ProofPopover } from "./ProofPopover";
 import { ReceiptsView } from "./ReceiptsView";
 import { SourceTag } from "./SourceTag";
-
-export interface DatasetOption {
-  key: string;
-  label: string;
-}
+import type { DatasetOption } from "../data/select-adapter";
 
 function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
   const dbtPath = model.dbtFilePath;

@@ -163,8 +163,18 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
         and it belongs beside the records it counts.
       */}
       <p className="evidence-standing">
-        <span className="evidence-tier-badge" aria-label="Evidence tier">{model.summary.split(" ")[0].replace(/:$/, "")}</span>
-        {model.summary.split(" ").slice(1).join(" ")}
+        {(() => {
+          const sep = model.summary.indexOf(": ");
+          if (sep === -1) return <span>{model.summary}</span>;
+          const tier = model.summary.slice(0, sep);
+          const rest = model.summary.slice(sep + 2);
+          return (
+            <>
+              <span className="evidence-tier-badge" aria-label="Evidence tier">{tier}</span>
+              {rest}
+            </>
+          );
+        })()}
       </p>
       <p className="proof-ledger-gloss">A proof ledger is the full chain of evidence: every claim above is tied to a verification command in the raw receipt below.</p>
     </section>

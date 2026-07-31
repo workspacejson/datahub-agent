@@ -137,8 +137,8 @@ describe("each fact is stated once per route", () => {
   });
 });
 
-describe("silent zero callout on the impact route", () => {
-  it("renders the silent zero before the resolution seam in DOM order", () => {
+describe("silent zero callout rendered on all routes via CockpitShell hero", () => {
+  it("renders the silent zero before the resolution seam in DOM order on impact", () => {
     cleanup();
     render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
     const callout = screen.queryByText(/Naive join: 0 matches/i);
@@ -154,9 +154,19 @@ describe("silent zero callout on the impact route", () => {
     render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
     const m = model();
     if (m.dbtFilePath) {
-      expect(screen.getAllByText(new RegExp(m.dbtFilePath)).length).toBeGreaterThan(0);
+      const escaped = m.dbtFilePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      expect(screen.getAllByText(new RegExp(escaped)).length).toBeGreaterThan(0);
     }
   });
+
+  for (const route of ROUTES) {
+    it(`renders the silent zero callout on the ${route} route`, () => {
+      cleanup();
+      render(<CockpitShell model={model()} route={route} onRouteChange={() => {}} />);
+      const callout = screen.queryByText(/Naive join: 0 matches/i);
+      expect(callout).not.toBeNull();
+    });
+  }
 });
 
 describe("progressive disclosure summaries carry semantic labels, not raw identifiers", () => {

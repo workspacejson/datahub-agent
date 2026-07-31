@@ -10,27 +10,35 @@ function readLocation() {
   return {
     route: cockpitRouteSchema.catch("impact").parse(path || "impact"),
     state: cockpitStateNameSchema.catch("loading").parse(query.get("state")),
+    dataset: query.get("dataset") ?? undefined,
   };
 }
 
-function writeLocation(route: CockpitRoute) {
+function writeLocation(route: CockpitRoute, datasetKey?: string) {
   const url = new URL(window.location.href);
   url.pathname = `/${route === "impact" ? "" : route}`;
   url.searchParams.delete("view");
+  if (datasetKey) url.searchParams.set("dataset", datasetKey);
+  else url.searchParams.delete("dataset");
   window.history.pushState(null, "", url);
 }
 
 export function App() {
-  const initial = readLocation();
-  const [location, setLocation] = useState(initial);
-  const [datasetKey, setDatasetKey] = useState(DATASET_OPTIONS[0].key);
+  const [location, setLocation] = useState(() => readLocation());
+  const [datasetKey, setDatasetKey] = useState(
+    () => location.dataset ?? DATASET_OPTIONS[0].key,
+  );
   const model = useMemo(
     () => (import.meta.env.DEV ? selectCockpitStateAdapter(location.state) : selectCockpitAdapterByKey(datasetKey)).read(),
     [location.state, datasetKey],
   );
 
   useEffect(() => {
-    const onPopState = () => setLocation(readLocation());
+    const onPopState = () => {
+      const next = readLocation();
+      setLocation(next);
+      setDatasetKey(next.dataset ?? DATASET_OPTIONS[0].key);
+    };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
@@ -64,12 +72,17 @@ export function App() {
    */
   const goTo = (route: CockpitRoute) => {
     const commit = () => {
-      writeLocation(route);
+      writeLocation(route, datasetKey);
       setLocation((current) => ({ ...current, route }));
     };
     if (typeof document.startViewTransition !== "function") return commit();
     document.startViewTransition(() => flushSync(commit));
   };
 
-  return <CockpitShell model={model} route={location.route} onRouteChange={goTo} datasetKey={datasetKey} datasetOptions={import.meta.env.DEV ? undefined : DATASET_OPTIONS} onDatasetChange={setDatasetKey} />;
+  const handleDatasetChange = (key: string) => {
+    writeLocation(location.route, key);
+    setDatasetKey(key);
+  };
+
+  return <CockpitShell model={model} route={location.route} onRouteChange={goTo} datasetKey={datasetKey} datasetOptions={import.meta.env.DEV ? undefined : DATASET_OPTIONS} onDatasetChange={handleDatasetChange} />;
 }
