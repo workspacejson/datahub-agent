@@ -682,7 +682,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    Decorative inline icon paired with a visible text label. The
    icon reinforces meaning; the text carries it. Never icon-only. */
 .semantic-icon { display: inline-flex; vertical-align: middle; flex-shrink: 0; color: currentColor; }
-.semantic-icon + span { margin-left: var(--sp-1); }
+.semantic-icon + span { margin-left: var(--sp-2); }
 
 /* ── Proof popover ───────────────────────────────────────────
    Anchored popover for compact identifier proof. Replaces
@@ -690,10 +690,11 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    where layout reflow from native disclosure was the problem.
    No animation on open/close, per the design rule. */
 .proof-popover__trigger {
-  display: inline-flex; align-items: center; gap: var(--sp-1);
+  display: inline-flex; align-items: center; gap: var(--sp-2);
   border: none; background: transparent; color: var(--text-body);
   font-family: var(--font-sans); font-size: var(--fs-sm);
-  cursor: pointer; padding: var(--sp-1) 0;
+  cursor: pointer; padding: var(--sp-2) var(--sp-2);
+  min-height: var(--tap-target);
 }
 .proof-popover__trigger:hover { color: var(--text-heading); }
 .proof-popover__panel {
@@ -715,7 +716,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   color: var(--wj-gray-2); font-family: var(--font-mono); font-size: var(--fs-caption);
   text-transform: uppercase; letter-spacing: var(--ls-eyebrow);
 }
-.proof-popover__value { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--fs-xs); }
+.proof-popover__value { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--fs-sm); }
 .proof-popover__actions { display: flex; align-items: center; gap: var(--sp-2); }
 .proof-popover__copy {
   border: 1px solid var(--border-default); border-radius: var(--radius-sm);
