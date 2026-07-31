@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # Nightly at 04:00 UTC — catches e2e regressions without blocking PRs
+    - cron: "0 4 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -52,6 +56,28 @@ jobs:
 
       - name: Tests
         run: npm test
+
+      - name: Cockpit production build
+        run: npm run build
+
+  e2e:
+    # Browser checks run nightly and on manual dispatch — not on every push.
+    # The fast gates above (typecheck, lint, clean-room, tests, build) run on
+    # every push and PR. E2e is a regression guard: the View Transitions API
+    # fallback path differs across Chromium/WebKit/Firefox, and sub-pixel
+    # rounding differences in WebKit make per-push e2e a source of flakes
+    # rather than signal. A nightly run on main catches real regressions.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: npm
+
+      - run: npm ci
 
       - name: Cockpit production build
         run: npm run build
