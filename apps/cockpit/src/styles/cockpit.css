@@ -421,11 +421,27 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   .topology__col--subject { border-inline: 0; padding-inline: 0; }
 }
 @media (max-width: 640px) {
-  .product-header { align-items: flex-start; flex-direction: column; }
   /* Tighter spacing on the first-screen elements so the silent zero, the seam,
-     and the CTA are all reachable without scrolling on a phone. */
+     and the CTA are all reachable without scrolling on a phone.
+
+     The gaps above the silent zero are the desktop rhythm applied to a stack
+     that is now one column, so each one is spent twice: once as a column gap
+     that no longer separates columns, and again as vertical distance the fold
+     cannot afford. At 390x844 the callout cleared the fold by 5px on macOS and
+     missed it by up to 26px on the CI runners, whose type metrics are larger.
+     Halving them reclaims ~48px, which is headroom on both, and the stack still
+     reads as separated groups. The other half of this pass sits in the mobile
+     block below `.spine`, because `.coverage__note` and `.spine` are declared
+     after this point and would otherwise win on source order. */
+  .product-header {
+    align-items: flex-start; flex-direction: column;
+    gap: var(--sp-3); padding-bottom: var(--sp-2);
+  }
   .cockpit-shell { padding: var(--sp-4) var(--sp-3) var(--sp-6); }
-  .hero { padding: var(--sp-3) 0; margin-inline: calc(-1 * var(--sp-3)); padding-inline: var(--sp-3); }
+  .hero {
+    gap: var(--sp-5);
+    padding: var(--sp-3) 0; margin-inline: calc(-1 * var(--sp-3)); padding-inline: var(--sp-3);
+  }
   .silent-zero { padding: var(--sp-3); }
   .seam { padding: var(--sp-3); }
   .seam__row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
@@ -510,6 +526,14 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   transition: var(--transition-interactive);
 }
 .spine__back:hover { color: var(--text-body); text-decoration-color: currentColor; }
+
+/* The second half of the mobile first-frame pass. These two live here rather
+   than in the block above because `.coverage__note` and `.spine` are declared
+   after it and, at equal specificity, would win on source order. */
+@media (max-width: 640px) {
+  .coverage__note { margin-bottom: var(--sp-2); }
+  .spine { margin-top: var(--sp-2); }
+}
 
 /* ── The silent zero: the failure before the repair ──────────
    Quieter than the seam. Same card surface, but no bold path, no accent
