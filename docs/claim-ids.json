@@ -14,8 +14,8 @@
     },
     {
       "id": "TALLY-CLAIM-003",
-      "claim": "Corpus nodes silently discarded by `extractModels`",
-      "section": "Silent failure"
+      "claim": "Nodes kept by the legacy `extractModels`",
+      "section": "Node accounting"
     },
     {
       "id": "TALLY-CLAIM-004",
