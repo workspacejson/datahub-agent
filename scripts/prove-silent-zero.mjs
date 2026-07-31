@@ -54,7 +54,7 @@ function joinModels(models, projectPrefix, fileIndex) {
       uniqueId: m.uniqueId,
       originalFilePath: m.originalFilePath,
       normalizedKey,
-      matched: Object.prototype.hasOwnProperty.call(fileIndex, normalizedKey),
+      matched: Object.hasOwn(fileIndex, normalizedKey),
     };
   });
   return { rows, matched: rows.filter((r) => r.matched).length, total: rows.length };
