@@ -25,6 +25,14 @@ import { COMMITTED_ORIGIN } from "../playwright.config";
  */
 const VIEWPORTS = [{ width: 1440, height: 900 }, { width: 1280, height: 800 }];
 
+/**
+ * Mobile viewports where the layout collapses to a single column and the rail
+ * becomes static. The failure must still be visible above the fold; the CTA is
+ * expected to be below the fold here because the rail follows the main content
+ * in flow, which is the correct trade for a narrow screen.
+ */
+const MOBILE_VIEWPORTS = [{ width: 390, height: 844 }];
+
 /** Clearance the decision must keep below itself, in CSS pixels. */
 const FOLD_HEADROOM = 48;
 
@@ -149,6 +157,62 @@ for (const viewport of VIEWPORTS) {
   });
 }
 
+for (const viewport of MOBILE_VIEWPORTS) {
+  test(`mobile first frame contains its own content at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(`${COMMITTED_ORIGIN}/impact`);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+    const overflowing = await page.evaluate(() => {
+      const offenders: string[] = [];
+      for (const element of Array.from(document.querySelectorAll<HTMLElement>("*"))) {
+        const overflowX = getComputedStyle(element).overflowX;
+        if (overflowX === "auto" || overflowX === "scroll") continue;
+        if (element.clientWidth === 0) continue;
+        if (element.scrollWidth > element.clientWidth + 1) {
+          offenders.push(`${element.tagName.toLowerCase()}.${element.className || "(no class)"} ` +
+            `content ${element.scrollWidth}px in ${element.clientWidth}px`);
+        }
+      }
+      return offenders;
+    });
+    expect(overflowing).toEqual([]);
+
+    const pageOverflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(pageOverflow).toBeLessThanOrEqual(1);
+  });
+
+  test(`the silent zero is visible above the fold at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(`${COMMITTED_ORIGIN}/impact`);
+
+    // The failure must be visible without scrolling. The layout collapses to a
+    // single column on mobile, so the silent zero callout follows the hero and
+    // spine. It must still fit within the first frame.
+    const callout = page.getByLabel("Silent zero: naive join failure");
+    await expect(callout).toBeVisible();
+
+    const box = await callout.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+
+    // The dataset identity and coverage must also be in the first frame, so the
+    // failure is contextualised — a failure without a subject is not information.
+    for (const locator of [
+      page.getByRole("heading", { level: 1 }),
+      page.getByLabel("Coverage of this review"),
+    ]) {
+      const region = await locator.first().boundingBox();
+      expect(region).not.toBeNull();
+      expect(region!.y).toBeLessThan(viewport.height);
+    }
+
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  });
+}
+
 test("the changed-plan destination shows the real evidence-backed delta", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS[0]);
   await page.goto(`${COMMITTED_ORIGIN}/impact`);
@@ -243,7 +307,9 @@ test("the committed build renders the golden subject and never leaves its origin
   await page.goto(`${COMMITTED_ORIGIN}/impact`);
 
   // The evidence is really the committed golden package, not an empty shell that
-  // happens to render without erroring.
+  // happens to render without erroring. The URN is behind a popover trigger
+  // (proof-on-demand), so open it to verify the canonical value is present.
+  await page.getByRole("button", { name: /View dataset identity/ }).click();
   await expect(page.getByText(golden.subject.urn, { exact: false }).first()).toBeVisible();
   // And no placeholder build slipped onto this origin.
   await expect(page.getByText("DESIGN PLACEHOLDER")).toHaveCount(0);
