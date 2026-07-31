@@ -136,8 +136,11 @@ quickstart proof.
 
 ## What is deliberately not claimed
 
-- **No completeness claim.** Every lineage read carries `not-established`.
-  Observed counts are not exhaustiveness claims.
+- **No general completeness claim.** The nested fixture (Transfermarkt) carries
+  `complete-against-pinned-manifest` for both upstreams and downstreams, backed
+  by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still
+  carries `not-established` because no readiness manifest was derived for it.
+  Observed counts are not exhaustiveness claims on their own.
 - **No statistical co-change evidence.** The proof corpus has 92 commits over
   five years. Any co-change figure is illustrative, not statistical.
 - **No `externalUrl` workaround.** The gap is stated, not papered over. The fix

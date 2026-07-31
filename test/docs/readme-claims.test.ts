@@ -86,10 +86,17 @@ describe("the README explains the evidence vocabulary a cold reader will meet", 
   });
 
   it("says plainly that not-established is honest rather than a shortfall", () => {
-    // The single most misreadable state in the artifact. Every lineage read this
-    // repository emits carries it, so a reader who takes it as a defect
+    // The single most misreadable state in the artifact. The root fixture
+    // (Jaffle Shop) still carries it, so a reader who takes it as a defect
     // concludes the whole evidence surface is broken.
     expect(README).toMatch(/not-established.*(honest|not a shortfall)/is);
+  });
+
+  it("says the nested fixture carries complete-against-pinned-manifest", () => {
+    // The nested fixture (Transfermarkt) now carries this state backed by
+    // HAC-231's readiness manifests. The README must explain it as the
+    // verified state, not leave a reader to discover it in the fixture alone.
+    expect(README).toMatch(/complete-against-pinned-manifest.*nested|nested.*complete-against-pinned-manifest/is);
   });
 
   it("does not present a bare VERIFIED tier", () => {

@@ -77,7 +77,7 @@ Resolving `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)`:
 | Repository-relative path | `dbt/models/curated/game_events.sql` |
 | workspace.json fileIndex | 131 keys, exact-match integrity |
 | Evidence tier | `VERIFIED` — 1 of 1 record(s) carry a check this harness executed |
-| Lineage | 8 upstream, 1 downstream, `not-established` completeness |
+| Lineage | 8 upstream, 1 downstream, `complete-against-pinned-manifest` completeness |
 | Writeback | `succeeded: true`, `bothStatesRead: true`, `noop: true` |
 
 This is the [golden nested fixture](test/fixtures/golden/change-impact-event.nested.json) — a real emitted event with an attached writeback receipt, committed so a judge can inspect it without running DataHub.
@@ -142,7 +142,7 @@ Every fact Tally emits carries the standing of the evidence behind it, on axes t
 
 **Did the catalog answer?** — `read`: `ok`, `failed`, or `not-queried`. `failed` and `not-queried` are not claims about the data. Collapsing them into "no data" is the error the whole contract exists to prevent.
 
-**Was the answer whole?** — `completeness`: `complete-against-pinned-manifest` or `not-established`. A read can succeed and still be partial. DataHub's lineage is search-index backed, and that index converges after ingest — so a query can return four edges of twelve, succeed, and look identical to a complete answer. `not-established` is the honest and usually correct state, not a shortfall.
+**Was the answer whole?** — `completeness`: `complete-against-pinned-manifest` or `not-established`. A read can succeed and still be partial. DataHub's lineage is search-index backed, and that index converges after ingest — so a query can return four edges of twelve, succeed, and look identical to a complete answer. `not-established` is the honest and usually correct state, not a shortfall. The nested fixture (Transfermarkt) now carries `complete-against-pinned-manifest` backed by HAC-231's readiness manifests; the root fixture (Jaffle Shop) still carries `not-established` because no readiness manifest was derived for it.
 
 **Why is something missing?** — `unavailable[].reason`: `absent`, `not-queried`, `failed`, `indeterminate`, or `not-exposed-by-source`. `absent` is the strongest: asked, and reported nothing. `indeterminate` exists because the other three could not express it: the query succeeded, returned something, and completeness is unknown.
 
@@ -222,7 +222,7 @@ See [`examples/README.md`](examples/README.md) for the full index with descripti
 
 ## Known limitations
 
-1. **No completeness claim.** Every lineage read carries `not-established`. Observed counts are not exhaustiveness claims. Deriving a pinned expected set is tracked but not yet landed.
+1. **Partial completeness claim.** The nested fixture (Transfermarkt) carries `complete-against-pinned-manifest` for both upstreams and downstreams, backed by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still carries `not-established` because no readiness manifest was derived for it. Observed counts are not exhaustiveness claims on their own.
 2. **`externalUrl` dropped at MCP boundary.** DataHub holds a commit-pinned source URL; the official MCP server does not project it for datasets. `code.sourceUrl` is null under MCP. The fix is filed upstream.
 3. **Shallow corpus history.** 92 commits over five years is thin for co-change and fragility evidence. Any such figure is illustrative, not statistical.
 4. **No co-change evidence from the producer.** The workspace.json producer withholds behavioral values by design. The join exercises key membership, not value reading.
