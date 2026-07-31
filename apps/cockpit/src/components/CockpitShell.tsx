@@ -21,9 +21,22 @@ function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
       <p className="silent-zero__result">
         Naive join: 0 matches. No error. No warning. Exit code 0.
       </p>
+      <p className="silent-zero__gloss">A naive join is a direct path lookup without prefix normalization.</p>
       <p className="silent-zero__path">
         dbt: {dbtPath} | workspace.json: {prefix}/{dbtPath}
       </p>
+    </article>
+  );
+}
+
+function ResolvedPathSummary({ model }: { model: CockpitViewModel }) {
+  if (model.resolutionDisposition !== "exact") return null;
+  return (
+    <article className="resolved-summary" aria-label="Resolved path via manifest join">
+      <p className="resolved-summary__result">
+        Resolved: <span className="mono">{model.producerPath.text}</span>
+      </p>
+      <p className="resolved-summary__method">via manifest-join (normalizing the dbt prefix so paths match)</p>
     </article>
   );
 }
@@ -233,7 +246,7 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
         >
           workspace.json
         </a>
-        <span className="endorsement__subtitle">a repo-evidence artifact at a pinned commit</span>
+        <span className="endorsement__subtitle">a repo-evidence artifact (a JSON file pinned to a Git commit recording what the repository knows) at a pinned commit</span>
       </p>
       <DatasetSelector datasetKey={datasetKey} options={datasetOptions} onChange={onDatasetChange} />
     </header>
@@ -244,8 +257,11 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
     */}
     <section className="hero" aria-label="Dataset under review">
       <div className="hero__stakes-group">
-        <p className="hero__stakes">DataHub says where data flows; git says what breaks together; joining them silently returns nothing. Here is the proof.</p>
-        <SilentZeroCallout model={model} />
+        <p className="hero__stakes">DataHub says where data flows; git says what breaks together; joining them (matching dbt paths to Git paths) silently returns nothing. Here is the proof.</p>
+        <div className="silent-zero-pair">
+          <SilentZeroCallout model={model} />
+          <ResolvedPathSummary model={model} />
+        </div>
       </div>
       <div className="hero__identity">
         <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>
@@ -306,5 +322,9 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
         <DecisionRail model={model} route={route} onRouteChange={onRouteChange} />
       </div>
     </section>
+    <footer className="cockpit-footer">
+      <a className="cta" href="https://github.com/workspacejson/datahub-agent/blob/main/JUDGING.md" target="_blank" rel="noopener">Verify this yourself</a>
+      <p className="cockpit-footer__role">Tally is the join between DataHub and workspace.json. Open-source, Apache 2.0.</p>
+    </footer>
   </main></MotionConfig>;
 }
