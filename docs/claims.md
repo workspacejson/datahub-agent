@@ -5,6 +5,10 @@
 Every figure and claim in the README, with its source and verification command.
 A claim that cannot be reproduced is a claim that does not belong here.
 
+> **Single-command verification:** `npm ci && npm run verify:judging` runs all
+> gates below in sequence and emits a PASS/FAIL/SKIP ledger. Individual commands
+> are listed per-claim for targeted verification.
+
 ---
 
 ## Silent failure

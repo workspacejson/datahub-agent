@@ -113,11 +113,15 @@ quickstart proof.
 8. Run the full verification suite:
 
    ```bash
-   npm test
-   npm run typecheck
-   npm run check:clean-room
-   npm run parity:datahub-adapter
+   npm ci
+   npm run verify:judging
    ```
+
+   This runs typecheck, lint, clean-room audit, the full test suite (including
+   fixture integrity, schema/contract validity, and credential scanning), the
+   cockpit production build, and adapter parity in a single PASS/FAIL/SKIP
+   ledger. Parity is SKIPped unless `PARITY_OLD_SIDE` is set — see
+   `docs/manual-commands.md` for the manual verification path.
 
 **What you have verified in 15 minutes:**
 
@@ -129,8 +133,8 @@ quickstart proof.
   one.
 - The MCP field coverage gap is measured and will fail honestly if upstream
   fixes it.
-- The full verification suite passes: tests, typecheck, clean-room audit, and
-  adapter parity.
+- The full verification suite passes: tests, typecheck, lint, clean-room audit,
+  production build, and adapter parity.
 
 ---
 

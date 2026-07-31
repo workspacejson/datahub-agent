@@ -8,13 +8,13 @@
  *
  * Gates:
  *   1. typecheck         — tsc --noEmit (required)
- *   2. clean-room        — dependency audit (required)
- *   3. fixture-integrity — golden fixture schema + credential scan (required)
- *   4. schema-contract   — committed events satisfy the contract (required)
- *   5. tests             — vitest run, dot reporter (required)
- *   6. cockpit-tests     — workspace cockpit suite (optional)
- *   7. production-build  — cockpit production build (optional)
- *   8. parity            — adapter parity against frozen baseline (optional)
+ *   2. lint              — biome check (required)
+ *   3. clean-room        — dependency audit (required)
+ *   4. tests             — vitest run, dot reporter (required, covers fixture
+ *                          integrity and schema/contract via the full suite)
+ *   5. cockpit-tests     — workspace cockpit suite (optional)
+ *   6. production-build  — cockpit production build (optional)
+ *   7. parity            — adapter parity against frozen baseline (optional)
  *
  * Usage:
  *   node scripts/verify-judging.mjs
@@ -65,10 +65,25 @@ const results = [];
 
 // Gate 1: Typecheck
 results.push(
-  runGate("typecheck", process.execPath, ["node_modules/.bin/tsc", "--noEmit"], "tsconfig.json"),
+  runGate("typecheck", process.execPath, ["node_modules/.bin/tsc", "--noEmit"], "tsconfig.json", {
+    skipCondition: () =>
+      !existsSync(join(repoRoot, "node_modules/.bin/tsc"))
+        ? "tsc not installed — run npm ci first"
+        : null,
+  }),
 );
 
-// Gate 2: Clean-room audit
+// Gate 2: Lint (biome — covers scripts that tsc cannot see)
+results.push(
+  runGate("lint", process.execPath, ["node_modules/.bin/biome", "check"], "biome.jsonc", {
+    skipCondition: () =>
+      !existsSync(join(repoRoot, "node_modules/.bin/biome"))
+        ? "biome not installed — run npm ci first"
+        : null,
+  }),
+);
+
+// Gate 3: Clean-room audit
 results.push(
   runGate("clean-room", process.execPath, ["scripts/check-clean-room.mjs"], "scripts/check-clean-room.mjs", {
     skipCondition: () =>
@@ -78,39 +93,8 @@ results.push(
   }),
 );
 
-// Gate 3: Fixture integrity (golden fixture schema + credential scan)
-results.push(
-  runGate(
-    "fixture-integrity",
-    process.execPath,
-    ["node_modules/.bin/vitest", "run", "--reporter=dot", "test/integration/golden-fixture.test.ts"],
-    "test/fixtures/golden/",
-    {
-      skipCondition: () =>
-        !existsSync(join(repoRoot, "node_modules/.bin/vitest"))
-          ? "vitest not installed"
-          : null,
-    },
-  ),
-);
-
-// Gate 4: Schema/contract validity (committed events satisfy the contract)
-results.push(
-  runGate(
-    "schema-contract",
-    process.execPath,
-    ["node_modules/.bin/vitest", "run", "--reporter=dot", "test/integration/committed-events-satisfy-the-contract.test.ts"],
-    "src/integration/change-impact-event.ts",
-    {
-      skipCondition: () =>
-        !existsSync(join(repoRoot, "node_modules/.bin/vitest"))
-          ? "vitest not installed"
-          : null,
-    },
-  ),
-);
-
-// Gate 5: Tests (full suite, dot reporter to minimise buffer)
+// Gate 4: Tests (full suite — covers fixture integrity, schema/contract,
+// credential scan, claim-drift, and all other test files)
 results.push(
   runGate(
     "tests",
@@ -120,13 +104,13 @@ results.push(
     {
       skipCondition: () =>
         !existsSync(join(repoRoot, "node_modules/.bin/vitest"))
-          ? "vitest not installed"
+          ? "vitest not installed — run npm ci first"
           : null,
     },
   ),
 );
 
-// Gate 6: Cockpit tests
+// Gate 5: Cockpit tests
 results.push(
   runGate("cockpit-tests", "npm", ["run", "test:cockpit"], "apps/cockpit/", {
     required: false,
@@ -137,7 +121,7 @@ results.push(
   }),
 );
 
-// Gate 7: Production build
+// Gate 6: Production build
 results.push(
   runGate("production-build", "npm", ["run", "build"], "apps/cockpit/dist/", {
     required: false,
@@ -148,7 +132,7 @@ results.push(
   }),
 );
 
-// Gate 8: Parity (manual — requires PARITY_OLD_SIDE or network fetch)
+// Gate 7: Parity (manual — requires PARITY_OLD_SIDE or network fetch)
 results.push(
   runGate("parity", "npm", ["run", "parity:datahub-adapter"], "migration/parity-datahub-shim.mjs", {
     required: false,

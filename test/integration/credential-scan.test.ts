@@ -1,7 +1,11 @@
 /**
- * HAC-265 acceptance: a deliberately seeded credential in a JSON artifact
- * makes the credential scan fail. This proves the scan pattern catches real
- * secrets, not just that the golden fixtures happen to be clean.
+ * HAC-265 acceptance: the credential-scan regex catches seeded credentials.
+ *
+ * These are pattern-level tests proving the regex used in
+ * `test/integration/golden-fixture.test.ts` detects real secrets and passes
+ * redacted values. The actual file-level scan of committed golden fixtures
+ * lives in that test file. SECURITY.md scopes the scan to golden-fixture
+ * writeback blocks only.
  */
 
 import { describe, expect, it } from "vitest";
@@ -9,7 +13,7 @@ import { describe, expect, it } from "vitest";
 const CREDENTIAL_PATTERN =
   /"(token|password|secret|authorization)":\s*"(?!\[redacted\])/i;
 
-describe("HAC-265: seeded credential is detected", () => {
+describe("HAC-265: credential-scan regex catches seeded credentials", () => {
   it("fails when a token field contains a real value", () => {
     const seeded = JSON.stringify({
       writeback: {
