@@ -194,7 +194,7 @@ npm install
 npm test                        # contract, writeback, join, and cockpit suites
 npm run typecheck
 npm run check:clean-room        # every dependency resolves to a published version
-npm run parity:datahub-adapter  # 35/35 against the frozen migration baseline
+npm run parity:datahub-adapter  # 34/35 against the frozen migration baseline
 ```
 
 > **Parity prerequisite:** `npm run parity:datahub-adapter` fetches the public

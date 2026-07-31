@@ -97,7 +97,7 @@ Set `PARITY_OLD_SIDE` to point at an existing checkout of the old side:
 PARITY_OLD_SIDE=/path/to/workspacejson/cli npm run parity:datahub-adapter
 ```
 
-**Evidence produced:** Console output (35/35 PASS).
+**Evidence produced:** Console output (34/35 PASS; one pre-existing failure in the 'declares NO generate command' check does not affect the migration parity result).
 
 ## 6. Catalog baseline capture
 
@@ -113,11 +113,32 @@ node scripts/capture-catalog-baseline.mjs
 
 Verify `original_file_path` coverage for node types not in the frozen corpus.
 
+**Prerequisite:** Requires a local `dbt` installation with the duckdb adapter (`pip install dbt-duckdb`). If `dbt` is not on PATH, pass `--dbt /path/to/dbt`.
+
 ```bash
 node scripts/build-nodetype-probe.mjs
 ```
 
 **Evidence produced:** `evaluation/dbt-node-coverage.md`
+
+## 8. Reproduce HAC-152 live evidence package
+
+Reproduce the full HAC-152 live evidence chain: ingest the Transfermarkt dbt
+corpus into a local DataHub, emit the MCP event, observe the writeback, and run
+a paired Qwen plan comparison.
+
+**Prerequisite:** Requires a running local DataHub OSS quickstart (Docker), a
+Qwen model accessible through an OpenAI-compatible endpoint, and the
+environment variables `HAC152_QWEN_CONFIG` and `OPENAI_API_KEY` set.
+
+```bash
+HAC152_QWEN_CONFIG=<your-qwen-config> \
+  OPENAI_API_KEY=<your-key> \
+  bash scripts/reproduce-hac-152-live.sh
+```
+
+**Evidence produced:** New run directory under `evaluation/hac-152/` containing
+the fresh event, writeback receipt, and paired plan comparison.
 
 ## Re-verification before submission
 
