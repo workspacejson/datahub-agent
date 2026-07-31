@@ -1,5 +1,7 @@
 # Adoption provenance — the workspace.json DataHub/dbt adapter
 
+> **Type:** Reference | **Status:** Current | **Scope:** Adapter adoption provenance
+
 Recorded per the adapter adoption ruling. This
 document states where `src/adapters/workspacejson/` came from and what was
 verified at adoption.

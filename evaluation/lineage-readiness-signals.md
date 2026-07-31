@@ -1,5 +1,7 @@
 # Lineage readiness signals — what DataHub actually exposes
 
+> **Type:** Evidence | **Status:** Current | **Scope:** DataHub index-convergence signals
+
 Investigated 2026-07-29 against local quickstart GMS `v1.5.0.6`
 (`d0fce948555c06b3083479d40e8fa270d156c71f`), 66 datasets ingested (33 dbt /
 33 duckdb, transfermarkt corpus only).

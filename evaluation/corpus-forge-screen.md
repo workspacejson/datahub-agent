@@ -1,5 +1,7 @@
 # Forge screen — measurement-corpus candidates
 
+> **Type:** Evidence | **Status:** Current | **Scope:** Corpus candidate screening
+
 Phase-0 de-risking for HAC-213
 and the follow-on to HAC-143.
 Run 2026-07-26. Reproduce with `node scripts/screen-corpus-candidates.mjs`.

@@ -1,5 +1,7 @@
 # Public claim ledger
 
+> **Type:** Reference | **Status:** Current | **Scope:** All public claims
+
 Every figure and claim in the README, with its source and verification command.
 A claim that cannot be reproduced is a claim that does not belong here.
 

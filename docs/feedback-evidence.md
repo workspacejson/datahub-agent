@@ -1,5 +1,7 @@
 # Feedback evidence log
 
+> **Type:** Log | **Status:** Current | **Scope:** Development session records
+
 Running record for HAC-215.
 Captured **as it happens**, not reconstructed during submission week — a
 reconstructed log loses the exact error strings and the real time cost, which

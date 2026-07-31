@@ -1,5 +1,7 @@
 # `original_file_path` coverage by dbt node type
 
+> **Type:** Evidence | **Status:** Current | **Scope:** dbt node-type field coverage
+
 Verification for HAC-162, the
 join-key foundation under HAC-147.
 

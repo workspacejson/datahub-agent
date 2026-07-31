@@ -1,5 +1,7 @@
 # Clean-room import rule
 
+> **Type:** Policy | **Status:** Current | **Scope:** Dependency imports
+
 This repository is a downstream **consumer** of the `workspacejson` standard, not a co-development surface for it.
 
 ## Rule

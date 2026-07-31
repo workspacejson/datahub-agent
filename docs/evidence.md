@@ -1,5 +1,7 @@
 # Evidence terminology and invariants
 
+> **Type:** Reference | **Status:** Current | **Scope:** ChangeImpactEvent contract
+
 This document defines every term a cold reader will meet in a
 `ChangeImpactEvent` and states the invariants the contract enforces. It is the
 reference a judge or reviewer should consult when a field reads oddly — the

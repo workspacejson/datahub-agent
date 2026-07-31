@@ -1,5 +1,7 @@
 # MCP field coverage — what DataHub holds vs what an agent receives
 
+> **Type:** Evidence | **Status:** Current | **Scope:** MCP projection boundary
+
 Measured against a clean local DataHub OSS quickstart, GMS `v1.5.0.6`, with two
 dbt projects ingested.
 

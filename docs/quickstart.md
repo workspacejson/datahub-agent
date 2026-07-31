@@ -1,5 +1,7 @@
 # Local DataHub quickstart
 
+> **Type:** Guide | **Status:** Current | **Scope:** Local development setup
+
 This application reads DataHub through the official DataHub MCP server
 (`acryldata/mcp-server-datahub`), spawned over stdio. For local development you
 need a running local DataHub instance and that server installed.

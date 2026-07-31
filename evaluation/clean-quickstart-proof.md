@@ -1,5 +1,7 @@
 # Clean-quickstart proof
 
+> **Type:** Evidence | **Status:** Current | **Scope:** End-to-end quickstart verification
+
 The read path, the writeback and the reset, run end to end against a DataHub
 that was destroyed and rebuilt immediately beforehand. Everything below is one
 transcript from one run.

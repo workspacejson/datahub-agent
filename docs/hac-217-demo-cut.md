@@ -1,5 +1,7 @@
 # HAC-217 cockpit UX ratification and demo cut
 
+> **Type:** Reference | **Status:** Current | **Scope:** Cockpit UX demo cut
+
 **Status:** ratified for implementation handoff on 2026-07-27.  The attached
 **Cockpit UX reference layout** on HAC-217
 is the canonical visual artifact.  This document is the authoritative
