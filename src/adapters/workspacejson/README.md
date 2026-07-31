@@ -83,6 +83,7 @@ workspace link) for the `FileIndexEntry` key contract.
 
 ## Status
 
-The path-normalization shim and join are adopted with parity preserved at 35/35.
+The path-normalization shim and join are adopted with parity preserved at 34/35
+(one pre-existing harness sensitivity; see `docs/provenance.md`).
 Non-silent extraction is new and tested against the frozen
 proof corpus (HAC-143).

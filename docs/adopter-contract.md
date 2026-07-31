@@ -102,7 +102,7 @@ default value would manufacture an observation nobody made.
 
 The adapter in `src/adapters/workspacejson/` was transferred from
 `workspacejson/cli` under a recorded adoption ruling. Parity is verified at
-35/35 checks against the frozen migration baseline.
+34/35 checks against the frozen migration baseline (one pre-existing failure; see `docs/provenance.md`).
 
 - **Parity check:** `npm run parity:datahub-adapter`
 - **Provenance:** [`docs/provenance.md`](provenance.md)

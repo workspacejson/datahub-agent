@@ -33,8 +33,8 @@ Why it is not a clean-room breach:
 - The transfer is **fully attributed**. Judge-facing legibility is the point of
   the rule, and it is served better by a recorded provenance trail than by
   silence: see [`provenance.md`](provenance.md) for the frozen baseline commit,
-  per-file source identity, the single documented deviation, and the 35/35
-  parity result.
+  per-file source identity, the single documented deviation, and the 34/35
+  parity result (one pre-existing failure; see `provenance.md`).
 
 What this exception does **not** license:
 

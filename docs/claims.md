@@ -133,7 +133,7 @@ is listed here so the figure has one accurate home rather than an alarming one.
 
 | Claim | Value | Source | Verify |
 | -- | -- | -- | -- |
-| Parity checks against frozen baseline | 35/35 | `migration/parity-datahub-shim.mjs` | `npm run parity:datahub-adapter` *(manual — not in CI)* |
+| Parity checks against frozen baseline | 34/35 | `migration/parity-datahub-shim.mjs` | `npm run parity:datahub-adapter` *(manual — not in CI)* |
 
 ## Clean-room audit
 

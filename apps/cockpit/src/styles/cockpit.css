@@ -964,6 +964,8 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   }
 }
 
+.cockpit-footer .cta { width: auto; max-width: 320px; }
+
 /* ── Mobile adjustments for new elements ───────────────────── */
 @media (max-width: 640px) {
   .route-intro { font-size: var(--fs-xs); }

@@ -185,7 +185,7 @@ All pass.
 **What to look for:** The test suite validates the golden fixtures against the
 frozen contract, the writeback invariants, and the project-layout coverage.
 The clean-room audit verifies every dependency resolves to a published version.
-The adapter parity check runs 35/35 against the frozen migration baseline.
+The adapter parity check runs 34/35 against the frozen migration baseline.
 
 **Verify locally:** Run the commands above from a clean clone.
 

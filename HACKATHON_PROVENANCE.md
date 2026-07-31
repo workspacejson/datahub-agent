@@ -49,8 +49,8 @@ in [`docs/provenance.md`](docs/provenance.md).
 > **Correction 2026-07-29 (HAC-273):** `urn.ts` was removed as dormant. See
 > [`docs/provenance.md`](docs/provenance.md) for the HAC-147 reconciliation.
 
-**Parity verification:** 35/35 checks pass against the frozen migration
-baseline. Run `npm run parity:datahub-adapter`.
+**Parity verification:** 34/35 checks pass against the frozen migration
+baseline (one pre-existing failure; see `docs/provenance.md`). Run `npm run parity:datahub-adapter`.
 
 ### Proof corpus
 
