@@ -11,7 +11,7 @@ A claim that cannot be reproduced is a claim that does not belong here.
 | -- | -- | -- | -- |
 | Models matched, dbt project at repo root | 5/5 | `test/integration/golden-fixture.test.ts` | `npm test` |
 | Models matched, dbt project nested under `dbt/` | 0/5 (without normalization) | `test/integration/golden-fixture.test.ts` — nested fixture exercises the prefix | `npm test` |
-| Process exit code on silent failure | 0 | Measured — the join returns empty with no error | Run the emitter against a nested project without normalization |
+| Process exit code on silent failure | 0 | `scripts/prove-silent-zero.mjs` — naive join returns 0/5 with no error and exit 0 | `node scripts/prove-silent-zero.mjs` |
 
 The `extractModels` node-drop figure used to sit in this table. It was moved to
 node accounting below on 2026-07-30, because it measures a different thing:
