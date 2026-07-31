@@ -14,7 +14,7 @@ const MODELS: DbtModel[] = [
   { uniqueId: "model.jaffle_shop.stg_orders", originalFilePath: "models/staging/stg_orders.sql" },
 ];
 
-// workspace.json fileIndex as the REAL Vreko emitter produced it on the nested
+// workspace.json fileIndex as the real workspace.json emitter produced it on the nested
 // repo (git-root-relative keys, observed in the HAC-75 probe): dbt/ prefix.
 const NESTED_FILE_INDEX: FileIndex = {
   "dbt/models/customers.sql": {},

@@ -144,8 +144,9 @@ human-authored, as recorded in the attempts themselves."
 
 ### 7. No credentials in committed artifacts
 
-Every committed JSON artifact is scanned for `token`, `password`, `secret`, and
-`authorization` fields. A credential that is not explicitly redacted fails.
+The golden fixture's writeback block is scanned for `token`, `password`,
+`secret`, and `authorization` fields. A credential that is not explicitly
+redacted fails.
 
 **Test:** `test/integration/golden-fixture.test.ts` — "carries no credential,
 since the fixture is committed."

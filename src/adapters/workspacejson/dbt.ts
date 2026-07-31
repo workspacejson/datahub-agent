@@ -37,7 +37,7 @@ const DEFAULT_IGNORE = new Set(["node_modules", ".git", "target", "dbt_packages"
 export function findDbtProjects(root: string, ignore: Set<string> = DEFAULT_IGNORE): string[] {
   const found: string[] = [];
   const walk = (dir: string): void => {
-    // META-248 type-only deviation from the frozen baseline, which read
+    // Adapter adoption type-only deviation from the frozen baseline, which read
     // `ReturnType<typeof readdirSync>`. That resolved against an ambient
     // `node:fs` stub upstream (workspacejson/cli types/ambient.d.ts); against
     // real @types/node it picks the Buffer overload and fails to compile.

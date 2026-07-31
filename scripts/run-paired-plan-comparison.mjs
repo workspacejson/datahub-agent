@@ -18,12 +18,12 @@ const baseUrl = flag("base-url", process.env.OPENAI_BASE_URL ?? "https://api.ope
 const apiKeyEnv = flag("api-key-env", "OPENAI_API_KEY");
 const settingsText = flag("settings", '{"temperature":0}');
 if (!eventFile || !outFile || !taskId || !prompt || !model) {
-  console.error("usage: doppler run --project dev_week_26_openai --config <config> -- node --import tsx scripts/run-paired-plan-comparison.mjs --event EVENT.json --out BUNDLE.json --task-id ID --prompt TEXT --model QWEN_MODEL_ID [--settings JSON]");
+  console.error("usage: node --import tsx scripts/run-paired-plan-comparison.mjs --event EVENT.json --out BUNDLE.json --task-id ID --prompt TEXT --model QWEN_MODEL_ID [--settings JSON]");
   process.exit(2);
 }
 const apiKey = process.env[apiKeyEnv];
 if (!apiKey) {
-  console.error(`refused: ${apiKeyEnv} is absent; provide it through Doppler (its value is never read from a file or printed).`);
+  console.error(`refused: ${apiKeyEnv} is absent; provide it through your environment (its value is never read from a file or printed).`);
   process.exit(2);
 }
 let settings;

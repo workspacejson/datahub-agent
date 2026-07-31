@@ -42,13 +42,13 @@ or a cold-reader witness.
 Start a local DataHub OSS quickstart, then run from a clean clone:
 
 ```bash
-HAC152_QWEN_CONFIG=prd_qwen_hackathon_26 \
+HAC152_QWEN_CONFIG=<your-qwen-config> \
   bash scripts/reproduce-hac-152-live.sh
 ```
 
 The script checks out the exact public Transfermarkt revision in a temporary
 directory, generates dbt metadata, ingests it into the local GMS, emits the
-MCP event, observes the writeback, and calls Qwen through Doppler using the
-OpenAI-compatible `OPENAI_API_KEY2` name only. It writes new artifacts to a
-new temporary run directory and prints that path; it never prints or stores a
-secret value.
+MCP event, observes the writeback, and calls Qwen through an OpenAI-compatible
+endpoint using the `OPENAI_API_KEY` environment variable name only. It writes
+new artifacts to a new temporary run directory and prints that path; it never
+prints or stores a secret value.

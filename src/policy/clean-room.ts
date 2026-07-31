@@ -15,7 +15,13 @@
  * gives the same answer in CI, on a plane, and in a judge's checkout.
  */
 
-/** Packages whose origin the rule governs — the standard's org and its private producers. */
+/**
+ * Packages whose origin the rule governs — the workspace.json standard's org and
+ * its private producers. The regex matches specific package scopes so the audit
+ * catches real dependency names; documentation refers to these generically as
+ * "private repository origin" to avoid perpetuating internal org names in
+ * reader-facing prose.
+ */
 const CONTROLLED = /^(@workspacejson\/|workspacejson$|agents-audit$|@marcelle-labs\/|marcelle-labs$|vreko)/i;
 
 /**

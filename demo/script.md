@@ -196,13 +196,14 @@ The adapter parity check runs 35/35 against the frozen migration baseline.
 For a full end-to-end reproduction against a live DataHub instance:
 
 ```bash
-HAC152_QWEN_CONFIG=prd_qwen_hackathon_26 \
+HAC152_QWEN_CONFIG=<your-qwen-config> \
   bash scripts/reproduce-hac-152-live.sh
 ```
 
 The script checks out the exact public Transfermarkt revision in a temporary
 directory, generates dbt metadata, ingests it into the local GMS, emits the
-MCP event, observes the writeback, and calls Qwen through Doppler. It writes
+MCP event, observes the writeback, and calls Qwen through an OpenAI-compatible
+endpoint. It writes
 new artifacts to a temporary run directory and never prints or stores a secret
 value.
 

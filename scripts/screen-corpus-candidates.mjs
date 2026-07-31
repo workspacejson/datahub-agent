@@ -2,7 +2,7 @@
 /**
  * Forge screen for measurement-corpus candidates (HAC-213 / HAC-143 follow-on).
  *
- * Selection criterion per the META-195 thread, 2026-07-10:
+ * Selection criterion per the pre-squash history recovery thread, 2026-07-10:
  *
  *   "Demo-repo constraint dissolves. Merge-commit preservation is no longer
  *    required. Select the corpus on lineage quality and patch_path cardinality

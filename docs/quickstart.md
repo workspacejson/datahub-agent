@@ -167,23 +167,21 @@ with `toDataHubOnly`, while the joined envelope retains the exact
 corpus-matched repository-relative source and pinned revision.
 
 Do not put provider credentials in an event, bundle, fixture, or shell history.
-Run it through Doppler instead (the exact config name is the one provisioned to
-you):
+Provide the API key through an environment variable:
 
 ```bash
-doppler run --project dev_week_26_openai --config <config> -- \
-  node --import tsx scripts/run-paired-plan-comparison.mjs \
+node --import tsx scripts/run-paired-plan-comparison.mjs \
   --event event-with-writeback.json --out judge-run-bundle.json \
   --task-id add-quality-check \
   --prompt 'Add a dbt quality check for game_events.' \
   --model <qwen-model-id> --settings '{"temperature":0}' \
-  --api-key-env OPENAI_API_KEY2
+  --api-key-env OPENAI_API_KEY
 ```
 
 `--api-key-env` names an environment variable only; it never places a key in
-the command, artifact, or repository. In the currently provisioned Qwen
-configuration, `OPENAI_API_KEY2` is the OpenAI-compatible key that the Qwen
-endpoint accepts. This is not an OpenRouter route.
+the command, artifact, or repository. Set the environment variable in your
+shell before running, using whatever secret manager your environment
+provides.
 
 The runner refuses a DataHub-only answer unless it explicitly refuses the
 unknown source location, and refuses a joined answer unless it uses the exact
@@ -194,5 +192,5 @@ input event may be fixture-based, which must be stated alongside the result.
 
 ## Notes
 
-- This quickstart is intentionally daemon-free with respect to Vreko: nothing here starts, requires, or assumes a Vreko process. See [`docs/clean-room.md`](clean-room.md).
+- This quickstart is intentionally daemon-free: nothing here starts, requires, or assumes a background process beyond Docker for DataHub. See [`docs/clean-room.md`](clean-room.md).
 - For DataHub's own quickstart options (Kubernetes, custom compose overrides, upgrading), see the [official DataHub docs](https://docs.datahub.com/docs/quickstart).

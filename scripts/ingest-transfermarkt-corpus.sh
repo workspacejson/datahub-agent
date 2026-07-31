@@ -8,10 +8,10 @@
 # `scripts/reproduce-hac-152-live.sh`. They were not reachable. That script's
 # third line is:
 #
-#     config="${HAC152_QWEN_CONFIG:?set HAC152_QWEN_CONFIG to the Doppler ...}"
+#     config="${HAC152_QWEN_CONFIG:?set HAC152_QWEN_CONFIG to the API key config ...}"
 #
-# which under `set -u` exits 1 before the clone, so anyone without this project's
-# Doppler tenant cannot reach the corpus build at all — and having reached it,
+# which under `set -u` exits 1 before the clone, so anyone without the API key
+# cannot reach the corpus build at all — and having reached it,
 # would still be running an LLM judge comparison they did not ask for. The corpus
 # ingest was welded to a paid, credentialled, private-secret workflow.
 #

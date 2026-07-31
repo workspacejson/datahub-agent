@@ -1,6 +1,6 @@
 # Feedback evidence log
 
-Running record for [HAC-215](https://linear.app/marcelle-labs/issue/HAC-215).
+Running record for HAC-215.
 Captured **as it happens**, not reconstructed during submission week — a
 reconstructed log loses the exact error strings and the real time cost, which
 are the only parts worth anything to the DataHub team.
@@ -12,7 +12,7 @@ happened verbatim, and what it cost.
 
 ## 2026-07-26 — Session 1: adapter adoption, corpus freeze, node-type coverage
 
-Scope: META-248, HAC-143, HAC-162.
+Scope: adapter adoption ruling, HAC-143, HAC-162.
 
 ### What worked
 
@@ -309,28 +309,7 @@ not generalise across GMS versions.
 
 ---
 
-## Devpost draft state
-
-Tracked here so the submission fields are never reconstructed from memory.
-
-> Migrated from the deleted Devpost working draft before deletion under
-> HAC-260/HAC-273. Submission management URL intentionally not perpetuated
-> (private management URL in a public repo).
-
-| Field | State |
-| -- | -- |
-| Project title | **not yet set** — still `Untitled` |
-| Tagline | not yet set |
-| Description | not yet set |
-| Category | **Metadata-Aware Code Generation & Development** (decided) |
-| Public repository | https://github.com/workspacejson/datahub-agent |
-| `examples/` link | pending — [HAC-148](https://linear.app/marcelle-labs/issue/HAC-148) / [HAC-152](https://linear.app/marcelle-labs/issue/HAC-152) |
-| Runnable path | `docs/quickstart.md` (DataHub side); application entry pending HAC-148 |
-| Video | not yet recorded |
-| Upstream contributions | none yet; one candidate — the `types/ambient.d.ts` masking defect above |
-| Submission status | `submission_pre_draft` |
-
-### Technologies actually demonstrated
+## Technologies actually demonstrated
 
 Claimed **only** where genuinely used. Anything not yet exercised is marked so
 and must not appear on the submission until it is.
@@ -341,18 +320,18 @@ and must not appear on the submission until it is.
 | DataHub dataset URN semantics | **used** — DataHub-returned URNs consumed via `src/integration/mcp-read.ts` |
 | DataHub OSS/Core | **not yet** — no instance stood up |
 | DataHub MCP Server | **not yet** — pending HAC-148 |
-| Agent Context Kit | **not yet** — pending [HAC-163](https://linear.app/marcelle-labs/issue/HAC-163) substrate decision |
+| Agent Context Kit | **not yet** — pending HAC-163 substrate decision |
 | Analytics Agent | **not yet** — pending HAC-163 |
 
 > Corrected 2026-07-29 under HAC-273; previous `urn.ts` reference in the URN semantics row superseded after dormant seam removal.
 
-### Pre-existing-work disclosure
+## Pre-existing-work disclosure
 
 To be stated plainly on the submission:
 
 > The `workspace.json` standard, its producer CLI, and the dbt path-normalization
 > adapter in `src/adapters/workspacejson/` are **pre-existing work**, developed
-> before the hackathon and adopted into this repository under META-248 with full
+> before the hackathon and adopted into this repository under the adapter adoption ruling with full
 > provenance recorded in `docs/provenance.md` (frozen baseline commit, per-file
 > source identity, 35/35 parity).
 >

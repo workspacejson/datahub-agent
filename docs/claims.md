@@ -34,7 +34,7 @@ that accounting rather than about a failure.
 | Nodes kept by the legacy `extractModels` | 5 of 28, filtering `resource_type === "model"` | `evaluation/dbt-node-coverage.md` | `node scripts/build-nodetype-probe.mjs` |
 
 `extractModels` is **not on the join path.** It is retained byte-identical because
-the META-248 parity harness pins it at 35/35, and the join runs through
+the adapter adoption parity harness pins it at 35/35, and the join runs through
 `extractDatasetNodes`, which enforces
 `nodes.length + dropped.length + sum(excluded) === total`. Its 5-of-28 filtering
 is a property of a frozen function, not a defect in the current pipeline, and it

@@ -32,7 +32,7 @@ recorded exception.
 ### dbt path-normalization adapter
 
 The five files in [`src/adapters/workspacejson/`](src/adapters/workspacejson/)
-were adopted from the workspacejson CLI's internal dbt adapter (META-248).
+were adopted from the workspacejson CLI's internal dbt adapter (the adapter adoption ruling).
 This is the only recorded exception to the clean-room import rule, documented
 in [`docs/provenance.md`](docs/provenance.md).
 

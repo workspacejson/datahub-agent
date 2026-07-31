@@ -1,6 +1,6 @@
 # Adoption provenance — the workspace.json DataHub/dbt adapter
 
-Recorded per [META-248](https://linear.app/marcelle-labs/issue/META-248). This
+Recorded per the adapter adoption ruling. This
 document states where `src/adapters/workspacejson/` came from and what was
 verified at adoption.
 
@@ -18,7 +18,7 @@ verified at adoption.
 
 ## What was adopted
 
-Five source files, as an **internal module — not a package**. META-248 ratified
+Five source files, as an **internal module — not a package**. The adapter adoption ruling ratified
 this shape to avoid creating a second public package and a semver obligation.
 Promotion to `packages/workspacejson-adapter/` happens only if a second real
 DataHub application consumes it — decided by observed reuse, not anticipated
@@ -98,7 +98,7 @@ Result: **35 passed, 0 failed**, plus 5/5 source identity.
 
 ### Substitutions in the 35
 
-META-248 required both "internal module, not a package" and "preserve its 35/35
+The adapter adoption ruling required both "internal module, not a package" and "preserve its 35/35
 behavior". Section 1 of the original harness asserted on `package.json` fields
 that an internal module does not have, so 7 of the 35 were structurally
 unsatisfiable as written. Each was restated as the adoption-equivalent
@@ -133,7 +133,7 @@ parity baseline stays pinned:
 
 | File | Purpose |
 | -- | -- |
-| `nodes.ts` | non-silent node extraction ([HAC-162](https://linear.app/marcelle-labs/issue/HAC-162)) |
+| `nodes.ts` | non-silent node extraction (HAC-162) |
 
 `nodes.ts` exists because the adopted `extractModels` filters
 `resource_type === "model"` **and** silently requires a truthy

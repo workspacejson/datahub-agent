@@ -1,7 +1,7 @@
 # HAC-217 cockpit UX ratification and demo cut
 
 **Status:** ratified for implementation handoff on 2026-07-27.  The attached
-**Cockpit UX reference layout** on [HAC-217](https://linear.app/marcelle-labs/issue/HAC-217)
+**Cockpit UX reference layout** on HAC-217
 is the canonical visual artifact.  This document is the authoritative
 ship/defer ledger for it; it does not introduce a second wireframe, route, or
 application shell.

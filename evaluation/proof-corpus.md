@@ -1,6 +1,6 @@
 # Proof corpus — selected and frozen
 
-Ruling for [HAC-143](https://linear.app/marcelle-labs/issue/HAC-143). This
+Ruling for HAC-143. This
 repository is **not** the proof corpus; it consumes the corpus as an external,
 read-only input at an immutable commit. Nothing from the corpus is vendored.
 

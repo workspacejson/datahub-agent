@@ -11,7 +11,7 @@
  * dropped node must warn, not vanish."
  *
  * `extractModels` is deliberately left untouched — it is the behavior the
- * META-248 parity harness pins at 35/35. This module is the widened,
+ * adapter adoption parity harness pins at 35/35. This module is the widened,
  * accountable path that the DataHub join actually uses.
  *
  * The two exclusion kinds are reported separately because they mean different

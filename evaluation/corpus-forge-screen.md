@@ -1,7 +1,7 @@
 # Forge screen — measurement-corpus candidates
 
-Phase-0 de-risking for [HAC-213](https://linear.app/marcelle-labs/issue/HAC-213)
-and the follow-on to [HAC-143](https://linear.app/marcelle-labs/issue/HAC-143).
+Phase-0 de-risking for HAC-213
+and the follow-on to HAC-143.
 Run 2026-07-26. Reproduce with `node scripts/screen-corpus-candidates.mjs`.
 
 ## Why the forge, not `git log`
@@ -11,7 +11,7 @@ shows only the flattened result, so `git log` systematically under-reports
 fix-follow and co-change signal on any squash-merging repository — which is most
 well-run repositories.
 
-This was established in the META-195 thread on 2026-07-10 and restated as a
+This was established in the pre-squash history recovery thread on 2026-07-10 and restated as a
 selection rule:
 
 > **Demo-repo constraint dissolves.** Merge-commit preservation is no longer
@@ -130,6 +130,6 @@ nested-project normalization for real.
 
 **Not pinned yet.** Freezing it at an immutable commit is a decision for the
 HAC-143 follow-on, and the measurement claim it would support remains blocked on
-[META-195](https://linear.app/marcelle-labs/issue/META-195) — there is no
+the pre-squash history recovery thread — there is no
 producer emitting `fileIndex` to measure. HEAD at screen time was
 `59fa295c51fc23466f3a71542f8bf3d1335daa83`.

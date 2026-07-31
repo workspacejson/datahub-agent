@@ -5,7 +5,7 @@ behavioral intelligence (fragility, co-change, modification history) by
 **repository-root-relative POSIX path**.
 
 Adopted from `workspacejson/cli@c60447fc` under
-[META-248](https://linear.app/marcelle-labs/issue/META-248). See
+the adapter adoption ruling. See
 [`docs/provenance.md`](../../../docs/provenance.md) for the baseline commit,
 per-file source identity, and the parity result.
 
@@ -54,7 +54,7 @@ dbt manifest node
 | `extractDatasetNodes` (`nodes.ts`) | models, seeds and snapshots; accounts for **every** node as kept, dropped, or excluded | always |
 
 `extractModels` discards 23 of the 28 nodes in the frozen proof corpus without
-a word. [HAC-162](https://linear.app/marcelle-labs/issue/HAC-162) requires that
+a word. HAC-162 requires that
 a dropped node warn rather than vanish, so `extractDatasetNodes` is the path the
 join uses. `extractModels` is left byte-identical because the parity harness
 pins it.
@@ -85,4 +85,4 @@ workspace link) for the `FileIndexEntry` key contract.
 
 The path-normalization shim and join are adopted with parity preserved at 35/35.
 Non-silent extraction is new and tested against the frozen
-proof corpus ([HAC-143](https://linear.app/marcelle-labs/issue/HAC-143)).
+proof corpus (HAC-143).
