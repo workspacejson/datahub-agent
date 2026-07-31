@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { CockpitShell } from "./components/CockpitShell";
@@ -155,5 +156,78 @@ describe("silent zero callout on the impact route", () => {
     if (m.dbtFilePath) {
       expect(screen.getByText(m.dbtFilePath)).toBeTruthy();
     }
+  });
+});
+
+describe("progressive disclosure summaries carry semantic labels, not raw identifiers", () => {
+  // The proof indicator's <summary> is what a reader sees first. The raw
+  // canonical value lives in the expanded panel (hidden by <details> but still
+  // in the DOM). This test walks <summary> elements only, not full textContent,
+  // because hidden <details> content would produce false positives.
+  it("shows semantic labels in proof indicator summaries on the receipts route", () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="receipts" onRouteChange={() => {}} />);
+    const summaries = Array.from(document.querySelectorAll("summary.proof-indicator__summary"));
+    expect(summaries.length).toBeGreaterThan(0);
+    for (const summary of summaries) {
+      // Each summary should have non-empty text content (the semantic label)
+      expect(summary.textContent?.trim().length).toBeGreaterThan(0);
+    }
+    // At least one summary should carry the "Exact-source evidence corpus" label
+    const labels = summaries.map((s) => s.textContent?.trim() ?? "");
+    expect(labels.some((l) => l.includes("Exact-source evidence corpus"))).toBe(true);
+  });
+
+  it("does not show raw SHA values in proof indicator summaries", () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="receipts" onRouteChange={() => {}} />);
+    const summaries = Array.from(document.querySelectorAll("summary.proof-indicator__summary"));
+    // The contract event's corpus commit should not appear in any summary text
+    const event = model();
+    const receipt = event.receipt;
+    const rawValues: string[] = [];
+    for (const key of ["subjectRevision", "artifactRevision", "inputDigest", "artifactDigest"] as const) {
+      const val = receipt.provenance[key];
+      if (val.state === "observed") rawValues.push(val.value);
+    }
+    for (const summary of summaries) {
+      for (const raw of rawValues) {
+        // Check a meaningful prefix (first 12 chars) rather than the full value,
+        // since a raw SHA or digest is unlikely to partially match a semantic label
+        expect(summary.textContent).not.toContain(raw.slice(0, 12));
+      }
+    }
+  });
+
+  it("hero popover trigger says \"View dataset identity\", not the dataset name or raw URN", () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
+    // The hero section's proof popover trigger is a button, not a <summary>.
+    // The compact variant was converted from <details> to an anchored popover.
+    const hero = document.querySelector(".hero__identity");
+    expect(hero).toBeTruthy();
+    const trigger = hero?.querySelector("button.proof-popover__trigger");
+    expect(trigger).toBeTruthy();
+    expect(trigger?.textContent).toContain("View dataset identity");
+    // The h1 should still carry the dataset name — the disclosure does not replace it
+    const h1 = hero?.querySelector("h1");
+    expect(h1?.textContent).toContain("game_events");
+    // The trigger must not duplicate the dataset name or expose the raw URN
+    expect(trigger?.textContent).not.toContain("game_events");
+    expect(trigger?.textContent).not.toContain("urn:li:dataset");
+  });
+
+  it("hero popover panel contains the full canonical URN when opened", async () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
+    const hero = document.querySelector(".hero__identity");
+    const trigger = hero?.querySelector("button.proof-popover__trigger");
+    expect(trigger).toBeTruthy();
+    // Open the popover by clicking the trigger. Radix Portal renders the panel
+    // into document.body, not inside the hero.
+    await userEvent.click(trigger!);
+    // The expanded panel should contain the full URN
+    const panel = document.querySelector(".proof-popover__panel");
+    expect(panel?.textContent).toContain("urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)");
   });
 });

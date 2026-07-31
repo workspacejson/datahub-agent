@@ -107,7 +107,7 @@ The `unavailable` block states what is missing and why:
 **What the viewer sees:** The writeback running and producing a receipt. The
 `writeback` block shows:
 
-- `before.evidenceTier: null` — the dataset had no prior tier.
+- `before.evidenceTier: null` — the dataset had no prior tier. (Live event.)
 - `after.evidenceTier: "VERIFIED"` — the tier was written.
 - `bothStatesRead: true` — both states were observed.
 - `succeeded: true` — mutations accepted and intended state observed.
@@ -118,6 +118,10 @@ The `unavailable` block states what is missing and why:
 refusal, omission, and accepted-but-not-observed. This is a success with a
 stated omission. `bothStatesRead` is the field that makes the write evidence
 rather than assertion.
+
+The golden fixtures show a subsequent run: `before.evidenceTier: "VERIFIED"`
+and `noop: true`, because the tier was already present from the first
+writeback. The live event shows the first run: `before.evidenceTier: null`.
 
 **Committed artifact:**
 [`evaluation/hac-152/live-event-with-writeback.json`](../evaluation/hac-152/live-event-with-writeback.json)

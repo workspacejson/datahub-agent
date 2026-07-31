@@ -18,19 +18,26 @@ function disabled(name: RegExp): boolean {
   return (screen.getByRole("button", { name }) as HTMLButtonElement).disabled;
 }
 
-it("renders an unavailable receipt field as a stated reason, never as a blank", () => {
-  // A blank cell tells a judge nothing. "The catalog does not expose this" and
-  // "nobody looked" are different findings and they act on them differently.
+it("renders a constructed immutable source URL from corpus provenance, not as a blank", () => {
+  // The receipt and the Impact view must agree. When `code.sourceUrl` is null
+  // (the MCP read path), the receipt now carries the same constructed
+  // commit-pinned link the Impact view shows, tagged `workspace.json`.
   render(<ReceiptsView model={projected()} />);
   const row = screen.getByText("Immutable source URL").closest("div");
-  expect(row?.textContent).toContain("Unavailable");
-  expect(row?.textContent).toContain("externalUrl");
+  expect(row?.textContent).not.toContain("Unavailable");
+  expect(row?.textContent).not.toContain("externalUrl");
 });
 
-it("offers no immutable source link when the event carries no commit-pinned URL", () => {
+it("links the immutable source from corpus provenance when the catalog did not expose one", () => {
   render(<ReceiptsView model={projected()} />);
-  expect(screen.queryByRole("link", { name: "View immutable source" })).toBeNull();
-  expect(screen.getByText(/No immutable source link is offered/)).toBeTruthy();
+  // The constructed link is present, not absent.
+  const link = screen.getByRole("link", { name: "View immutable source" });
+  expect(link).toBeTruthy();
+  // The URL is commit-pinned, built from corpus provenance.
+  const event = contractEvent();
+  expect(link.getAttribute("href")).toBe(
+    `${event.provenance.corpus.repository}/blob/${event.provenance.corpus.commit}/dbt/models/curated/game_events.sql`,
+  );
 });
 
 it("links the immutable source when, and only when, the event observed one", () => {
@@ -116,4 +123,42 @@ it("renders each unresolved dataset with the reason it did not resolve", () => {
   expect(section.getByText(/the join refused to pick/)).toBeTruthy();
   // The fallback message must not also be on screen — one state at a time.
   expect(section.queryByText(/without per-dataset names/)).toBeNull();
+});
+
+it("renders provenance rows with identifier metadata as proof indicators with semantic labels", () => {
+  // The semantic label replaces the raw identifier in the primary reading plane.
+  // A judge sees "Exact-source evidence corpus" rather than a naked SHA.
+  render(<ReceiptsView model={projected()} />);
+  // The subject revision row should carry the semantic label in a proof indicator
+  const subjectRevRow = screen.getByText("Subject revision").closest("div");
+  expect(subjectRevRow?.textContent).toContain("Exact-source evidence corpus");
+  // The artifact revision row should carry its semantic label
+  const artifactRevRow = screen.getByText("Artifact revision").closest("div");
+  expect(artifactRevRow?.textContent).toContain("Generated-plan evidence revision");
+});
+
+it("keeps the raw SHA out of the summary element in provenance rows", () => {
+  // Hidden <details> content remains in the DOM, so the test checks the
+  // <summary> element specifically — not the full row textContent.
+  render(<ReceiptsView model={projected()} />);
+  const subjectRevRow = screen.getByText("Subject revision").closest("div");
+  const summary = subjectRevRow?.querySelector("summary");
+  // The summary should contain the semantic label, not the raw SHA value.
+  // The contract event's corpus commit should not appear in the summary text.
+  expect(summary?.textContent).toContain("Exact-source evidence corpus");
+  // The raw SHA from the contract event should not be in the summary
+  const event = contractEvent();
+  const commit = event.provenance.corpus.commit;
+  if (commit) {
+    expect(summary?.textContent).not.toContain(commit);
+  }
+});
+
+it("renders provenance rows without identifier metadata as before", () => {
+  // The producer version row does not carry identifier metadata, so it should
+  // render as a plain evidence value, not a proof indicator.
+  render(<ReceiptsView model={projected()} />);
+  const producerRow = screen.getByText("Artifact producer").closest("div");
+  // No proof indicator summary should be present in this row
+  expect(producerRow?.querySelector("summary.proof-indicator__summary")).toBeNull();
 });

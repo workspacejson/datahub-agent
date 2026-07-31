@@ -35,7 +35,9 @@ import type {
   ClaimSource,
   CockpitRoute,
   EvidenceValue,
+  IdentifierMeta,
   SourceEvent,
+  ViewSource,
 } from "./cockpit-view-model";
 
 /**
@@ -158,15 +160,31 @@ export { NO_COMPARISON_SUPPLIED } from "./project-comparison";
 import { NO_COMPARISON_SUPPLIED } from "./project-comparison";
 
 /** An observation, tagged with the system that made it. */
-const observed = (value: string, source: ClaimSource): EvidenceValue =>
-  ({ state: "observed", value, source });
+const observed = (value: string, source: ClaimSource, identifier?: IdentifierMeta): EvidenceValue =>
+  identifier ? { state: "observed", value, source, identifier } : { state: "observed", value, source };
 
 /** An absence, stating which absence it is. Never an empty string. */
 const missing = (reason: string): EvidenceValue => ({ state: "unavailable", reason });
 
 /** `observed` when the event carries the value, `unavailable` with the reason when it does not. */
-function fromNullable(value: string | null | undefined, source: ClaimSource, reason: string): EvidenceValue {
-  return value ? observed(value, source) : missing(reason);
+function fromNullable(value: string | null | undefined, source: ClaimSource, reason: string, identifier?: IdentifierMeta): EvidenceValue {
+  return value ? observed(value, source, identifier) : missing(reason);
+}
+
+/**
+ * The receipt's `immutableSourceUrl` row and the Impact view's source link must
+ * agree. Both are derived from `resolveViewSource`, so a constructed link on the
+ * Impact screen is also a constructed link on the Receipt — not "no link is
+ * offered."
+ *
+ * `declared` is tagged `DataHub` because the catalog supplied it. `constructed`
+ * is tagged `workspace.json` because it was built from corpus provenance the
+ * artifact carries. `unavailable` carries the same reason the Impact view shows.
+ */
+function viewSourceToEvidence(vs: ViewSource): EvidenceValue {
+  if (vs.state === "declared") return observed(vs.url, "DataHub");
+  if (vs.state === "constructed") return observed(vs.url, "workspace.json");
+  return missing(vs.reason);
 }
 
 /**
@@ -181,7 +199,7 @@ function fromNullable(value: string | null | undefined, source: ClaimSource, rea
  * made alone: it is the key the two are compared on, and every workspace-derived
  * claim on the event is gated on it matching the artifact's own identity.
  */
-function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes): SourceEvent["receipt"] {
+function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSource: ViewSource): SourceEvent["receipt"] {
   const artifact = event.provenance.workspaceArtifact;
   const noArtifact = "No workspace.json artifact was supplied with this event, so the artifact side of the join has no identity to report.";
   // Digests and query parameters live on `VerificationEvidence`, which the
@@ -224,22 +242,38 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes): SourceEv
     statedGaps: event.unavailable.map((u) => ({ field: u.field, source: u.source, reason: u.reason, detail: u.detail })),
     provenance: {
       subjectRepository: fromNullable(event.provenance.corpus.repository, "Joined", "The event states no subject repository, so no workspace claim on it can be checked."),
-      subjectRevision: fromNullable(event.provenance.corpus.commit, "Joined", "The event states no subject revision, so no claim about it is revision-bound."),
+      subjectRevision: fromNullable(event.provenance.corpus.commit, "Joined", "The event states no subject revision, so no claim about it is revision-bound.", {
+        type: "git-commit-sha",
+        semanticLabel: "Exact-source evidence corpus",
+        copyLabel: "Copy SHA",
+      }),
       artifactRepository: fromNullable(artifact?.repository, "workspace.json", noArtifact),
-      artifactRevision: fromNullable(artifact?.revision, "workspace.json", noArtifact),
+      artifactRevision: fromNullable(artifact?.revision, "workspace.json", noArtifact, {
+        type: "git-commit-sha",
+        semanticLabel: "Generated-plan evidence revision",
+        copyLabel: "Copy SHA",
+      }),
       producerVersion: fromNullable(artifact?.producedBy, "workspace.json", noArtifact),
       algorithmVersion: observed(`${event.provenance.producer.name}@${event.provenance.producer.version}`, "Joined"),
       inputDigest: verification
-        ? observed(verification.expectedSetDigest, "Joined")
+        ? observed(verification.expectedSetDigest, "Joined", {
+            type: "set-digest",
+            semanticLabel: "Expected URN set digest",
+            copyLabel: "Copy digest",
+          })
         : missing(noVerification),
       artifactDigest: verification
-        ? observed(verification.manifestDigest, "Joined")
+        ? observed(verification.manifestDigest, "Joined", {
+            type: "manifest-digest",
+            semanticLabel: "Readiness manifest digest",
+            copyLabel: "Copy digest",
+          })
         : missing(noVerification),
       dataHubReadParameters: verification
         ? observed(JSON.stringify(verification.queryParameters), "DataHub")
         : observed(`gms ${event.provenance.datahub.gmsUrl} (${event.provenance.datahub.gmsVersion ?? "version not reported"})`, "DataHub"),
       producerPath: fromNullable(event.code.repositoryRelativePath, "workspace.json", `The producing file was not resolved to a repository path (method: ${event.code.method}).`),
-      immutableSourceUrl: fromNullable(event.code.sourceUrl, "DataHub", "The official DataHub MCP projection drops Dataset.externalUrl, so no commit-pinned URL is available. No link is offered rather than one that could drift."),
+      immutableSourceUrl: viewSourceToEvidence(viewSource),
       limitations: capabilityLimits.length > 0
         ? observed(capabilityLimits.join(" · "), "Joined")
         : missing("The event records no source-capability limitation."),
@@ -269,6 +303,7 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
 
   const producerPath = event.code.repositoryRelativePath;
   const axes = writebackAxes((event as { writeback?: unknown }).writeback);
+  const viewSource = resolveViewSource(event);
   const partnerSummary = event.partners.length > 0
     ? `${event.partners.length} co-changing file(s) from repository evidence`
     : event.unavailable.find((u) => u.field === "partners")?.detail
@@ -291,6 +326,11 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     summary: `${describeTier(event.evidence.records)}; ${event.unavailable.length} stated gap(s).`,
     unresolvedItems: event.unavailable.map((u) => `${u.field}: ${u.reason}`),
     datasetIdentity: { text: event.subject.urn, source: "DataHub" },
+    datasetIdentityIdentifier: {
+      type: "dataset-urn",
+      semanticLabel: "View dataset identity",
+      copyLabel: "Copy URN",
+    },
     producerPath: {
       text: producerPath ?? "Producer file was not resolved.",
       source: "workspace.json",
@@ -301,10 +341,10 @@ export function projectEvent(event: ChangeImpactEvent, route: CockpitRoute): Sou
     // Declared by the catalog when it says anything, constructed from recorded
     // provenance when it does not, and explicitly unavailable when neither is
     // possible. Never fabricated. See `resolveViewSource`.
-    viewSource: resolveViewSource(event),
+    viewSource,
     impactEdges: impactEdges(event),
     planComparison: { state: "unavailable", reason: NO_COMPARISON_SUPPLIED },
-    receipt: projectReceipt(event, axes),
+    receipt: projectReceipt(event, axes, viewSource),
   };
 }
 

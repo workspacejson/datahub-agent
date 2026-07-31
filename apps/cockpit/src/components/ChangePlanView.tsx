@@ -1,4 +1,7 @@
 import type { CockpitViewModel } from "../model/cockpit-view-model";
+import { Link2 } from "lucide-react";
+import { Icon } from "./Icon";
+import { ProofPopover } from "./ProofPopover";
 import { SourceTag } from "./SourceTag";
 
 /**
@@ -42,8 +45,18 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
           <span className="parity-value">{comparison.model}</span>
         </div>
         <div>
-          <span className="parity-label">Bound to event</span>
-          <span className="parity-value">{comparison.eventDigest}</span>
+          <span className="parity-label"><Icon icon={Link2} className="semantic-icon" /> <span>Bound to this analysis event</span></span>
+          {comparison.eventDigestIdentifier ? (
+            <ProofPopover
+              label={comparison.eventDigestIdentifier.semanticLabel}
+              value={comparison.eventDigest}
+              identifierType={comparison.eventDigestIdentifier.type}
+              copyLabel={comparison.eventDigestIdentifier.copyLabel ?? "Copy digest"}
+              openUrl={comparison.eventDigestIdentifier.openUrl}
+            />
+          ) : (
+            <span className="parity-value">{comparison.eventDigest}</span>
+          )}
         </div>
       </div>
 

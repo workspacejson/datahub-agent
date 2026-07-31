@@ -84,7 +84,10 @@ if (errors.length === 0) {
     }
 
     if (!asset.export || typeof asset.export !== "object") fail(`${label} is missing export metadata`);
-    if (!Array.isArray(asset.limitations) || asset.limitations.length === 0) fail(`${label} is missing limitations`);
+    if (!Array.isArray(asset.limitations) || asset.limitations.length === 0) {
+      fail(`${label} is missing limitations`);
+      continue;
+    }
     if (!asset.destinationEligibility || typeof asset.destinationEligibility !== "object") {
       fail(`${label} is missing destination eligibility`);
     }
@@ -96,10 +99,8 @@ if (errors.length === 0) {
     if (asset.approvalState === "approved" && asset.publicUse !== "allowed") {
       fail(`${label} is approved but publicUse is not allowed`);
     }
-    if (asset.approvalState === "approved" && asset.isQuantitative === true) {
-      if (!asset.productEvidenceRevision?.evidenceRevision || asset.limitations.length === 0) {
-        fail(`${label} is an approved quantitative asset without evidence revision and limitations`);
-      }
+    if (asset.approvalState === "approved" && asset.isQuantitative === true && !asset.productEvidenceRevision?.evidenceRevision) {
+      fail(`${label} is an approved quantitative asset without evidence revision`);
     }
   }
 

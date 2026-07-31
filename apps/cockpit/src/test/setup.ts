@@ -14,3 +14,13 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   }) as MediaQueryList;
 }
+
+// jsdom does not implement ResizeObserver. Radix UI's popover uses it
+// internally for collision detection and content sizing.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}

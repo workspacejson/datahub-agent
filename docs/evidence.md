@@ -115,6 +115,14 @@ projection removes workspace.json facts while recording each removal as
 When `code.sourceUrl` is non-null, it contains `/blob/<commit>/` — a
 commit-pinned GitHub link. An unpinned or branch-relative link fails validation.
 
+When `code.sourceUrl` is null (the MCP read path), the cockpit constructs a
+commit-pinned link from corpus provenance (`provenance.corpus.repository` +
+`provenance.corpus.commit` + `code.repositoryRelativePath`) rather than
+offering none. The constructed link is tagged `workspace.json` on the Receipt
+and `constructed` on the Impact view, so its origin is distinguishable from a
+catalog-declared link. Both surfaces derive from `resolveViewSource`, so they
+agree.
+
 **Test:** `test/integration/golden-fixture.test.ts` — "pins the source link to
 an immutable commit when it has one at all."
 
