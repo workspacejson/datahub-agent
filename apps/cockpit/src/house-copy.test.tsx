@@ -137,11 +137,28 @@ describe("each fact is stated once per route", () => {
   });
 });
 
+/**
+ * The silent-zero result line, matched on the paragraph's full text.
+ *
+ * `queryByText` matches within a single text node. "Naive join" is a
+ * `TermDefinition` trigger, so the sentence now spans a <button> and the text
+ * node after it, and no single node carries the whole string. Asserting on the
+ * paragraph's `textContent` keeps the *same sentence* under test — and in fact
+ * a stricter one than before, since the previous matcher stopped at
+ * "0 matches" and this requires the full line including the exit code.
+ */
+function silentZeroResult(): HTMLElement | null {
+  const node = document.querySelector<HTMLElement>("p.silent-zero__result");
+  if (node === null) return null;
+  const expected = /Naive join: 0 matches\. No error\. No warning\. Exit code 0\./i;
+  return expected.test(node.textContent ?? "") ? node : null;
+}
+
 describe("silent zero callout rendered on all routes via CockpitShell hero", () => {
   it("renders the silent zero before the resolution seam in DOM order on impact", () => {
     cleanup();
     render(<CockpitShell model={model()} route="impact" onRouteChange={() => {}} />);
-    const callout = screen.queryByText(/Naive join: 0 matches/i);
+    const callout = silentZeroResult();
     const seam = screen.getByLabelText("Producing file resolution");
     expect(callout).not.toBeNull();
     // The callout must appear before the seam in DOM order — failure first,
@@ -163,7 +180,7 @@ describe("silent zero callout rendered on all routes via CockpitShell hero", () 
     it(`renders the silent zero callout on the ${route} route`, () => {
       cleanup();
       render(<CockpitShell model={model()} route={route} onRouteChange={() => {}} />);
-      const callout = screen.queryByText(/Naive join: 0 matches/i);
+      const callout = silentZeroResult();
       expect(callout).not.toBeNull();
     });
   }

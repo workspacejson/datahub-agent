@@ -77,7 +77,11 @@
 }
 
 .endorsement {
-  margin: 0; flex: none;
+  /* `flex: none` here cost the cockpit every viewport once its text grew: an
+     unshrinkable pill in a flex header pushed the dataset selector off screen
+     from 1024 to 1512. Shrinkable with a floor, so long copy wraps inside the
+     pill instead of widening the header past the page. */
+  margin: 0; flex: 0 1 auto; min-width: 0;
   border: 1px solid var(--border-default); border-radius: var(--radius-pill);
   padding: var(--sp-1) var(--sp-3);
   color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption);
@@ -806,11 +810,6 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   font-family: var(--font-mono); font-size: var(--fs-caption);
   color: var(--text-muted); overflow-wrap: anywhere;
 }
-.silent-zero__gloss {
-  margin: var(--sp-2) 0 0;
-  color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal);
-}
-.silent-zero__gloss code { font-family: var(--font-mono); font-size: var(--fs-caption); }
 .silent-zero__consequence {
   margin: var(--sp-3) 0 0;
   color: var(--text-body); font-size: var(--fs-sm); font-weight: 500;
@@ -894,7 +893,15 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    The naive-join card and the resolved path are wrapped together
    so a judge sees the problem and the fix without scrolling. */
 .silent-zero-pair {
+  /* The failure and its resolution are a before/after, so they belong beside
+     each other where there is room: HAC-279 asks for the silent-zero comparison
+     to be legible "in one glance", and two stacked bands are two glances. It
+     also buys back the vertical space stacking them cost — the next action was
+     pushed below the fold at both required viewports. Falls back to one column
+     under ~44rem, where side-by-side would break the measure. */
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
+  align-items: start;
   gap: var(--sp-2);
   margin: 0 0 var(--sp-3);
 }
@@ -973,4 +980,41 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   .cockpit-footer__role { font-size: var(--fs-xs); }
   .resolved-summary__result { font-size: var(--fs-xs); }
   .resolved-summary__result .mono { font-size: var(--fs-caption); }
+}
+
+/* ── Term definition ─────────────────────────────────────────
+   A term a reader may not know, defined on demand. Same primitive and
+   panel language as the proof popover; different payload — prose, not a
+   typed identifier. The trigger stays inline in its sentence so the
+   surrounding copy still reads unopened, which is the property the
+   parenthetical glosses this replaced did not have. */
+.term-def__trigger {
+  display: inline; border: none; background: transparent; padding: 0;
+  color: inherit; font: inherit; text-align: left; cursor: help;
+  text-decoration: underline dotted var(--border-strong);
+  text-underline-offset: 0.2em;
+}
+.term-def__trigger:hover,
+.term-def__trigger[data-state="open"] { text-decoration-color: var(--wj-accent); }
+.term-def__trigger:focus-visible { outline: 2px solid var(--wj-accent); outline-offset: 2px; }
+.term-def__panel {
+  max-width: min(28rem, calc(100vw - 2rem), var(--radix-popover-content-available-width));
+  max-height: var(--radix-popover-content-available-height, 80vh);
+  overflow-y: auto;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  padding: var(--sp-3);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.term-def__arrow { fill: var(--surface-card); stroke: var(--border-default); }
+.term-def__term {
+  font-family: var(--font-mono); font-size: var(--fs-caption);
+  text-transform: uppercase; letter-spacing: var(--ls-eyebrow);
+  color: var(--text-faint);
+}
+.term-def__body {
+  margin: 0; font-family: var(--font-sans); font-size: var(--fs-sm);
+  line-height: 1.5; color: var(--text-body);
 }

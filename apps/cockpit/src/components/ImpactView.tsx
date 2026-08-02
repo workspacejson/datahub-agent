@@ -2,6 +2,7 @@ import { motion, stagger, useReducedMotion, type Variants } from "motion/react";
 import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, ImpactEdge, StatedGap, ViewSource } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
+import { TermDefinition } from "./TermDefinition";
 
 /** The contract field the seam is about: the producing file's repository-relative path. */
 const PRODUCER_PATH_FIELD = "code.repositoryRelativePath";
@@ -146,7 +147,7 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
     <section className="lineage-band" aria-label="Lineage topology">
       <header className="lineage-band__head">
         <div>
-          <p className="eyebrow">Declared lineage (which datasets feed and depend on this one)</p>
+          <p className="eyebrow"><TermDefinition term="Declared lineage" definition="The datasets DataHub records as feeding this one or depending on it, as declared to the catalog." /></p>
           {/*
             The head stays; the sentence under it moved to the coverage band in
             the hero. It is the answer to "can I trust the set in front of me",

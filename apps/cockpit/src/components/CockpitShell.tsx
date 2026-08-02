@@ -9,6 +9,7 @@ import { ProofPopover } from "./ProofPopover";
 import { ReceiptsView } from "./ReceiptsView";
 import { SourceTag } from "./SourceTag";
 import type { DatasetOption } from "../data/select-adapter";
+import { TermDefinition } from "./TermDefinition";
 
 function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
   const dbtPath = model.dbtFilePath;
@@ -19,9 +20,8 @@ function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
   return (
     <article className="silent-zero silent-zero--inline" aria-label="Silent zero: naive join failure">
       <p className="silent-zero__result">
-        Naive join: 0 matches. No error. No warning. Exit code 0.
+        <TermDefinition term="Naive join" definition="A direct path lookup with no prefix normalization: the dbt path is compared to the repository path exactly as each system spells it." />: 0 matches. No error. No warning. Exit code 0.
       </p>
-      <p className="silent-zero__gloss">A naive join is a direct path lookup without prefix normalization.</p>
       <p className="silent-zero__path">
         dbt: {dbtPath} | workspace.json: {prefix}/{dbtPath}
       </p>
@@ -36,7 +36,7 @@ function ResolvedPathSummary({ model }: { model: CockpitViewModel }) {
       <p className="resolved-summary__result">
         Resolved: <span className="mono">{model.producerPath.text}</span>
       </p>
-      <p className="resolved-summary__method">via manifest-join (normalizing the dbt prefix so paths match)</p>
+      <p className="resolved-summary__method">via <TermDefinition term="manifest-join" definition="Reading the dbt manifest to learn the project prefix, then normalizing it away so the DataHub path and the repository path resolve to the same file." /></p>
     </article>
   );
 }
@@ -246,7 +246,7 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
         >
           workspace.json
         </a>
-        <span className="endorsement__subtitle">a repo-evidence artifact (a JSON file pinned to a Git commit recording what the repository knows) at a pinned commit</span>
+        <span className="endorsement__subtitle">a <TermDefinition term="repo-evidence artifact" definition="A JSON file committed to the repository and pinned to a Git commit, recording what the repository knows about itself: its source tree, its producing files, and the revision they were read at." /> at a pinned commit</span>
       </p>
       <DatasetSelector datasetKey={datasetKey} options={datasetOptions} onChange={onDatasetChange} />
     </header>
@@ -257,7 +257,7 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
     */}
     <section className="hero" aria-label="Dataset under review">
       <div className="hero__stakes-group">
-        <p className="hero__stakes">DataHub says where data flows; git says what breaks together; joining them (matching dbt paths to Git paths) silently returns nothing. Here is the proof.</p>
+        <p className="hero__stakes">DataHub says where data flows; git says what breaks together; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
         {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
           <div className="silent-zero-pair">
             <SilentZeroCallout model={model} />

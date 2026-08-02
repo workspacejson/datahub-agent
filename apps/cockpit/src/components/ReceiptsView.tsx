@@ -5,6 +5,7 @@ import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpi
 import { Icon } from "./Icon";
 import { ProofIndicator } from "./ProofIndicator";
 import { SourceTag } from "./SourceTag";
+import { TermDefinition } from "./TermDefinition";
 
 declare const __COCKPIT_RECEIPT_HTML__: string | null;
 
@@ -155,7 +156,7 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
     <UnestablishedBand statedGaps={statedGaps} />
 
     <section aria-labelledby="evidence-title">
-      <p className="eyebrow">Evidence standing (a tier is a label derived from how many checks ran, not a verdict)</p>
+      <p className="eyebrow"><TermDefinition term="Evidence standing" definition="A tier is a label derived from how many checks ran and what they observed. It is not a verdict on whether the change is safe." /></p>
       <h2 id="evidence-title">The tier is a count, not a warrant</h2>
       {/*
         The tier lives here rather than in the first frame. Rendered as the hero
