@@ -1085,7 +1085,7 @@
       "editableSource": {
         "type": "self",
         "repository": "workspacejson/datahub-agent",
-        "commitOrRef": "b70b344",
+        "commitOrRef": "645e51b",
         "path": "assets/exports/tally-architecture/tally-architecture.svg",
         "sha256": "5cf5770f31782f98a8a3e21be4df7da1a125302e899b92420768e98c5532646c",
         "detail": "The checked-in vector is itself the editable source; it has no separate origin file."
@@ -1147,7 +1147,7 @@
       "editableSource": {
         "type": "in-repository",
         "repository": "workspacejson/datahub-agent",
-        "commitOrRef": "b70b344",
+        "commitOrRef": "645e51b",
         "path": "assets/exports/tally-architecture/tally-architecture.svg",
         "sha256": "5cf5770f31782f98a8a3e21be4df7da1a125302e899b92420768e98c5532646c",
         "detail": "Exported from the checked-in SVG source. Re-export with any SVG-to-PNG renderer at 1600×900 viewBox."
