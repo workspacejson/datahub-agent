@@ -64,52 +64,6 @@ function DatasetSelector({ datasetKey, options, onChange }: {
   );
 }
 
-export interface DatasetOption {
-  key: string;
-  label: string;
-}
-
-function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
-  const dbtPath = model.dbtFilePath;
-  const prefix = model.projectPrefix;
-
-  if (!dbtPath || !prefix) return null;
-
-  return (
-    <article className="silent-zero silent-zero--inline" aria-label="Silent zero: naive join failure">
-      <p className="silent-zero__result">
-        Naive join: 0 matches. No error. No warning. Exit code 0.
-      </p>
-      <p className="silent-zero__path">
-        dbt: {dbtPath} | workspace.json: {prefix}/{dbtPath}
-      </p>
-    </article>
-  );
-}
-
-function DatasetSelector({ datasetKey, options, onChange }: {
-  datasetKey?: string;
-  options?: DatasetOption[];
-  onChange?(key: string): void;
-}) {
-  if (!options || options.length < 2) return null;
-  return (
-    <div className="dataset-selector" aria-label="Dataset under review">
-      <label className="dataset-selector__label" htmlFor="dataset-select">Dataset under review</label>
-      <select
-        id="dataset-select"
-        className="dataset-selector__select"
-        value={datasetKey}
-        onChange={(e) => onChange?.(e.target.value)}
-      >
-        {options.map((opt) => (
-          <option key={opt.key} value={opt.key}>{opt.label}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 /**
  * The three views are a sequence, and only the sequence navigates.
  *
@@ -304,10 +258,12 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
     <section className="hero" aria-label="Dataset under review">
       <div className="hero__stakes-group">
         <p className="hero__stakes">DataHub says where data flows; git says what breaks together; joining them (matching dbt paths to Git paths) silently returns nothing. Here is the proof.</p>
-        <div className="silent-zero-pair">
-          <SilentZeroCallout model={model} />
-          <ResolvedPathSummary model={model} />
-        </div>
+        {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
+          <div className="silent-zero-pair">
+            <SilentZeroCallout model={model} />
+            <ResolvedPathSummary model={model} />
+          </div>
+        ) : null}
       </div>
       <div className="hero__identity">
         <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>

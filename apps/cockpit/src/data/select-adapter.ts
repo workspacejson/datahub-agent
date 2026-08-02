@@ -6,8 +6,6 @@ import {
   type CockpitStateName,
 } from "./cockpit-adapter";
 import type { SourceEvent, SourceMode } from "../model/cockpit-view-model";
-import type { DatasetOption } from "../components/CockpitShell";
-
 // Eager glob import: Vite resolves these at build time. In placeholder mode
 // (which tests run in) the fixtures are never read.
 const fixtures = import.meta.glob<{ default: unknown }>(
@@ -19,13 +17,6 @@ export interface DatasetOption {
   key: string;
   label: string;
 }
-
-// Eager glob import: Vite resolves these at build time. In placeholder mode
-// (which tests run in) the fixtures are never read.
-const fixtures = import.meta.glob<{ default: unknown }>(
-  "../../../../test/fixtures/golden/change-impact-event.*.json",
-  { eager: true },
-);
 
 declare const __COCKPIT_SOURCE_MODE__: SourceMode;
 /** The build-time event, or null in a placeholder build. See `vite.config.ts`. */
