@@ -10,6 +10,10 @@ Tally resolves DataHub context to repository code, joins code and lineage impact
 
 Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](https://github.com/workspacejson).
 
+<p align="center">
+  <img src="assets/exports/tally-architecture/tally-architecture.png" alt="Tally architecture: DataHub context (URN, schema, lineage, owners) and repository snapshot (workspace.json, source tree, pinned commit) feed the six-stage Tally evidence pipeline (read, attest, resolve, validate, enrich, observe). A guardrail bar marks that mismatch, ambiguity, or incomplete evidence becomes an explicit gap or refusal, never a silent zero. Verified enrichment writes back to DataHub via GMS GraphQL. The pipeline emits a typed ChangeImpactEvent to the Change Impact Cockpit (impact, change plan, receipts)." width="800">
+</p>
+
 
 ## Four questions Tally answers
 
@@ -131,6 +135,10 @@ test/fixtures/golden/         committed golden events with writeback receipts
 evaluation/                   proof corpus, node-type coverage, MCP field coverage,
                               live evidence packages
 ```
+
+<p align="center">
+  <img src="assets/exports/tally-architecture/tally-architecture.png" alt="Tally architecture: DataHub context and repository snapshot feed the six-stage Tally evidence pipeline, with a guardrail that mismatch or incomplete evidence becomes an explicit gap, never a silent zero. Verified enrichment writes back to DataHub via GMS GraphQL. The pipeline emits a typed ChangeImpactEvent to the Change Impact Cockpit." width="800">
+</p>
 
 The cockpit is a React 19 + Vite + Tailwind application. All source events cross Zod validation into a `CockpitViewModel`; components accept only that model. The three-view sequence — Impact, Change plan, Receipts — is the judge-facing surface. See [`docs/cockpit-architecture.md`](docs/cockpit-architecture.md).
 
