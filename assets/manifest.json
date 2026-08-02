@@ -1047,7 +1047,7 @@
       "storyBeat": "Canonical system map: two source coordinate systems converge through the Tally evidence pipeline, emitting a typed event to the cockpit and verified enrichment back to DataHub.",
       "intendedConclusion": "DataHub context and commit-pinned repository evidence join in a deterministic pipeline. Mismatch, ambiguity, and incomplete evidence become explicit gaps or refusals, never silent zeroes.",
       "canonicalPath": "assets/exports/tally-architecture/tally-architecture.svg",
-      "sha256": "109229eb53d032bea3b294948115e422c0925ad3a748f575c64f903b19f8134c",
+      "sha256": "5cf5770f31782f98a8a3e21be4df7da1a125302e899b92420768e98c5532646c",
       "claimIds": [],
       "sourceType": "checked-in-vector",
       "export": {
@@ -1087,7 +1087,7 @@
         "repository": "workspacejson/datahub-agent",
         "commitOrRef": "b70b344",
         "path": "assets/exports/tally-architecture/tally-architecture.svg",
-        "sha256": "109229eb53d032bea3b294948115e422c0925ad3a748f575c64f903b19f8134c",
+        "sha256": "5cf5770f31782f98a8a3e21be4df7da1a125302e899b92420768e98c5532646c",
         "detail": "The checked-in vector is itself the editable source; it has no separate origin file."
       },
       "generatedAt": {
@@ -1149,7 +1149,7 @@
         "repository": "workspacejson/datahub-agent",
         "commitOrRef": "b70b344",
         "path": "assets/exports/tally-architecture/tally-architecture.svg",
-        "sha256": "109229eb53d032bea3b294948115e422c0925ad3a748f575c64f903b19f8134c",
+        "sha256": "5cf5770f31782f98a8a3e21be4df7da1a125302e899b92420768e98c5532646c",
         "detail": "Exported from the checked-in SVG source. Re-export with any SVG-to-PNG renderer at 1600×900 viewBox."
       },
       "generatedAt": {
