@@ -51,52 +51,6 @@ function DatasetSelector({ datasetKey, options, onChange }: {
   );
 }
 
-export interface DatasetOption {
-  key: string;
-  label: string;
-}
-
-function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
-  const dbtPath = model.dbtFilePath;
-  const prefix = model.projectPrefix;
-
-  if (!dbtPath || !prefix) return null;
-
-  return (
-    <article className="silent-zero silent-zero--inline" aria-label="Silent zero: naive join failure">
-      <p className="silent-zero__result">
-        Naive join: 0 matches. No error. No warning. Exit code 0.
-      </p>
-      <p className="silent-zero__path">
-        dbt: {dbtPath} | workspace.json: {prefix}/{dbtPath}
-      </p>
-    </article>
-  );
-}
-
-function DatasetSelector({ datasetKey, options, onChange }: {
-  datasetKey?: string;
-  options?: DatasetOption[];
-  onChange?(key: string): void;
-}) {
-  if (!options || options.length < 2) return null;
-  return (
-    <div className="dataset-selector" aria-label="Dataset under review">
-      <label className="dataset-selector__label" htmlFor="dataset-select">Dataset under review</label>
-      <select
-        id="dataset-select"
-        className="dataset-selector__select"
-        value={datasetKey}
-        onChange={(e) => onChange?.(e.target.value)}
-      >
-        {options.map((opt) => (
-          <option key={opt.key} value={opt.key}>{opt.label}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 /**
  * The three views are a sequence, and only the sequence navigates.
  *
