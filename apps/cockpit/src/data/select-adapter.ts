@@ -28,6 +28,11 @@ declare const __COCKPIT_EVENT__: unknown;
  */
 declare const __COCKPIT_COMPARISON__: SourceEvent["planComparison"] | null;
 /**
+ * The build-time comparison for the Jaffle Shop (root) dataset, validated
+ * against the root fixture event, or null in a placeholder build.
+ */
+declare const __COCKPIT_ROOT_COMPARISON__: SourceEvent["planComparison"] | null;
+/**
  * Build-time syntax-highlighted HTML for the raw evidence receipt, or null in a
  * placeholder build or when Shiki is unavailable. See `vite.config.ts`.
  */
@@ -62,7 +67,9 @@ export function selectCockpitAdapterByKey(
   if (mode === "placeholder") return provisionalAdapter;
 
   const event = key === "nested" ? __COCKPIT_EVENT__ : fixtureForKey(key);
-  const comparison = key === "nested" ? __COCKPIT_COMPARISON__ : null;
+  const comparison = key === "nested"
+    ? __COCKPIT_COMPARISON__
+    : key === "root" ? __COCKPIT_ROOT_COMPARISON__ : null;
 
   if (event === null || event === undefined) {
     if (key === "nested") {

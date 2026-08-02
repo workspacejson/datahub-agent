@@ -1,0 +1,304 @@
+{
+  "bundleVersion": "1.0",
+  "event": {
+    "eventVersion": "1.3",
+    "provenance": {
+      "producedAt": "2026-07-28T03:08:51.099Z",
+      "producer": {
+        "name": "@workspacejson/datahub-agent",
+        "version": "0.0.1"
+      },
+      "datahub": {
+        "gmsUrl": "http://localhost:8080",
+        "gmsVersion": "v1.5.0.6"
+      },
+      "corpus": {
+        "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+        "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+      },
+      "workspaceArtifact": {
+        "producedBy": "@workspacejson/cli",
+        "fileIndexKeys": 36,
+        "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+        "revision": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+        "integrity": "exact-match"
+      }
+    },
+    "subject": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)"
+    },
+    "datahub": {
+      "name": "customers",
+      "platform": "dbt",
+      "description": "This table has basic information about a customer, as well as some derived facts based on a customer's orders",
+      "upstreams": [
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_customers,PROD)",
+          "name": "raw_customers",
+          "degree": 4
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_orders,PROD)",
+          "name": "raw_orders",
+          "degree": 4
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.raw_payments,PROD)",
+          "name": "raw_payments",
+          "degree": 4
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_customers,PROD)",
+          "name": "stg_customers",
+          "degree": 2
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_orders,PROD)",
+          "name": "stg_orders",
+          "degree": 2
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.stg_payments,PROD)",
+          "name": "stg_payments",
+          "degree": 2
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_customers,PROD)",
+          "name": null,
+          "degree": 3
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_orders,PROD)",
+          "name": null,
+          "degree": 3
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.raw_payments,PROD)",
+          "name": null,
+          "degree": 3
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_customers,PROD)",
+          "name": null,
+          "degree": 1
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_orders,PROD)",
+          "name": null,
+          "degree": 1
+        },
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.stg_payments,PROD)",
+          "name": null,
+          "degree": 1
+        }
+      ],
+      "downstreams": [
+        {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,jaffle_shop.main.customers,PROD)",
+          "name": null,
+          "degree": 1
+        }
+      ],
+      "lineageObservation": {
+        "upstreams": {
+          "read": "ok",
+          "completeness": "not-established",
+          "observedCount": 12
+        },
+        "downstreams": {
+          "read": "ok",
+          "completeness": "not-established",
+          "observedCount": 1
+        }
+      },
+      "schemaFieldCount": 7,
+      "owners": [],
+      "domain": null
+    },
+    "code": {
+      "dbtUniqueId": "model.jaffle_shop.customers",
+      "dbtFilePath": "models/customers.sql",
+      "repositoryRelativePath": "models/customers.sql",
+      "projectPrefix": "",
+      "method": "manifest-join",
+      "sourceUrl": null
+    },
+    "partners": [],
+    "evidence": {
+      "records": [
+        {
+          "claim": "producing file models/customers.sql is tracked in the corpus-matched workspace.json artifact",
+          "observation": "Artifact repository, revision, and repository-relative source path matched exactly.",
+          "source": "workspacejson",
+          "checkExecuted": true
+        }
+      ],
+      "tier": "VERIFIED"
+    },
+    "accounting": {
+      "datasetsRequested": 1,
+      "datasetsResolved": 1,
+      "datasetsUnresolved": 0,
+      "nodesDropped": 0,
+      "nodesExcluded": {}
+    },
+    "unavailable": [
+      {
+        "field": "code.repositoryRelativePath",
+        "source": "datahub",
+        "reason": "not-exposed-by-source",
+        "detail": "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact."
+      },
+      {
+        "field": "partners",
+        "source": "workspacejson",
+        "reason": "indeterminate",
+        "detail": "The artifact resolves the exact source but contains no behavioral co-change evidence, so no partners are asserted.",
+        "completeness": "not-established",
+        "observedCount": 0
+      }
+    ],
+    "writeback": {
+      "targetUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)",
+      "actor": {
+        "tool": "@workspacejson/datahub-agent",
+        "version": "0.0.1"
+      },
+      "attemptedAt": "2026-07-28T03:11:43.220Z",
+      "revision": {
+        "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+        "commit": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+      },
+      "intended": {
+        "linkUrl": null,
+        "evidenceTier": "VERIFIED"
+      },
+      "before": {
+        "linkUrl": "https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql",
+        "evidenceTier": "VERIFIED",
+        "read": "ok",
+        "readError": null
+      },
+      "after": {
+        "linkUrl": "https://github.com/dbt-labs/jaffle_shop_duckdb/blob/36bde6cba69d962b83be1d52fc65a0dce1cb4ebb/models/customers.sql",
+        "evidenceTier": "VERIFIED",
+        "read": "ok",
+        "readError": null
+      },
+      "attempts": [
+        {
+          "mutation": "createStructuredProperty",
+          "variables": {
+            "input": {
+              "id": "workspacejson_evidence_tier"
+            }
+          },
+          "succeeded": true,
+          "response": "already defined"
+        },
+        {
+          "mutation": "upsertStructuredProperties",
+          "variables": {
+            "input": {
+              "assetUrn": "urn:li:dataset:(urn:li:dataPlatform:dbt,jaffle_shop.main.customers,PROD)",
+              "structuredPropertyInputParams": [
+                {
+                  "structuredPropertyUrn": "urn:li:structuredProperty:workspacejson_evidence_tier",
+                  "values": [
+                    {
+                      "stringValue": "VERIFIED"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "succeeded": true,
+          "response": "{\"upsertStructuredProperties\":{\"properties\":[{\"structuredProperty\":{\"urn\":\"urn:li:structuredProperty:workspacejson_evidence_tier\"}}]}}"
+        }
+      ],
+      "observation": {
+        "status": "settled",
+        "polls": 1,
+        "elapsedMs": 17,
+        "timeoutMs": 20000,
+        "lastError": null
+      },
+      "succeeded": true,
+      "noop": true,
+      "bothStatesRead": true,
+      "refusedBecause": null,
+      "linkOmittedBecause": "no commit-pinned source URL is available; an unpinned link would drift from the artifact it describes, so none was written"
+    }
+  },
+  "comparison": {
+    "artifactVersion": "1.0",
+    "eventDigest": "f2ab1a9c026f8d6ba3fbed452214647bd22f47ceca68f5a411ce54a3934620c9",
+    "snapshot": {
+      "repository": "https://github.com/dbt-labs/jaffle_shop_duckdb",
+      "revision": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+      "datahub": {
+        "gmsUrl": "http://localhost:8080",
+        "eventProducedAt": "2026-07-28T03:08:51.099Z"
+      }
+    },
+    "datahubOnlyPlan": {
+      "mode": "datahub-only",
+      "run": {
+        "taskId": "add-quality-check",
+        "promptDigest": "sha256:46b4a89f7bfcbf6ef3550232103ef30f7ada59761311cea239108d13a77d55cd",
+        "model": "qwen-plus",
+        "settingsDigest": "sha256:e4ff491169b8a9ea78518a7972422b5a24d5e3790e0d9a9e5cbfb384d9b621e0"
+      },
+      "steps": [
+        {
+          "id": "datahub-only-refusal",
+          "action": "refuse to guess or edit the repository-relative source location because it is unknown in datahub-only mode"
+        }
+      ]
+    },
+    "joinedPlan": {
+      "mode": "joined",
+      "run": {
+        "taskId": "add-quality-check",
+        "promptDigest": "sha256:46b4a89f7bfcbf6ef3550232103ef30f7ada59761311cea239108d13a77d55cd",
+        "model": "qwen-plus",
+        "settingsDigest": "sha256:e4ff491169b8a9ea78518a7972422b5a24d5e3790e0d9a9e5cbfb384d9b621e0"
+      },
+      "steps": [
+        {
+          "id": "add-customers-quality-check",
+          "action": "add a dbt quality check for customers, preserving the declared lineage and recording the DataHub enrichment outcome using repository-relative source \"models/customers.sql\" and pinned revision \"36bde6cba69d962b83be1d52fc65a0dce1cb4ebb\""
+        }
+      ]
+    },
+    "deltas": [
+      {
+        "kind": "added",
+        "label": "use exact source models/customers.sql",
+        "reason": "Only the joined context contains the corpus-matched repository-relative producing file.",
+        "evidenceRefs": [
+          "evidence.records[0]"
+        ]
+      },
+      {
+        "kind": "removed",
+        "label": "refuse unknown source location",
+        "reason": "The DataHub-only projection records that repository-relative source location is not exposed; joined evidence resolves it exactly.",
+        "evidenceRefs": [
+          "unavailable[\"code.repositoryRelativePath\"]",
+          "evidence.records[0]"
+        ]
+      },
+      {
+        "kind": "constrained",
+        "label": "constrain work to models/customers.sql at 36bde6cba69d962b83be1d52fc65a0dce1cb4ebb",
+        "reason": "The exact corpus revision and producing file constrain the joined plan to one checkable source location.",
+        "evidenceRefs": [
+          "evidence.records[0]"
+        ]
+      }
+    ]
+  }
+}

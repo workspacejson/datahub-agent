@@ -103,6 +103,7 @@ const readJson = (relative: string) => {
 
 let event: unknown = null;
 let planComparison: ReturnType<typeof projectComparison> | { state: "unavailable"; reason: string } | null = null;
+let rootComparison: ReturnType<typeof projectComparison> | { state: "unavailable"; reason: string } | null = null;
 
 if (sourceMode !== "placeholder") {
   const explicitEvent = process.env.COCKPIT_EVENT;
@@ -148,6 +149,13 @@ if (sourceMode !== "placeholder") {
     planComparison = state.status === "observed"
       ? projectComparison(state.comparison)
       : { state: "unavailable", reason: state.reason };
+
+    const rootBundlePath = "../../evaluation/hac-294/jaffle-shop-judge-run-bundle.json";
+    const rootBundle = readJson(rootBundlePath).value;
+    const rootState = toComparisonState(rootBundle, NO_COMPARISON_SUPPLIED);
+    rootComparison = rootState.status === "observed"
+      ? projectComparison(rootState.comparison)
+      : { state: "unavailable", reason: rootState.reason };
   }
 }
 
@@ -209,6 +217,7 @@ export default defineConfig(async ({ command }) => {
       __COCKPIT_SOURCE_MODE__: JSON.stringify(sourceMode),
       __COCKPIT_EVENT__: JSON.stringify(event),
       __COCKPIT_COMPARISON__: JSON.stringify(planComparison),
+      __COCKPIT_ROOT_COMPARISON__: JSON.stringify(rootComparison),
       __COCKPIT_RECEIPT_HTML__: JSON.stringify(highlightedReceipt),
     },
   };
