@@ -258,10 +258,12 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
     <section className="hero" aria-label="Dataset under review">
       <div className="hero__stakes-group">
         <p className="hero__stakes">DataHub says where data flows; git says what breaks together; joining them (matching dbt paths to Git paths) silently returns nothing. Here is the proof.</p>
-        <div className="silent-zero-pair">
-          <SilentZeroCallout model={model} />
-          <ResolvedPathSummary model={model} />
-        </div>
+        {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
+          <div className="silent-zero-pair">
+            <SilentZeroCallout model={model} />
+            <ResolvedPathSummary model={model} />
+          </div>
+        ) : null}
       </div>
       <div className="hero__identity">
         <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>
