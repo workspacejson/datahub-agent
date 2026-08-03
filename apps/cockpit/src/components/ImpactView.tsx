@@ -278,7 +278,17 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
         nothing at all, the second says what that did here. The spec's lead card
         makes both points in that order for the same reason.
       */}
-      <p className="hero__stakes">DataHub says where data flows; git says what breaks together; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
+      {/*
+        "git says where each file lives", not "what breaks together". The second
+        is a co-change claim, and this event's receipt states the opposite on
+        `partners`: indeterminate, because the artifact carries no behavioral
+        co-change evidence. The hero asserting a capability the receipt disclaims
+        is the one contradiction this surface cannot afford, since the receipt is
+        the reason to believe anything else on the page. The narrowed clause is
+        what the artifact actually supplies: the file's location, which is
+        exactly what the join below resolves.
+      */}
+      <p className="hero__stakes">DataHub says where data flows; git says where each file lives; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
       <p className="route-intro">What broke: the catalog cannot resolve this dataset to a file.</p>
       <CoordinateSeam model={model} />
       <ResolutionSeam model={model} gap={producerGap} />
