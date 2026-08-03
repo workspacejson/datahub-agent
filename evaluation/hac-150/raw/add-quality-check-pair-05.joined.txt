@@ -1,0 +1,1 @@
+{"steps":[{"id":"add-dbt-quality-check","action":"add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""}]}

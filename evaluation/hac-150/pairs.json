@@ -1,0 +1,671 @@
+{
+  "evaluationVersion": "1.0",
+  "run": {
+    "taskId": "add-quality-check",
+    "promptDigest": "sha256:d19f4d098fb3adf77a041805d853d3cea8218644ef95c2c647786ace4373e413",
+    "model": "qwen-plus",
+    "settingsDigest": "sha256:e4ff491169b8a9ea78518a7972422b5a24d5e3790e0d9a9e5cbfb384d9b621e0"
+  },
+  "pairs": [
+    {
+      "pairId": "add-quality-check-pair-00",
+      "index": 0,
+      "invocationOrder": [
+        "datahub-only",
+        "joined"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-unknown-source-location",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and must not be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-unknown-source-location"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-01",
+      "index": 1,
+      "invocationOrder": [
+        "joined",
+        "datahub-only"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "datahub-only-refusal",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "datahub-only-refusal"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-02",
+      "index": 2,
+      "invocationOrder": [
+        "datahub-only",
+        "joined"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-dbtsql-location",
+              "action": "refuse to guess or edit the repository-relative source location because it is unknown in datahub-only mode"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-dbtsql-location"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-03",
+      "index": 3,
+      "invocationOrder": [
+        "joined",
+        "datahub-only"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-unknown-source-location",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-unknown-source-location"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-04",
+      "index": 4,
+      "invocationOrder": [
+        "datahub-only",
+        "joined"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "datahub-only-refusal",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "datahub-only-refusal"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-05",
+      "index": 5,
+      "invocationOrder": [
+        "joined",
+        "datahub-only"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-unknown-source",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-unknown-source"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-06",
+      "index": 6,
+      "invocationOrder": [
+        "datahub-only",
+        "joined"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-unknown-source-location",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and must not be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-unknown-source-location"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "Add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-07",
+      "index": 7,
+      "invocationOrder": [
+        "joined",
+        "datahub-only"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-unknown-source",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-unknown-source"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-08",
+      "index": 8,
+      "invocationOrder": [
+        "datahub-only",
+        "joined"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-dbtsql-location",
+              "action": "refuse to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-dbtsql-location"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    },
+    {
+      "pairId": "add-quality-check-pair-09",
+      "index": 9,
+      "invocationOrder": [
+        "joined",
+        "datahub-only"
+      ],
+      "datahubOnly": {
+        "state": "observed",
+        "observation": {
+          "mode": "datahub-only",
+          "steps": [
+            {
+              "id": "refuse-dbtpath-guess",
+              "action": "refuse to guess or edit the repository-relative source location because it is unknown in datahub-only mode"
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "refuse-dbtpath-guess"
+          ],
+          "filesReferenced": [],
+          "revisionsReferenced": [],
+          "refusalPresent": true,
+          "uncertaintyPresent": true,
+          "writebackMentioned": false
+        }
+      },
+      "joined": {
+        "state": "observed",
+        "observation": {
+          "mode": "joined",
+          "steps": [
+            {
+              "id": "add-dbt-quality-check",
+              "action": "add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome, using repository-relative source \"dbt/models/curated/game_events.sql\" and pinned revision \"59fa295c51fc23466f3a71542f8bf3d1335daa83\""
+            }
+          ],
+          "stepCount": 1,
+          "stepIds": [
+            "add-dbt-quality-check"
+          ],
+          "filesReferenced": [
+            "dbt/models/curated/game_events.sql"
+          ],
+          "revisionsReferenced": [
+            "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+          ],
+          "refusalPresent": false,
+          "uncertaintyPresent": false,
+          "writebackMentioned": true
+        }
+      },
+      "outcome": "observed",
+      "comparison": {
+        "filesAddedByJoin": [
+          "dbt/models/curated/game_events.sql"
+        ],
+        "filesRemovedByJoin": [],
+        "sequencingChanged": true,
+        "refusalRemovedByJoin": true,
+        "exactSourceOnlyInJoined": true,
+        "exactRevisionOnlyInJoined": true,
+        "writebackChoiceChanged": true
+      }
+    }
+  ]
+}

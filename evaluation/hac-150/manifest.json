@@ -1,0 +1,232 @@
+{
+  "evaluationVersion": "1.0",
+  "issue": "HAC-150",
+  "experiment": {
+    "pairsRequested": 10,
+    "taskId": "add-quality-check",
+    "prompt": "Add a dbt quality check for game_events, preserving the declared lineage and recording the DataHub enrichment outcome without claiming success unless the intended state is observed.",
+    "promptDigest": "sha256:d19f4d098fb3adf77a041805d853d3cea8218644ef95c2c647786ace4373e413",
+    "model": "qwen-plus",
+    "settings": {
+      "temperature": 0
+    },
+    "settingsDigest": "sha256:e4ff491169b8a9ea78518a7972422b5a24d5e3790e0d9a9e5cbfb384d9b621e0",
+    "baseUrl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    "timeoutMs": 120000,
+    "apiKeyEnv": "OPENAI_API_KEY2",
+    "invocationOrderScheme": "counterbalanced-by-index: even pairs lead datahub-only, odd pairs lead joined",
+    "invocationOrderByPair": [
+      {
+        "index": 0,
+        "order": [
+          "datahub-only",
+          "joined"
+        ]
+      },
+      {
+        "index": 1,
+        "order": [
+          "joined",
+          "datahub-only"
+        ]
+      },
+      {
+        "index": 2,
+        "order": [
+          "datahub-only",
+          "joined"
+        ]
+      },
+      {
+        "index": 3,
+        "order": [
+          "joined",
+          "datahub-only"
+        ]
+      },
+      {
+        "index": 4,
+        "order": [
+          "datahub-only",
+          "joined"
+        ]
+      },
+      {
+        "index": 5,
+        "order": [
+          "joined",
+          "datahub-only"
+        ]
+      },
+      {
+        "index": 6,
+        "order": [
+          "datahub-only",
+          "joined"
+        ]
+      },
+      {
+        "index": 7,
+        "order": [
+          "joined",
+          "datahub-only"
+        ]
+      },
+      {
+        "index": 8,
+        "order": [
+          "datahub-only",
+          "joined"
+        ]
+      },
+      {
+        "index": 9,
+        "order": [
+          "joined",
+          "datahub-only"
+        ]
+      }
+    ]
+  },
+  "subject": {
+    "eventFile": "evaluation/hac-152/live-qwen-judge-run-bundle.json",
+    "fromBundle": true,
+    "eventDigest": "75a8ec70be7b422546fa324a88a8c0a5574fa27d738ef9a99e3b0d4f380ab501",
+    "exactSource": "dbt/models/curated/game_events.sql",
+    "exactRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83",
+    "corpusRepository": "https://github.com/dcaribou/transfermarkt-datasets"
+  },
+  "artifacts": {
+    "pairs": {
+      "file": "pairs.json",
+      "digest": "sha256:00722fe4eaec64ff62930e046585026bef82bc96fa5dd635f252510101c09923"
+    },
+    "aggregate": {
+      "file": "aggregate.json",
+      "digest": "sha256:2ec128bbc572594f1b205c6faecfa0bb6ff8e821e667ea921cb3b30c936d2e0a"
+    },
+    "raw": [
+      {
+        "pairId": "add-quality-check-pair-00",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-00.datahub-only.txt",
+        "digest": "sha256:7bba3c3c37173e8e10f099caa49e04901503f061086b0ed9f55a0e4c3e0c267f"
+      },
+      {
+        "pairId": "add-quality-check-pair-00",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-00.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-01",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-01.datahub-only.txt",
+        "digest": "sha256:0a83fc133fa5cc0b9fdf4a9ca33f644e4104d1eafa97cc072fe8ea906afe6f68"
+      },
+      {
+        "pairId": "add-quality-check-pair-01",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-01.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-02",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-02.datahub-only.txt",
+        "digest": "sha256:99e8190bd0e15dc137d154f0e88f9bab55437528e02f92821add80fcbde9918d"
+      },
+      {
+        "pairId": "add-quality-check-pair-02",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-02.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-03",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-03.datahub-only.txt",
+        "digest": "sha256:400a8bd5ea5ad850fb100c8b79e2b6edb42bd1f8b1b257534a1b0e7beea18664"
+      },
+      {
+        "pairId": "add-quality-check-pair-03",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-03.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-04",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-04.datahub-only.txt",
+        "digest": "sha256:0a83fc133fa5cc0b9fdf4a9ca33f644e4104d1eafa97cc072fe8ea906afe6f68"
+      },
+      {
+        "pairId": "add-quality-check-pair-04",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-04.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-05",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-05.datahub-only.txt",
+        "digest": "sha256:3017f683f3ffc49907000cf7faf52388e482f6100c3f2d6b44677a48d2c5241b"
+      },
+      {
+        "pairId": "add-quality-check-pair-05",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-05.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-06",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-06.datahub-only.txt",
+        "digest": "sha256:7bba3c3c37173e8e10f099caa49e04901503f061086b0ed9f55a0e4c3e0c267f"
+      },
+      {
+        "pairId": "add-quality-check-pair-06",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-06.joined.txt",
+        "digest": "sha256:b5d984243a13e7bffd84c261c294b8be4d9e7f46c1c163135e24f1599d06af8d"
+      },
+      {
+        "pairId": "add-quality-check-pair-07",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-07.datahub-only.txt",
+        "digest": "sha256:3017f683f3ffc49907000cf7faf52388e482f6100c3f2d6b44677a48d2c5241b"
+      },
+      {
+        "pairId": "add-quality-check-pair-07",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-07.joined.txt",
+        "digest": "sha256:412dfa248091b9910e6c7ce15017fb6d9c4de9eab6e14df09977c993f9cc17ed"
+      },
+      {
+        "pairId": "add-quality-check-pair-08",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-08.datahub-only.txt",
+        "digest": "sha256:c0317063f46c3e452b7908aef581ea13842d9e86d68c552d7c05348a4d2295ed"
+      },
+      {
+        "pairId": "add-quality-check-pair-08",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-08.joined.txt",
+        "digest": "sha256:cd2e788076b006418165912b163f5298557877e51785920b1f98b5e10a4230d2"
+      },
+      {
+        "pairId": "add-quality-check-pair-09",
+        "condition": "datahub-only",
+        "file": "raw/add-quality-check-pair-09.datahub-only.txt",
+        "digest": "sha256:b9d70fe805566282197bad88eccbb3890a7814b17da7bbb8f7c26dcc29f93238"
+      },
+      {
+        "pairId": "add-quality-check-pair-09",
+        "condition": "joined",
+        "file": "raw/add-quality-check-pair-09.joined.txt",
+        "digest": "sha256:412dfa248091b9910e6c7ce15017fb6d9c4de9eab6e14df09977c993f9cc17ed"
+      }
+    ]
+  },
+  "reproduce": "node --import tsx scripts/run-hac-150-evaluation.mjs --event evaluation/hac-152/live-qwen-judge-run-bundle.json --from-bundle --task-id add-quality-check --prompt <see experiment.prompt> --model qwen-plus --runs 10 --out-dir evaluation/hac-150 --settings '{\"temperature\":0}' --base-url https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+}
