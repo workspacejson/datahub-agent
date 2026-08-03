@@ -462,6 +462,34 @@
 .parity-detail .parity-strip { margin-top: var(--sp-2); }
 .parity-value--open { color: var(--wj-experimental); }
 
+/* Cited evaluation result: the recorded outcome of HAC-150's ten paired runs.
+
+   Carded rather than run as prose, because it is the one block on this route
+   that is not about the two plans on screen. A reader must be able to see at a
+   glance that its scope is ten runs and not this one, and a card boundary says
+   that before the sentence does.
+
+   Neutral surface, not emerald. Emerald is workspace.json attribution and the
+   primary CTA; an evaluation result carrying it would read as generated rather
+   than measured, which is the exact collapse the encoding grammar forbids. */
+.evaluation-claim {
+  margin: 0 0 var(--sp-4); padding: var(--sp-3);
+  border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  max-width: 78ch;
+}
+.evaluation-claim__result {
+  margin: 0 0 var(--sp-2);
+  color: var(--text-heading); font-size: var(--fs-sm);
+  line-height: var(--lh-relaxed); text-wrap: pretty;
+}
+.evaluation-claim__result:last-of-type { margin-bottom: var(--sp-3); }
+.evaluation-claim__source {
+  color: var(--text-muted); font-size: var(--fs-xs);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.evaluation-claim__source:hover { color: var(--text-body); }
+
 /* The first entry of each plan, promoted so the two are comparable without
    reading both lists down. Labelled as a first planned action, never as a
    decision: nothing in the model records a disposition. */

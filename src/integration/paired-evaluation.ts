@@ -49,9 +49,9 @@ export interface PlanStepRecord {
 }
 
 /**
- * One condition's output, normalised into the fields the six measures need.
+ * One condition's output, normalized into the fields the six measures need.
  *
- * The normalised fields sit beside `steps` rather than replacing them. HAC-150
+ * The normalized fields sit beside `steps` rather than replacing them. HAC-150
  * asks for comparison of semantic fields rather than raw prose, but discarding
  * the prose would make every aggregate unauditable: a reviewer disputing
  * `exactRevisionPresent` needs the text the flag was derived from, in the same
@@ -149,14 +149,14 @@ const matchAll = (text: string, pattern: RegExp): string[] =>
  * appears in neither.
  */
 export function observePlan(mode: PlanMode, steps: PlanStepRecord[]): PlanObservation {
-  const normalisedSteps = steps.map((step) => ({ id: step.id.trim(), action: step.action.trim() }));
-  const text = normalisedSteps.map((step) => step.action).join("\n");
+  const normalizedSteps = steps.map((step) => ({ id: step.id.trim(), action: step.action.trim() }));
+  const text = normalizedSteps.map((step) => step.action).join("\n");
   const lower = text.toLowerCase();
   return {
     mode,
-    steps: normalisedSteps,
-    stepCount: normalisedSteps.length,
-    stepIds: normalisedSteps.map((step) => step.id),
+    steps: normalizedSteps,
+    stepCount: normalizedSteps.length,
+    stepIds: normalizedSteps.map((step) => step.id),
     filesReferenced: matchAll(text, PATH_TOKEN),
     revisionsReferenced: matchAll(lower, REVISION_TOKEN),
     refusalPresent: REFUSAL.test(lower),

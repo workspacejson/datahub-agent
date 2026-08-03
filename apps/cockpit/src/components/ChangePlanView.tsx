@@ -80,6 +80,50 @@ function ParityValue({ value }: { value: EvidenceValue }) {
   return <span className="parity-value parity-value--open">Not attested. {value.reason}</span>;
 }
 
+/**
+ * The recorded result of HAC-150's ten paired runs.
+ *
+ * Not derived from the model on screen. The counts are hardcoded on purpose: a
+ * runtime-computed version would be a claim this render is making, and the
+ * point is that it cites an experiment that already happened and can be
+ * checked. It is a component rather than inline markup so both branches of this
+ * route render it, including the branch where this model carries no comparison
+ * at all. The evaluation does not stop being true because one event lacks a
+ * comparison, and gating it on this model would repeat the mistake it replaced.
+ *
+ * Both sentences state what the instrument observed rather than what it
+ * concluded. "The plan included the exact source revision" is a property of the
+ * recorded text; "the join supplied it" would be an inference about cause that
+ * ten runs on one corpus do not license.
+ *
+ * The counts are normalized step sequences, not identical raw plans. Two runs
+ * whose prose differs but whose step ids match count as one sequence, and
+ * "identical plans" would overclaim what the normalization compared.
+ */
+function EvaluationCitation() {
+  return (
+    <section className="evaluation-claim" aria-label="Repeated paired evaluation">
+      <p className="eyebrow">Measured across repeated runs</p>
+      <p className="evaluation-claim__result">
+        Across 10 controlled paired runs on the pinned corpus, the plan included the exact
+        source revision in 10/10 joined-context runs and 0/10 DataHub-only runs.
+      </p>
+      <p className="evaluation-claim__result">
+        DataHub-only produced five distinct normalized step sequences across 10 runs. Joined
+        context produced one.
+      </p>
+      <a
+        className="evaluation-claim__source"
+        href="https://github.com/workspacejson/datahub-agent/tree/main/evaluation/hac-150"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Read the evaluation receipt, with every raw output
+      </a>
+    </section>
+  );
+}
+
 export function ChangePlanView({ model }: { model: CockpitViewModel }) {
   const comparison = model.planComparison;
   const { provenance } = model.receipt;
@@ -89,6 +133,7 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
       <section aria-label="Plan comparison">
         <h2>Changed plan</h2>
         <p className="comparison-unavailable">No plan comparison available. {comparison.reason}</p>
+        <EvaluationCitation />
       </section>
     );
   }
@@ -107,11 +152,15 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
         worth showing -- they are what was recorded -- but the sentence that
         explains them is not.
       */}
-      <p className="route-intro">
-        {parity.established
-          ? "What the join added: the exact repository path and pinned revision."
-          : "The two plans as recorded. What differs is shown; why it differs is not asserted."}
-      </p>
+      {/*
+        Unconditional and descriptive. This line used to carry the causal claim
+        ("What the join added") gated on `parityControls`, which was the wrong
+        truth condition: parity establishes that the comparison was fair, not
+        what the join caused. A fair comparison of one run is still one run.
+        The measured claim moved to the cited block below, where it is bound to
+        an evaluation rather than to this render.
+      */}
+      <p className="route-intro">The two plans as recorded. What differs is shown below.</p>
 
       {/*
         The assertion stays visible; only its verification collapses. Hiding the
@@ -135,6 +184,8 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
           </>
         )}
       </p>
+
+      <EvaluationCitation />
 
       <details className="parity-detail">
         <summary>How this comparison was controlled</summary>
