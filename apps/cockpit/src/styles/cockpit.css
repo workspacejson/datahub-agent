@@ -435,6 +435,52 @@
    Two panels, not tabs. The comparison is the argument, and a tab would hide
    half of it. The parity strip shows the values that must match rather than
    asserting they do. */
+/* ── Parity: the claim above, the evidence inside ─────────────
+   The assertion that the comparison was controlled is always visible. Only the
+   identifiers that verify it collapse. Hiding the assertion would hide the
+   condition that makes the two plan panels mean anything, which is the opposite
+   of what a disclosure is for.
+
+   The unestablished variant takes the same amber hairline as every other stated
+   absence, and says which dimensions are missing, so the state is legible from
+   the words alone. */
+.parity-claim {
+  margin: 0 0 var(--sp-3); padding-left: var(--sp-3);
+  border-left: 2px solid var(--wj-accent);
+  color: var(--text-body); font-size: var(--fs-xs); line-height: var(--lh-relaxed);
+  max-width: 78ch; text-wrap: pretty;
+}
+.parity-claim strong { color: var(--text-heading); font-weight: 600; }
+.parity-claim--open { border-left-color: var(--wj-experimental); }
+.parity-claim--open strong { color: var(--wj-experimental); }
+.parity-detail { margin: 0 0 var(--sp-4); }
+.parity-detail > summary {
+  cursor: pointer; color: var(--text-muted);
+  font-size: var(--fs-xs); padding: var(--sp-1) 0;
+}
+.parity-detail > summary:hover { color: var(--text-body); }
+.parity-detail .parity-strip { margin-top: var(--sp-2); }
+.parity-value--open { color: var(--wj-experimental); }
+
+/* The first entry of each plan, promoted so the two are comparable without
+   reading both lists down. Labelled as a first planned action, never as a
+   decision: nothing in the model records a disposition. */
+.first-action {
+  margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm); background: var(--surface-sunken);
+}
+.first-action__label {
+  margin: 0 0 var(--sp-1); color: var(--text-faint);
+  font-family: var(--font-mono); font-size: var(--fs-caption);
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+}
+.first-action__value { margin: 0; color: var(--text-heading); font-size: var(--fs-sm); font-weight: 600; line-height: var(--lh-snug); }
+.reversal-label {
+  margin: 0 0 var(--sp-3); color: var(--text-heading);
+  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+}
+
 .parity-strip { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 0 0 var(--sp-4); border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); }
 .parity-strip div { min-width: 0; }
 .parity-strip dt, .parity-strip .parity-label { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }

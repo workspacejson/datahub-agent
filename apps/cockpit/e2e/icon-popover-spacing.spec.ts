@@ -55,6 +55,20 @@ for (const viewport of [DESKTOP, NARROW, MOBILE]) {
     await page.setViewportSize(viewport);
     await page.goto(`${COMMITTED_ORIGIN}/change-plan`);
 
+    /*
+      The strip moved inside "How this comparison was controlled". The assertion
+      that the comparison was controlled stays visible above it; these exact
+      identifiers are the verification of that assertion, and they are one level
+      down by design.
+
+      Opening it here rather than dropping the test: reachable after one click is
+      still reachable, and the tap target, gap and containment checks below are
+      exactly as load-bearing inside a disclosure as outside one.
+    */
+    const disclosure = page.locator("details.parity-detail");
+    await expect(disclosure).toBeVisible();
+    await disclosure.locator("summary").click();
+
     const trigger = page.getByRole("button", { name: /Inspect proof/ });
     await expect(trigger).toBeVisible();
 
