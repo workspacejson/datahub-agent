@@ -138,6 +138,21 @@ quickstart proof.
 
 ---
 
+## Two corpora, two roles
+
+| Corpus | Purpose | Judge-facing |
+| --- | --- | --- |
+| Transfermarkt (nested dbt project) | Canonical silent-zero and changed-plan demonstration | Yes |
+| Jaffle Shop | Clean-install and integration regression proof | No |
+
+Jaffle Shop's `code.projectPrefix` is `""` — its dbt path and its repository
+path are the same string. There is no prefix to normalize, so the silent zero
+cannot occur there, and it is not offered in the cockpit's dataset selector. It
+is what `scripts/clean-quickstart-proof.sh` rebuilds from the official
+quickstart, which is the role it is good at.
+
+---
+
 ## What is deliberately not claimed
 
 - **No general completeness claim.** The nested fixture (Transfermarkt) carries

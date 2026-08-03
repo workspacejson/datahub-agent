@@ -86,7 +86,7 @@ Resolving `urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)`:
 
 This is the [golden nested fixture](test/fixtures/golden/change-impact-event.nested.json) — a real emitted event with an attached writeback receipt, committed so a judge can inspect it without running DataHub.
 
-**Corpus split.** The judge-facing golden fixture uses the Transfermarkt corpus (`dcaribou/transfermarkt-datasets@59fa295c`), which exercises the nested `dbt/` project layout where a naive join silently returns zero rows. The Jaffle Shop DuckDB corpus (`dbt-labs/jaffle_shop_duckdb@36bde6cb`) is the regression and proof corpus — it backs the node-coverage audit and the clean-room quickstart, and its [root-level fixture](test/fixtures/golden/change-impact-event.root.json) exercises the project-at-repo-root layout. Both corpora stay visible on judge surfaces; Transfermarkt is the demo subject, Jaffle is the regression proof.
+**Corpus split.** The judge-facing golden fixture uses the Transfermarkt corpus (`dcaribou/transfermarkt-datasets@59fa295c`), which exercises the nested `dbt/` project layout where a naive join silently returns zero rows. The Jaffle Shop DuckDB corpus (`dbt-labs/jaffle_shop_duckdb@36bde6cb`) is the regression and proof corpus — it backs the node-coverage audit and the clean-room quickstart, and its [root-level fixture](test/fixtures/golden/change-impact-event.root.json) exercises the project-at-repo-root layout. Transfermarkt is the demo subject and the only corpus offered in the cockpit; Jaffle Shop is the regression proof and is not judge-facing. See [Two corpora, two roles](JUDGING.md#two-corpora-two-roles).
 
 ## Why DataHub is essential
 
@@ -193,6 +193,15 @@ See the [golden nested fixture](test/fixtures/golden/change-impact-event.nested.
 
 **MCP field coverage.** What DataHub holds versus what an agent receives through the official MCP server. See [`evaluation/mcp-field-coverage.md`](evaluation/mcp-field-coverage.md).
 
+## Contributions
+
+Eleven findings from building against DataHub — silent recipe overwrites, GraphQL errors under HTTP 200, lineage tier ambiguity, and more — are distilled in [`FEEDBACK.md`](FEEDBACK.md). Two are filed as open upstream submissions:
+
+- [acryldata/mcp-server-datahub#149](https://github.com/acryldata/mcp-server-datahub/pull/149) — expose `Dataset.externalUrl` through `get_entities` (finding 2)
+- [datahub-project/datahub#18754](https://github.com/datahub-project/datahub/pull/18754) — scope the structured-property set/replace note to the API it describes (finding 7)
+
+Both PRs are open as of this submission. No claim of upstream acceptance, merge, or resolution is made without evidence.
+
 ## Quickstart
 
 From a clean clone:
@@ -249,7 +258,6 @@ See [`examples/README.md`](examples/README.md) for the full index with descripti
 - **Pre-existing work:** The workspace.json standard, its producer CLI, and the dbt path-normalization adapter in `src/adapters/workspacejson/` were developed before the hackathon and adopted with full provenance. See [`docs/provenance.md`](docs/provenance.md) and [`HACKATHON_PROVENANCE.md`](HACKATHON_PROVENANCE.md).
 - **New work:** Non-silent node extraction, the change-impact event contract, the MCP read path, writeback with observed receipts, the paired plan comparison, the cockpit, and all evaluation evidence.
 - **Clean-room boundary:** Tally consumes only released, published `@workspacejson/*` packages. No source-level cross-org imports. See [`docs/clean-room.md`](docs/clean-room.md).
-- **Upstream contributions:** The [`externalUrl` MCP projection fix](https://github.com/acryldata/mcp-server-datahub/pull/149) (filed against `acryldata/mcp-server-datahub`) and the [`node:fs` type-stub masking defect](https://github.com/workspacejson/cli/issues) (filed against `workspacejson/cli`).
 
 **Challenge category:** Metadata-Aware Code Generation & Development
 

@@ -37,10 +37,31 @@ declare const __COCKPIT_ROOT_COMPARISON__: SourceEvent["planComparison"] | null;
  */
 declare const __COCKPIT_RECEIPT_HTML__: string | null;
 
-/** The datasets a judge can switch between in the cockpit. */
+/**
+ * The datasets a judge can switch between in the cockpit.
+ *
+ * Jaffle Shop (`root`) was removed on 2026-08-02. It remains a supported key
+ * below, and remains the corpus `scripts/clean-quickstart-proof.sh` rebuilds,
+ * because it is this project's clean-install regression proof. It is not a
+ * second product demonstration.
+ *
+ * Its `code.projectPrefix` is `""`: the dbt path and the repository path are the
+ * same string, so there is no prefix to normalize and the silent zero cannot
+ * occur. Verified live against a nuked-and-rebuilt DataHub — the root event
+ * resolves exactly and correctly renders no failure, while the nested event
+ * carries prefix `dbt` and reproduces the naive-join miss.
+ *
+ * A judge switching to it therefore watched the headline failure disappear
+ * beneath a headline still promising proof. Offering it was a trapdoor rather
+ * than breadth: a second option that cannot demonstrate the product reads as
+ * evidence that the product does not always work. Any second entry here must be
+ * another nested-project subject.
+ *
+ * With one entry `DatasetSelector` renders nothing, which is the intent — the
+ * chrome goes with the choice.
+ */
 export const DATASET_OPTIONS: DatasetOption[] = [
   { key: "nested", label: "game_events (Transfermarkt)" },
-  { key: "root", label: "customers (Jaffle Shop)" },
 ];
 
 /** The fixture for a given dataset key. */
