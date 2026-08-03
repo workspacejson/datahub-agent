@@ -56,6 +56,43 @@ function ViewSourceLink({ viewSource }: { viewSource: ViewSource }) {
  * catalog could resolve on its own, and saying otherwise would be a fabricated
  * contrast on the one screen that must not have any.
  */
+/**
+ * The same file named by two coordinate systems, with the difference visible.
+ *
+ * The join fails on one missing segment, and a reader comparing two long paths
+ * character by character will not find it. Rendering the prefix as its own slot
+ * makes the difference structural: one row has the segment, the other has a hole
+ * where it would go.
+ *
+ * The hole is empty. The canvas fills it with `dbt/?`, which reads as DataHub
+ * offering a guess it does not have -- the prefix is exactly what the catalog
+ * never exposes, and printing it on the catalog row attributes it to the wrong
+ * system on the one screen whose whole argument is which system supplied what.
+ * The slot carries a question mark and its explanation instead, and the prefix
+ * appears once, on the row that actually supplies it.
+ */
+function CoordinateSeam({ model }: { model: CockpitViewModel }) {
+  if (!model.dbtFilePath || !model.projectPrefix) return null;
+  const prefix = model.projectPrefix.endsWith("/") ? model.projectPrefix : `${model.projectPrefix}/`;
+  return (
+    <div className="coordinates" aria-label="The same file in two coordinate systems">
+      <div className="coordinate coordinate--open">
+        <span className="coordinate__system">DataHub coordinate</span>
+        <span className="coordinate__path mono">
+          <span className="coordinate__slot" title="Repository prefix, not exposed by DataHub">?</span>
+          {model.dbtFilePath}
+        </span>
+      </div>
+      <div className="coordinate coordinate--resolved">
+        <span className="coordinate__system">Repository coordinate</span>
+        <span className="coordinate__path mono">
+          <span className="coordinate__prefix">{prefix}</span>{model.dbtFilePath}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function ResolutionSeam({ model, gap }: { model: CockpitViewModel; gap: StatedGap | undefined }) {
   return (
     <article className="seam" aria-label="Producing file resolution">
@@ -243,6 +280,7 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
       */}
       <p className="hero__stakes">DataHub says where data flows; git says what breaks together; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
       <p className="route-intro">What broke: the catalog cannot resolve this dataset to a file.</p>
+      <CoordinateSeam model={model} />
       <ResolutionSeam model={model} gap={producerGap} />
 
       <motion.article className="claim claim--evidence" variants={reduce ? undefined : itemVariants}>

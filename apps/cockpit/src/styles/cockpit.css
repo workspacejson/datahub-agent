@@ -174,6 +174,45 @@
   .outcome-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* ── Coordinate seam ──────────────────────────────────────────
+   Two rows, one per coordinate system, so the missing segment is a shape rather
+   than a string comparison. Both rows are mono at the same size and the paths
+   start at the same x, which is what makes the hole line up under the prefix.
+
+   Colour follows the source axis and nothing else: the catalog row is amber
+   because the segment is unsettled there, the repository row is emerald because
+   `workspace.json` is what supplied it. Neither carries resolution meaning, and
+   the labels state which system is which, so the rows still read in greyscale. */
+.coordinates { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-4); }
+.coordinate {
+  display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  gap: var(--sp-3) var(--sp-5); align-items: center;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+}
+.coordinate--open { border: 1px dashed var(--wj-experimental); background: var(--surface-sunken); }
+.coordinate--resolved { border: 1px solid var(--wj-accent); background: var(--accent-wash-6); }
+.coordinate__system {
+  color: var(--text-muted);
+  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+}
+.coordinate__path { color: var(--text-heading); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+/* An empty slot the width of the segment it is missing. `?` rather than the
+   prefix: see the note on CoordinateSeam. */
+.coordinate__slot {
+  display: inline-block; min-width: 2.75rem; margin-right: 2px; padding: 2px var(--sp-2);
+  border: 1px dashed var(--wj-experimental); border-radius: var(--radius-sm);
+  color: var(--wj-experimental); text-align: center;
+}
+.coordinate__prefix {
+  padding: 2px var(--sp-1); border-radius: var(--radius-sm);
+  background: var(--accent-wash-25); color: var(--wj-accent-high);
+}
+@media (max-width: 640px) {
+  .coordinate { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
+}
+
 /* ── Hero band ────────────────────────────────────────────────
    Identity left, the one coverage verdict right, on the same baseline grid. Both
    are above the fold at 1440x900 and 1280x800; `first-frame.spec.ts` asserts that
@@ -1016,11 +1055,20 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   padding-left: var(--sp-2);
 }
 .writeback-state--accepted .semantic-icon { color: var(--text-body); }
+/* Neutral, not emerald. Emerald is the source axis on this surface: it marks
+   material `workspace.json` supplied, and the primary action. An observed
+   after-state is DataHub reporting on itself, so emerald here would say the
+   catalog's own observation came from the artifact -- the one confusion the
+   source axis exists to prevent, on the row asserting the writeback is real.
+
+   Nothing is lost by the change. The distinction from `--accepted` was already
+   carried by the border style and the icon, which is why it survives greyscale;
+   colour was only reinforcing, and here it was reinforcing the wrong axis. */
 .writeback-state--observed {
-  border-left: 2px dashed var(--wj-accent);
+  border-left: 2px dashed var(--border-strong);
   padding-left: var(--sp-2);
 }
-.writeback-state--observed .semantic-icon { color: var(--wj-accent); }
+.writeback-state--observed .semantic-icon { color: var(--text-body); }
 
 /* ── Cockpit footer: next action + ecosystem role ────────────
    Replaces a governance-disclaimer ending with a concrete CTA
