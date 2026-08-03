@@ -29,3 +29,8 @@ __pycache__/
 # YouTube rather than to this repository.
 /demo/output/
 /demo/narration/output/
+
+# Agent tooling. The cockpit design contract lives here as a skill: it is real
+# working material, but it is instructions *for* building the artifact rather
+# than part of it, so it stays out of the judging corpus and on disk.
+.claude/
