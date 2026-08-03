@@ -136,10 +136,6 @@ evaluation/                   proof corpus, node-type coverage, MCP field covera
                               live evidence packages
 ```
 
-<p align="center">
-  <img src="assets/exports/tally-architecture/tally-architecture.png" alt="Tally architecture: DataHub context and repository snapshot feed the six-stage Tally evidence pipeline, with a guardrail that mismatch or incomplete evidence becomes an explicit gap, never a silent zero. Verified enrichment writes back to DataHub via GMS GraphQL. The pipeline emits a typed ChangeImpactEvent to the Change Impact Cockpit." width="800">
-</p>
-
 The cockpit is a React 19 + Vite + Tailwind application. All source events cross Zod validation into a `CockpitViewModel`; components accept only that model. The three-view sequence — Impact, Change plan, Receipts — is the judge-facing surface. See [`docs/cockpit-architecture.md`](docs/cockpit-architecture.md).
 
 The change-impact event contract is at [`src/integration/change-impact-event.ts`](src/integration/change-impact-event.ts). It is versioned (currently 1.3), Zod-validated, and drift-guarded so the TypeScript interfaces and runtime schemas cannot diverge silently.

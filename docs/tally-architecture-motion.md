@@ -48,27 +48,25 @@ them was verified pixel-identical against the pre-hook file at 1600×900 @2x.
 
 `[data-stage]` is ordered; `stagger()` over the six is safe.
 
-## ⚠️ Open ruling — blocks both consumers
+## Beat order — ruled and frozen
 
-**HAC-296 specifies two incompatible beat orders.**
+**Ruled 2026-08-02: writeback before Cockpit.**
 
-> "…deliver typed evidence to the Cockpit, **observe writeback**, then hold the
-> complete system before looping."
+The Cockpit renders the observed receipt, so the truthful causal sequence is:
 
-> "Reveal the asymmetry first, guarded join second, **observed DataHub return
-> third, and Cockpit outputs last**."
+> guarded join → observed DataHub writeback → typed event and Cockpit output →
+> plan comparison → hold
 
-The first puts Cockpit before writeback. The second puts writeback before
-Cockpit. The timeline below implements **Order A** (Cockpit → writeback)
-provisionally, because it is stated in the same sentence as the 12–15s target and
-is therefore the more specific instruction.
+An animation that showed the Cockpit before the writeback would put the display
+of a receipt ahead of the observation that produced it — motion asserting a
+causality the system does not have, which is exactly the failure the "motion
+must never carry information absent from the static evidence" rule exists to
+prevent.
 
-To adopt **Order B**, swap beats 5 and 6 as whole blocks — their durations are
-deliberately equal (2.2s each), so the total and the hold are unaffected. No
-other beat moves.
-
-Amend HAC-296 to remove the losing sentence once ruled. Do not leave both in the
-issue and let each consumer pick.
+HAC-296 previously carried two incompatible orderings in two sentences. The
+losing sentence — "deliver typed evidence to the Cockpit, observe writeback" —
+is to be deleted from that issue rather than left beside the ruling, so neither
+consumer can pick differently.
 
 ## Timeline
 
@@ -81,12 +79,10 @@ Total **14.0s**, inside HAC-296's 12–15s target.
 | 2 | 3.0–5.0s | 2.0s | `#coord-datahub`, `#coord-repository` | Both path strings hold at emphasis (`opacity 0.55→1`) for a 1.2s dwell. This is the asymmetry: one string carries the `dbt/` prefix and the other does not. | `easeInOut` |
 | 3 | 5.0–7.4s | 2.4s | `[data-flow="source"]`, then `#pipeline-spine`, then `[data-stage]` | Connectors draw (`pathLength 0→1`, 0.7s), spine draws (0.5s), then six stages resolve `opacity 0.3→1` on `stagger(0.2)` | `easeOut` |
 | 4 | 7.4–8.8s | 1.4s | `#guardrail-band` | Band settles `opacity 0.4→1` once, holds. **One pass. It must not pulse** — a perpetually blinking refusal reads as an alarm state rather than a guarantee. | `easeOut` |
-| 5 | 8.8–11.0s | 2.2s | `#flow-cockpit` → `#event-pill` → `#cockpit` | Event connector draws (0.6s), pill appears (0.5s), Cockpit card fades and rises (1.1s) | `easeOut` |
-| 6 | 11.0–13.2s | 2.2s | `#flow-writeback` → `#writeback-label` → `#writeback` | Writeback connector draws (0.8s), label appears (0.4s), DataHub card fades and rises (1.0s) | `easeOut` |
+| 5 | 8.8–11.0s | 2.2s | `#flow-writeback` → `#writeback-label` → `#writeback` | Writeback connector draws (0.8s), label appears (0.4s), DataHub card fades and rises (1.0s). **The observation comes before the surface that displays it.** | `easeOut` |
+| 6 | 11.0–13.2s | 2.2s | `#flow-cockpit` → `#event-pill` → `#cockpit` | Event connector draws (0.6s), pill appears (0.5s), Cockpit card fades and rises (1.1s) | `easeOut` |
 | 7 | 13.2–14.0s | 0.8s | `#plan-comparison` | Lane fades to full. It arrives **last and separately**, because it is a controlled comparison rather than an observed fact, and nothing should suggest it is part of the deterministic path. | `easeOut` |
 | Hold | 14.0–17.0s | 3.0s | — | Complete diagram, fully static, no residual motion | — |
-
-Beats 5 and 6 are the swap pair for the ruling above.
 
 The 3.0s hold is not padding — it is the only window in which a reader can
 inspect the finished system, and HAC-296 gates on it explicitly.
