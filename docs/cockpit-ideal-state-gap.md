@@ -25,7 +25,7 @@ The audit was written against older screenshots. These recommendations are **alr
 
 ## Part 1 — Narrative deltas (the load-bearing defect)
 
-### D1. Hero stakes sentence still claims the absent capability ✅ confirmed
+### D1. Hero stakes sentence claimed the absent capability — ✅ LANDED (`e88cd3b`)
 
 `ImpactView.tsx:281` reads verbatim:
 
@@ -41,15 +41,28 @@ The receipt contradicts it. The shipped bundle states:
 
 So "git says what breaks together" claims exactly the capability the receipt disclaims. This is the load-bearing defect and the finding is sound.
 
-**Delta:** replace with the narrowed claim — "DataHub identifies the affected dataset. workspace.json resolves it to the exact repository path and revision. Without that join, the agent gets zero matches and no warning."
+**Landed as:** "DataHub says where data flows; **git says where each file lives**; *joining them* silently returns nothing. Here is the proof."
 
-> ⚠️ **Correction to the audit's caution.** The hero sentence is **not** pinned in `house-copy.test.tsx`. Grep across `house-copy.test.tsx` and all `components/*.test.tsx` returns no pin on this string. This edit is low-risk — the audit's "check for pinned copy first" advice is prudent but the pin does not exist.
+Only the false clause changed. The mechanism, the `TermDefinition` on the coordinate-system mismatch, and the "Here is the proof" close are intact.
 
-### D2. Linear project description is out of parity
+> ⚠️ **Two corrections to the audit's version of this fix.**
+> 1. The hero sentence is **not** pinned in `house-copy.test.tsx`, so the edit was cheaper than the audit implied.
+> 2. The audit's proposed replacement ended "…the agent gets zero matches and no warning." That would have **restated the pinned silent-zero callout**, which renders directly above it on Impact and already reads "Naive join: 0 matches. No error. No warning. Exit code 0." House copy requires each fact stated once per route, so the numbers were left to the callout that owns them. The stakes line keeps its job: the mechanism, not the instance.
 
-Project description still promises "code partners learned from repository history" and "behavioral code partners". HAC-154's message lock already uses the correct narrowed wording — the project description is the outlier.
+Verified green: `typecheck`, 761 + 187 tests, 57/57 e2e.
 
-**Delta:** rewrite both to the narrowed HAC-150 exact-source-and-revision scope. *(Not code-verifiable; Linear-side.)*
+### D2. Linear project description was out of parity — ✅ LANDED
+
+Two phrases in the project description promised behavioral co-change:
+
+| Section | Was | Now |
+| --- | --- | --- |
+| Winning thesis | "the exact producer file and **code partners learned from repository history**" | "the exact producer file and **the revision it is pinned at**" |
+| Product shape → Impact | "lineage, producer file, **behavioral code partners**, immutable View Source" | "lineage, producer file, **pinned revision**, immutable View Source" |
+
+Nothing else in the description changed. HAC-154's message lock already used the narrowed wording, so the project description was the last outlier.
+
+> Worth considering: the Guardrails list already carries "No invented risk score or universal maintainability claim." A companion line — *no behavioral co-change or code-partner claim* — would stop this specific drift from returning. Not added unasked.
 
 ---
 
@@ -84,7 +97,9 @@ Project description still promises "code partners learned from repository histor
   > 🔴 **Backend does not align on one word: "Decision".**
   > There is no decision or disposition concept anywhere in the contract. `PlanDeltaKind` is `added | removed | reordered | constrained | uncertainty-changed` (`src/integration/plan-comparison.ts:88`), and a grep for `decision` across `src/` returns only unrelated prose comments.
   >
-  > `ChangePlanView.tsx:180-187` **explicitly refuses this exact change**, in a comment:
+  > This is a ratified ruling, not just a code comment. The cockpit design contract lists "**No decision field**" among the three places the canvas was deliberately not followed: *"The canvas heads each plan panel with a decision word. Nothing records a plan's disposition … **Never call either value a decision.** A real approve/execute workflow wants a typed `planDisposition` with invariants tying it to the steps, not a display string."*
+  >
+  > `ChangePlanView.tsx:180-187` **refuses the same change** in code:
   >
   > > *"First step changed", not "decision changed". … nothing in the model calls either one a decision — naming them that would assert a disposition the artifact does not record, and it would put a second source of truth beside the step lists that could contradict them.*
   >
@@ -114,8 +129,15 @@ Project description still promises "code partners learned from repository histor
 
 ### Receipts (`ReceiptsView.tsx`, `cockpit.css`)
 
-- **D11. Caveats open the route.** ✅ confirmed — `UnestablishedBand` renders at `ReceiptsView.tsx:156`, immediately after the route intro, before any positive result. Add a leading receipt-outcome summary — **Exact source resolved · Plan changed · Writeback observed · 3 limitations remain** — each expandable into its section.
-  *All four values verified against the shipped bundle:* 3 stated gaps ✅; writeback `succeeded: true`, `bothStatesRead: true`, `observation.status: "settled"` ✅; 3 plan deltas ✅. The proposed summary asserts nothing the evidence does not carry.
+- **D11. Caveats open the route.** ✅ observation confirmed — `UnestablishedBand` renders at `ReceiptsView.tsx:156`, immediately after the route intro, before any positive result. The four values the proposed summary would assert are all real: 3 stated gaps ✅; writeback `succeeded: true`, `bothStatesRead: true`, `observation.status: "settled"` ✅; 3 plan deltas ✅.
+
+  > 🔴 **Do not build this. It reverses a ratified ruling.** The cockpit design contract records HAC-218 as authoritative on the Receipts lead order:
+  >
+  > > *Receipts leads with what is not established, keeps its seven-section evidence structure, and leaves "Plan changed" to the Change plan route. The canvas leads with four outcome statements under "Result outranks limitation" — that principle governs the hero, where it was adopted, and stops there. On Receipts, unestablished evidence **is** a result, so demoting it ranks a finding beneath a summary of the findings.*
+  >
+  > D11 is that canvas proposal restated, down to the four outcome statements and the "Plan changed" item the ruling explicitly assigns elsewhere. The audit appears to have read the `.dc.html` canvas as governing; it does not. Reasoning is in `docs/cockpit-architecture.md`, and the ruling was re-affirmed on `feature/cockpit-ideal-state` (`6db0b21`).
+  >
+  > The underlying concern — the writeback, the strongest proof, sits far below the fold — is still legitimate. Address it by **raising the writeback's position or prominence within the existing seven-section structure** (which is D13's job), not by prefixing the route with an outcome summary.
 
 - **D12. Provenance is a flat 11-row wall.** ✅ **exactly right** — `provenanceRows` (`ReceiptsView.tsx:56-72`) is precisely 11 entries. (The schema carries 12 provenance fields; `limitations` is deliberately excluded from rendering, with the reason documented at lines 68-71. Preserve that exclusion when regrouping.)
   Group into a chain: (1) subject repo + revision, (2) artifact + revision, (3) algorithm/producer, (4) digests/query details — steps 3–4 expandable.
@@ -155,16 +177,17 @@ Project description still promises "code partners learned from repository histor
 
 Steps 1–2 of the audit's order are done (PR #70, PR #71 merged). Remaining:
 
-1. Close HAC-270 after reconciling its remaining acceptance items.
-2. **D1 + D2** — reconcile hero and project narrative to the narrowed exact-source claim. Cheap, unblocks all capture, and no test pin blocks it.
-3. **Decide the D7/D9/D10 contract questions before building them** — this is new, and it gates the largest UI delta. Three questions: does a plan *decision* become a recorded field or stay unnamed; does grouped-delta rendering union its evidence refs; does `evidence-path` get a producer or get deleted.
-4. Sign off HAC-145; close HAC-226.
-5. **D3–D6, D8, D11–D15** under HAC-220 (outcome-first hierarchy pass) — none of these need a contract change.
-6. Run HAC-150's repeated paired evaluation.
-7. Finish HAC-282 (JUDGING.md rebuild path + script error message).
-8. Reinstate and run HAC-228's two bounded cold reads.
-9. Lock HAC-154 video, then HAC-155 submission gate.
-10. Freeze. No new BETs.
+1. ~~**D1 + D2** — reconcile hero and project narrative to the narrowed exact-source claim.~~ ✅ **done** (`e88cd3b` + Linear).
+2. Close HAC-270 after reconciling its remaining acceptance items.
+3. **Drop D11 and re-scope D7/D9.** Both were written against the `.dc.html` canvas as if it governed; it does not. HAC-218 rules the Receipts lead order and the design contract rules out a decision field. D11 should not be built at all; D7/D9 should be built in recorded vocabulary (*First planned action* / Target / Revision) or not at all.
+4. **Decide the D10 contract question before building it** — does `evidence-path` get a producer, or get deleted? Cheapest correct answer is derive the label in the view and delete the dead enum member.
+5. Sign off HAC-145; close HAC-226.
+6. **D3, D4, D5, D8, D12, D13, D14, D15** under HAC-220 (hierarchy pass) — none need a contract change, and none conflict with a ruling. D13 absorbs D11's legitimate concern by raising the writeback within the existing section order.
+7. Run HAC-150's repeated paired evaluation. **Highest-risk item on this board:** it is due today, not started, and without it the causal claim the whole cockpit displays rests on n=1 — which the project's own guardrails forbid.
+8. Finish HAC-282 (JUDGING.md rebuild path + script error message).
+9. Reinstate and run HAC-228's two bounded cold reads.
+10. Lock HAC-154 video, then HAC-155 submission gate.
+11. Freeze. No new BETs.
 
 ## Verification
 
