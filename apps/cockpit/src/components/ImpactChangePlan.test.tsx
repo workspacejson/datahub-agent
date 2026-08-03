@@ -60,3 +60,45 @@ it("names the run a comparison came from, so both plans can be checked as one qu
   expect(screen.getByText("qwen-plus")).toBeTruthy();
   expect(screen.getByText("digest-under-test")).toBeTruthy();
 });
+
+/**
+ * Parity is fail-closed.
+ *
+ * The visible sentence above the panels is what lets a reader treat the two
+ * plans as a comparison rather than two lists, so it may only appear when every
+ * dimension it names is observed. These assert both directions, because a claim
+ * that cannot fail is not a claim.
+ */
+const withProvenance = (overrides: Record<string, unknown>) => {
+  const base = provisionalStateAdapter("partial").read();
+  return {
+    ...base,
+    planComparison: observed([]),
+    receipt: { ...base.receipt, provenance: { ...base.receipt.provenance, ...overrides } },
+  };
+};
+
+const attested = {
+  dataHubReadParameters: { state: "observed", value: "gms http://localhost:8080", source: "DataHub" },
+  subjectRevision: { state: "observed", value: "59fa295c", source: "workspace.json" },
+} as const;
+
+it("asserts a controlled comparison only when every named dimension is attested", () => {
+  render(<ChangePlanView model={withProvenance({ ...attested }) as never} />);
+  expect(screen.getByText(/Controlled comparison/)).toBeTruthy();
+  // The causal sentence is licensed by the controls, so it travels with them.
+  expect(screen.getByText(/What the join added/)).toBeTruthy();
+});
+
+it("withholds the causal claim when a control dimension is not attested", () => {
+  const model = withProvenance({
+    ...attested,
+    subjectRevision: { state: "unavailable", reason: "not recorded for this run" },
+  });
+  render(<ChangePlanView model={model as never} />);
+
+  expect(screen.getByText(/Comparison controls not established/)).toBeTruthy();
+  expect(screen.getByText(/repository revision/)).toBeTruthy();
+  // No causal language anywhere on the route while the controls are open.
+  expect(screen.queryByText(/What the join added/)).toBeNull();
+});

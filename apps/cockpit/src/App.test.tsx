@@ -14,9 +14,11 @@ it("derives the shell state from URL query state and writes navigation back to t
   render(<App />);
 
   expect(screen.getByRole("button", { name: "Receipts" }).getAttribute("aria-current")).toBe("step");
-  // The panel states completeness in words with a subject rather than as the
-  // bare contract token, which had no visible referent on the frame.
-  expect(screen.getByLabelText("Coverage of this review").textContent).toContain("Complete against pinned manifest");
+  // The outcome bar states completeness in words with a subject rather than as
+  // the bare contract token, which had no visible referent on the frame. It
+  // moved here from the hero panel when the bar took over the fact: the bar
+  // holds it on every route, and the hero renders the consequence only.
+  expect(screen.getByLabelText("Standing of this review").textContent).toContain("Complete against pinned manifest");
 
   await user.click(screen.getByRole("button", { name: "Change plan" }));
   expect(window.location.pathname).toBe("/change-plan");
