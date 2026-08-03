@@ -91,8 +91,17 @@ describe("deriveTier", () => {
     expect(deriveTier([record(false), record(false)])).toBe("OBSERVED");
   });
 
-  it("is VERIFIED when at least one record was executed by this harness", () => {
-    expect(deriveTier([record(false), record(true)])).toBe("VERIFIED");
+  it("is OBSERVED when not all records were executed by this harness", () => {
+    expect(deriveTier([record(false), record(true)])).toBe("OBSERVED");
+  });
+
+  it.each([
+    ["ASSERTED", []],
+    ["OBSERVED", [false, false]],
+    ["OBSERVED", [false, true]],
+    ["VERIFIED", [true, true]],
+  ] as const)("derives %s for the given check-execution pattern", (expected, checks) => {
+    expect(deriveTier(checks.map(record))).toBe(expected);
   });
 
   it("takes no input but the records, so no caller can tune it", () => {

@@ -202,14 +202,14 @@ async function ensureProperty() {
       qualifiedName: EVIDENCE_TIER_PROPERTY_ID,
       displayName: "Evidence tier (workspace.json)",
       description:
-        "Mechanically derived from the evidence records supporting the dataset-to-code resolution. ASSERTED: no supporting record. OBSERVED: at least one record. VERIFIED: at least one record whose check was executed.",
+        "Mechanically derived from the evidence records supporting the dataset-to-code resolution. ASSERTED: no supporting record. OBSERVED: at least one record, not all with checkExecuted. VERIFIED: every supporting record has checkExecuted: true.",
       valueType: "urn:li:dataType:datahub.string",
       cardinality: "SINGLE",
       entityTypes: ["urn:li:entityType:datahub.dataset"],
       allowedValues: [
         { stringValue: "ASSERTED", description: "claimed, with no supporting record" },
-        { stringValue: "OBSERVED", description: "at least one recorded observation" },
-        { stringValue: "VERIFIED", description: "at least one check executed by the harness" },
+        { stringValue: "OBSERVED", description: "at least one record; not all have checkExecuted: true" },
+        { stringValue: "VERIFIED", description: "every supporting record has checkExecuted: true" },
       ],
     },
   });
