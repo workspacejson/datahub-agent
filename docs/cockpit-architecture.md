@@ -34,3 +34,31 @@ that no module the browser loads can reach the network and that no stylesheet
 loads a remote font, so the offline property is enforced rather than described.
 
 HAC-218 and HAC-219 consume the model/route slots, never provisional source data.
+
+## Receipts lead order — ruled and standing
+
+**Ruled 2026-08-03: HAC-218 remains authoritative for Receipts.**
+
+Receipts leads with what is not established. The absence band stays first, the
+seven-section evidence structure is preserved, and "Plan changed" is owned by the
+Change plan route rather than restated here.
+
+`Tally cockpit ideal state.dc.html` proposes the inverse: four expandable outcome
+statements lead, with limitations fourth, under the heading "Result outranks
+limitation". That principle governs the hero, where it was adopted. It does not
+extend to Receipts, because on this route **unestablished evidence is itself a
+result**. Demoting it below the outcomes would rank a finding beneath a summary
+of the findings, on the one surface whose job is to say what is not known.
+
+The canvas's Receipts frame is therefore non-applicable where it conflicts with
+this ruling. Two consequences, both deliberate:
+
+- Its four statements do not map onto the seven sections, and no attempt should
+  be made to force the mapping. The sections are the evidence structure.
+- Its "Plan changed" statement has no home here. The Change plan route owns that
+  comparison, and stating it twice would be the double assertion the receipt
+  exists to avoid.
+
+Recorded here rather than only in the issue, for the same reason the motion beat
+order is recorded in `tally-architecture-motion.md`: a ruling that lives beside
+the losing statement lets the next consumer pick either one.
