@@ -1,10 +1,11 @@
 import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model";
-import { CircleDashed, Database } from "lucide-react";
+import { Database } from "lucide-react";
 import { MotionConfig } from "motion/react";
 import { ChangePlanView } from "./ChangePlanView";
 import { DecisionRail } from "./DecisionRail";
 import { Icon } from "./Icon";
 import { ImpactView } from "./ImpactView";
+import { OutcomeBar } from "./OutcomeBar";
 import { ProofPopover } from "./ProofPopover";
 import { ReceiptsView } from "./ReceiptsView";
 import { SourceTag } from "./SourceTag";
@@ -143,12 +144,21 @@ function Wordmark() {
 function Coverage({ model }: { model: CockpitViewModel }) {
   const { accounting } = model.receipt;
   const complete = model.completeness === "complete-against-pinned-manifest";
+  /*
+    The headline and its eyebrow used to sit at the top of this block, stating
+    completeness in the same words the outcome bar now uses. Two renderings of
+    one fact on one route is what `house-copy.test.tsx` forbids, and the bar
+    states it on every route rather than only where the hero renders, so the bar
+    is the one that keeps it.
+
+    The note stays. It is not a restatement: the bar gives the state, this gives
+    the consequence, that an absent edge is not evidence of no impact, which is
+    the part a reader cannot derive from the words "not established". Same
+    division HAC-218 settled for the gap rows: short state tag, explanation in
+    muted body text.
+  */
   return (
     <div className="coverage" aria-label="Coverage of this review" aria-live="polite">
-      <p className="eyebrow">Coverage of this review</p>
-      <p className={`coverage__headline ${complete ? "" : "coverage__headline--open"}`}>
-        {complete ? "Complete against pinned manifest" : <><Icon icon={CircleDashed} className="semantic-icon" /> <span>Completeness not established</span></>}
-      </p>
       {/*
         "that set", not "the set". The counters sit three inches below this
         sentence, and a reader who has just crossed 1/1 supplies the nearest
@@ -251,13 +261,23 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
       <DatasetSelector datasetKey={datasetKey} options={datasetOptions} onChange={onDatasetChange} />
     </header>
 
+    <OutcomeBar model={model} />
+
     {/*
       The glow and the scanline grid stop at the bottom of this band, so the eye
       reads the band as chrome and everything below it as data.
     */}
     <section className="hero" aria-label="Dataset under review">
+      {/*
+        The stakes sentence moved into `ImpactView`. It is the argument the
+        Impact route makes, and stating it here put it *above* the sticky
+        decision rail, so its height pushed the primary action toward the fold on
+        every route including the two that do not make that argument. In the main
+        column it sits beside the rail instead of over it, which is worth 50px at
+        1280x800 and loses nothing: the sentence is unchanged and still leads the
+        route it belongs to.
+      */}
       <div className="hero__stakes-group">
-        <p className="hero__stakes">DataHub says where data flows; git says what breaks together; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
         {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
           <div className="silent-zero-pair">
             <SilentZeroCallout model={model} />

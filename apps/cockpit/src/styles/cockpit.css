@@ -111,6 +111,69 @@
 }
 
 
+/* ── Outcome bar ──────────────────────────────────────────────
+   The standing of the review, held on every route. It is chrome, so it is
+   full-bleed against the shell padding and sticks to the top edge: a reader who
+   has scrolled into the lineage list can still see that coverage is open.
+
+   `minmax(0, 1fr)` rather than `1fr`. A bare `1fr` is `minmax(auto, 1fr)`, so a
+   column cannot shrink below its longest unbreakable word, and the row overflows
+   its container instead of the cell wrapping. That is the containment failure
+   `first-frame.spec.ts` was written for, and six columns at 1280px is exactly
+   where it would recur.
+
+   The 1px grid gap over a hairline background draws the dividers, so the cells
+   carry no borders of their own.
+
+   It sits inside the shell padding rather than bleeding to the viewport edge.
+   The canvas shows it full-bleed, but reproducing that needs a negative margin
+   mirroring a clamped padding, and the two did not cancel at 390px: content came
+   out 398px in a 390px viewport. An inset bar reads as chrome just as well and
+   cannot overflow at any width. */
+.outcome-bar {
+  position: sticky; top: 0; z-index: 5;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+  background: var(--border-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.outcome-cell {
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface-page);
+}
+/* Amber is unsettled, and unestablished coverage is unsettled. Same hairline
+   marker as `.coverage__headline--open`, because it is the same statement in a
+   smaller place: the word carries the state and the colour only reinforces it,
+   so the cell still reads correctly in greyscale. */
+.outcome-cell--open { border-left: 2px solid var(--wj-experimental); }
+.outcome-cell--open .outcome-cell__value { color: var(--wj-experimental); }
+.outcome-cell__label {
+  margin-bottom: var(--sp-2);
+  color: var(--text-faint);
+  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
+}
+.outcome-cell__value {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: var(--fs-xs); font-weight: 600; line-height: var(--lh-snug);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+/* Six columns is a 1440px figure. Below that the cells stop being readable long
+   before they stop fitting, so the bar rewraps rather than compressing: three
+   columns of a legible width beat six of an illegible one. */
+@media (max-width: 1100px) {
+  .outcome-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .outcome-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* ── Hero band ────────────────────────────────────────────────
    Identity left, the one coverage verdict right, on the same baseline grid. Both
    are above the fold at 1440x900 and 1280x800; `first-frame.spec.ts` asserts that

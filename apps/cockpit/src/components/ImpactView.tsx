@@ -235,6 +235,13 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
       animate="visible"
       variants={reduce ? undefined : containerVariants}
     >
+      {/*
+        The mechanism, then this dataset's instance of it. They are not the same
+        statement: the first says why joining two coordinate systems can return
+        nothing at all, the second says what that did here. The spec's lead card
+        makes both points in that order for the same reason.
+      */}
+      <p className="hero__stakes">DataHub says where data flows; git says what breaks together; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
       <p className="route-intro">What broke: the catalog cannot resolve this dataset to a file.</p>
       <ResolutionSeam model={model} gap={producerGap} />
 
