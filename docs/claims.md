@@ -108,6 +108,41 @@ is listed here so the figure has one accurate home rather than an alarming one.
 | Plan comparison: downstream observed | 1 | `evaluation/hac-152/live-qwen-judge-run-bundle.json` | `jq '.event.datahub.lineageObservation.downstreams.observedCount' evaluation/hac-152/live-qwen-judge-run-bundle.json` |
 | Checksums valid | yes | `evaluation/hac-152/SHA256SUMS` | `cd evaluation/hac-152 && shasum -a 256 -c SHA256SUMS` |
 
+## Repeated paired evaluation (HAC-150)
+
+Ten paired runs under two conditions, holding task, model, prompt, decoding
+settings, repository revision and DataHub snapshot constant. The context
+envelope is the only varying input. Continuity with HAC-152 rests on the exact
+HAC-152 task prompt together with the pinned experimental inputs: the same
+event digest, the same corpus revision, the same model and the same decoding
+settings. The matching prompt digest records that the prompt was unchanged; it
+is not on its own what makes the two runs comparable.
+
+Every denominator below is the pairs **requested**. A run that failed or
+returned unparsable output is reported as a failure and stays in the
+denominator, so no rate is computed against a subset that happened to conform.
+
+| Claim | Value | Source | Verify |
+| -- | -- | -- | -- |
+| Pairs requested | 10 | `evaluation/hac-150/manifest.json` | `jq '.experiment.pairsRequested' evaluation/hac-150/manifest.json` |
+| Pairs observed | 10/10 | `evaluation/hac-150/aggregate.json` | `jq '.pairsObserved' evaluation/hac-150/aggregate.json` |
+| Recorded failures | 0 | `evaluation/hac-150/aggregate.json` | `jq '.failures \| length' evaluation/hac-150/aggregate.json` |
+| **Exact source revision included, joined context** | **10/10** | `evaluation/hac-150/aggregate.json` | `jq '.measures.exactRevisionOnlyInJoined' evaluation/hac-150/aggregate.json` |
+| **Exact source revision included, DataHub-only** | **0/10** | `evaluation/hac-150/pairs.json` — no DataHub-only observation references any revision token | `jq '[.pairs[].datahubOnly.observation.revisionsReferenced[]?] \| length' evaluation/hac-150/pairs.json` |
+| **Distinct normalized step sequences, DataHub-only** | **5** across 10 runs | `evaluation/hac-150/aggregate.json` | `jq '.stability.datahubOnly.distinctSequences' evaluation/hac-150/aggregate.json` |
+| **Distinct normalized step sequences, joined** | **1** across 10 runs | `evaluation/hac-150/aggregate.json` | `jq '.stability.joined.distinctSequences' evaluation/hac-150/aggregate.json` |
+| Refusal present, DataHub-only | 10/10 | `evaluation/hac-150/aggregate.json` | `jq '.stability.datahubOnly.refusalPresent' evaluation/hac-150/aggregate.json` |
+| Refusal removed by join | 10/10 | `evaluation/hac-150/aggregate.json` | `jq '.measures.refusalRemovedByJoin' evaluation/hac-150/aggregate.json` |
+| Position effect (order counterbalanced) | none: 5/5 in both arms | `evaluation/hac-150/aggregate.json` | `jq '.orderEffect' evaluation/hac-150/aggregate.json` |
+| Model | `qwen-plus` | `evaluation/hac-150/manifest.json` | `jq '.experiment.model' evaluation/hac-150/manifest.json` |
+| Decoding settings | `{"temperature":0}` | `evaluation/hac-150/manifest.json` | `jq '.experiment.settings' evaluation/hac-150/manifest.json` |
+| Prompt digest, identical to HAC-152 | `sha256:d19f4d09…` | `evaluation/hac-150/manifest.json` | `jq -r '.experiment.promptDigest' evaluation/hac-150/manifest.json` |
+| Raw model outputs archived | 20 files, one per condition per pair | `evaluation/hac-150/raw/` | `ls evaluation/hac-150/raw \| wc -l` |
+
+"Distinct normalized step sequences" counts sequences of step **ids**, not raw
+prose. Two runs whose wording differs but whose step ids match count as one
+sequence; this is not a claim that ten runs produced byte-identical plans.
+
 ## MCP field coverage
 
 | Claim | Value | Source | Verify |

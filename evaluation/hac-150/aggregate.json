@@ -1,0 +1,86 @@
+{
+  "evaluationVersion": "1.0",
+  "run": {
+    "taskId": "add-quality-check",
+    "promptDigest": "sha256:d19f4d098fb3adf77a041805d853d3cea8218644ef95c2c647786ace4373e413",
+    "model": "qwen-plus",
+    "settingsDigest": "sha256:e4ff491169b8a9ea78518a7972422b5a24d5e3790e0d9a9e5cbfb384d9b621e0"
+  },
+  "pairsRequested": 10,
+  "pairsObserved": 10,
+  "pairsPartial": 0,
+  "pairsFailed": 0,
+  "failures": [],
+  "measures": {
+    "exactSourceOnlyInJoined": {
+      "count": 10,
+      "denominator": 10
+    },
+    "exactRevisionOnlyInJoined": {
+      "count": 10,
+      "denominator": 10
+    },
+    "refusalRemovedByJoin": {
+      "count": 10,
+      "denominator": 10
+    },
+    "sequencingChanged": {
+      "count": 10,
+      "denominator": 10
+    },
+    "writebackChoiceChanged": {
+      "count": 10,
+      "denominator": 10
+    },
+    "anyFileAddedByJoin": {
+      "count": 10,
+      "denominator": 10
+    },
+    "anyFileRemovedByJoin": {
+      "count": 0,
+      "denominator": 10
+    }
+  },
+  "stability": {
+    "datahubOnly": {
+      "distinctSequences": 5,
+      "distinctStepCounts": 1,
+      "observed": {
+        "count": 10,
+        "denominator": 10
+      },
+      "refusalPresent": {
+        "count": 10,
+        "denominator": 10
+      }
+    },
+    "joined": {
+      "distinctSequences": 1,
+      "distinctStepCounts": 1,
+      "observed": {
+        "count": 10,
+        "denominator": 10
+      },
+      "refusalPresent": {
+        "count": 0,
+        "denominator": 10
+      }
+    }
+  },
+  "orderEffect": {
+    "datahubOnlyFirst": {
+      "assigned": 5,
+      "exactRevisionOnlyInJoined": {
+        "count": 5,
+        "denominator": 5
+      }
+    },
+    "joinedFirst": {
+      "assigned": 5,
+      "exactRevisionOnlyInJoined": {
+        "count": 5,
+        "denominator": 5
+      }
+    }
+  }
+}

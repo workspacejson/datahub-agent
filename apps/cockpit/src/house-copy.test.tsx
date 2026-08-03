@@ -91,6 +91,87 @@ it("keeps the sentence that states a complete empty list", () => {
   expect(screen.getByText(/The empty list is the complete list: every requested dataset resolved\./)).toBeTruthy();
 });
 
+describe("the cited evaluation result is rendered verbatim and unconditionally", () => {
+  /*
+    These two sentences are citations of HAC-150, not descriptions of the model
+    on screen, so they are pinned character for character. A reworded count is a
+    different claim about a fixed experiment, and the experiment cannot be
+    reworded to match.
+
+    They are asserted on the rendered route rather than on the source string,
+    because a sentence moved behind a condition would still exist in the file
+    while being invisible to a judge. That is precisely the failure this pin
+    exists to catch: the copy it replaced was gated on `parityControls`, which
+    established fairness rather than cause.
+  */
+  const REVISION_CLAIM =
+    "Across 10 controlled paired runs on the pinned corpus, the plan included the exact source revision in 10/10 joined-context runs and 0/10 DataHub-only runs.";
+  const STABILITY_CLAIM =
+    "DataHub-only produced five distinct normalized step sequences across 10 runs. Joined context produced one.";
+
+  const changePlanText = () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="change-plan" onRouteChange={() => {}} />);
+    const block = document.querySelector('[aria-label="Repeated paired evaluation"]');
+    return (block?.textContent ?? "").replace(/\s+/g, " ").trim();
+  };
+
+  it("states the revision-inclusion result with both denominators", () => {
+    expect(changePlanText()).toContain(REVISION_CLAIM);
+  });
+
+  it("states the sequence-stability result as normalized sequences, not identical plans", () => {
+    const text = changePlanText();
+    expect(text).toContain(STABILITY_CLAIM);
+    // "identical plans" would overclaim what the normalization compared.
+    expect(text).not.toContain("identical plan");
+  });
+
+  it("renders even when this model carries no plan comparison at all", () => {
+    /*
+      The hardest case, and the one the contract-event fixture actually
+      exercises: `planComparison` is `unavailable`, so the route takes its early
+      return and never reaches the panels, the parity strip, or the delta list.
+
+      The citation must still be there. It is the result of an experiment that
+      already ran, not a statement about this event, so an event without a
+      comparison is no reason to withhold it. Gating it on the model would be
+      the same mistake as gating it on `parityControls`, one level down.
+    */
+    cleanup();
+    render(<CockpitShell model={model()} route="change-plan" onRouteChange={() => {}} />);
+    expect(document.body.textContent).toContain("No plan comparison available");
+    const block = document.querySelector('[aria-label="Repeated paired evaluation"]');
+    expect((block?.textContent ?? "").replace(/\s+/g, " ")).toContain(REVISION_CLAIM);
+  });
+
+  it("stays out of the parity control's scope", () => {
+    // Parity establishes fairness for one run. The citation is ten runs. The
+    // two must not share a truth condition, so the citation lives outside the
+    // element the parity gate governs.
+    cleanup();
+    render(<CockpitShell model={model()} route="change-plan" onRouteChange={() => {}} />);
+    const block = document.querySelector('[aria-label="Repeated paired evaluation"]');
+    expect(block).not.toBeNull();
+    expect(block?.closest(".parity-claim")).toBeNull();
+    expect(block?.closest(".parity-detail")).toBeNull();
+  });
+
+  it("links to the receipt the numbers came from", () => {
+    cleanup();
+    render(<CockpitShell model={model()} route="change-plan" onRouteChange={() => {}} />);
+    const link = document.querySelector('a.evaluation-claim__source');
+    expect(link?.getAttribute("href")).toBe("https://github.com/workspacejson/datahub-agent/tree/main/evaluation/hac-150");
+  });
+
+  it("no longer claims what the join added", () => {
+    // The replaced sentence. Its absence is the point of the change.
+    cleanup();
+    render(<CockpitShell model={model()} route="change-plan" onRouteChange={() => {}} />);
+    expect(document.body.textContent).not.toContain("What the join added");
+  });
+});
+
 describe("each fact is stated once per route", () => {
   // The header stated coverage three ways and was collapsed to one; the same
   // thing then reappeared on Receipts, where the limitations card repeated the

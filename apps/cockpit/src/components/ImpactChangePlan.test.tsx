@@ -86,11 +86,20 @@ const attested = {
 it("asserts a controlled comparison only when every named dimension is attested", () => {
   render(<ChangePlanView model={withProvenance({ ...attested }) as never} />);
   expect(screen.getByText(/Controlled comparison/)).toBeTruthy();
-  // The causal sentence is licensed by the controls, so it travels with them.
-  expect(screen.getByText(/What the join added/)).toBeTruthy();
 });
 
-it("withholds the causal claim when a control dimension is not attested", () => {
+/*
+  This pair used to assert that the causal sentence travelled with the parity
+  controls. That coupling was the defect: parity establishes that one comparison
+  was fair, which is not evidence about what the join caused. A fair comparison
+  of a single run is still a single run.
+
+  The measured claim now cites HAC-150's ten paired runs and renders
+  unconditionally, so what these tests protect has changed. Parity still gates
+  the fairness assertion, and the citation must not move with it in either
+  direction.
+*/
+it("keeps the fairness control gated when a dimension is not attested", () => {
   const model = withProvenance({
     ...attested,
     subjectRevision: { state: "unavailable", reason: "not recorded for this run" },
@@ -99,6 +108,26 @@ it("withholds the causal claim when a control dimension is not attested", () => 
 
   expect(screen.getByText(/Comparison controls not established/)).toBeTruthy();
   expect(screen.getByText(/repository revision/)).toBeTruthy();
-  // No causal language anywhere on the route while the controls are open.
+  // The sentence this replaced. Its absence is the change.
   expect(screen.queryByText(/What the join added/)).toBeNull();
+});
+
+it("renders the cited evaluation whether the controls are open or closed", () => {
+  const cited = /the plan included the exact source revision in 10\/10 joined-context runs and 0\/10 DataHub-only runs/;
+
+  const { unmount } = render(<ChangePlanView model={withProvenance({ ...attested }) as never} />);
+  expect(screen.getByText(cited)).toBeTruthy();
+  unmount();
+
+  render(
+    <ChangePlanView
+      model={
+        withProvenance({
+          ...attested,
+          subjectRevision: { state: "unavailable", reason: "not recorded for this run" },
+        }) as never
+      }
+    />,
+  );
+  expect(screen.getByText(cited)).toBeTruthy();
 });
