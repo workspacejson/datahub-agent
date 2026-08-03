@@ -53,8 +53,8 @@ Frozen `workspace.json` artifacts and dbt manifests used by the test suite.
 | [`test/fixtures/proof-corpus/`](../test/fixtures/proof-corpus/) | `jaffle_shop_duckdb` workspace.json + provenance sidecar + dbt manifest |
 | [`test/fixtures/proof-corpus-transfermarkt/`](../test/fixtures/proof-corpus-transfermarkt/) | `transfermarkt-datasets` workspace.json + provenance sidecar (nested at `dbt/`) |
 
-**Verify:** `npm run parity:datahub-adapter` — checks 35/35 against the frozen
-migration baseline.
+**Verify:** `npm run parity:datahub-adapter` — checks 34/35 against the frozen
+migration baseline (one pre-existing failure; see `docs/provenance.md`).
 
 ## Contract and source
 
@@ -87,7 +87,7 @@ migration baseline.
 npm test                        # contract, writeback, join, and cockpit suites
 npm run typecheck               # TypeScript strict mode
 npm run check:clean-room        # every dependency resolves to a published version
-npm run parity:datahub-adapter  # 35/35 against the frozen migration baseline
+npm run parity:datahub-adapter  # 34/35 against the frozen migration baseline
 ```
 
 For the full judging guide with 60-second, 5-minute, and 15-minute paths, see

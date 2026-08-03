@@ -35,7 +35,8 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
 
   return (
     <section aria-label="Plan comparison">
-      <div className="parity-strip" aria-label="Held constant across both modes">
+      <p className="route-intro">What the join added: the exact repository path and pinned revision.</p>
+      <div className="parity-strip" aria-label="Parity strip — values held constant so the comparison is fair">
         <div>
           <span className="parity-label">Task</span>
           <span className="parity-value">{comparison.taskId}</span>

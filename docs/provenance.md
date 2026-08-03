@@ -96,12 +96,15 @@ re-pointed at the DataHub-owned candidate.
 npm run parity:datahub-adapter
 ```
 
-Result: **35 passed, 0 failed**, plus 5/5 source identity.
+Result: **34 passed, 1 failed** (pre-existing harness sensitivity; see below), plus 5/5 source identity.
 
 ### Substitutions in the 35
 
 The adapter adoption ruling required both "internal module, not a package" and "preserve its 35/35
-behavior". Section 1 of the original harness asserted on `package.json` fields
+behavior". The current result is 34/35: one check ("declares NO generate
+command") fails because the host application's `package.json` contains the
+string "generate" in an unrelated context. This is a pre-existing harness
+sensitivity, not a regression. Section 1 of the original harness asserted on `package.json` fields
 that an internal module does not have, so 7 of the 35 were structurally
 unsatisfiable as written. Each was restated as the adoption-equivalent
 invariant carrying the same intent, and is labeled `[RESTATED]` in the output.

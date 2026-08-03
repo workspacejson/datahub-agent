@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { Check, ExternalLink, Eye } from "lucide-react";
 import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
 import type { CockpitViewModel, EvidenceValue, StatedGap } from "../model/cockpit-view-model";
 import { Icon } from "./Icon";
 import { ProofIndicator } from "./ProofIndicator";
 import { SourceTag } from "./SourceTag";
+import { TermDefinition } from "./TermDefinition";
 
 declare const __COCKPIT_RECEIPT_HTML__: string | null;
 
@@ -151,10 +152,11 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
   };
 
   return <div className="receipts-view">
+    <p className="route-intro">How to trust this: every claim has a source, every absence has a reason.</p>
     <UnestablishedBand statedGaps={statedGaps} />
 
     <section aria-labelledby="evidence-title">
-      <p className="eyebrow">Evidence standing</p>
+      <p className="eyebrow"><TermDefinition term="Evidence standing" definition="A tier is a label derived from how many checks ran and what they observed. It is not a verdict on whether the change is safe." /></p>
       <h2 id="evidence-title">The tier is a count, not a warrant</h2>
       {/*
         The tier lives here rather than in the first frame. Rendered as the hero
@@ -254,8 +256,14 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
       <dl className="provenance-list">
         <div><dt>Intent</dt><dd><Evidence value={writeback.intent} /></dd></div>
         <div><dt>Before-state read</dt><dd><Evidence value={writeback.beforeState} /></dd></div>
-        <div><dt>Mutation response</dt><dd>{writeback.mutationResponse}</dd></div>
-        <div><dt>After-state read</dt><dd>{writeback.afterStateRead} · {writeback.afterStateFreshness}</dd></div>
+        <div className="writeback-state writeback-state--accepted">
+          <dt><Icon icon={Check} className="semantic-icon" /> <span>Mutation response</span></dt>
+          <dd>{writeback.mutationResponse}</dd>
+        </div>
+        <div className="writeback-state writeback-state--observed">
+          <dt><Icon icon={Eye} className="semantic-icon" /> <span>After-state read</span></dt>
+          <dd>{writeback.afterStateRead} · {writeback.afterStateFreshness}</dd>
+        </div>
         <div><dt>Both states read</dt><dd>{writeback.bothStatesRead ? "yes" : "no"}</dd></div>
         <div><dt>Intended-state observation</dt><dd>{writeback.intendedStateObservation}</dd></div>
         <div><dt>Terminal disposition</dt><dd>{writeback.terminalDisposition}</dd></div>
