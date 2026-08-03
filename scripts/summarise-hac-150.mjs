@@ -114,6 +114,24 @@ lines.push(`| Joined | ${rate(s.joined.observed)} | ${s.joined.distinctSequences
 lines.push("");
 lines.push("A distinct-sequence count above 1 means the condition did not produce an identical plan every time. That is the nondeterminism this evaluation exists to characterise.");
 lines.push("");
+lines.push("## Within-pair invocation order");
+lines.push("");
+// A manifest without the scheme is one produced before order was controlled.
+// Printing `undefined` there would render a missing control as a present one,
+// so the absence is stated in the words a reader needs.
+lines.push(
+  manifest.experiment.invocationOrderScheme
+    ? `Order was counterbalanced by pair index: \`${manifest.experiment.invocationOrderScheme}\`. A fixed order could not separate a condition effect from a position effect.`
+    : "**This manifest records no invocation-order scheme**, so the within-pair order was not controlled and a position effect cannot be separated from a condition effect. Treat the split below as descriptive only.",
+);
+lines.push("");
+lines.push("| Lead condition | Pairs assigned | Exact revision only in joined |");
+lines.push("| --- | --- | --- |");
+lines.push(`| DataHub-only first | ${aggregate.orderEffect.datahubOnlyFirst.assigned} | ${rate(aggregate.orderEffect.datahubOnlyFirst.exactRevisionOnlyInJoined)} |`);
+lines.push(`| Joined first | ${aggregate.orderEffect.joinedFirst.assigned} | ${rate(aggregate.orderEffect.joinedFirst.exactRevisionOnlyInJoined)} |`);
+lines.push("");
+lines.push("Denominators are the pairs **assigned** to each arm, fixed before any invocation. A sharp difference between arms means position mattered and the headline sentence must say so.");
+lines.push("");
 lines.push("## Failures");
 lines.push("");
 if (aggregate.failures.length === 0) {

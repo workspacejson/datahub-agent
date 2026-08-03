@@ -103,11 +103,37 @@ export interface PairRecord {
   /** Shared across both conditions of one pair. Stable and reproducible. */
   pairId: string;
   index: number;
+  /**
+   * The order the two conditions were actually invoked in, for this pair.
+   *
+   * Recorded rather than assumed. Each invocation is a stateless completion, so
+   * a first-mover effect should not exist — but "should not" is a prediction,
+   * and an experiment that always invokes DataHub-only first cannot distinguish
+   * a condition effect from a position effect if one turns out to be present.
+   * Provider-side caching, adaptive routing and throttling drift within a pair
+   * are all position-shaped.
+   */
+  invocationOrder: [PlanMode, PlanMode];
   datahubOnly: ConditionOutcome;
   joined: ConditionOutcome;
   /** `observed` only when both conditions were observed. */
   outcome: "observed" | "partial" | "failed";
   comparison: WithinPairComparison | null;
+}
+
+/**
+ * Deterministic counterbalancing: even pairs lead with DataHub-only, odd pairs
+ * lead with joined.
+ *
+ * Deterministic rather than randomised, because the experiment must be exactly
+ * reproducible from the manifest — a random order would need a seed recorded
+ * and replayed, which is more machinery for the same guarantee. Over ten pairs
+ * this puts each condition in first position five times, so a position effect
+ * would show as a split between even and odd pairs rather than hiding inside
+ * the condition difference.
+ */
+export function invocationOrderFor(index: number): [PlanMode, PlanMode] {
+  return index % 2 === 0 ? ["datahub-only", "joined"] : ["joined", "datahub-only"];
 }
 
 const distinct = (values: string[]): string[] => [...new Set(values)];
@@ -201,12 +227,14 @@ export function buildPairRecord(
   joined: ConditionOutcome,
   exactSource: string,
   exactRevision: string,
+  invocationOrder: [PlanMode, PlanMode] = invocationOrderFor(index),
 ): PairRecord {
   const bothObserved = datahubOnly.state === "observed" && joined.state === "observed";
   const neitherObserved = datahubOnly.state === "failed" && joined.state === "failed";
   return {
     pairId,
     index,
+    invocationOrder,
     datahubOnly,
     joined,
     outcome: bothObserved ? "observed" : neitherObserved ? "failed" : "partial",
@@ -253,6 +281,19 @@ export interface PairedEvaluationAggregate {
     anyFileRemovedByJoin: Measured;
   };
   stability: { datahubOnly: ConditionStability; joined: ConditionStability };
+  /**
+   * The headline measure split by which condition was invoked first.
+   *
+   * Counterbalancing removes the confound; this is what reports whether one was
+   * present. Denominators are the pairs *assigned* to each arm, which is fixed
+   * by `invocationOrderFor` before any run happens and so cannot be rewritten
+   * by the outcome. A split that differs sharply between arms means position
+   * mattered, and the headline sentence must not be written as if it did not.
+   */
+  orderEffect: {
+    datahubOnlyFirst: { assigned: number; exactRevisionOnlyInJoined: Measured };
+    joinedFirst: { assigned: number; exactRevisionOnlyInJoined: Measured };
+  };
 }
 
 const conditionStability = (records: PairRecord[], mode: PlanMode, denominator: number): ConditionStability => {
@@ -316,6 +357,22 @@ export function aggregatePairs(records: PairRecord[], run: RunIdentity, pairsReq
       datahubOnly: conditionStability(records, "datahub-only", denominator),
       joined: conditionStability(records, "joined", denominator),
     },
+    orderEffect: (() => {
+      // Assignment comes from the index, not from what the run returned, so
+      // both arms are sized before any invocation happens.
+      const arm = (leader: PlanMode) => {
+        const assigned = Array.from({ length: pairsRequested }, (_, i) => invocationOrderFor(i)[0]).filter((m) => m === leader).length;
+        const inArm = records.filter((r) => r.invocationOrder[0] === leader);
+        return {
+          assigned,
+          exactRevisionOnlyInJoined: {
+            count: inArm.filter((r) => r.comparison?.exactRevisionOnlyInJoined).length,
+            denominator: assigned,
+          },
+        };
+      };
+      return { datahubOnlyFirst: arm("datahub-only"), joinedFirst: arm("joined") };
+    })(),
   };
 }
 

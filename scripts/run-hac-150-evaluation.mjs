@@ -69,7 +69,7 @@ const load = async (specifier) =>
     return import(resolve(specifier));
   });
 
-const { parsePlanResponse, buildPairRecord, aggregatePairs, conditionContexts, PAIRED_EVALUATION_VERSION } =
+const { parsePlanResponse, buildPairRecord, aggregatePairs, conditionContexts, invocationOrderFor, PAIRED_EVALUATION_VERSION } =
   await load("src/integration/paired-evaluation.ts");
 const { digestEvent } = await load("src/integration/plan-comparison.ts");
 
@@ -156,11 +156,21 @@ const rawArtifacts = [];
 
 for (let index = 0; index < runs; index += 1) {
   const pairId = `${taskId}-pair-${String(index).padStart(2, "0")}`;
+  const order = invocationOrderFor(index);
   // Sequential, not parallel. Ten concurrent pairs would share rate-limit
   // pressure, and a throttled run would be recorded as model instability when
   // it is harness instability.
-  const datahubResult = await invokeOnce("datahub-only", datahubOnlyContext);
-  const joinedResult = await invokeOnce("joined", joinedContext);
+  //
+  // Counterbalanced within the pair: even pairs lead with DataHub-only, odd
+  // pairs lead with joined. A fixed order could not separate a condition effect
+  // from a position effect, and the order each pair used is recorded on the
+  // pair so the split is checkable rather than trusted.
+  const results = {};
+  for (const mode of order) {
+    results[mode] = await invokeOnce(mode, mode === "joined" ? joinedContext : datahubOnlyContext);
+  }
+  const datahubResult = results["datahub-only"];
+  const joinedResult = results.joined;
 
   for (const [condition, result] of [["datahub-only", datahubResult], ["joined", joinedResult]]) {
     const name = `${pairId}.${condition}.txt`;
@@ -176,6 +186,7 @@ for (let index = 0; index < runs; index += 1) {
     outcomeFor("joined", joinedResult),
     exactSource,
     exactRevision,
+    order,
   );
   records.push(record);
   console.error(`  pair ${index + 1}/${runs} ${pairId}: ${record.outcome}`);
@@ -208,6 +219,11 @@ const manifest = {
     baseUrl,
     timeoutMs,
     apiKeyEnv,
+    // Within-pair invocation order is counterbalanced by pair index rather than
+    // fixed, so a position effect cannot hide inside the condition difference.
+    // The scheme is deterministic, so the manifest alone reproduces it.
+    invocationOrderScheme: "counterbalanced-by-index: even pairs lead datahub-only, odd pairs lead joined",
+    invocationOrderByPair: Array.from({ length: runs }, (_, i) => ({ index: i, order: invocationOrderFor(i) })),
   },
   subject: {
     eventFile,

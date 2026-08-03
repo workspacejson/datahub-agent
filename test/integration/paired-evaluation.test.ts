@@ -4,6 +4,7 @@ import {
   aggregatePairs,
   buildPairRecord,
   compareWithinPair,
+  invocationOrderFor,
   observePlan,
   parsePlanResponse,
   type ConditionOutcome,
@@ -120,6 +121,57 @@ describe("within-pair comparison", () => {
     const reworded = [{ id: "refuse-unknown-source", action: "decline: the source location cannot be established" }];
     expect(compareWithinPair(observePlan("datahub-only", refusalSteps), observePlan("joined", reworded), SOURCE, REVISION).sequencingChanged)
       .toBe(false);
+  });
+});
+
+describe("within-pair invocation order is counterbalanced and recorded", () => {
+  it("alternates which condition leads, by pair index", () => {
+    expect(invocationOrderFor(0)).toEqual(["datahub-only", "joined"]);
+    expect(invocationOrderFor(1)).toEqual(["joined", "datahub-only"]);
+    expect(invocationOrderFor(2)).toEqual(["datahub-only", "joined"]);
+  });
+
+  it("splits ten pairs evenly between the two lead positions", () => {
+    const leads = Array.from({ length: 10 }, (_, i) => invocationOrderFor(i)[0]);
+    expect(leads.filter((m) => m === "datahub-only")).toHaveLength(5);
+    expect(leads.filter((m) => m === "joined")).toHaveLength(5);
+  });
+
+  it("records the order it used on every pair record", () => {
+    expect(conformingPair(0).invocationOrder).toEqual(["datahub-only", "joined"]);
+    expect(conformingPair(1).invocationOrder).toEqual(["joined", "datahub-only"]);
+  });
+
+  it("reports the headline measure split by lead position, against assigned arms", () => {
+    const records = Array.from({ length: 10 }, (_, i) => conformingPair(i));
+    const aggregate = aggregatePairs(records, RUN, 10);
+    expect(aggregate.orderEffect.datahubOnlyFirst.assigned).toBe(5);
+    expect(aggregate.orderEffect.joinedFirst.assigned).toBe(5);
+    expect(aggregate.orderEffect.datahubOnlyFirst.exactRevisionOnlyInJoined).toEqual({ count: 5, denominator: 5 });
+    expect(aggregate.orderEffect.joinedFirst.exactRevisionOnlyInJoined).toEqual({ count: 5, denominator: 5 });
+  });
+
+  /*
+    The detector for the order split. If a position effect were present, the two
+    arms must not read identically -- a split that always matches would make the
+    counterbalancing decorative.
+  */
+  it("shows an asymmetric split when the lead position actually matters", () => {
+    const noRevision = [{ id: "add-check", action: `Add a dbt quality check using ${SOURCE}` }];
+    const records = Array.from({ length: 10 }, (_, i) =>
+      buildPairRecord(
+        `pair-${i}`,
+        i,
+        observed("datahub-only", refusalSteps),
+        // Joined omits the revision whenever it was invoked first.
+        observed("joined", invocationOrderFor(i)[0] === "joined" ? noRevision : joinedSteps),
+        SOURCE,
+        REVISION,
+      ),
+    );
+    const aggregate = aggregatePairs(records, RUN, 10);
+    expect(aggregate.orderEffect.datahubOnlyFirst.exactRevisionOnlyInJoined.count).toBe(5);
+    expect(aggregate.orderEffect.joinedFirst.exactRevisionOnlyInJoined.count).toBe(0);
   });
 });
 
