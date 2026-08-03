@@ -176,12 +176,35 @@ describe("silent zero callout rendered on all routes via CockpitShell hero", () 
     }
   });
 
+  /*
+    This used to assert the callout itself on all three routes, because the hero
+    rendered everywhere and the callout was the only thing carrying the argument
+    off Impact.
+
+    The full hero is now Impact's, so that assertion would only be satisfiable by
+    putting the argument back where it pushed the primary action toward the fold.
+    What the original guard was protecting is that a reader who navigates away
+    from Impact does not lose the standing of the review -- so that is what is
+    asserted here, against the surface that now carries it. The callout keeps its
+    own guards above: it still leads Impact, still precedes the seam.
+  */
   for (const route of ROUTES) {
-    it(`renders the silent zero callout on the ${route} route`, () => {
+    it(`states the source resolution on the ${route} route`, () => {
       cleanup();
-      render(<CockpitShell model={model()} route={route} onRouteChange={() => {}} />);
-      const callout = silentZeroResult();
-      expect(callout).not.toBeNull();
+      const m = model();
+      render(<CockpitShell model={m} route={route} onRouteChange={() => {}} />);
+      const bar = screen.getByLabelText("Standing of this review");
+      expect(bar.textContent?.toLowerCase()).toContain(m.resolutionDisposition.toLowerCase());
+    });
+
+    it(`names the dataset under review on the ${route} route`, () => {
+      cleanup();
+      const m = model();
+      render(<CockpitShell model={m} route={route} onRouteChange={() => {}} />);
+      // The bar carries the standing but never the subject. Without this the
+      // identity block could be gated with the rest of the hero and two routes
+      // would stop saying what they are about.
+      expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(m.title);
     });
   }
 });

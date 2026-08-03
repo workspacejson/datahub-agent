@@ -277,14 +277,29 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
         1280x800 and loses nothing: the sentence is unchanged and still leads the
         route it belongs to.
       */}
-      <div className="hero__stakes-group">
-        {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
-          <div className="silent-zero-pair">
-            <SilentZeroCallout model={model} />
-            <ResolvedPathSummary model={model} />
-          </div>
-        ) : null}
-      </div>
+      {/*
+        The *full* hero is Impact's. The silent-zero pair argues why a naive join
+        returns nothing and the coverage figures account for what this run
+        resolved; both are the Impact route's case, and the canvas renders them
+        there only.
+
+        The identity block stays on every route. Two reasons it is not gated with
+        the rest: `route-slot` labels itself `aria-labelledby="route-title"`, so
+        removing the h1 on two of three routes would leave a dangling reference
+        and a document with no heading; and the outcome bar carries the standing
+        of the review but never names its subject, so gating this too would leave
+        Change plan and Receipts unable to say which dataset they are about.
+      */}
+      {route === "impact" && (
+        <div className="hero__stakes-group">
+          {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
+            <div className="silent-zero-pair">
+              <SilentZeroCallout model={model} />
+              <ResolvedPathSummary model={model} />
+            </div>
+          ) : null}
+        </div>
+      )}
       <div className="hero__identity">
         <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>
         <h1 id="route-title">{model.title}</h1>
@@ -303,7 +318,7 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
           <SourceTag source={model.datasetIdentity.source} />
         </p>
       </div>
-      <Coverage model={model} />
+      {route === "impact" && <Coverage model={model} />}
     </section>
 
     <nav className="spine" aria-label="Review sequence">
