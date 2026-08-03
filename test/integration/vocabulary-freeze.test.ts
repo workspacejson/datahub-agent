@@ -535,6 +535,14 @@ describe("V-2 · evidence claiming a check that did not execute", () => {
     );
   });
 
+  it("refuses tier VERIFIED when only some records carry an executed check", () => {
+    const event = validEvent();
+    event.evidence = { records: [record(false), record(true)], tier: "VERIFIED" };
+    expect(validateEvent(event)).toContainEqual(
+      "evidence.tier is not the mechanical function of evidence.records",
+    );
+  });
+
   it("refuses a checkExecuted workspacejson record when the artifact was refused", () => {
     // A check that ran against an artifact describing a different repository
     // established nothing about this subject. This is HAC-225's defect, held
@@ -626,10 +634,13 @@ describe("V-4 · a naked tier token reaching a reader", () => {
 
   it("states how many records carry an executed check, so the tier can be checked against them", () => {
     expect(describeTier(records(3, 1))).toBe(
-      "VERIFIED: 1 of 3 record(s) carry a check this harness executed",
+      "OBSERVED: This harness executed checks for 1 of 3 records. Because not all records were checked, the tier remains OBSERVED.",
     );
     expect(describeTier(records(2, 0))).toBe(
-      "OBSERVED: 2 record(s), none of them a check this harness executed",
+      "OBSERVED: None of the 2 record(s) carries a check executed by this harness.",
+    );
+    expect(describeTier(records(3, 3))).toBe(
+      "VERIFIED: 3 of 3 record(s) carry a check this harness executed",
     );
     expect(describeTier([])).toBe("ASSERTED: no supporting record was captured");
   });

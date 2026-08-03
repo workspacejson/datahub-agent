@@ -279,9 +279,11 @@ export interface CodePartner {
 /**
  * Evidence tier, a mechanical function of the records present — never a tuned
  * score. ASSERTED: claimed with no supporting record. OBSERVED: at least one
- * record. VERIFIED: at least one record whose check this harness executed.
+ * record, not all with checkExecuted. VERIFIED: every supporting record has
+ * checkExecuted: true.
  *
- * The token is a machine value, not a caption. `VERIFIED` says a check ran; it
+ * The token is a machine value, not a caption. `VERIFIED` says every supporting
+ * record has a check that ran; it
  * does not say the claim is true, and the two are close enough in English that
  * the bare word will be read as the second. It must therefore never reach a
  * surface on its own — `describeTier` is the only sanctioned rendering, and it
@@ -667,14 +669,15 @@ void _drift;
  */
 export function deriveTier(records: readonly EvidenceRecord[]): EvidenceTier {
   if (records.length === 0) return "ASSERTED";
-  return records.some((r) => r.checkExecuted) ? "VERIFIED" : "OBSERVED";
+  return records.every((r) => r.checkExecuted) ? "VERIFIED" : "OBSERVED";
 }
 
 /**
  * The tier as a phrase a reader cannot over-read, for any surface a human sees.
  *
  * `VERIFIED` alone is the contract's most dangerous string. It is a mechanical
- * fact about *records* — at least one check was executed by this harness — and
+ * fact about *records* — every supporting record has a check that was executed
+ * by this harness — and
  * in English it reads as a warrant about *claims*. A judge who sees "VERIFIED
  * evidence" on a screen has been told something this project cannot support, by
  * a token that is individually accurate.
@@ -697,7 +700,9 @@ export function describeTier(records: readonly EvidenceRecord[]): string {
   const executed = records.filter((r) => r.checkExecuted).length;
   return tier === "VERIFIED"
     ? `VERIFIED: ${executed} of ${records.length} record(s) carry a check this harness executed`
-    : `OBSERVED: ${records.length} record(s), none of them a check this harness executed`;
+    : executed === 0
+      ? `OBSERVED: None of the ${records.length} record(s) carries a check executed by this harness.`
+      : `OBSERVED: This harness executed checks for ${executed} of ${records.length} records. Because not all records were checked, the tier remains OBSERVED.`;
 }
 
 /**

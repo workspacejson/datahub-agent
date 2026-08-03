@@ -73,9 +73,9 @@ derivation accounts for that.
 
 | Tier | Meaning |
 | -- | -- |
-| `ASSERTED` | At least one record, none with `checkExecuted: true`. |
-| `OBSERVED` | At least one record with `checkExecuted: true`. |
-| `VERIFIED` | All records have `checkExecuted: true`. |
+| `ASSERTED` | No supporting record was captured. |
+| `OBSERVED` | At least one record; not all have `checkExecuted: true`. |
+| `VERIFIED` | Every supporting record has `checkExecuted: true`. |
 
 **The tier is a function of the records, not an assertion.** `deriveTier` is
 pure: given the records, the tier is determined. `VERIFIED` is never rendered
