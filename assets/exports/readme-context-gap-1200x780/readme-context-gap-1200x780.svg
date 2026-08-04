@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780" role="img" aria-labelledby="cg-title cg-desc" font-family="'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title id="cg-title">Why joined context changes the result</title>
+  <desc id="cg-desc">A two-column comparison of the same repository change under two context envelopes. With DataHub-only context the repository-relative source and pinned revision are unavailable, and the outcome is a refusal because the source location cannot be guessed. With joined context, DataHub plus workspace.json, the source resolves to dbt/models/curated/game_events.sql at pinned revision 59fa295c and the outcome is an added dbt quality check; coverage remains not established. A footer records ten controlled paired runs on the pinned corpus in which the plan included the exact source revision in zero of ten DataHub-only runs and ten of ten joined-context runs.</desc>
+
+  <!--
+    Colours are the product's own tokens, not approximations:
+    canvas #07100e, card #0b1714, code surface #0c1915, hairline #173028,
+    strong border #36544b, heading #f0f7f4, body #edf7f3, muted #8da69c.
+
+    Two encodings are load-bearing and deliberate.
+
+    Emerald #00c896 appears exactly once, on the workspace.json attribution chip.
+    It is reserved for that attribution and for primary actions; using it to mean
+    "resolved" would make resolution read as "we generated this", which is the
+    one thing this diagram must not imply.
+
+    The left column is a correct refusal under insufficient identity, not a
+    broken system. It therefore uses the neutral ramp and dashed strokes, which
+    carry resolution meaning throughout this design system. The danger colour
+    #f2545b is absent on purpose: nothing here went wrong.
+
+    Amber #f59e0b marks the unsettled coverage qualification, which is what amber
+    means here. It is not a warning about the outcome.
+
+    Every state is named in words as well as encoded, so the diagram survives
+    greyscale and colour-blind rendering.
+  -->
+
+  <rect width="1200" height="780" rx="14" fill="#07100e"/>
+  <rect x="0.5" y="0.5" width="1199" height="779" rx="14" fill="none" stroke="#173028"/>
+
+  <!-- Header -->
+  <text x="40" y="66" font-size="28" font-weight="800" letter-spacing="-1.1" fill="#f0f7f4">Why joined context changes the result</text>
+  <text x="40" y="98" font-size="16" fill="#8da69c">
+    <tspan x="40">The same repository change produces a refusal with DataHub-only context, and an exact,</tspan>
+    <tspan x="40" dy="22">checkable action after repository identity is joined.</tspan>
+  </text>
+
+  <!-- ── Left column: DataHub-only ───────────────────────────── -->
+  <rect x="40" y="152" width="545" height="424" rx="14" fill="#0b1714" stroke="#173028"/>
+
+  <text x="68" y="184" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="3" fill="#8da69c">DATAHUB-ONLY CONTEXT</text>
+
+  <rect x="68" y="198" width="78" height="24" rx="12" fill="none" stroke="#36544b"/>
+  <text x="107" y="214" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" fill="#bfcdc6" text-anchor="middle">DataHub</text>
+
+  <line x1="68" y1="244" x2="557" y2="244" stroke="#173028"/>
+
+  <text x="68" y="272" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="2" fill="#5d7a70">OUTCOME</text>
+  <text x="68" y="308" font-size="30" font-weight="800" letter-spacing="-0.8" fill="#f0f7f4">Refuse</text>
+  <text x="68" y="336" font-size="14" fill="#8da69c">
+    <tspan x="68">The repository-relative source location is unknown</tspan>
+    <tspan x="68" dy="20">and cannot be guessed.</tspan>
+  </text>
+
+  <line x1="68" y1="372" x2="557" y2="372" stroke="#173028"/>
+
+  <text x="68" y="400" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="2" fill="#5d7a70">REPOSITORY-RELATIVE SOURCE</text>
+  <rect x="68" y="410" width="489" height="34" rx="6" fill="#0c1915" stroke="#5d7a70" stroke-dasharray="5 4"/>
+  <text x="84" y="432" font-size="13" font-family="'Geist Mono', ui-monospace, monospace" fill="#8da69c">Unavailable</text>
+
+  <text x="68" y="474" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="2" fill="#5d7a70">PINNED REVISION</text>
+  <rect x="68" y="484" width="489" height="34" rx="6" fill="#0c1915" stroke="#5d7a70" stroke-dasharray="5 4"/>
+  <text x="84" y="506" font-size="13" font-family="'Geist Mono', ui-monospace, monospace" fill="#8da69c">Unavailable</text>
+
+  <!--
+    The left column's state, named. Neutral ramp and a dashed edge, matching the
+    two rows above it: this is insufficient identity, not a fault. The chip also
+    balances the coverage qualification opposite, so neither column reads as the
+    one with something extra wrong with it.
+  -->
+  <rect x="68" y="534" width="196" height="24" rx="6" fill="none" stroke="#5d7a70" stroke-dasharray="5 4"/>
+  <text x="166" y="550" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" fill="#8da69c" text-anchor="middle">Insufficient context</text>
+
+  <!-- ── Right column: joined ────────────────────────────────── -->
+  <rect x="615" y="152" width="545" height="424" rx="14" fill="#0b1714" stroke="#173028"/>
+
+  <text x="643" y="184" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="3" fill="#8da69c">JOINED CONTEXT</text>
+
+  <rect x="643" y="198" width="78" height="24" rx="12" fill="none" stroke="#36544b"/>
+  <text x="682" y="214" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" fill="#bfcdc6" text-anchor="middle">DataHub</text>
+  <text x="729" y="214" font-size="13" fill="#5d7a70">+</text>
+  <rect x="745" y="198" width="118" height="24" rx="12" fill="none" stroke="#00c896"/>
+  <text x="804" y="214" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" fill="#00c896" text-anchor="middle">workspace.json</text>
+
+  <line x1="643" y1="244" x2="1132" y2="244" stroke="#173028"/>
+
+  <text x="643" y="272" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="2" fill="#5d7a70">OUTCOME</text>
+  <text x="643" y="308" font-size="30" font-weight="800" letter-spacing="-0.8" fill="#f0f7f4">Add quality check</text>
+  <text x="643" y="336" font-size="14" fill="#8da69c">
+    <tspan x="643">Add a dbt quality check for game_events, preserving</tspan>
+    <tspan x="643" dy="20">the declared lineage.</tspan>
+  </text>
+
+  <line x1="643" y1="372" x2="1132" y2="372" stroke="#173028"/>
+
+  <text x="643" y="400" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="2" fill="#5d7a70">REPOSITORY-RELATIVE SOURCE</text>
+  <rect x="643" y="410" width="489" height="34" rx="6" fill="#0c1915" stroke="#36544b"/>
+  <text x="659" y="432" font-size="13" font-family="'Geist Mono', ui-monospace, monospace" fill="#edf7f3">dbt/models/curated/game_events.sql</text>
+
+  <text x="643" y="474" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="2" fill="#5d7a70">PINNED REVISION</text>
+  <rect x="643" y="484" width="489" height="34" rx="6" fill="#0c1915" stroke="#36544b"/>
+  <text x="659" y="506" font-size="13" font-family="'Geist Mono', ui-monospace, monospace" fill="#edf7f3">59fa295c51fc23466f3a71542f8bf3d1335daa83</text>
+
+  <rect x="643" y="534" width="270" height="24" rx="6" fill="none" stroke="#f59e0b"/>
+  <text x="778" y="550" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" fill="#f59e0b" text-anchor="middle">Coverage: not established</text>
+
+  <!-- ── Evidence footer ─────────────────────────────────────── -->
+  <rect x="40" y="604" width="1120" height="150" rx="14" fill="#0b1714" stroke="#173028"/>
+
+  <text x="68" y="636" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="3" fill="#8da69c">MEASURED ACROSS REPEATED RUNS</text>
+
+  <text x="68" y="690" font-size="38" font-weight="800" letter-spacing="-1.4" fill="#f0f7f4">0/10</text>
+  <text x="68" y="714" font-size="13" fill="#8da69c">DataHub-only context</text>
+
+  <text x="238" y="690" font-size="38" font-weight="800" letter-spacing="-1.4" fill="#f0f7f4">10/10</text>
+  <text x="238" y="714" font-size="13" fill="#8da69c">Joined context</text>
+
+  <line x1="410" y1="658" x2="410" y2="724" stroke="#173028"/>
+
+  <text x="442" y="674" font-size="14" fill="#edf7f3">Runs whose plan included the exact source revision.</text>
+  <text x="442" y="698" font-size="13" fill="#8da69c">
+    <tspan x="442">Ten controlled paired runs on the pinned corpus. Task, model, prompt, decoding settings, repository</tspan>
+    <tspan x="442" dy="19">revision and DataHub snapshot held constant; the context envelope is the only varying input.</tspan>
+  </text>
+  <text x="1132" y="636" font-size="11" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="1" fill="#5d7a70" text-anchor="end">HAC-150</text>
+</svg>

@@ -1380,6 +1380,75 @@
         "detail": "Not published. Pending README placement and rendering review."
       },
       "supersedes": []
+    },
+    {
+      "id": "readme-context-gap-1200x780",
+      "title": "README context-gap comparison (1200 x 780)",
+      "storyBeat": "The measured claim, in the product's own vocabulary: why joined context changes what an agent will do.",
+      "intendedConclusion": "With DataHub-only context the repository-relative source and pinned revision are unavailable and the plan refuses. With joined context the same task resolves an exact source at a pinned revision and proposes a checkable edit. Across ten controlled paired runs the plan included the exact source revision in 10/10 joined-context runs and 0/10 DataHub-only runs. Coverage is not established in either condition.",
+      "canonicalPath": "assets/exports/readme-context-gap-1200x780/readme-context-gap-1200x780.svg",
+      "sha256": "2adddee87467d56d171f4e1a31f60194173d5710e139797455441830501159f0",
+      "claimIds": [
+        "TALLY-CLAIM-002",
+        "TALLY-CLAIM-005",
+        "TALLY-CLAIM-007"
+      ],
+      "sourceType": "authored-svg-in-repository",
+      "export": {
+        "filename": "readme-context-gap-1200x780.svg",
+        "format": "svg",
+        "width": 1200,
+        "height": 780,
+        "aspectRatio": "20:13",
+        "colorMode": "sRGB hex literals drawn from the product token set",
+        "safeArea": null
+      },
+      "proposedCaption": "The same repository change under two context envelopes. DataHub-only context refuses, because the repository-relative source location is unknown. Joined context resolves the exact source at a pinned revision and proposes a checkable edit. Measured across ten controlled paired runs.",
+      "proposedAltText": "A two-column comparison of the same repository change under two context envelopes. With DataHub-only context the repository-relative source and pinned revision are unavailable, and the outcome is a refusal because the source location cannot be guessed. With joined context, DataHub plus workspace.json, the source resolves to dbt/models/curated/game_events.sql at pinned revision 59fa295c and the outcome is an added dbt quality check; coverage remains not established. A footer records ten controlled paired runs on the pinned corpus in which the plan included the exact source revision in zero of ten DataHub-only runs and ten of ten joined-context runs.",
+      "approvalState": "pending",
+      "publicUse": "pending",
+      "productEvidenceRevision": {
+        "productRevision": "9b2528e1299c64145d3793d726dd20fa9f35d748",
+        "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Re-review whenever HAC-150 is re-run or the plan comparison vocabulary changes. `test/policy/readme-asset-claims.test.ts` fails if the quoted source, revision or counts stop matching evaluation/hac-150, so drift is a test failure rather than a discovery.",
+      "limitations": [
+        "No owner approval or public-use authorization is recorded.",
+        "A distillation, not a screenshot. It reuses the product's vocabulary and tokens but is hand-authored, so it can be correct about the evaluation while differing from any single rendered cockpit frame.",
+        "The 0/10 figure is derived, not separately measured. HAC-150 records exactRevisionOnlyInJoined as 10/10, meaning the joined plan carried the exact revision and the DataHub-only plan did not, in every pair; the DataHub-only count is the complement on the same denominator.",
+        "Shows one task on one subject. It is not a benchmark across tasks, models or repositories, and the numbers must never be presented as one.",
+        "Dark surface only, matching the other README assets. It renders on both light and dark GitHub backgrounds as a self-contained panel; it does not restyle itself to the reader's theme.",
+        "Text is drawn with the product's font stacks and falls back to system faces. No font is embedded, so glyph metrics vary slightly by platform."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "pending-owner-review",
+        "video": "pending-owner-review"
+      },
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "authored-in-repository",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": "9b2528e1299c64145d3793d726dd20fa9f35d748",
+        "path": "assets/exports/readme-context-gap-1200x780/readme-context-gap-1200x780.svg",
+        "sha256": "2adddee87467d56d171f4e1a31f60194173d5710e139797455441830501159f0",
+        "detail": "SVG is a text format, so the export is the source: there is no separate editable file to drift from it. Hand-authored against the token values in apps/cockpit/src/styles/tokens/, and guarded by test/policy/readme-asset-claims.test.ts, which pins its quoted source, revision and counts to evaluation/hac-150."
+      },
+      "generatedAt": {
+        "value": "2026-08-04T03:28:14.848Z",
+        "source": "Filesystem mtime of the authored file."
+      },
+      "refreshTrigger": "Update when HAC-150 is re-run, when the plan comparison vocabulary changes, or when the design tokens move.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Not published. Pending README placement and rendering review."
+      },
+      "supersedes": []
     }
   ],
   "supportingInternalEvidencePaths": [
