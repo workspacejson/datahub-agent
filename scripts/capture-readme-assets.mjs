@@ -25,7 +25,7 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -75,6 +75,46 @@ const NEXT_ELEMENT_GAP = 2;
 const EXPECTED_HEIGHT = 380;
 const HEIGHT_TOLERANCE = 40;
 
+/**
+ * The walkthrough viewport, and why it is wider than the poster's.
+ *
+ * One viewport for the whole sequence, never resized: a frame that changes shape
+ * mid-playback reads as a video edit, and the claim being made is that this is
+ * one continuous surface.
+ *
+ * 1440x1100 is the smallest frame where both states are fully in view with no
+ * scrolling. The Impact coordinate rows end at 665 and the Change plan panels end
+ * at 1026, so 1100 holds either without moving the page.
+ *
+ * The width is not interchangeable with the poster's 1280, and the reason is
+ * about this asset rather than about the product. Below 1440 a media query
+ * switches the stated-gaps list to its compact layout, 6rem instead of 8rem, and
+ * the third gap sits behind a scrollbar: 124px of content in a 96px box. That is
+ * a valid application layout -- the cap stops the gap list pushing the primary
+ * action below the fold -- but it is unsuitable for a walkthrough frame, which
+ * has to show the complete gap list beside the comparison. So the capture picks a
+ * viewport where the content fits rather than widening the cap for a screenshot.
+ * Optimising the product for the marketing asset is how a frame stops being
+ * evidence.
+ */
+const GIF_WIDTH = 1440;
+const GIF_HEIGHT = 1100;
+
+/**
+ * Frame durations, in seconds. They sum to the total runtime.
+ *
+ * Paced for reading, not for brevity. The closing state has to be held long
+ * enough to read four things -- the refusal reason, the repository-relative path,
+ * the pinned revision, and the proposed action -- and that is the whole proof. A
+ * shorter loop that renders it unreadable would be a product tour rather than
+ * evidence.
+ */
+const GIF_TIMELINE = [
+  { name: "open", seconds: 2.0, note: "Impact: the naive join beside the resolved path" },
+  { name: "press", seconds: 0.5, note: "the primary action under the pointer, before it is taken" },
+  { name: "plan", seconds: 5.5, note: "Change plan: refusal beside evidence-backed action" },
+];
+
 function git(...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
@@ -100,9 +140,9 @@ const commit = git("rev-parse", "HEAD");
  * bump across the tree, days from submission, to serve four files.
  *
  * The fallback to `index.html` is not a convenience. It mirrors the single
- * rewrite in `vercel.json` -- `/(.*)` to `/index.html` -- so `/impact` resolves
- * here the way it resolves on the deployed origin. A static server without it
- * would 404 the route and capture nothing.
+ * rewrite in `vercel.json` -- `/(.*)` to `/index.html` -- so `/impact` and
+ * `/change-plan` resolve here the way they resolve on the deployed origin. A
+ * static server without it would 404 both routes and capture nothing.
  */
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -220,7 +260,184 @@ try {
 
   console.log(JSON.stringify(record, null, 2));
   console.log(`\nWrote ${file}`);
+  await page.close();
+
+  await captureWalkthrough();
 } finally {
   await browser.close();
   await new Promise((closed) => server.close(closed));
+}
+
+/**
+ * The product walkthrough: Impact, one click, Change plan.
+ *
+ * Three key frames with explicit durations rather than a recorded video. The
+ * surface is static between interactions, so a frame-and-duration timeline is
+ * both smaller and exactly reproducible -- a video capture would encode whatever
+ * the machine's frame scheduler happened to do, and two runs would never produce
+ * the same bytes.
+ *
+ * Captured under `reducedMotion: reduce`. A GIF cannot read the viewer's
+ * `prefers-reduced-motion`, so the choice is which single behaviour to ship, and
+ * the calm one is the only defensible default: a viewer who needs reduced motion
+ * cannot opt out of what is baked in. This is recorded as a limitation on the
+ * asset rather than left implicit.
+ *
+ * The GIF does not loop. It ends on the Change plan state and stays there, which
+ * is the point -- the closing frame is the claim, and a loop would pull it away
+ * from a reader mid-sentence to replay an opening they have already seen.
+ */
+async function captureWalkthrough() {
+  const id = `readme-walkthrough-${GIF_WIDTH}x${GIF_HEIGHT}`;
+  const outDir = join(root, "assets", "exports", id);
+  mkdirSync(outDir, { recursive: true });
+
+  const page = await browser.newPage({
+    viewport: { width: GIF_WIDTH, height: GIF_HEIGHT },
+    deviceScaleFactor: 1,
+    colorScheme: "dark",
+    reducedMotion: "reduce",
+  });
+
+  await page.goto(`${origin}/impact`, { waitUntil: "networkidle" });
+  await page.waitForSelector(".coordinate");
+  await page.waitForTimeout(400);
+
+  const frames = [];
+  const shoot = async (name) => {
+    const path = join(outDir, `frame-${name}.png`);
+    await page.screenshot({ path });
+    frames.push(path);
+    return path;
+  };
+
+  await shoot("open");
+
+  const cta = page
+    .getByRole("link", { name: /Continue to change plan/i })
+    .or(page.getByRole("button", { name: /Continue to change plan/i }))
+    .first();
+  // Hover, not a drawn cursor. The button's own hover state is the product
+  // saying it is about to be used; a painted pointer ring would be decoration
+  // asserting an interaction the frame does not contain.
+  await cta.hover();
+  await page.waitForTimeout(250);
+  await shoot("press");
+
+  await cta.click();
+  await page.waitForSelector(".plan-panel");
+  await page.waitForTimeout(700);
+  await shoot("plan");
+
+  /*
+    Everything the closing frame has to carry, checked rather than trusted. The
+    four strings below are the walkthrough's entire claim: without them the GIF
+    shows a tab change. Asserted on rendered text, and asserted to be inside the
+    viewport, because content scrolled below the fold is absent from the frame
+    however present it is in the DOM.
+  */
+  const closing = await page.evaluate(() => {
+    const text = document.body.textContent ?? "";
+    const panels = Array.from(document.querySelectorAll(".plan-panel"));
+    const gaps = document.querySelector(".rail-group ul");
+    return {
+      refusal: text.includes("refuse to add the dbt quality check"),
+      repositoryPath: text.includes("dbt/models/curated/game_events.sql"),
+      pinnedRevision: text.includes("59fa295c51fc23466f3a71542f8bf3d1335daa83"),
+      proposedAction: text.includes("Add a dbt quality check for game_events"),
+      coverageVisible: (document.querySelector(".outcome-bar")?.textContent ?? "").includes("Not established"),
+      panelsInViewport: panels.length > 0 && panels.every((p) => p.getBoundingClientRect().bottom <= window.innerHeight),
+      gapsClipped: gaps ? gaps.scrollHeight > gaps.clientHeight + 1 : null,
+      scrollY: window.scrollY,
+    };
+  });
+
+  const missing = Object.entries(closing)
+    .filter(([key, value]) => key !== "scrollY" && key !== "gapsClipped" && value !== true)
+    .map(([key]) => key);
+  if (missing.length > 0) {
+    throw new Error(`The closing frame does not carry its claim. Missing or out of view: ${missing.join(", ")}.`);
+  }
+  if (closing.scrollY !== 0) {
+    throw new Error(`The sequence scrolled (scrollY=${closing.scrollY}). The viewport must hold both states without moving the page.`);
+  }
+  if (closing.gapsClipped) {
+    throw new Error(
+      "The stated-gaps list is in its compact layout at this width, so the closing frame would show an incomplete gap list. " +
+        `That layout is valid for the application; it is unsuitable for this frame. Raise GIF_WIDTH past the ${GIF_WIDTH}px media-query boundary rather than changing the list's cap, which exists to keep the primary action above the fold.`,
+    );
+  }
+
+  const listPath = join(outDir, "frames.txt");
+  const list = GIF_TIMELINE.map((f, i) => `file '${frames[i]}'\nduration ${f.seconds}`).join("\n");
+  // The concat demuxer ignores the final entry's duration, so the last frame is
+  // repeated. Without it the closing state flashes for one frame interval and
+  // the GIF ends on the thing it exists to show, unread.
+  writeFileSync(listPath, `${list}\nfile '${frames[frames.length - 1]}'\n`);
+
+  const gif = join(outDir, `${id}.gif`);
+  const palette = join(outDir, "palette.png");
+  const filters = "scale=iw:ih:flags=lanczos";
+  run("ffmpeg", ["-y", "-f", "concat", "-safe", "0", "-i", listPath, "-vf", `${filters},palettegen=max_colors=192:stats_mode=diff`, palette]);
+  run("ffmpeg", [
+    "-y", "-f", "concat", "-safe", "0", "-i", listPath, "-i", palette,
+    "-lavfi", `${filters}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`,
+    // -1 is "play once and hold". 0 would loop forever.
+    //
+    // No `-final_delay`. A non-looping GIF already holds its last frame for as
+    // long as the reader looks at it, so a trailing delay adds nothing visible
+    // and everything to the reported duration: 500 centiseconds took an 8.0s
+    // walkthrough to a 13.0s file, outside the runtime this sequence was paced
+    // for. Measured with ffprobe, not assumed.
+    "-loop", "-1", gif,
+  ]);
+
+  // The poster frame is the GIF's own first frame at the GIF's own viewport, a
+  // separate export with its own hash. The Impact poster is a different crop for
+  // a different job, and reusing it would put a frame on screen that does not
+  // match the one playback starts from.
+  const posterId = `${id}-poster`;
+  const posterDir = join(root, "assets", "exports", posterId);
+  mkdirSync(posterDir, { recursive: true });
+  const posterFile = join(posterDir, `${posterId}.png`);
+  writeFileSync(posterFile, readFileSync(frames[0]));
+
+  const digest = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
+  const gifBytes = readFileSync(gif);
+  const walkthrough = {
+    id,
+    capturedFromCommit: commit,
+    sequence: GIF_TIMELINE.map((f) => ({ ...f })),
+    totalSeconds: GIF_TIMELINE.reduce((sum, f) => sum + f.seconds, 0),
+    loops: false,
+    routes: ["/impact", "/change-plan"],
+    interaction: "one click on the primary action; no scrolling, no resize",
+    datasetKey: "nested",
+    sourceMode: "committed",
+    cssViewport: { width: GIF_WIDTH, height: GIF_HEIGHT },
+    deviceScaleFactor: 1,
+    colorScheme: "dark",
+    reducedMotion: "reduce",
+    closingFrameCarries: closing,
+    export: { width: GIF_WIDTH, height: GIF_HEIGHT, format: "gif", bytes: gifBytes.length },
+    sha256: digest(gif),
+    poster: { id: posterId, path: `assets/exports/${posterId}/${posterId}.png`, sha256: digest(posterFile) },
+    generationMethod: "npm run build && node scripts/capture-readme-assets.mjs",
+  };
+  writeFileSync(join(outDir, "capture.json"), `${JSON.stringify(walkthrough, null, 2)}\n`);
+  writeFileSync(join(posterDir, "capture.json"), `${JSON.stringify({ ...walkthrough.poster, capturedFromCommit: commit, derivedFrom: id, frame: "open", cssViewport: { width: GIF_WIDTH, height: GIF_HEIGHT }, generationMethod: walkthrough.generationMethod }, null, 2)}\n`);
+
+  // The intermediates go. `frames.txt` embeds absolute paths from whichever
+  // machine ran the capture, so committing it would put one developer's home
+  // directory in the registry; the frames and the palette are regenerable and
+  // only the GIF and its poster are the asset.
+  for (const path of [...frames, listPath, palette]) rmSync(path, { force: true });
+
+  console.log(`\n${JSON.stringify(walkthrough, null, 2)}`);
+  console.log(`\nWrote ${gif} (${(gifBytes.length / 1024 / 1024).toFixed(2)} MB)`);
+  await page.close();
+}
+
+function run(cmd, args) {
+  execFileSync(cmd, args, { cwd: root, stdio: ["ignore", "ignore", "pipe"] });
 }

@@ -1,0 +1,60 @@
+{
+  "id": "readme-walkthrough-1440x1100",
+  "capturedFromCommit": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+  "sequence": [
+    {
+      "name": "open",
+      "seconds": 2,
+      "note": "Impact: the naive join beside the resolved path"
+    },
+    {
+      "name": "press",
+      "seconds": 0.5,
+      "note": "the primary action under the pointer, before it is taken"
+    },
+    {
+      "name": "plan",
+      "seconds": 5.5,
+      "note": "Change plan: refusal beside evidence-backed action"
+    }
+  ],
+  "totalSeconds": 8,
+  "loops": false,
+  "routes": [
+    "/impact",
+    "/change-plan"
+  ],
+  "interaction": "one click on the primary action; no scrolling, no resize",
+  "datasetKey": "nested",
+  "sourceMode": "committed",
+  "cssViewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "deviceScaleFactor": 1,
+  "colorScheme": "dark",
+  "reducedMotion": "reduce",
+  "closingFrameCarries": {
+    "refusal": true,
+    "repositoryPath": true,
+    "pinnedRevision": true,
+    "proposedAction": true,
+    "coverageVisible": true,
+    "panelsInViewport": true,
+    "gapsClipped": false,
+    "scrollY": 0
+  },
+  "export": {
+    "width": 1440,
+    "height": 1100,
+    "format": "gif",
+    "bytes": 281172
+  },
+  "sha256": "ce2767bb8edd5544a50cc88d6ded4ef879690961bb29cf8e10c84c5e96f08745",
+  "poster": {
+    "id": "readme-walkthrough-1440x1100-poster",
+    "path": "assets/exports/readme-walkthrough-1440x1100-poster/readme-walkthrough-1440x1100-poster.png",
+    "sha256": "238078243211c3fd85ba7789ff97c5ebaef1250b9d0957e0dbdf9b10caa20c3d"
+  },
+  "generationMethod": "npm run build && node scripts/capture-readme-assets.mjs"
+}
