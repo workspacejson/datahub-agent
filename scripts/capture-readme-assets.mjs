@@ -29,7 +29,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "@playwright/test";
+import { chromium } from "playwright-core";
 import { preview } from "vite";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
