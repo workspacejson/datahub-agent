@@ -1,0 +1,22 @@
+{
+  "id": "readme-poster-impact-2560x756",
+  "capturedFromCommit": "9c1689c875616df5ddb1557e4242e14d1d908d26",
+  "route": "/impact",
+  "datasetKey": "nested",
+  "sourceMode": "committed",
+  "cssViewport": {
+    "width": 1280,
+    "height": 378
+  },
+  "deviceScaleFactor": 2,
+  "export": {
+    "width": 2560,
+    "height": 756,
+    "format": "png"
+  },
+  "colorScheme": "dark",
+  "clampedToNextElement": true,
+  "sha256": "f7c5061de2d6d120610e5589f8a02c0c0c8ad871ae63e4a8c4a284b24db99c45",
+  "bytes": 318303,
+  "generationMethod": "npm run build && node scripts/capture-readme-assets.mjs"
+}

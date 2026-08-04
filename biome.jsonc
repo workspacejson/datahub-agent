@@ -106,4 +106,26 @@
       }
     }
   }
+  ,
+  "overrides": [
+    {
+      // `noUnresolvedImports` cannot follow this import to its declaration, and
+      // the import is correct. `playwright/index.d.ts` is a bare
+      // `export * from 'playwright-core'`, and playwright-core declares
+      // `chromium` in `types/types.d.ts` rather than at the entry the resolver
+      // reads. The rule reports "no export named chromium" for `@playwright/test`,
+      // `playwright` and `playwright-core` alike, which is the tell: three
+      // packages cannot all be wrong about their own public API.
+      //
+      // Verified rather than assumed, on the same version the lockfile pins:
+      // `node -e "import('playwright-core').then(m => console.log(typeof m.chromium))"`
+      // prints `object`, and the script it guards runs and produces the export.
+      //
+      // Scoped to the one file so the rule stays live everywhere else. If a
+      // future biome resolves star re-exports, this override should be deleted
+      // rather than kept for safety.
+      "includes": ["scripts/capture-readme-assets.mjs"],
+      "linter": { "rules": { "correctness": { "noUnresolvedImports": "off" } } }
+    }
+  ]
 }
