@@ -938,12 +938,13 @@
         "The filename does not say dark. The unsuffixed file is the dark variant and the light one carries the light suffix, so the pair is asymmetrically named and easy to swap by mistake.",
         "Approved for GitHub only. Website, Devpost and video use remain unreviewed.",
         "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
-        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control.",
+        "No longer placed in README.md. readme-tally-hero-1280x440 occupies that placement as of 2026-08-04; this record is retained because the asset remains valid for destinations it was already eligible for."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "approved",
+        "github": "superseded-on-this-destination",
         "video": "pending-owner-review"
       },
       "proposedAltText": "Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0.",
@@ -972,7 +973,13 @@
       },
       "supersedes": [
         "tally-github-readme"
-      ]
+      ],
+      "supersededOnDestination": {
+        "destination": "github-readme",
+        "supersededBy": "readme-tally-hero-1280x440",
+        "date": "2026-08-04",
+        "detail": "Removed from README.md by the README implementation and replaced by readme-tally-hero-1280x440. The asset itself is not retired: its bytes, hashes, claims, captions and provenance are unchanged, and its other destinations remain at whatever state they already held."
+      }
     },
     {
       "id": "github-hero-light-1280x440",
@@ -1005,12 +1012,13 @@
         "Serves the light half of the README's theme-conditional pair; it is not a standalone hero.",
         "Approved for GitHub only. Website, Devpost and video use remain unreviewed.",
         "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
-        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control."
+        "No editable source is checked in, so this export cannot be regenerated from this repository. Re-export depends on a tool outside version control.",
+        "No longer placed in README.md. readme-tally-hero-1280x440 occupies that placement as of 2026-08-04; this record is retained because the asset remains valid for destinations it was already eligible for."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "approved",
+        "github": "superseded-on-this-destination",
         "video": "pending-owner-review"
       },
       "proposedAltText": "Tally: DataHub context, resolved to code. A change impact cockpit that refuses silent zeroes, with the tally lockup and the labels official MCP read, repository evidence, explicit gaps, Apache 2.0.",
@@ -1039,7 +1047,13 @@
       },
       "supersedes": [
         "tally-github-readme"
-      ]
+      ],
+      "supersededOnDestination": {
+        "destination": "github-readme",
+        "supersededBy": "readme-tally-hero-1280x440",
+        "date": "2026-08-04",
+        "detail": "Removed from README.md by the README implementation and replaced by readme-tally-hero-1280x440. The asset itself is not retired: its bytes, hashes, claims, captions and provenance are unchanged, and its other destinations remain at whatever state they already held."
+      }
     },
     {
       "id": "tally-architecture",
@@ -1072,12 +1086,13 @@
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
         "No claim relationship has been approved.",
-        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe."
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No longer placed in README.md. readme-cockpit-architecture-boundary-1800x1100 occupies that placement as of 2026-08-04; this record is retained because the asset remains valid for destinations it was already eligible for."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
+        "github": "superseded-on-this-destination",
         "video": "pending-owner-review"
       },
       "owner": "Qwynn Marcelle",
@@ -1101,7 +1116,13 @@
         "verifiedLoggedOut": false,
         "detail": "Not published anywhere. No destination URL or upload receipt exists."
       },
-      "supersedes": []
+      "supersedes": [],
+      "supersededOnDestination": {
+        "destination": "github-readme",
+        "supersededBy": "readme-cockpit-architecture-boundary-1800x1100",
+        "date": "2026-08-04",
+        "detail": "Removed from README.md by the README implementation and replaced by readme-cockpit-architecture-boundary-1800x1100. The asset itself is not retired: its bytes, hashes, claims, captions and provenance are unchanged, and its other destinations remain at whatever state they already held."
+      }
     },
     {
       "id": "tally-architecture-png",
@@ -1134,12 +1155,13 @@
       "limitations": [
         "No owner approval or public-use authorization is recorded.",
         "No claim relationship has been approved.",
-        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe."
+        "No safe area is recorded. The value is null because no crop specification was supplied for this export, not because the full frame is known to be safe.",
+        "No longer placed in README.md. readme-cockpit-architecture-boundary-1800x1100 occupies that placement as of 2026-08-04; this record is retained because the asset remains valid for destinations it was already eligible for."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
+        "github": "superseded-on-this-destination",
         "video": "pending-owner-review"
       },
       "owner": "Qwynn Marcelle",
@@ -1163,7 +1185,13 @@
         "verifiedLoggedOut": false,
         "detail": "Not published anywhere. No destination URL or upload receipt exists."
       },
-      "supersedes": []
+      "supersedes": [],
+      "supersededOnDestination": {
+        "destination": "github-readme",
+        "supersededBy": "readme-cockpit-architecture-boundary-1800x1100",
+        "date": "2026-08-04",
+        "detail": "Removed from README.md by the README implementation and replaced by readme-cockpit-architecture-boundary-1800x1100. The asset itself is not retired: its bytes, hashes, claims, captions and provenance are unchanged, and its other destinations remain at whatever state they already held."
+      }
     },
     {
       "id": "readme-poster-impact-2560x756",
@@ -1195,8 +1223,8 @@
       },
       "proposedCaption": "The naive join returns zero matches and exits cleanly. Tally resolves the same dataset to `dbt/models/curated/game_events.sql` through a manifest join at the pinned revision.",
       "proposedAltText": "Tally change-impact cockpit comparing a silent naive join with a resolved repository path. The naive join reports zero matches, no error, no warning, and exit code 0. Beside it, Tally resolves the same dataset to dbt/models/curated/game_events.sql through a manifest join at pinned revision 59fa295c. The status strip also shows coverage is not established and three limitations remain.",
-      "approvalState": "pending",
-      "publicUse": "pending",
+      "approvalState": "approved",
+      "publicUse": "allowed",
       "productEvidenceRevision": {
         "productRevision": "4352b6f751f2cda76813f7a73342eb5f302a5379",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -1204,16 +1232,16 @@
       "isQuantitative": true,
       "stalenessRule": "Regenerate with `npm run build && node scripts/capture-readme-assets.mjs` whenever the Impact hero, the outcome bar, or the bound event changes. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
       "limitations": [
-        "No owner approval or public-use authorization is recorded.",
         "The capture requires a 1280 CSS-pixel viewport. At narrower widths the outcome bar reflows to three columns by two rows and the hero stacks, which destroys the side-by-side naive-join and resolved comparison this frame exists to make. The width is part of the reproducible method, not an incidental setting.",
         "Dark scheme only. The cockpit ships one surface and the capture pins `colorScheme: dark`, so there is no light-theme variant of this asset.",
         "A crop of a live surface, not a composition. It shows what the Impact route rendered at the recorded commit and asserts nothing beyond that frame.",
-        "Coverage is not established in the frame and the asset must never be captioned as though lineage were complete."
+        "Coverage is not established in the frame and the asset must never be captioned as though lineage were complete.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
+        "github": "approved",
         "video": "pending-owner-review"
       },
       "owner": "Qwynn Marcelle",
@@ -1237,7 +1265,8 @@
         "verifiedLoggedOut": false,
         "detail": "Not published. Pending README placement and rendering review."
       },
-      "supersedes": []
+      "supersedes": [],
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. The Impact poster, placed in the README's silent-failure section by this change."
     },
     {
       "id": "readme-walkthrough-1440x1100",
@@ -1267,8 +1296,8 @@
       },
       "proposedCaption": "One click. With DataHub-only context the plan refuses the edit because the repository-relative source location is unknown. With joined context the same task adds the quality check at `dbt/models/curated/game_events.sql`, pinned to revision 59fa295c.",
       "proposedAltText": "An eight-second walkthrough of the Tally change-impact cockpit. It opens on the Impact view, where the DataHub coordinate carries no project prefix and the repository coordinate resolves to dbt/models/curated/game_events.sql. One click on Continue to change plan moves to the plan comparison. There, DataHub-only context refuses to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed, while joined context adds it using that source at pinned revision 59fa295c. The status strip shows coverage is not established throughout.",
-      "approvalState": "pending",
-      "publicUse": "pending",
+      "approvalState": "approved",
+      "publicUse": "allowed",
       "productEvidenceRevision": {
         "productRevision": "4352b6f751f2cda76813f7a73342eb5f302a5379",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -1276,18 +1305,18 @@
       "isQuantitative": true,
       "stalenessRule": "Regenerate with `npm run build && node scripts/capture-readme-assets.mjs` whenever the Impact view, the Change plan comparison, the decision rail, or the bound event changes. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
       "limitations": [
-        "No owner approval or public-use authorization is recorded.",
         "A GIF cannot read the viewer prefers-reduced-motion setting. This capture is taken under reducedMotion: reduce so the calmer behaviour is the one shipped, but a viewer who needs reduced motion cannot opt out of what is baked in. The static poster frame carries the opening state for anyone who cannot use the animation.",
         "A 1440 CSS-pixel viewport is required to preserve the complete stated-gaps list and the refusal-versus-action comparison without clipping. Narrower widths trigger the product's compact gap-list layout, which is valid for the application but unsuitable for this walkthrough frame.",
         "Does not loop. It plays once and holds the closing frame, which is where the claim is. Any tool that re-loops it changes the asset behaviour.",
         "Dark scheme only, no audio, no narration, and no captions track.",
         "Shows two of the three routes. Receipts is deliberately absent: it is too dense to read at this runtime, and it is reached from the product rather than from this asset.",
-        "A recording of a live surface at one commit, not a composition. It asserts nothing beyond the two states it shows."
+        "A recording of a live surface at one commit, not a composition. It asserts nothing beyond the two states it shows.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
+        "github": "approved",
         "video": "pending-owner-review"
       },
       "owner": "Qwynn Marcelle",
@@ -1311,7 +1340,8 @@
         "verifiedLoggedOut": false,
         "detail": "Not published. Pending README placement and rendering review."
       },
-      "supersedes": []
+      "supersedes": [],
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. The product walkthrough, placed in the README's product section by this change."
     },
     {
       "id": "readme-walkthrough-1440x1100-poster",
@@ -1337,8 +1367,8 @@
       },
       "proposedCaption": "The walkthrough opens here: the DataHub coordinate carries no project prefix, and the repository coordinate resolves the same dataset to `dbt/models/curated/game_events.sql`.",
       "proposedAltText": "The Tally change-impact cockpit on the Impact view. A naive path join reports zero matches with exit code 0, beside a resolved repository path. Below, the DataHub coordinate reads models/curated/game_events.sql with an unknown project prefix, and the repository coordinate reads dbt/models/curated/game_events.sql. A side panel names three stated gaps, and the status strip shows coverage is not established.",
-      "approvalState": "pending",
-      "publicUse": "pending",
+      "approvalState": "approved",
+      "publicUse": "allowed",
       "productEvidenceRevision": {
         "productRevision": "4352b6f751f2cda76813f7a73342eb5f302a5379",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -1346,16 +1376,16 @@
       "isQuantitative": true,
       "stalenessRule": "Regenerate with the walkthrough it belongs to; the two must always be produced by the same run. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
       "limitations": [
-        "No owner approval or public-use authorization is recorded.",
         "Only meaningful beside the walkthrough it opens. It is the first frame of that GIF at the same viewport, not a general-purpose still, and pairing it with a different animation would show a state that playback does not start from.",
         "A 1440 CSS-pixel viewport is required, matching the walkthrough it opens. Narrower widths trigger the product's compact gap-list layout, which is valid for the application but unsuitable for this frame.",
         "Dark scheme only.",
-        "A crop of a live surface at one commit. It asserts nothing beyond the frame."
+        "A crop of a live surface at one commit. It asserts nothing beyond the frame.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
+        "github": "approved",
         "video": "pending-owner-review"
       },
       "owner": "Qwynn Marcelle",
@@ -1379,7 +1409,8 @@
         "verifiedLoggedOut": false,
         "detail": "Not published. Pending README placement and rendering review."
       },
-      "supersedes": []
+      "supersedes": [],
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. The walkthrough's own first frame, placed as its static alternative by this change."
     },
     {
       "id": "readme-context-gap-1200x780",
@@ -1405,8 +1436,8 @@
       },
       "proposedCaption": "The same repository change under two context envelopes. DataHub-only context refuses, because the repository-relative source location is unknown. Joined context resolves the exact source at a pinned revision and proposes a checkable edit. Measured across ten controlled paired runs.",
       "proposedAltText": "A two-column comparison of the same repository change under two context envelopes. With DataHub-only context the repository-relative source and pinned revision are unavailable, and the outcome is a refusal because the source location cannot be guessed. With joined context, DataHub plus workspace.json, the source resolves to dbt/models/curated/game_events.sql at pinned revision 59fa295c and the outcome is an added dbt quality check; coverage remains not established. A footer records ten controlled paired runs on the pinned corpus in which the plan included the exact source revision in zero of ten DataHub-only runs and ten of ten joined-context runs.",
-      "approvalState": "pending",
-      "publicUse": "pending",
+      "approvalState": "approved",
+      "publicUse": "allowed",
       "productEvidenceRevision": {
         "productRevision": "9b2528e1299c64145d3793d726dd20fa9f35d748",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -1414,17 +1445,17 @@
       "isQuantitative": true,
       "stalenessRule": "Re-review whenever HAC-150 is re-run or the plan comparison vocabulary changes. `test/policy/readme-asset-claims.test.ts` fails if the quoted source, revision or counts stop matching evaluation/hac-150, so drift is a test failure rather than a discovery.",
       "limitations": [
-        "No owner approval or public-use authorization is recorded.",
         "A distillation, not a screenshot. It reuses the product's vocabulary and tokens but is hand-authored, so it can be correct about the evaluation while differing from any single rendered cockpit frame.",
         "The 0/10 figure is derived, not separately measured. HAC-150 records exactRevisionOnlyInJoined as 10/10, meaning the joined plan carried the exact revision and the DataHub-only plan did not, in every pair; the DataHub-only count is the complement on the same denominator.",
         "Shows one task on one subject. It is not a benchmark across tasks, models or repositories, and the numbers must never be presented as one.",
         "Dark surface only, matching the other README assets. It renders on both light and dark GitHub backgrounds as a self-contained panel; it does not restyle itself to the reader's theme.",
-        "Text is drawn with the product's font stacks and falls back to system faces. No font is embedded, so glyph metrics vary slightly by platform."
+        "Text is drawn with the product's font stacks and falls back to system faces. No font is embedded, so glyph metrics vary slightly by platform.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
       ],
       "destinationEligibility": {
         "website": "pending-owner-review",
         "devpost": "pending-owner-review",
-        "github": "pending-owner-review",
+        "github": "approved",
         "video": "pending-owner-review"
       },
       "owner": "Qwynn Marcelle",
@@ -1447,6 +1478,385 @@
         "uploadReceipt": null,
         "verifiedLoggedOut": false,
         "detail": "Not published. Pending README placement and rendering review."
+      },
+      "supersedes": [],
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. The context-gap comparison, placed in the README's mechanism section by this change."
+    },
+    {
+      "id": "readme-tally-hero-1280x440",
+      "title": "Tally README hero (1280 × 440)",
+      "storyBeat": "Product identity: the first thing a reader meets on the repository front page.",
+      "intendedConclusion": "Identifies the application and states its thesis. It supports no claim about evidence, coverage or resolution.",
+      "canonicalPath": "assets/exports/readme-tally-hero-1280x440/readme-tally-hero-1280x440.png",
+      "sha256": "2ace855f23c34201c329bafadeace8c73cc5781ae4ecd9522e20dcc6fb9bae1f",
+      "claimIds": [],
+      "sourceType": "authored-canvas-export",
+      "export": {
+        "filename": "readme-tally-hero-1280x440.png",
+        "format": "png",
+        "width": 2560,
+        "height": 880,
+        "aspectRatio": "32:11",
+        "colorMode": "RGB, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null,
+        "cssBox": {
+          "width": 1280,
+          "height": 440
+        },
+        "deviceScaleFactor": 2,
+        "colorScheme": "dark"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "6a7263857f941d94c08e03bde4ff4e92e4cf6fc4",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes. Re-export from the source with `node scripts/export-authored-readme-assets.mjs` rather than editing the PNG.",
+      "limitations": [
+        "Brand chrome, not an evidence asset: it carries no claim and none may be attached to it.",
+        "The four labels along the base name the resolution chain as a sequence, not as a coverage claim about any particular dataset.",
+        "No safe area is recorded. The value is null because the source defines no crop specification, not because the full frame is known to be safe.",
+        "Byte reproducibility is demonstrated for this environment, not asserted in general: two consecutive runs of the export script from the same source produced identical bytes on Chromium 151.0.7922.34. A different Chromium build may rasterise differently.",
+        "Re-exported from the checked-in source rather than carried over from the design tool that first drew it. The frame, copy, geometry and dimensions are the approved ones, but the bytes are not the design tool's: rendering the same source in Chromium differs from the original export by antialiasing, measured at roughly 0.01 to 1.6 percent of pixels depending on how much small text and how many hairline borders the canvas carries. No content differs.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Tally. DataHub context, resolved to code. Tally joins repository identity with DataHub lineage, refuses unsupported conclusions, and preserves the evidence behind the result.",
+      "proposedCaption": "The repository hero, opening the README with what Tally is before what it measures.",
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "authored-in-repository",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "assets/source/readme-tally-hero-1280x440/readme-tally-hero-1280x440.dc.html",
+        "sha256": "e5ebd77b60251f8821147cbd1ce04ea80c27faa65a7db7a78b1d9500e5b86ded",
+        "detail": "The `.dc.html` canvas is the editable source and the PNG is the governed display export. `commitOrRef` is null on purpose: the source is committed in the same change that adds this record, so any SHA written here would either be self-referential or would name a branch commit that a squash merge discards. The source is pinned by digest instead, which survives the merge. Regenerate with `node scripts/export-authored-readme-assets.mjs`."
+      },
+      "generatedAt": {
+        "value": "2026-08-04T13:07:57.948Z",
+        "source": "Recorded by the export script at capture time and written to assets/exports/readme-tally-hero-1280x440/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
+      },
+      "refreshTrigger": "Regenerate when the mark, wordmark, palette, or on-image copy changes.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
+      },
+      "supersedes": [
+        "github-hero-dark-1280x440",
+        "github-hero-light-1280x440"
+      ]
+    },
+    {
+      "id": "readme-cockpit-architecture-boundary-1800x1100",
+      "title": "Tally cockpit architecture boundary (1800 × 1100)",
+      "storyBeat": "How the cockpit stays honest: the boundary a committed event crosses, and what the browser cannot do.",
+      "intendedConclusion": "The cockpit renders validated evidence offline, and the axes it renders are independent of one another.",
+      "canonicalPath": "assets/exports/readme-cockpit-architecture-boundary-1800x1100/readme-cockpit-architecture-boundary-1800x1100.png",
+      "sha256": "2cd059833165bd7474802a9b2081ad425cd7198ad646276912dcc3c21a044127",
+      "claimIds": [
+        "TALLY-CLAIM-013"
+      ],
+      "sourceType": "authored-canvas-export",
+      "export": {
+        "filename": "readme-cockpit-architecture-boundary-1800x1100.png",
+        "format": "png",
+        "width": 3600,
+        "height": 2200,
+        "aspectRatio": "18:11",
+        "colorMode": "RGB, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null,
+        "cssBox": {
+          "width": 1800,
+          "height": 1100
+        },
+        "deviceScaleFactor": 2,
+        "colorScheme": "dark"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "6a7263857f941d94c08e03bde4ff4e92e4cf6fc4",
+        "evidenceRevision": null
+      },
+      "isQuantitative": false,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes. Re-export from the source with `node scripts/export-authored-readme-assets.mjs` rather than editing the PNG.",
+      "limitations": [
+        "A boundary diagram, not a module graph. It states which crossings exist and which are forbidden; it does not enumerate every file on either side.",
+        "The offline property it depicts is enforced by `apps/cockpit/src/data/architecture-invariants.test.ts`, not by this drawing.",
+        "No safe area is recorded. The value is null because the source defines no crop specification, not because the full frame is known to be safe.",
+        "Byte reproducibility is demonstrated for this environment, not asserted in general: two consecutive runs of the export script from the same source produced identical bytes on Chromium 151.0.7922.34. A different Chromium build may rasterise differently.",
+        "Re-exported from the checked-in source rather than carried over from the design tool that first drew it. The frame, copy, geometry and dimensions are the approved ones, but the bytes are not the design tool's: rendering the same source in Chromium differs from the original export by antialiasing, measured at roughly 0.01 to 1.6 percent of pixels depending on how much small text and how many hairline borders the canvas carries. No content differs.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Tally cockpit architecture boundary. A committed ChangeImpactEvent with distinct DataHub and workspace.json attribution crosses Zod validation into CockpitViewModel. Impact, Change plan, and Receipts render offline with no browser network access. Optional writeback occurs in the integration runtime, while provenance, read status, completeness, resolution, unavailability, evidence tier, and writeback remain independent axes.",
+      "proposedCaption": "A committed event crosses Zod into `CockpitViewModel`, and the three routes render from that model with no network access. Writeback lives in the integration runtime, outside the browser.",
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "authored-in-repository",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "assets/source/readme-cockpit-architecture-boundary-1800x1100/readme-cockpit-architecture-boundary-1800x1100.dc.html",
+        "sha256": "153cb236ee63d442807f67232e0c6d4b5fc935d8e98a182d9c5a9adeb6dd31f6",
+        "detail": "The `.dc.html` canvas is the editable source and the PNG is the governed display export. `commitOrRef` is null on purpose: the source is committed in the same change that adds this record, so any SHA written here would either be self-referential or would name a branch commit that a squash merge discards. The source is pinned by digest instead, which survives the merge. Regenerate with `node scripts/export-authored-readme-assets.mjs`."
+      },
+      "generatedAt": {
+        "value": "2026-08-04T13:07:58.299Z",
+        "source": "Recorded by the export script at capture time and written to assets/exports/readme-cockpit-architecture-boundary-1800x1100/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
+      },
+      "refreshTrigger": "Update when the cockpit boundary changes: a new route, a change to what crosses Zod, or a change to which evidence axes are kept apart.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
+      },
+      "supersedes": [
+        "tally-architecture",
+        "tally-architecture-png"
+      ]
+    },
+    {
+      "id": "readme-hac-150-paired-evaluation-1400x620",
+      "title": "HAC-150 paired evaluation (1400 × 620)",
+      "storyBeat": "Measured behaviour: what ten controlled paired runs showed when the context envelope was the only varying input.",
+      "intendedConclusion": "Under this task, model and settings, joined context carried the exact source revision in every run and DataHub-only carried it in none.",
+      "canonicalPath": "assets/exports/readme-hac-150-paired-evaluation-1400x620/readme-hac-150-paired-evaluation-1400x620.png",
+      "sha256": "bee0f736fbf55c796bccf7886f00bc7fb71c3f00eee68f47df4f0df057df4178",
+      "claimIds": [
+        "TALLY-CLAIM-009",
+        "TALLY-CLAIM-010",
+        "TALLY-CLAIM-011"
+      ],
+      "sourceType": "authored-canvas-export",
+      "export": {
+        "filename": "readme-hac-150-paired-evaluation-1400x620.png",
+        "format": "png",
+        "width": 2800,
+        "height": 1240,
+        "aspectRatio": "70:31",
+        "colorMode": "RGB, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null,
+        "cssBox": {
+          "width": 1400,
+          "height": 620
+        },
+        "deviceScaleFactor": 2,
+        "colorScheme": "dark"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "6a7263857f941d94c08e03bde4ff4e92e4cf6fc4",
+        "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes. Re-export from the source with `node scripts/export-authored-readme-assets.mjs` rather than editing the PNG.",
+      "limitations": [
+        "Ten paired runs on one task with one model at temperature 0. It is a controlled comparison, not a significance test, and it supports no claim about models in general.",
+        "\"Distinct normalized step sequences\" counts sequences of step ids, not prose. It is not a claim that ten runs produced byte-identical plans.",
+        "No safe area is recorded. The value is null because the source defines no crop specification, not because the full frame is known to be safe.",
+        "Byte reproducibility is demonstrated for this environment, not asserted in general: two consecutive runs of the export script from the same source produced identical bytes on Chromium 151.0.7922.34. A different Chromium build may rasterise differently.",
+        "Re-exported from the checked-in source rather than carried over from the design tool that first drew it. The frame, copy, geometry and dimensions are the approved ones, but the bytes are not the design tool's: rendering the same source in Chromium differs from the original export by antialiasing, measured at roughly 0.01 to 1.6 percent of pixels depending on how much small text and how many hairline borders the canvas carries. No content differs.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "HAC-150 paired evaluation. Across 10 controlled paired runs, the exact source revision appeared in 0 of 10 DataHub-only plans and 10 of 10 joined-context plans. DataHub-only produced five normalized step sequences and joined context one. DataHub-only refused the unknown repository source in all runs, while joined context removed the refusal in all runs.",
+      "proposedCaption": "Ten paired runs, one varying input. Every denominator is the pairs requested, so a failed run stays in the count rather than leaving it.",
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "authored-in-repository",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "assets/source/readme-hac-150-paired-evaluation-1400x620/readme-hac-150-paired-evaluation-1400x620.dc.html",
+        "sha256": "1775c42a916420462ab278684e94a0f70c9147e0c0e1f984dc003654190802a2",
+        "detail": "The `.dc.html` canvas is the editable source and the PNG is the governed display export. `commitOrRef` is null on purpose: the source is committed in the same change that adds this record, so any SHA written here would either be self-referential or would name a branch commit that a squash merge discards. The source is pinned by digest instead, which survives the merge. Regenerate with `node scripts/export-authored-readme-assets.mjs`."
+      },
+      "generatedAt": {
+        "value": "2026-08-04T13:07:58.462Z",
+        "source": "Recorded by the export script at capture time and written to assets/exports/readme-hac-150-paired-evaluation-1400x620/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
+      },
+      "refreshTrigger": "Regenerate when HAC-150 is re-run, or when any measure it quotes changes in evaluation/hac-150/aggregate.json.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
+      },
+      "supersedes": []
+    },
+    {
+      "id": "readme-node-accounting-1200x780",
+      "title": "Proof-corpus node accounting (1200 × 780 canvas, 2400 × 1660 export)",
+      "storyBeat": "Nothing vanishes: every node in the pinned proof corpus is accounted for, and the legacy figure is placed where it belongs.",
+      "intendedConclusion": "The current join accounts for all 28 nodes. The legacy extractModels figure belongs to a frozen regression baseline and is not a current pipeline result.",
+      "canonicalPath": "assets/exports/readme-node-accounting-1200x780/readme-node-accounting-1200x780.png",
+      "sha256": "4b04fce6e8009936ad65409ecbceb1b1ea7d0b8c4d87a0d82b8e35f025430c2c",
+      "claimIds": [
+        "TALLY-CLAIM-003",
+        "TALLY-CLAIM-008"
+      ],
+      "sourceType": "authored-canvas-export",
+      "export": {
+        "filename": "readme-node-accounting-1200x780.png",
+        "format": "png",
+        "width": 2400,
+        "height": 1660,
+        "aspectRatio": "120:83",
+        "colorMode": "RGB, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null,
+        "cssBox": {
+          "width": 1200,
+          "height": 829.453125
+        },
+        "deviceScaleFactor": 2,
+        "colorScheme": "dark"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "6a7263857f941d94c08e03bde4ff4e92e4cf6fc4",
+        "evidenceRevision": "36bde6cba69d962b83be1d52fc65a0dce1cb4ebb"
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes. Re-export from the source with `node scripts/export-authored-readme-assets.mjs` rather than editing the PNG.",
+      "limitations": [
+        "The counts describe the pinned Jaffle Shop proof corpus. They are not a claim about dbt projects in general.",
+        "The canvas declares a 1200 × 780 preview but sets no height on its root element, so the export takes its height from the content. The governed export is 2400 × 1660 device pixels; the id names the declared canvas.",
+        "No safe area is recorded. The value is null because the source defines no crop specification, not because the full frame is known to be safe.",
+        "Byte reproducibility is demonstrated for this environment, not asserted in general: two consecutive runs of the export script from the same source produced identical bytes on Chromium 151.0.7922.34. A different Chromium build may rasterise differently.",
+        "Re-exported from the checked-in source rather than carried over from the design tool that first drew it. The frame, copy, geometry and dimensions are the approved ones, but the bytes are not the design tool's: rendering the same source in Chromium differs from the original export by antialiasing, measured at roughly 0.01 to 1.6 percent of pixels depending on how much small text and how many hairline borders the canvas carries. No content differs.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "Proof-corpus node accounting. Twenty-eight total nodes equal 8 kept dataset-bearing nodes, 20 test nodes excluded by policy, and 0 dropped. The legacy extractModels function retains 5 of 28 but is not on the current join path.",
+      "proposedCaption": "The current join accounts for every node in the pinned proof corpus. The legacy `extractModels` figure belongs to a separate frozen regression baseline and is not a current pipeline result.",
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "authored-in-repository",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "assets/source/readme-node-accounting-1200x780/readme-node-accounting-1200x780.dc.html",
+        "sha256": "a5acc495eadee24311b326b4b9509263a70095f249518b112fc647dddd85508e",
+        "detail": "The `.dc.html` canvas is the editable source and the PNG is the governed display export. `commitOrRef` is null on purpose: the source is committed in the same change that adds this record, so any SHA written here would either be self-referential or would name a branch commit that a squash merge discards. The source is pinned by digest instead, which survives the merge. Regenerate with `node scripts/export-authored-readme-assets.mjs`."
+      },
+      "generatedAt": {
+        "value": "2026-08-04T13:07:58.665Z",
+        "source": "Recorded by the export script at capture time and written to assets/exports/readme-node-accounting-1200x780/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
+      },
+      "refreshTrigger": "Regenerate when the proof corpus is repinned, when the node accounting changes, or when the dataset-bearing resource types change.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
+      },
+      "supersedes": []
+    },
+    {
+      "id": "readme-datahub-feedback-synthesis-1400x1110",
+      "title": "DataHub feedback synthesis (1400 × 1110)",
+      "storyBeat": "What building against DataHub uncovered, grouped by the shape of the failure.",
+      "intendedConclusion": "Eleven findings were written down and one question was left open because it was never reproduced. Two upstream pull requests are open.",
+      "canonicalPath": "assets/exports/readme-datahub-feedback-synthesis-1400x1110/readme-datahub-feedback-synthesis-1400x1110.png",
+      "sha256": "5fa0609d4ebc362d80aa7040c27756ce6cbe4e698a5566802ee84e061bbd5f70",
+      "claimIds": [
+        "TALLY-CLAIM-012"
+      ],
+      "sourceType": "authored-canvas-export",
+      "export": {
+        "filename": "readme-datahub-feedback-synthesis-1400x1110.png",
+        "format": "png",
+        "width": 2800,
+        "height": 2220,
+        "aspectRatio": "140:111",
+        "colorMode": "RGB, 8-bit per channel, no embedded colour profile; consumers assume sRGB",
+        "safeArea": null,
+        "cssBox": {
+          "width": 1400,
+          "height": 1110
+        },
+        "deviceScaleFactor": 2,
+        "colorScheme": "dark"
+      },
+      "approvalState": "approved",
+      "publicUse": "allowed",
+      "productEvidenceRevision": {
+        "productRevision": "6a7263857f941d94c08e03bde4ff4e92e4cf6fc4",
+        "evidenceRevision": "6ea9f56bdc70a4723ec872b45772b22614104f7e"
+      },
+      "isQuantitative": true,
+      "stalenessRule": "Recalculate the byte hash and re-review approval, public-use, caption, and alt text whenever this file changes. Re-export from the source with `node scripts/export-authored-readme-assets.mjs` rather than editing the PNG.",
+      "limitations": [
+        "An inventory of what was written down, not a claim that any finding was accepted upstream.",
+        "The two pull-request states were true when the asset was reviewed on 2026-08-04. A pull-request state is not a fact this repository can keep current, so it is dated rather than asserted as ongoing.",
+        "The open question is counted apart from the eleven because it was never reproduced. Folding it in would report a suspicion as a finding.",
+        "No safe area is recorded. The value is null because the source defines no crop specification, not because the full frame is known to be safe.",
+        "Byte reproducibility is demonstrated for this environment, not asserted in general: two consecutive runs of the export script from the same source produced identical bytes on Chromium 151.0.7922.34. A different Chromium build may rasterise differently.",
+        "Re-exported from the checked-in source rather than carried over from the design tool that first drew it. The frame, copy, geometry and dimensions are the approved ones, but the bytes are not the design tool's: rendering the same source in Chromium differs from the original export by antialiasing, measured at roughly 0.01 to 1.6 percent of pixels depending on how much small text and how many hairline borders the canvas carries. No content differs.",
+        "Approved for this repository's GitHub README only. Website, Devpost and video use remain unreviewed."
+      ],
+      "destinationEligibility": {
+        "website": "pending-owner-review",
+        "devpost": "pending-owner-review",
+        "github": "approved",
+        "video": "pending-owner-review"
+      },
+      "proposedAltText": "DataHub feedback synthesis. Eleven findings and one unreproduced open question are grouped as one state-destruction finding, three answers wrong without looking wrong, two answers ambiguous by construction, and five documentation or setup hazards. Two upstream pull requests remain open.",
+      "proposedCaption": "Eleven findings and one open question, grouped by failure shape. Both upstream pull requests were open when this asset was reviewed.",
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed.",
+      "owner": "Qwynn Marcelle",
+      "destinationSurface": "github-readme",
+      "editableSource": {
+        "type": "authored-in-repository",
+        "repository": "workspacejson/datahub-agent",
+        "commitOrRef": null,
+        "path": "assets/source/readme-datahub-feedback-synthesis-1400x1110/readme-datahub-feedback-synthesis-1400x1110.dc.html",
+        "sha256": "e1af0cf54acabebb8533a6a6f947feb531eb163f198ad8426ff685efd227eb49",
+        "detail": "The `.dc.html` canvas is the editable source and the PNG is the governed display export. `commitOrRef` is null on purpose: the source is committed in the same change that adds this record, so any SHA written here would either be self-referential or would name a branch commit that a squash merge discards. The source is pinned by digest instead, which survives the merge. Regenerate with `node scripts/export-authored-readme-assets.mjs`."
+      },
+      "generatedAt": {
+        "value": "2026-08-04T13:07:58.882Z",
+        "source": "Recorded by the export script at capture time and written to assets/exports/readme-datahub-feedback-synthesis-1400x1110/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
+      },
+      "refreshTrigger": "Regenerate when a finding is added, removed or regrouped in FEEDBACK.md, or when either upstream pull request changes state.",
+      "publicDestination": {
+        "url": null,
+        "uploadReceipt": null,
+        "verifiedLoggedOut": false,
+        "detail": "Rendered by README.md on the repository front page. A stable raw URL exists only after this change merges, so no URL is recorded and no logged-out verification has been performed."
       },
       "supersedes": []
     }

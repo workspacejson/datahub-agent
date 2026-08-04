@@ -121,10 +121,10 @@
       // `node -e "import('playwright-core').then(m => console.log(typeof m.chromium))"`
       // prints `object`, and the script it guards runs and produces the export.
       //
-      // Scoped to the one file so the rule stays live everywhere else. If a
-      // future biome resolves star re-exports, this override should be deleted
-      // rather than kept for safety.
-      "includes": ["scripts/capture-readme-assets.mjs"],
+      // Scoped to the two capture scripts so the rule stays live everywhere
+      // else. If a future biome resolves star re-exports, this override should
+      // be deleted rather than kept for safety.
+      "includes": ["scripts/capture-readme-assets.mjs", "scripts/export-authored-readme-assets.mjs"],
       "linter": { "rules": { "correctness": { "noUnresolvedImports": "off" } } }
     }
   ]

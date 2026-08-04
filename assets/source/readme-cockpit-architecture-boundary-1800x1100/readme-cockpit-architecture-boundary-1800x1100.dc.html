@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="../_design-system/tokens/fonts.css">
+<link rel="stylesheet" href="../_design-system/tokens/colors.css">
+<link rel="stylesheet" href="../_design-system/tokens/typography.css">
+<style>
+body{margin:0;background:#020605;font-family:var(--font-sans,system-ui);color:#f5f7f6}
+a{color:#00c896;text-decoration:none}
+a:hover{color:#7fffd4}
+</style>
+</helmet>
+
+<div data-screen-label="Cockpit architecture" style="width:1800px;height:1100px;box-sizing:border-box;background:#07100e;background-image:radial-gradient(1100px 520px at 92% -14%,rgba(0,200,150,.12),transparent 70%),radial-gradient(820px 460px at -6% 34%,rgba(0,200,150,.08),transparent 70%),repeating-linear-gradient(to bottom,rgba(255,255,255,.015) 0 1px,transparent 1px 56px);border:1px solid #1d3a31;border-radius:20px;padding:46px 54px 44px;display:flex;flex-direction:column;gap:30px;overflow:hidden">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:24px;border-bottom:1px solid #173028;flex:none">
+    <div style="display:flex;align-items:center;gap:14px">
+      <svg viewBox="0 0 104 96" width="34" height="31" aria-hidden="true" style="display:block;flex:none"><g fill="#00c896"><rect x="6" y="6" width="7" height="84"></rect><rect x="6" y="6" width="22" height="7"></rect><rect x="6" y="83" width="22" height="7"></rect><rect x="91" y="6" width="7" height="84"></rect><rect x="76" y="6" width="22" height="7"></rect><rect x="76" y="83" width="22" height="7"></rect></g><g fill="#f5f7f6"><rect x="32" y="18" width="7" height="60"></rect><rect x="45" y="18" width="7" height="60"></rect><rect x="58" y="18" width="7" height="60"></rect><rect x="71" y="18" width="7" height="60"></rect></g><path d="M26 74 L84 38" stroke="#f5f7f6" stroke-width="7"></path></svg>
+      <span style="font:800 30px/1 var(--font-sans);letter-spacing:-.04em;color:#f5f7f6">tally</span>
+      <span style="width:1px;height:26px;background:#24443b;display:block"></span>
+      <span style="font:500 22px/1 var(--font-sans);letter-spacing:-.02em;color:#8fa39b">cockpit architecture boundary</span>
+    </div>
+    <span style="font:500 13px/1 var(--font-mono);letter-spacing:.28em;text-transform:uppercase;color:#5d7a70">committed evidence, validated, rendered offline</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.02fr 1.08fr;gap:0;align-items:stretch;flex:none">
+
+    <div style="padding-right:40px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <span style="font:500 13px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70">01</span>
+        <span style="font:800 25px/1.1 var(--font-sans);letter-spacing:-.035em;color:#f5f7f6">Committed evidence</span>
+      </div>
+      <div style="background:#0b1714;border:1px solid #173028;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.35);padding:24px 24px 22px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:500 24px/1.2 var(--font-mono);color:#f5f7f6">ChangeImpactEvent</span>
+          <span style="font:400 17px/1.5 var(--font-sans);color:#8fa39b">committed build-time event</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:14px;background:#07100e;border:1px solid #24443b;border-left:4px solid #6f7d78;border-radius:10px;padding:14px 16px">
+            <span style="font:600 13px/1 var(--font-mono);color:#a8b7b1;border:1px solid #3a4d47;border-radius:4px;padding:4px 7px;flex:none">DH</span>
+            <span style="font:500 19px/1.3 var(--font-sans);color:#e6ece9">DataHub<span style="color:#8fa39b;font-weight:400">-derived fields</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:#07100e;border:1px solid #1d5a48;border-left:4px solid #00c896;border-radius:10px;padding:14px 16px">
+            <span style="font:600 13px/1 var(--font-mono);color:#00c896;border:1px solid #1d5a48;border-radius:4px;padding:4px 7px;flex:none">WJ</span>
+            <span style="font:500 19px/1.3 var(--font-mono);color:#7fffd4">workspace.json<span style="font-family:var(--font-sans);color:#8fa39b;font-weight:400">-derived fields</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:#07100e;border:1px solid #24443b;border-left:4px solid #3a4d47;border-radius:10px;padding:14px 16px">
+            <span style="font:600 13px/1 var(--font-mono);color:#a8b7b1;border:1px solid #3a4d47;border-radius:4px;padding:4px 7px;flex:none">PR</span>
+            <span style="font:500 19px/1.3 var(--font-sans);color:#e6ece9">provenance block</span>
+          </div>
+        </div>
+        <div style="padding-top:16px;border-top:1px solid #173028;font:400 17px/1.5 var(--font-sans);color:#8fa39b">Two source attributions, kept distinct in the event.</div>
+      </div>
+    </div>
+
+    <div style="padding:0 40px;border-left:1px solid #24443b;border-right:1px solid #24443b;display:flex;flex-direction:column;gap:16px;position:relative">
+      <div style="position:absolute;left:-7px;top:96px;width:13px;height:13px;background:#07100e;border:1px solid #00c896;border-radius:999px"></div>
+      <div style="position:absolute;right:-7px;top:96px;width:13px;height:13px;background:#00c896;border-radius:999px"></div>
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <span style="font:500 13px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70">02</span>
+        <span style="font:800 25px/1.1 var(--font-sans);letter-spacing:-.035em;color:#f5f7f6">Validation and projection</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="flex:1;background:#0b1714;border:1px solid #36544b;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px">
+          <span style="font:500 12px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#00c896">validate</span>
+          <span style="font:700 21px/1.2 var(--font-sans);letter-spacing:-.02em;color:#f5f7f6">Zod validation</span>
+        </div>
+        <span style="font:400 26px/1 var(--font-sans);color:#00c896;flex:none">&#8594;</span>
+        <div style="flex:1;background:#0b1714;border:1px solid #36544b;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px">
+          <span style="font:500 12px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#00c896">project</span>
+          <span style="font:700 21px/1.2 var(--font-mono);letter-spacing:-.01em;color:#f5f7f6">CockpitViewModel</span>
+        </div>
+      </div>
+      <div style="background:#0b1714;border:1px solid #1d5a48;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.35);padding:22px 24px;font:700 27px/1.3 var(--font-sans);letter-spacing:-.03em;color:#f5f7f6">Components accept only the validated view model.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="background:#07100e;border:1px solid #24443b;border-radius:12px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px">
+          <span style="font:500 12px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#8fa39b">Presentation allowed</span>
+          <div style="display:flex;gap:9px;align-items:flex-start"><span style="font:600 17px/1.4 var(--font-mono);color:#00c896;flex:none">+</span><span style="font:400 17px/1.4 var(--font-sans);color:#cdd8d3">group and order records</span></div>
+          <div style="display:flex;gap:9px;align-items:flex-start"><span style="font:600 17px/1.4 var(--font-mono);color:#00c896;flex:none">+</span><span style="font:400 17px/1.4 var(--font-sans);color:#cdd8d3">format values and derive labels from enums</span></div>
+        </div>
+        <div style="background:#07100e;border:1px solid #3a4d47;border-radius:12px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px">
+          <span style="font:500 12px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#8fa39b">Facts not allowed</span>
+          <div style="display:flex;gap:9px;align-items:flex-start"><span style="font:600 17px/1.4 var(--font-mono);color:#8fa39b;flex:none">&#8722;</span><span style="font:400 17px/1.4 var(--font-sans);color:#cdd8d3">introduce claims or evaluation results</span></div>
+          <div style="display:flex;gap:9px;align-items:flex-start"><span style="font:600 17px/1.4 var(--font-mono);color:#8fa39b;flex:none">&#8722;</span><span style="font:400 17px/1.4 var(--font-sans);color:#cdd8d3">invent absence reasons or provenance</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding-left:40px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <span style="font:500 13px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:#5d7a70">03</span>
+        <span style="font:800 25px/1.1 var(--font-sans);letter-spacing:-.035em;color:#f5f7f6">Cockpit application</span>
+      </div>
+      <div style="background:#0b1714;border:1px solid #36544b;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:22px 24px 20px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <span style="font:600 24px/1.2 var(--font-mono);color:#f5f7f6">apps/cockpit</span>
+          <span style="font:500 14px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:#8fa39b;border:1px solid #3a4d47;border-radius:999px;padding:7px 13px;white-space:nowrap">offline</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div style="background:#07100e;border:1px solid #24443b;border-radius:10px;padding:15px 14px;display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70">route</span>
+            <span style="font:700 21px/1.2 var(--font-sans);letter-spacing:-.02em;color:#f5f7f6">Impact</span>
+          </div>
+          <div style="background:#07100e;border:1px solid #24443b;border-radius:10px;padding:15px 14px;display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70">route</span>
+            <span style="font:700 21px/1.2 var(--font-sans);letter-spacing:-.02em;color:#f5f7f6">Change plan</span>
+          </div>
+          <div style="background:#07100e;border:1px solid #24443b;border-radius:10px;padding:15px 14px;display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#5d7a70">route</span>
+            <span style="font:700 21px/1.2 var(--font-sans);letter-spacing:-.02em;color:#f5f7f6">Receipts</span>
+            <span style="font:400 14px/1.35 var(--font-sans);color:#8fa39b">evidence accounting</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span style="font:400 15px/1 var(--font-mono);color:#bfcdc6;background:#07100e;border:1px solid #173028;border-radius:6px;padding:9px 11px">React 19</span>
+          <span style="font:400 15px/1 var(--font-mono);color:#bfcdc6;background:#07100e;border:1px solid #173028;border-radius:6px;padding:9px 11px">TypeScript</span>
+          <span style="font:400 15px/1 var(--font-mono);color:#bfcdc6;background:#07100e;border:1px solid #173028;border-radius:6px;padding:9px 11px">Vite 8</span>
+          <span style="font:400 15px/1 var(--font-mono);color:#bfcdc6;background:#07100e;border:1px solid #173028;border-radius:6px;padding:9px 11px">Tailwind 4</span>
+          <span style="font:400 15px/1 var(--font-mono);color:#bfcdc6;background:#07100e;border:1px solid #173028;border-radius:6px;padding:9px 11px">URL and local React state</span>
+        </div>
+        <div style="padding-top:16px;border-top:1px solid #173028;display:flex;flex-direction:column;gap:8px">
+          <span style="font:600 21px/1.35 var(--font-sans);letter-spacing:-.02em;color:#f5f7f6">offline browser application</span>
+          <div style="display:flex;align-items:center;gap:11px">
+            <span style="font:600 17px/1 var(--font-mono);color:#8fa39b;flex:none">&#8709;</span>
+            <span style="font:500 20px/1.3 var(--font-sans);color:#cdd8d3">no browser network access</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;margin-top:2px">
+            <span style="font:600 17px/1 var(--font-mono);color:#8fa39b;flex:none">&#8709;</span>
+            <span style="font:400 18px/1.3 var(--font-sans);color:#8fa39b">no call to DataHub</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.08fr;gap:44px;flex:1;min-height:0;align-items:stretch">
+
+    <div style="border-top:1px solid #173028;padding-top:26px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font:600 20px/1.2 var(--font-sans);letter-spacing:-.02em;color:#e6ece9">Optional writeback</span>
+        <span style="font:500 12px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:#8fa39b;border:1px dashed #3a4d47;border-radius:999px;padding:6px 11px">integration/runtime</span>
+      </div>
+      <div style="border:1px dashed #3a4d47;border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;background:rgba(11,23,20,.5)">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font:500 17px/1.3 var(--font-sans);color:#cdd8d3">mutation acceptance</span>
+          <span style="font:400 18px/1 var(--font-sans);color:#5d7a70">&#8594;</span>
+          <span style="font:500 17px/1.3 var(--font-sans);color:#cdd8d3">Observe before / after</span>
+          <span style="font:400 18px/1 var(--font-sans);color:#5d7a70">&#8594;</span>
+          <span style="font:500 17px/1.3 var(--font-sans);color:#cdd8d3">bounded Receipt</span>
+        </div>
+        <div style="padding-top:14px;border-top:1px dashed #3a4d47;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font:500 16px/1.3 var(--font-mono);color:#8fa39b">committed ChangeImpactEvent</span>
+          <span style="font:400 18px/1 var(--font-sans);color:#00c896">&#8594;</span>
+          <span style="font:500 16px/1.3 var(--font-sans);color:#8fa39b">Validate</span>
+          <span style="font:400 18px/1 var(--font-sans);color:#00c896">&#8594;</span>
+          <span style="font:500 16px/1.3 var(--font-mono);color:#8fa39b">CockpitViewModel</span>
+        </div>
+        <div style="font:400 16px/1.5 var(--font-sans);color:#8fa39b">The cockpit consumes the resulting committed receipt. It never performs the writeback. Verification stays separate from mutation acceptance.</div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #173028;padding-top:26px;display:flex;flex-direction:column;gap:14px">
+      <span style="font:600 20px/1.2 var(--font-sans);letter-spacing:-.02em;color:#e6ece9">Independent evidence axes</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 22px">
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">provenance</span></div>
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">resolution disposition</span><span style="font:500 13px/1 var(--font-mono);color:#a8b7b1;border:1px solid #3a4d47;border-radius:999px;padding:5px 10px;white-space:nowrap">Unavailable</span></div>
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">read status</span></div>
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">unavailable reason</span></div>
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">completeness</span><span style="font:500 13px/1 var(--font-mono);color:var(--wj-experimental,#f59e0b);border:1px solid #6b5320;border-radius:999px;padding:5px 10px;white-space:nowrap">Not established</span></div>
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">evidence tier</span><span style="font:500 13px/1 var(--font-mono);letter-spacing:.06em;color:#00c896;border:1px solid #1d5a48;border-radius:999px;padding:5px 10px;white-space:nowrap">VERIFIED</span></div>
+        <div style="display:flex;align-items:center;gap:12px;border-left:2px solid #3a4d47;padding:7px 0 7px 14px"><span style="font:500 18px/1.3 var(--font-sans);color:#cdd8d3">writeback outcomes</span></div>
+      </div>
+      <div style="font:600 18px/1.5 var(--font-sans);color:#e6ece9;padding-top:6px">Each axis answers a separate question. No field answers two.</div>
+    </div>
+
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1800,&quot;height&quot;:1100}}"></script>
+</body>
+</html>

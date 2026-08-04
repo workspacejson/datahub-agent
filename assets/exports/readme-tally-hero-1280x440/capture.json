@@ -1,0 +1,27 @@
+{
+  "id": "readme-tally-hero-1280x440",
+  "source": {
+    "path": "assets/source/readme-tally-hero-1280x440/readme-tally-hero-1280x440.dc.html",
+    "sha256": "e5ebd77b60251f8821147cbd1ce04ea80c27faa65a7db7a78b1d9500e5b86ded",
+    "bytes": 4545
+  },
+  "export": {
+    "path": "assets/exports/readme-tally-hero-1280x440/readme-tally-hero-1280x440.png",
+    "sha256": "2ace855f23c34201c329bafadeace8c73cc5781ae4ecd9522e20dcc6fb9bae1f",
+    "bytes": 120156,
+    "format": "png",
+    "width": 2560,
+    "height": 880
+  },
+  "cssBox": {
+    "width": 1280,
+    "height": 440
+  },
+  "deviceScaleFactor": 2,
+  "colorScheme": "dark",
+  "heightSource": "declared on the source canvas",
+  "networkResourcesLoaded": 0,
+  "generationCommand": "node scripts/export-authored-readme-assets.mjs",
+  "runtime": "Chromium 151.0.7922.34 via playwright-core 1.62.0",
+  "generatedAt": "2026-08-04T13:07:57.948Z"
+}

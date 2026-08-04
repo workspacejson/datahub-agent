@@ -1,0 +1,27 @@
+{
+  "id": "readme-cockpit-architecture-boundary-1800x1100",
+  "source": {
+    "path": "assets/source/readme-cockpit-architecture-boundary-1800x1100/readme-cockpit-architecture-boundary-1800x1100.dc.html",
+    "sha256": "153cb236ee63d442807f67232e0c6d4b5fc935d8e98a182d9c5a9adeb6dd31f6",
+    "bytes": 18051
+  },
+  "export": {
+    "path": "assets/exports/readme-cockpit-architecture-boundary-1800x1100/readme-cockpit-architecture-boundary-1800x1100.png",
+    "sha256": "2cd059833165bd7474802a9b2081ad425cd7198ad646276912dcc3c21a044127",
+    "bytes": 669049,
+    "format": "png",
+    "width": 3600,
+    "height": 2200
+  },
+  "cssBox": {
+    "width": 1800,
+    "height": 1100
+  },
+  "deviceScaleFactor": 2,
+  "colorScheme": "dark",
+  "heightSource": "declared on the source canvas",
+  "networkResourcesLoaded": 0,
+  "generationCommand": "node scripts/export-authored-readme-assets.mjs",
+  "runtime": "Chromium 151.0.7922.34 via playwright-core 1.62.0",
+  "generatedAt": "2026-08-04T13:07:58.299Z"
+}

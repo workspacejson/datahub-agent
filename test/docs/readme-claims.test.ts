@@ -45,8 +45,23 @@ describe("the README makes no perishable count claim", () => {
     // Any "N test(s)" phrasing. The fix for the original defect was to stop
     // asserting the number at all, not to update it — an updated number is the
     // same defect with a later expiry date.
-    const counts = README.match(/\b\d+\s+tests?\b/gi) ?? [];
+    //
+    // "N test node(s)" is excluded, and the exclusion is narrow on purpose. A
+    // dbt `test` node is a manifest resource type, not an assertion in this
+    // repository's suite: "20 test nodes excluded by policy" is a fixed property
+    // of a pinned corpus and cannot go stale on a merge, which is the only thing
+    // this guard exists to catch. Excluding it by meaning keeps the alt text on
+    // the node-accounting image, which the asset registry governs verbatim,
+    // rather than rewording a governed string to satisfy a regex.
+    const counts = README.match(/\b\d+\s+tests?\b(?!\s+nodes?\b)/gi) ?? [];
     expect(counts, `README asserts a perishable test count: ${counts.join(", ")}`).toEqual([]);
+  });
+
+  it("still catches a suite count that hides beside the node-type exclusion", () => {
+    // The detector for the exclusion above. Without it, narrowing the regex
+    // could be widened later into a hole big enough for the original defect.
+    const withSuiteCount = README.replace("## Known limitations", "## Known limitations\n\n27 tests cover this.");
+    expect(withSuiteCount.match(/\b\d+\s+tests?\b(?!\s+nodes?\b)/gi) ?? []).not.toEqual([]);
   });
 
   it("still tells a reader how to run the suite", () => {
@@ -106,6 +121,88 @@ describe("the README explains the evidence vocabulary a cold reader will meet", 
     for (const _ of bare) {
       expect(README).toMatch(/VERIFIED.{0,120}(record|counts that produced)/is);
     }
+  });
+});
+
+describe("the README claims no behavioral co-change the bound event does not carry", () => {
+  /*
+    The cockpit already fixed this once, in prose, with nothing pinning it.
+
+    "DataHub says where data flows; git says what breaks together" claimed
+    exactly the capability the receipt disclaims, and it was landed as "git says
+    where each file lives" (see `docs/cockpit-ideal-state-gap.md`). The README
+    then reintroduced the same claim in two different words: a reviewer seeing
+    "behavioral coupling", and co-change partners listed among what
+    `workspace.json` contributes.
+
+    Both are the appealing version of the claim, which is why the wording keeps
+    coming back. The producer withholds behavioral values by design, the join
+    exercises key membership rather than value reading, and the bound event
+    carries `partners: []`. So the guard is pinned to the event rather than to a
+    banned-word list alone: if a future event ever does carry partners, the
+    positive assertion below relaxes on its own instead of forcing someone to
+    edit a test to state something newly true.
+  */
+  const partners = (goldenNested as unknown as { partners?: unknown[] }).partners ?? [];
+
+  it("is checked against an event that establishes no partners", () => {
+    expect(partners).toEqual([]);
+  });
+
+  it.each([
+    "behavioral coupling",
+    "behavioural coupling",
+    "what breaks together",
+  ])("does not assert %s", (phrase) => {
+    expect(README.toLowerCase(), `README asserts "${phrase}", which the bound event does not establish`).not.toContain(
+      phrase,
+    );
+  });
+
+  it("mentions behaviour only to disclaim it", () => {
+    /*
+      A phrase list is whack-a-mole. The claim came back three times in three
+      wordings -- "behavioral coupling", "a reviewer can tell a declaration from
+      a behaviour", and co-change partners listed as a contribution -- so the
+      rule is about meaning: this README may name behaviour, but only in a
+      sentence that says it is not established.
+
+      Deliberately not a ban on the word. "The producer withholds behavioral
+      values by design" is the honest limitation and has to stay sayable.
+    */
+    const DISCLAIMERS = /\b(not|no|never|withholds|thin for|illustrative)\b/i;
+    const offenders = README.split(/(?<=\.)\s+/)
+      .filter((sentence) => /behavio(u?)r/i.test(sentence))
+      .filter((sentence) => !DISCLAIMERS.test(sentence));
+    expect(offenders, `README names behaviour without disclaiming it: ${offenders.join(" | ")}`).toEqual([]);
+  });
+
+  it("says plainly that the bound event does not establish co-change partners", () => {
+    if (partners.length > 0) return;
+    expect(README).toMatch(/does not establish behavio(u?)ral co-change partners/i);
+  });
+
+  it("would catch the claim coming back in either of its previous shapes", () => {
+    // The detector, against both exact strings that were there. Without it the
+    // assertions above pass on any document that happens not to use the words.
+    for (const regressed of [
+      README.replace(
+        "while keeping repository identity separate from catalog dependency claims",
+        "so a reviewer sees both catalog dependencies and behavioral coupling",
+      ),
+      README.replace(
+        "The artifact carries its own provenance",
+        "Co-change partners, churn, and fragility are repository evidence. The artifact carries its own provenance",
+      ),
+    ]) {
+      expect(regressed).not.toBe(README);
+    }
+    expect(
+      README.replace(
+        "while keeping repository identity separate from catalog dependency claims",
+        "so a reviewer sees both catalog dependencies and behavioral coupling",
+      ).toLowerCase(),
+    ).toContain("behavioral coupling");
   });
 });
 

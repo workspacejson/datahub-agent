@@ -1,0 +1,27 @@
+{
+  "id": "readme-node-accounting-1200x780",
+  "source": {
+    "path": "assets/source/readme-node-accounting-1200x780/readme-node-accounting-1200x780.dc.html",
+    "sha256": "a5acc495eadee24311b326b4b9509263a70095f249518b112fc647dddd85508e",
+    "bytes": 9599
+  },
+  "export": {
+    "path": "assets/exports/readme-node-accounting-1200x780/readme-node-accounting-1200x780.png",
+    "sha256": "4b04fce6e8009936ad65409ecbceb1b1ea7d0b8c4d87a0d82b8e35f025430c2c",
+    "bytes": 211730,
+    "format": "png",
+    "width": 2400,
+    "height": 1660
+  },
+  "cssBox": {
+    "width": 1200,
+    "height": 829.453125
+  },
+  "deviceScaleFactor": 2,
+  "colorScheme": "dark",
+  "heightSource": "content",
+  "networkResourcesLoaded": 0,
+  "generationCommand": "node scripts/export-authored-readme-assets.mjs",
+  "runtime": "Chromium 151.0.7922.34 via playwright-core 1.62.0",
+  "generatedAt": "2026-08-04T13:07:58.665Z"
+}

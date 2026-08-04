@@ -25,10 +25,27 @@ file cannot drift apart by filename. Exports lived under `public/assets/` until
 2026-07-29; that directory is gone, because two homes for one asset is the state
 this registry exists to prevent.
 
-`source/` is currently unpopulated, and that is a real gap rather than a tidy
-default: none of the checked-in exports has an editable source in this
-repository, so none of them can be regenerated from a clean clone. Each record
-says so in its `editableSource` and its limitations.
+`source/` holds the editable canvases for the authored diagrams, one directory
+per record, matching `exports/`. The `.dc.html` file is the editable source and
+the PNG beside it in `exports/` is the governed display export; neither is a copy
+of the other, and neither has a second home.
+
+`source/_design-system/` is the shared render input those canvases link against:
+the two design-system token files they reference, plus the brand faces
+self-hosted so a render touches no network. `tokens/colors.css` and
+`tokens/typography.css` are verbatim copies of the upstream package and are
+byte-identical to `apps/cockpit/src/styles/tokens/`, which a policy test asserts
+so the two cannot drift in silence. They are pinned here rather than imported
+from the application on purpose: a governed export whose hash is registered must
+render from frozen inputs, and binding it to mutable application source would let
+a token tweak change an approved image without anything failing. `tokens/fonts.css`
+is the one adapted file, and its header says why.
+
+The gap this closes was real. Until 2026-08-04 every record said the export was
+governed and its origin was not, because the canvases lived outside version
+control and rendering one needed a font CDN. The remaining rasters that are
+screenshots or brand chrome still carry that limitation honestly; the five
+authored README diagrams no longer do.
 
 The brand vectors stay at `apps/cockpit/public/brand/`. The running application
 serves them from there, so that path is their single canonical home; copying them
@@ -63,11 +80,12 @@ and a null here is a statement rather than an omission:
 | `destinationSurface` | The single surface the asset is for. `destinationEligibility` is the per-destination approval grid and is a different question. |
 | `export.colorMode` | Read from the file, not assumed. Includes whether a colour profile is embedded; none of the current PNGs carries one, so consumers will assume sRGB. |
 | `export.safeArea` | **Null on every record.** No crop specification was supplied for any export. Null means unspecified, not "the full frame is safe". |
-| `editableSource` | `none-in-repository` for every raster: the export is governed, its origin is not, and re-export needs a tool outside version control. |
+| `editableSource` | `authored-in-repository` for the five authored README canvases, naming the `.dc.html` source and its digest. `commitOrRef` is null on those, because a source committed in the same change as its record can only be named by a SHA that is self-referential or that a squash merge discards; the digest survives both. `none-in-repository` elsewhere: those exports are governed, their origins are not. |
+| `supersededOnDestination` | Present when an asset loses one placement but stays valid elsewhere. It names the destination, the replacement, and the date. Distinct from `approvalState: "superseded"`, which retires the asset outright. |
 | `generatedAt` | Filesystem mtime at registration, with `source` saying so. No export event was ever recorded, so this is when the file was last written, not provably when it was produced. |
 | `refreshTrigger` | Measured assets refresh when a displayed value changes; brand assets when the mark, palette or copy changes. |
 | `publicDestination` | `url` and `uploadReceipt` are null everywhere, and `verifiedLoggedOut` is false everywhere. **No destination has been verified logged out**, which HAC-277 requires before a destination counts as published. |
-| `supersedes` | Populated on the two GitHub heroes, which replace `tally-github-readme`. |
+| `supersedes` | Populated on the two GitHub heroes, which replace `tally-github-readme`, and on the two new README assets that take over a placement from an older one. |
 
 ## What this registry cannot tell you
 
@@ -77,9 +95,15 @@ checked-in asset that no record declares.** Eight images were added under
 `assets/` on 2026-07-29 and the gate stayed green throughout, because an
 undeclared file is invisible to a validator that only reads declarations.
 
-Until that is closed, adding an asset means adding its record in the same change.
-A green registry validation is evidence that the declared assets are intact, not
-evidence that every checked-in asset is declared.
+That is now closed for `assets/exports/`. `test/policy/readme-assets.test.ts`
+enumerates the filesystem and fails on any display asset under `exports/` that no
+record declares, which is the direction the validator structurally cannot see.
+The validator still checks declarations against files; the policy test checks
+files against declarations, and both are needed.
+
+Adding an asset still means adding its record in the same change. A green
+registry validation on its own remains evidence that the declared assets are
+intact, not evidence that every checked-in asset is declared.
 
 Allowed `approvalState` values are:
 

@@ -1,0 +1,27 @@
+{
+  "id": "readme-hac-150-paired-evaluation-1400x620",
+  "source": {
+    "path": "assets/source/readme-hac-150-paired-evaluation-1400x620/readme-hac-150-paired-evaluation-1400x620.dc.html",
+    "sha256": "1775c42a916420462ab278684e94a0f70c9147e0c0e1f984dc003654190802a2",
+    "bytes": 7749
+  },
+  "export": {
+    "path": "assets/exports/readme-hac-150-paired-evaluation-1400x620/readme-hac-150-paired-evaluation-1400x620.png",
+    "sha256": "bee0f736fbf55c796bccf7886f00bc7fb71c3f00eee68f47df4f0df057df4178",
+    "bytes": 198301,
+    "format": "png",
+    "width": 2800,
+    "height": 1240
+  },
+  "cssBox": {
+    "width": 1400,
+    "height": 620
+  },
+  "deviceScaleFactor": 2,
+  "colorScheme": "dark",
+  "heightSource": "declared on the source canvas",
+  "networkResourcesLoaded": 0,
+  "generationCommand": "node scripts/export-authored-readme-assets.mjs",
+  "runtime": "Chromium 151.0.7922.34 via playwright-core 1.62.0",
+  "generatedAt": "2026-08-04T13:07:58.462Z"
+}

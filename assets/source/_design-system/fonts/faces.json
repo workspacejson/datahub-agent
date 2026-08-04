@@ -1,0 +1,57 @@
+[
+  {
+    "family": "Plus Jakarta Sans",
+    "slug": "plus-jakarta-sans",
+    "subset": "latin-ext",
+    "file": "plus-jakarta-sans-latin-ext.woff2",
+    "weightRange": "400 800",
+    "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+    "bytes": 21688,
+    "sha256": "0303e02b53b0298fb26a0193941a2e8754f0f9a9fce50d90b178d8da3424873f",
+    "upstreamUrl": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko40yygg_vbd-E.woff2"
+  },
+  {
+    "family": "Plus Jakarta Sans",
+    "slug": "plus-jakarta-sans",
+    "subset": "latin",
+    "file": "plus-jakarta-sans-latin.woff2",
+    "weightRange": "400 800",
+    "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+    "bytes": 27272,
+    "sha256": "cd8db90cd950e26bc8761f65d323588bd5cd112d326d6d322bc7c8ea86771215",
+    "upstreamUrl": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2"
+  },
+  {
+    "family": "Geist Mono",
+    "slug": "geist-mono",
+    "subset": "symbols2",
+    "file": "geist-mono-symbols2.woff2",
+    "weightRange": "400 700",
+    "unicodeRange": "U+2000-2001, U+2004-2008, U+200A, U+23B8-23BD, U+2500-259F",
+    "bytes": 5892,
+    "sha256": "d67e4a94ba498635f764ddca7d1ec4271f5642f032eb24b426764480f66f8497",
+    "upstreamUrl": "https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFg08vz7MhEIVVeA.woff2"
+  },
+  {
+    "family": "Geist Mono",
+    "slug": "geist-mono",
+    "subset": "latin-ext",
+    "file": "geist-mono-latin-ext.woff2",
+    "weightRange": "400 700",
+    "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+    "bytes": 14712,
+    "sha256": "745994b5cd950ec201b66526375f057d540847cccfc70f4f24f5f571d26d3923",
+    "upstreamUrl": "https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrkdmhHkjkotbA.woff2"
+  },
+  {
+    "family": "Geist Mono",
+    "slug": "geist-mono",
+    "subset": "latin",
+    "file": "geist-mono-latin.woff2",
+    "weightRange": "400 700",
+    "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+    "bytes": 23108,
+    "sha256": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
+    "upstreamUrl": "https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrcdmhHkjko.woff2"
+  }
+]

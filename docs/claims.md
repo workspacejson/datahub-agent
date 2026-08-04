@@ -143,6 +143,42 @@ denominator, so no rate is computed against a subset that happened to conform.
 prose. Two runs whose wording differs but whose step ids match count as one
 sequence; this is not a claim that ten runs produced byte-identical plans.
 
+### Paired-arm summaries
+
+The rows above state each arm separately, which is the right shape for
+verification and the wrong shape for a diagram: a figure that shows one arm
+without the other is not the finding. The three rows below are the both-arm
+summaries the README's HAC-150 graphic quotes, so the image has one named row to
+agree with rather than a reader's arithmetic across two.
+
+| Claim | Value | Source | Verify |
+| -- | -- | -- | -- |
+| Exact source revision in plan | joined 10/10, DataHub-only 0/10 | `evaluation/hac-150/aggregate.json`, `evaluation/hac-150/pairs.json` | `jq '.measures.exactRevisionOnlyInJoined' evaluation/hac-150/aggregate.json` |
+| Normalized plan-shape stability | DataHub-only 5 sequences, joined 1 | `evaluation/hac-150/aggregate.json` | `jq '[.stability.datahubOnly.distinctSequences, .stability.joined.distinctSequences]' evaluation/hac-150/aggregate.json` |
+| Refusal behaviour on the unknown repository source | present 10/10 DataHub-only, removed 10/10 joined | `evaluation/hac-150/aggregate.json` | `jq '[.stability.datahubOnly.refusalPresent, .measures.refusalRemovedByJoin]' evaluation/hac-150/aggregate.json` |
+
+## Platform feedback
+
+The inventory is a count of what was written down, not a claim that any finding
+was accepted upstream. The open question is counted apart from the eleven
+because it was never reproduced; folding it in would report a suspicion as a
+finding.
+
+| Claim | Value | Source | Verify |
+| -- | -- | -- | -- |
+| Settled findings and open questions | 11 findings, 1 open question | `FEEDBACK.md` | `grep -cE '^## [0-9]+\. ' FEEDBACK.md` for the findings; `grep -c '^## The open question' FEEDBACK.md` for the question |
+| Upstream submissions filed | 2, both open | `FEEDBACK.md` — `acryldata/mcp-server-datahub#149`, `datahub-project/datahub#18754` | Open each pull request and read its state |
+
+## Cockpit architecture boundary
+
+| Claim | Value | Source | Verify |
+| -- | -- | -- | -- |
+| Cockpit architecture boundary | committed events cross Zod into `CockpitViewModel`; no browser-loaded module reaches the network; the three routes render offline | `docs/cockpit-architecture.md`, `apps/cockpit/src/data/architecture-invariants.test.ts` | `npm run test:cockpit` |
+| Components accept only `CockpitViewModel` | yes | `apps/cockpit/src/data/from-change-impact-event.ts` | `npm run test:cockpit` |
+| No browser-loaded module can reach the network | yes | `apps/cockpit/src/data/architecture-invariants.test.ts` — "keeps every module the browser loads free of network calls" | `npm run test:cockpit` |
+| No stylesheet loads a remote font or asset | yes | `apps/cockpit/src/data/architecture-invariants.test.ts` | `npm run test:cockpit` |
+| The committed build never leaves its origin | yes | `apps/cockpit/e2e/first-frame.spec.ts` — "the committed build renders the golden subject and never leaves its origin" | `npm run e2e` *(manual — requires browsers)* |
+
 ## MCP field coverage
 
 | Claim | Value | Source | Verify |
