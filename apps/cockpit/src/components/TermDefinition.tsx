@@ -1,4 +1,7 @@
+import { useCallback, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
+
+import { useCloseWhenTriggerLeavesViewport } from "../hooks/use-close-when-trigger-leaves-viewport";
 
 export interface TermDefinitionProps {
   /** The term as it reads in the sentence. Stays in the running text. */
@@ -30,10 +33,15 @@ export interface TermDefinitionProps {
  * one clause of it.
  */
 export function TermDefinition({ term, definition }: TermDefinitionProps) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  useCloseWhenTriggerLeavesViewport(triggerRef, open, close);
+
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button className="term-def__trigger" type="button" aria-label={`${term} — what this means`}>
+        <button ref={triggerRef} className="term-def__trigger" type="button" aria-label={`${term} — what this means`}>
           {term}
         </button>
       </Popover.Trigger>
