@@ -16,6 +16,48 @@
      dotted    literal word carry the state, so it survives greyscale.
    ───────────────────────────────────────────────────────────── */
 
+/* ── Layers ───────────────────────────────────────────────────
+   Every stacking decision in the cockpit, in one place, because there is more
+   than one of them now and the relationship between them is the whole rule.
+
+   `.outcome-bar` is sticky and was the only z-index in this file. Both popovers
+   portal to `document.body`, which makes them the last elements in the document
+   and looks like it should be enough — it is not. A positioned element with a
+   z-index beats a later positioned element whose z-index resolves to `auto`,
+   regardless of document order, so the status cells painted over the header's
+   definition panel.
+
+   Named rather than numbered at each site so the next anchored surface reads the
+   ordering instead of guessing a number that happens to work. The gap between
+   the two values is deliberate: an overlay that must clear a popover has room to
+   land between them without renumbering anything. */
+:root {
+  --layer-sticky-bar: 5;
+  --layer-popover: 20;
+}
+
+/* The layer is declared on the panel classes below, and it has to be, for a
+   reason worth writing down because two other placements look more obvious and
+   both fail.
+
+   Radix renders the classed panel inside a wrapper it positions itself. The
+   wrapper is `position: fixed`, so it creates its own stacking context, and a
+   z-index on the panel is resolved inside that context rather than against the
+   page. That argues for styling the wrapper. But Radix reads the panel's
+   *computed* z-index in a layout effect and copies it onto the wrapper as an
+   inline style, and an inline style beats a stylesheet rule — so
+   `[data-radix-popper-content-wrapper] { z-index }` is silently overwritten with
+   the `auto` it just read off the panel.
+
+   Both were measured here rather than reasoned about. The wrapper rule left the
+   status cells on top at both viewports with the wrapper computing to
+   `z-index: auto`; declaring it on the panel is what actually moves the wrapper,
+   because the copy is the mechanism Radix provides for this.
+
+   The panel is `position: static` and stays that way. Computed and used values
+   differ: the declaration has no effect on the panel itself, and does not need
+   one. It exists to be read. */
+
 /* Flat. The atmosphere is contained to the hero band rather than washing the
    whole page, so a card two thirds down is not sitting on a gradient. */
 .cockpit-shell {
@@ -131,7 +173,7 @@
    out 398px in a 390px viewport. An inset bar reads as chrome just as well and
    cannot overflow at any width. */
 .outcome-bar {
-  position: sticky; top: 0; z-index: 5;
+  position: sticky; top: 0; z-index: var(--layer-sticky-bar);
   display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
   margin: 0 0 var(--sp-5);
   padding: 0;
@@ -960,6 +1002,8 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 }
 .proof-popover__trigger:hover { color: var(--text-heading); }
 .proof-popover__panel {
+  /* Read by Radix and copied to the popper wrapper. See the layers block. */
+  z-index: var(--layer-popover);
   max-width: min(32rem, calc(100vw - 2rem), var(--radix-popover-content-available-width));
   max-height: var(--radix-popover-content-available-height, 80vh);
   overflow-y: auto;
@@ -1201,6 +1245,8 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 .term-def__trigger[data-state="open"] { text-decoration-color: var(--wj-accent); }
 .term-def__trigger:focus-visible { outline: 2px solid var(--wj-accent); outline-offset: 2px; }
 .term-def__panel {
+  /* Read by Radix and copied to the popper wrapper. See the layers block. */
+  z-index: var(--layer-popover);
   max-width: min(28rem, calc(100vw - 2rem), var(--radix-popover-content-available-width));
   max-height: var(--radix-popover-content-available-height, 80vh);
   overflow-y: auto;
