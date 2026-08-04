@@ -302,6 +302,13 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
         `locBaseline` below is the same shape and is deliberately left: no
         lines-of-code baseline has been measured anywhere in `evaluation/`, so it
         still states something true. It becomes this bug the day one is.
+
+        The general rule this defect produced is recorded in
+        `docs/cockpit-architecture.md`, "What the mapper may derive, and what it
+        may not invent": this projection may derive presentation structure from
+        fields the validated event carries, and may not introduce factual claims
+        the event says nothing about. `locBaseline` is named there as the known
+        outstanding instance, so it cannot be mistaken for a precedent.
       */
       locBaseline: missing("No lines-of-code baseline has been measured."),
       limitations: observed(
