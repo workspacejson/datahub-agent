@@ -284,7 +284,6 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
       */}
       <p>Stated in full at the top of this receipt, each with the system that could not supply it.</p>
       <dl className="provenance-list">
-        <div><dt>Paired evaluation spread</dt><dd><Evidence value={evaluation.pairedSpread} /></dd></div>
         <div><dt>LOC baseline</dt><dd><Evidence value={evaluation.locBaseline} /></dd></div>
       </dl>
       <details>
