@@ -1,3 +1,4 @@
+import { useCallback, useRef, useState } from "react";
 import { Fingerprint } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
@@ -6,6 +7,7 @@ import { Icon } from "./Icon";
 import { IDENTIFIER_TYPE_LABEL } from "../model/identifier-types";
 import type { IdentifierType } from "../model/identifier-types";
 import { useCopyFeedback } from "../hooks/use-copy-feedback";
+import { useCloseWhenTriggerLeavesViewport } from "../hooks/use-close-when-trigger-leaves-viewport";
 
 export interface ProofPopoverProps {
   label: string;
@@ -27,11 +29,15 @@ export function ProofPopover({
   iconStrokeWidth = 1.5,
 }: ProofPopoverProps) {
   const { copyStatus, copy } = useCopyFeedback(value, copyLabel);
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  useCloseWhenTriggerLeavesViewport(triggerRef, open, close);
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button className="proof-popover__trigger" type="button">
+        <button ref={triggerRef} className="proof-popover__trigger" type="button">
           <Icon icon={icon} strokeWidth={iconStrokeWidth} className="semantic-icon" />
           <span>{label}</span>
         </button>
