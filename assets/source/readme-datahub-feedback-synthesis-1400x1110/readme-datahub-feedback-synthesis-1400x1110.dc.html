@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="../_design-system/tokens/fonts.css">
+<link rel="stylesheet" href="../_design-system/tokens/colors.css">
+<link rel="stylesheet" href="../_design-system/tokens/typography.css">
+<style>
+body{margin:0;background:#020605;font-family:var(--font-sans,system-ui);color:#f0f7f4}
+a{color:#00c896;text-decoration:none}
+a:hover{color:#7fffd4}
+</style>
+</helmet>
+
+<div data-screen-label="DataHub feedback synthesis" style="width:1400px;height:1110px;box-sizing:border-box;background:#07100e;border:1px solid #24443b;border-radius:16px;padding:36px 48px 34px;display:flex;flex-direction:column;gap:20px;overflow:hidden">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex:none">
+    <div style="display:flex;align-items:center;gap:13px">
+      <svg viewBox="0 0 104 96" width="24" height="22" aria-hidden="true" style="display:block;flex:none"><g fill="#00c896"><rect x="6" y="6" width="7" height="84"></rect><rect x="6" y="6" width="22" height="7"></rect><rect x="6" y="83" width="22" height="7"></rect><rect x="91" y="6" width="7" height="84"></rect><rect x="76" y="6" width="22" height="7"></rect><rect x="76" y="83" width="22" height="7"></rect></g><g fill="#f0f7f4"><rect x="32" y="18" width="7" height="60"></rect><rect x="45" y="18" width="7" height="60"></rect><rect x="58" y="18" width="7" height="60"></rect><rect x="71" y="18" width="7" height="60"></rect></g><path d="M26 74 L84 38" stroke="#f0f7f4" stroke-width="7"></path></svg>
+      <span style="font:800 22px/1 var(--font-sans);letter-spacing:-.04em;color:#f0f7f4">tally</span>
+      <span style="width:1px;height:22px;background:#24443b;display:block"></span>
+      <h1 style="margin:0;font:800 34px/1.1 var(--font-sans);letter-spacing:-.042em;color:#f0f7f4">Eleven findings and one open question</h1>
+    </div>
+    <span style="font:500 12px/1 var(--font-mono);letter-spacing:.28em;text-transform:uppercase;color:var(--wj-gray-4,#5d7a70);white-space:nowrap">datahub feedback synthesis</span>
+  </div>
+
+  <div style="background:#0b1714;border:1px solid #36544b;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.3);padding:20px 26px 18px;display:flex;flex-direction:column;gap:12px;flex:none">
+    <span style="font:500 11px/1 var(--font-mono);letter-spacing:.28em;text-transform:uppercase;color:var(--wj-gray-4,#5d7a70)">root cause</span>
+    <h2 style="margin:0;font:700 33px/1.2 var(--font-sans);letter-spacing:-.038em;color:#f0f7f4">DataHub's operations do not carry their own scope.</h2>
+    <div style="padding-top:13px;border-top:1px solid var(--wj-hairline,#173028);display:grid;grid-template-columns:1fr 1fr;gap:26px">
+      <p style="margin:0;font:400 19px/1.55 var(--font-sans);color:#bfcdc6;text-wrap:pretty">Reads can return plausible values without disclosing serving tier, consistency, or completeness.</p>
+      <p style="margin:0;font:400 19px/1.55 var(--font-sans);color:#bfcdc6;text-wrap:pretty">Writes cannot express &ldquo;add mine, preserve theirs,&rdquo; leaving clients to infer blast radius from prose.</p>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #36544b;display:flex;flex-direction:column;gap:18px;flex:none">
+
+    <div style="display:grid;grid-template-columns:1fr 1.32fr 1.32fr;gap:26px">
+
+      <div style="display:flex;flex-direction:column;gap:11px;position:relative;padding-top:18px">
+        <span style="position:absolute;top:0;left:0;width:1px;height:11px;background:#36544b;display:block"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font:800 40px/1 var(--font-sans);letter-spacing:-.05em;color:#f0f7f4">1</span>
+          <span style="font:700 18px/1.25 var(--font-sans);letter-spacing:-.02em;color:#bfcdc6">State that can be destroyed</span>
+        </div>
+        <div style="background:#0b1714;border:1px solid #24443b;border-radius:12px;padding:14px 16px;flex:1;display:flex;align-items:flex-start">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">1</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">CLI ingestion overwrites its own recipe in place</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:11px;position:relative;padding-top:18px">
+        <span style="position:absolute;top:0;left:0;width:1px;height:11px;background:#36544b;display:block"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font:800 40px/1 var(--font-sans);letter-spacing:-.05em;color:#f0f7f4">3</span>
+          <span style="font:700 18px/1.25 var(--font-sans);letter-spacing:-.02em;color:#bfcdc6">Answers wrong without looking wrong</span>
+        </div>
+        <div style="background:#0b1714;border:1px solid #24443b;border-radius:12px;padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">2</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty"><span style="font-family:var(--font-mono);font-size:17px">Dataset.externalUrl</span> is dropped at the MCP boundary</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">3</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">GraphQL errors arrive under HTTP 200</span>
+          </div>
+          <div style="margin-top:auto;padding-top:12px;border-top:1px solid var(--wj-hairline,#173028);font:400 16px/1.3 var(--font-sans);color:var(--wj-gray-3,#8da69c)">+ 1 additional finding</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:11px;position:relative;padding-top:18px">
+        <span style="position:absolute;top:0;left:0;width:1px;height:11px;background:#36544b;display:block"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font:800 40px/1 var(--font-sans);letter-spacing:-.05em;color:#f0f7f4">2</span>
+          <span style="font:700 18px/1.25 var(--font-sans);letter-spacing:-.02em;color:#bfcdc6">Answers ambiguous by construction</span>
+        </div>
+        <div style="background:#0b1714;border:1px solid #24443b;border-radius:12px;padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">5</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">Lineage reads do not disclose which tier answered</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">6</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">Absent, empty, and not-yet-written aspects are the same response</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;position:relative;padding-top:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font:800 40px/1 var(--font-sans);letter-spacing:-.05em;color:#f0f7f4">5</span>
+        <span style="font:700 18px/1.25 var(--font-sans);letter-spacing:-.02em;color:#bfcdc6">Documentation and setup hazards</span>
+      </div>
+      <div style="background:#0b1714;border:1px solid #24443b;border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">7</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">The structured-property set/replace note describes the wrong API</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;border-left:1px solid var(--wj-hairline,#173028);padding-left:24px">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">9</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">Telemetry blocks on an outbound POST and reads as a hang</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;border-left:1px solid var(--wj-hairline,#173028);padding-left:24px">
+            <span style="font:500 15px/1.45 var(--font-mono);color:var(--wj-gray-4,#5d7a70);flex:none">11</span>
+            <span style="font:500 19px/1.4 var(--font-sans);color:#f0f7f4;text-wrap:pretty">The documented 8 GB minimum is a real floor, and failing it fails badly</span>
+          </div>
+        </div>
+        <div style="padding-top:12px;border-top:1px solid var(--wj-hairline,#173028);font:400 16px/1.3 var(--font-sans);color:var(--wj-gray-3,#8da69c)">+ 2 additional findings</div>
+      </div>
+    </div>
+
+    <div style="font:400 16px/1.4 var(--font-sans);color:var(--wj-gray-4,#5d7a70)">See <span style="font-family:var(--font-mono);font-size:15px;color:var(--wj-gray-3,#8da69c)">FEEDBACK.md</span> for all eleven findings, evidence, reproduction steps, and suggested remedies.</div>
+
+  </div>
+
+  <div style="border:1px dashed #36544b;border-radius:14px;padding:16px 22px;margin-left:52px;display:grid;grid-template-columns:1fr 1.25fr;gap:28px;align-items:center;flex:none;background:rgba(11,23,20,.4)">
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <span style="font:500 11px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;color:var(--wj-gray-4,#5d7a70)">open question &#183; not reproduced</span>
+      <span style="font:700 24px/1.3 var(--font-sans);letter-spacing:-.025em;color:#f0f7f4;text-wrap:pretty">Does a full page of lineage results say so?</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;border-left:1px solid #36544b;padding-left:28px">
+      <span style="font:400 17px/1.45 var(--font-sans);color:#bfcdc6;text-wrap:pretty">The deepest observed subject had 8 edges, below the configured result limit of 50. No page-boundary truncation was observed.</span>
+      <span style="font:400 17px/1.45 var(--font-sans);color:var(--wj-gray-3,#8da69c);text-wrap:pretty">A response containing exactly <span style="font-family:var(--font-mono);font-size:16px;color:#bfcdc6">max_results</span> entries does not state whether more results exist.</span>
+    </div>
+  </div>
+
+  <div style="padding-top:18px;border-top:1px solid #24443b;display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:none">
+    <div style="background:#0b1714;border:1px solid #24443b;border-radius:12px;padding:15px 18px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font:500 18px/1.3 var(--font-mono);color:#f0f7f4">acryldata/mcp-server-datahub#149</span>
+        <span style="font:400 15px/1 var(--font-sans);color:var(--wj-gray-4,#5d7a70)">&#183;</span>
+        <span style="font:500 13px/1 var(--font-mono);letter-spacing:.06em;color:#bfcdc6;border:1px solid #36544b;border-radius:999px;padding:6px 12px">Open</span>
+      </div>
+      <span style="font:400 18px/1.45 var(--font-sans);color:#bfcdc6;text-wrap:pretty">Expose <span style="font-family:var(--font-mono);font-size:17px;color:#f0f7f4">Dataset.externalUrl</span> through <span style="font-family:var(--font-mono);font-size:17px;color:#f0f7f4">get_entities</span></span>
+    </div>
+    <div style="background:#0b1714;border:1px solid #24443b;border-radius:12px;padding:15px 18px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font:500 18px/1.3 var(--font-mono);color:#f0f7f4">datahub-project/datahub#18754</span>
+        <span style="font:400 15px/1 var(--font-sans);color:var(--wj-gray-4,#5d7a70)">&#183;</span>
+        <span style="font:500 13px/1 var(--font-mono);letter-spacing:.06em;color:#bfcdc6;border:1px solid #36544b;border-radius:999px;padding:6px 12px">Open</span>
+      </div>
+      <span style="font:400 18px/1.45 var(--font-sans);color:#bfcdc6;text-wrap:pretty">Scope the structured-property set/replace note to the API it describes</span>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:980}}"></script>
+</body>
+</html>

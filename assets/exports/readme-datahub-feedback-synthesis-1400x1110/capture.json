@@ -1,0 +1,27 @@
+{
+  "id": "readme-datahub-feedback-synthesis-1400x1110",
+  "source": {
+    "path": "assets/source/readme-datahub-feedback-synthesis-1400x1110/readme-datahub-feedback-synthesis-1400x1110.dc.html",
+    "sha256": "e1af0cf54acabebb8533a6a6f947feb531eb163f198ad8426ff685efd227eb49",
+    "bytes": 13176
+  },
+  "export": {
+    "path": "assets/exports/readme-datahub-feedback-synthesis-1400x1110/readme-datahub-feedback-synthesis-1400x1110.png",
+    "sha256": "5fa0609d4ebc362d80aa7040c27756ce6cbe4e698a5566802ee84e061bbd5f70",
+    "bytes": 459433,
+    "format": "png",
+    "width": 2800,
+    "height": 2220
+  },
+  "cssBox": {
+    "width": 1400,
+    "height": 1110
+  },
+  "deviceScaleFactor": 2,
+  "colorScheme": "dark",
+  "heightSource": "declared on the source canvas",
+  "networkResourcesLoaded": 0,
+  "generationCommand": "node scripts/export-authored-readme-assets.mjs",
+  "runtime": "Chromium 151.0.7922.34 via playwright-core 1.62.0",
+  "generatedAt": "2026-08-04T13:07:58.882Z"
+}

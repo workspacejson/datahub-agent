@@ -1,0 +1,98 @@
+/* ─────────────────────────────────────────────────────────────
+   COLORS — workspace.json
+   A near-black green canvas with an emerald/aqua accent.
+   Dark is the primary/default theme; light is the inverse.
+   Base ramp values are lifted verbatim from the production site.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Brand accent ramp (theme-independent) ── */
+  --wj-accent-low: #003628;   /* deep shadow / accent surface */
+  --wj-accent: #00c896;       /* primary brand emerald */
+  --wj-accent-high: #86f7d0;  /* bright aqua highlight */
+  --wj-aqua: #7fffd4;         /* gradient terminus (aquamarine) */
+
+  /* ── Semantic status ── */
+  --wj-stable: #00c896;       /* stable / success */
+  --wj-experimental: #f59e0b; /* experimental / warning (amber) */
+  --wj-danger: #f2545b;       /* never-commit / error */
+  --wj-info: #38bdf8;         /* informational */
+
+  /* default = dark theme values (see [data-theme] scopes below) */
+  color-scheme: dark;
+}
+
+/* ── DARK (primary) ── */
+:root,
+:root[data-theme="dark"] {
+  --wj-bg: #07100e;            /* app canvas — near-black green */
+  --wj-bg-nav: #07100e;
+  --wj-bg-sidebar: #08120f;
+  --wj-bg-code: #0c1915;       /* inline / block code surface */
+  --wj-bg-elevated: #0b1714;   /* raised card surface */
+
+  --wj-gray-1: #f0f7f4;        /* brightest text */
+  --wj-gray-2: #bfcdc6;
+  --wj-gray-3: #8da69c;
+  --wj-gray-4: #5d7a70;
+  --wj-gray-5: #36544b;
+  --wj-gray-6: #162922;        /* faint surface fill */
+  --wj-hairline: #173028;      /* borders / dividers */
+
+  --wj-text: #edf7f3;          /* body text */
+  --wj-text-accent: #00c896;   /* links, accented text */
+  --wj-white: #f5faf8;
+  --wj-black: #07100e;
+
+  /* semantic aliases */
+  --text-heading: var(--wj-gray-1);
+  --text-body: var(--wj-text);
+  --text-muted: var(--wj-gray-3);
+  --text-faint: var(--wj-gray-4);
+  --text-link: var(--wj-text-accent);
+
+  --surface-page: var(--wj-bg);
+  --surface-card: var(--wj-bg-elevated);
+  --surface-code: var(--wj-bg-code);
+  --surface-sunken: var(--wj-gray-6);
+
+  --border-default: var(--wj-hairline);
+  --border-strong: var(--wj-gray-5);
+}
+
+/* ── LIGHT (inverse) ── */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --wj-bg: #fbfdfc;
+  --wj-bg-nav: #fbfdfc;
+  --wj-bg-sidebar: #f2f8f5;
+  --wj-bg-code: #e6f3ee;
+  --wj-bg-elevated: #ffffff;
+
+  --wj-gray-1: #0d1f1a;
+  --wj-gray-2: #1b3730;
+  --wj-gray-3: #325b50;
+  --wj-gray-4: #4f7a6d;
+  --wj-gray-5: #76968b;
+  --wj-gray-6: #c7dcd6;
+  --wj-hairline: #d7ebe4;
+
+  --wj-text: #0d1f1a;
+  --wj-text-accent: #008667;
+  --wj-white: #ffffff;
+  --wj-black: #0d1f1a;
+
+  --text-heading: var(--wj-gray-1);
+  --text-body: var(--wj-text);
+  --text-muted: var(--wj-gray-3);
+  --text-faint: var(--wj-gray-4);
+  --text-link: var(--wj-text-accent);
+
+  --surface-page: var(--wj-bg);
+  --surface-card: var(--wj-bg-elevated);
+  --surface-code: var(--wj-bg-code);
+  --surface-sunken: var(--wj-gray-6);
+
+  --border-default: var(--wj-hairline);
+  --border-strong: var(--wj-gray-5);
+}

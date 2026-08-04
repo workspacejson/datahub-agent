@@ -36,6 +36,36 @@
       "id": "TALLY-CLAIM-007",
       "claim": "No completeness claim",
       "section": "Known limitations"
+    },
+    {
+      "id": "TALLY-CLAIM-008",
+      "claim": "Proof-corpus nodes accounted for",
+      "section": "Node accounting"
+    },
+    {
+      "id": "TALLY-CLAIM-009",
+      "claim": "Exact source revision in plan",
+      "section": "Repeated paired evaluation (HAC-150)"
+    },
+    {
+      "id": "TALLY-CLAIM-010",
+      "claim": "Normalized plan-shape stability",
+      "section": "Repeated paired evaluation (HAC-150)"
+    },
+    {
+      "id": "TALLY-CLAIM-011",
+      "claim": "Refusal behaviour on the unknown repository source",
+      "section": "Repeated paired evaluation (HAC-150)"
+    },
+    {
+      "id": "TALLY-CLAIM-012",
+      "claim": "Settled findings and open questions",
+      "section": "Platform feedback"
+    },
+    {
+      "id": "TALLY-CLAIM-013",
+      "claim": "Cockpit architecture boundary",
+      "section": "Cockpit architecture boundary"
     }
   ]
 }

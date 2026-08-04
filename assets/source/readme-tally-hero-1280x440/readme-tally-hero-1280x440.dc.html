@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="../_design-system/tokens/fonts.css">
+<link rel="stylesheet" href="../_design-system/tokens/colors.css">
+<link rel="stylesheet" href="../_design-system/tokens/typography.css">
+<style>
+body{margin:0;background:#020605;font-family:var(--font-sans,system-ui);color:#f5f7f6}
+a{color:#00c896;text-decoration:none}
+a:hover{color:#7fffd4}
+</style>
+</helmet>
+
+<div data-screen-label="README hero" style="width:1280px;height:440px;box-sizing:border-box;background:#07100e;border:1px solid #24443b;border-radius:16px;padding:52px 64px 44px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative">
+
+  <div aria-hidden="true" style="position:absolute;top:0;right:0;width:360px;height:100%;background-image:repeating-linear-gradient(to right,rgba(255,255,255,.02) 0 1px,transparent 1px 60px);pointer-events:none"></div>
+
+  <div style="position:relative;display:flex;flex-direction:column;gap:26px;max-width:800px">
+
+    <div style="display:flex;align-items:center;gap:12px">
+      <svg viewBox="0 0 104 96" width="28" height="26" aria-hidden="true" style="display:block;flex:none"><g fill="#00c896"><rect x="6" y="6" width="7" height="84"></rect><rect x="6" y="6" width="22" height="7"></rect><rect x="6" y="83" width="22" height="7"></rect><rect x="91" y="6" width="7" height="84"></rect><rect x="76" y="6" width="22" height="7"></rect><rect x="76" y="83" width="22" height="7"></rect></g><g fill="#f5f7f6"><rect x="32" y="18" width="7" height="60"></rect><rect x="45" y="18" width="7" height="60"></rect><rect x="58" y="18" width="7" height="60"></rect><rect x="71" y="18" width="7" height="60"></rect></g><path d="M26 74 L84 38" stroke="#f5f7f6" stroke-width="7"></path></svg>
+      <span style="font:800 25px/1 var(--font-sans);letter-spacing:-.04em;color:#f5f7f6">tally</span>
+    </div>
+
+    <h1 style="margin:0;font:800 62px/1.06 var(--font-sans);letter-spacing:-.05em;color:#f5f7f6;text-wrap:pretty">DataHub context,<br>resolved to code.</h1>
+
+    <p style="margin:0;max-width:660px;font:400 21px/1.6 var(--font-sans);color:#a8b7b1;text-wrap:pretty">Tally joins repository identity with DataHub lineage, refuses unsupported conclusions, and preserves the evidence behind the result.</p>
+
+  </div>
+
+  <div style="position:relative;padding-top:22px;border-top:1px solid #173028;display:flex;align-items:center;gap:0">
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <span style="width:7px;height:7px;border:1px solid var(--wj-gray-5,#36544b);border-radius:999px;display:block;flex:none"></span>
+      <span style="font:500 13px/1 var(--font-mono);letter-spacing:.1em;color:var(--wj-gray-4,#5d7a70);white-space:nowrap">Dataset identity</span>
+    </div>
+    <span style="flex:1;height:1px;background:var(--wj-hairline,#173028);margin:0 16px;display:block"></span>
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <span style="width:7px;height:7px;border:1px solid var(--wj-gray-5,#36544b);border-radius:999px;display:block;flex:none"></span>
+      <span style="font:500 13px/1 var(--font-mono);letter-spacing:.1em;color:var(--wj-gray-4,#5d7a70);white-space:nowrap">Repository identity</span>
+    </div>
+    <span style="flex:1;height:1px;background:var(--wj-hairline,#173028);margin:0 16px;display:block"></span>
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <span style="width:7px;height:7px;border:1px solid var(--wj-gray-5,#36544b);border-radius:999px;display:block;flex:none"></span>
+      <span style="font:500 13px/1 var(--font-mono);letter-spacing:.1em;color:var(--wj-gray-4,#5d7a70);white-space:nowrap">Exact source path</span>
+    </div>
+    <span style="flex:1;height:1px;background:var(--wj-hairline,#173028);margin:0 16px;display:block"></span>
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <span style="width:7px;height:7px;background:var(--wj-gray-5,#36544b);border:1px solid var(--wj-gray-5,#36544b);border-radius:999px;display:block;flex:none"></span>
+      <span style="font:500 13px/1 var(--font-mono);letter-spacing:.1em;color:var(--wj-gray-4,#5d7a70);white-space:nowrap">Bounded receipt</span>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:440}}"></script>
+</body>
+</html>

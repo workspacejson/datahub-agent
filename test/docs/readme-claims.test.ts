@@ -45,8 +45,23 @@ describe("the README makes no perishable count claim", () => {
     // Any "N test(s)" phrasing. The fix for the original defect was to stop
     // asserting the number at all, not to update it — an updated number is the
     // same defect with a later expiry date.
-    const counts = README.match(/\b\d+\s+tests?\b/gi) ?? [];
+    //
+    // "N test node(s)" is excluded, and the exclusion is narrow on purpose. A
+    // dbt `test` node is a manifest resource type, not an assertion in this
+    // repository's suite: "20 test nodes excluded by policy" is a fixed property
+    // of a pinned corpus and cannot go stale on a merge, which is the only thing
+    // this guard exists to catch. Excluding it by meaning keeps the alt text on
+    // the node-accounting image, which the asset registry governs verbatim,
+    // rather than rewording a governed string to satisfy a regex.
+    const counts = README.match(/\b\d+\s+tests?\b(?!\s+nodes?\b)/gi) ?? [];
     expect(counts, `README asserts a perishable test count: ${counts.join(", ")}`).toEqual([]);
+  });
+
+  it("still catches a suite count that hides beside the node-type exclusion", () => {
+    // The detector for the exclusion above. Without it, narrowing the regex
+    // could be widened later into a hole big enough for the original defect.
+    const withSuiteCount = README.replace("## Known limitations", "## Known limitations\n\n27 tests cover this.");
+    expect(withSuiteCount.match(/\b\d+\s+tests?\b(?!\s+nodes?\b)/gi) ?? []).not.toEqual([]);
   });
 
   it("still tells a reader how to run the suite", () => {
