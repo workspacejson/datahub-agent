@@ -97,15 +97,15 @@ See [`docs/cockpit-architecture.md`](docs/cockpit-architecture.md).
 ## Four questions Tally answers
 
 - **Which repository file implements this DataHub dataset?** Tally resolves a dataset URN through the dbt manifest to a repository-root-relative source path, pinned to an immutable commit.
-- **What code and downstream data could the change affect?** Tally joins DataHub lineage, upstream and downstream edges, with workspace.json repository evidence, so a reviewer sees both catalog dependencies and behavioral coupling.
+- **Which repository source produces the dataset, and which declared data dependencies surround it?** Tally places the exact revision-bound producer path beside DataHub's upstream and downstream lineage, while keeping repository identity separate from catalog dependency claims.
 - **Which conclusions were observed, resolved, complete, or explicitly unknown?** Every fact carries its origin, `datahub` or `workspacejson`, and its standing. Read success, completeness, and absence are stated separately, never collapsed.
 - **What durable context was written back to DataHub?** Tally writes a commit-pinned source link and an evidence-tier structured property, then observes the before and after states to produce a receipt.
 
 ## What each side contributes
 
-**DataHub provides what no repository tool can.** The dataset URN is the stable identifier everything joins against; without it, "which file produces the customers table" is a string match rather than a resolution. Field-level schema tells a reviewer what columns exist. Lineage edges are declared dependencies Tally carries alongside repository evidence, so a reviewer can tell a declaration from a behaviour. Owners, domains, and descriptions travel with the dataset and survive the join. And DataHub is where a commit-pinned source link belongs, visible to every catalog consumer rather than buried in a tool-specific store.
+**DataHub provides what no repository tool can.** The dataset URN is the stable identifier everything joins against; without it, "which file produces the customers table" is a string match rather than a resolution. Field-level schema tells a reviewer what columns exist. Lineage edges are declared dependencies, carried alongside repository evidence and kept distinct from it, so a catalog declaration is never read as a repository fact. Owners, domains, and descriptions travel with the dataset and survive the join. And DataHub is where a commit-pinned source link belongs, visible to every catalog consumer rather than buried in a tool-specific store.
 
-**[workspace.json](https://github.com/workspacejson) provides what no catalog can.** The `fileIndex` is keyed by repository-root-relative POSIX paths produced at a pinned commit: the coordinate system that makes the join work, and the one DataHub does not expose through MCP. Co-change partners, churn, and fragility are repository evidence rather than catalog declarations, kept separate from lineage so the difference stays legible. The artifact carries its own provenance, so Tally can verify it describes the same corpus before asserting anything.
+**[workspace.json](https://github.com/workspacejson) provides what no catalog can.** The `fileIndex` is keyed by repository-root-relative POSIX paths produced at a pinned commit: the coordinate system that makes the join work, and the one DataHub does not expose through MCP. The artifact carries its own provenance, so Tally can verify that it describes the same repository revision before asserting the exact source location. This bound event does not establish behavioral co-change partners, so Tally does not assert them.
 
 **Tally is the product joining both.** It resolves one through the other and attaches a bounded receipt.
 
