@@ -284,7 +284,25 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
     // than the thing keeping them aligned. HAC-226 owns how this renders.
     writeback: axes.receipt,
     evaluation: {
-      pairedSpread: missing("The paired DataHub-only vs joined evaluation has not been run."),
+      /*
+        There is no `pairedSpread` here. It was an unconditional
+        `missing("The paired DataHub-only vs joined evaluation has not been
+        run.")` — a literal, derived from nothing, that kept rendering after
+        HAC-150 ran the evaluation. Receipts therefore denied, under "Limitations
+        lead", the ten-run result Change plan cites two tabs earlier.
+
+        A hardcoded absence is the worst shape this bug can take: it reads as
+        principled disclosure, so it survives review that a stale positive claim
+        would not. The fix is removal rather than a corrected literal, because
+        `ChangeImpactEvent` 1.3 carries no evaluation reference for the mapper to
+        read, and a second literal would be the same defect with a better value.
+        HAC-150 belongs to the evaluation surface until the contract can carry a
+        reference to it.
+
+        `locBaseline` below is the same shape and is deliberately left: no
+        lines-of-code baseline has been measured anywhere in `evaluation/`, so it
+        still states something true. It becomes this bug the day one is.
+      */
       locBaseline: missing("No lines-of-code baseline has been measured."),
       limitations: observed(
         `${event.unavailable.length} stated gap(s); ${describeTier(event.evidence.records)}.`,

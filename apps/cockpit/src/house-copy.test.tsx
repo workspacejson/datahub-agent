@@ -172,6 +172,78 @@ describe("the cited evaluation result is rendered verbatim and unconditionally",
   });
 });
 
+describe("no route denies the evaluation another route cites", () => {
+  /*
+    Receipts carried `evaluation.pairedSpread`, an unconditional
+    `missing("The paired DataHub-only vs joined evaluation has not been run.")`.
+    After HAC-150 ran, the build stated the ten-run result on Change plan and
+    denied it on Receipts, under a heading that reads "Limitations lead".
+
+    The pin above holds the citation in place. This one holds the other side: no
+    route may state that the paired evaluation did not happen. Together they
+    close the contradiction from both ends, because fixing only the denial leaves
+    a build that can drift back into it the next time someone needs a plausible
+    absence to render.
+
+    Scanned on the rendered routes, not on source. A literal reintroduced through
+    a component, a fixture or a contract string reads identically to a judge, and
+    the original defect was exactly a literal no test named.
+  */
+  const DENIAL = /(paired|comparative)[^.]{0,60}evaluation[^.]{0,60}(has not been|was not|were not|never)\s+(run|performed|conducted)/i;
+
+  /** Every route's rendered text, minus the raw receipt, which is the event verbatim. */
+  const routeText = (route: string) => {
+    cleanup();
+    render(<CockpitShell model={model()} route={route as never} onRouteChange={() => {}} />);
+    for (const raw of Array.from(document.querySelectorAll(".receipts-view pre"))) raw.remove();
+    return (document.body.textContent ?? "").replace(/\s+/g, " ");
+  };
+
+  it("states no denial of the paired evaluation on any route", () => {
+    const offenders = ROUTES
+      .map((route) => [route, routeText(route)] as const)
+      .filter(([, text]) => DENIAL.test(text))
+      .map(([route, text]) => `${route}: ${DENIAL.exec(text)?.[0] ?? ""}`);
+    expect(offenders).toEqual([]);
+  });
+
+  it("names no paired-evaluation spread it cannot source", () => {
+    // The field's own label, gone with it. `ChangeImpactEvent` 1.3 carries no
+    // evaluation reference, so a receipt row for one can only be a literal.
+    expect(routeText("receipts")).not.toContain("Paired evaluation spread");
+  });
+
+  it("would catch the denial reintroduced through any evidence value", () => {
+    /*
+      The detector, against a constructed violation, in the idiom of the em dash
+      guard above. Both scans pass trivially on a tree that renders no text, and
+      the removed field is no longer in the schema to reinject — so the check is
+      that the scan trips on the sentence wherever it reaches the page. Without
+      this, deleting the row would silently disarm the guard that replaced it.
+    */
+    cleanup();
+    const base = model();
+    render(
+      <CockpitShell
+        model={{
+          ...base,
+          receipt: {
+            ...base.receipt,
+            evaluation: {
+              ...base.receipt.evaluation,
+              locBaseline: { state: "unavailable", reason: "The paired DataHub-only vs joined evaluation has not been run." },
+            },
+          },
+        }}
+        route="receipts"
+        onRouteChange={() => {}}
+      />,
+    );
+    for (const raw of Array.from(document.querySelectorAll(".receipts-view pre"))) raw.remove();
+    expect(DENIAL.test((document.body.textContent ?? "").replace(/\s+/g, " "))).toBe(true);
+  });
+});
+
 describe("each fact is stated once per route", () => {
   // The header stated coverage three ways and was collapsed to one; the same
   // thing then reappeared on Receipts, where the limitations card repeated the

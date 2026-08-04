@@ -340,7 +340,6 @@ export const receiptSchema = z.object({
     beforeMatchedIntent: z.boolean(),
   }),
   evaluation: z.object({
-    pairedSpread: evidenceValueSchema,
     locBaseline: evidenceValueSchema,
     limitations: evidenceValueSchema,
     rawEvidence: evidenceValueSchema,
