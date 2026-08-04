@@ -25,12 +25,14 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { createServer } from "node:http";
+import { extname } from "node:path";
+
 import { chromium } from "playwright-core";
-import { preview } from "vite";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cockpit = join(root, "apps", "cockpit");
@@ -88,12 +90,49 @@ if (dirty && !process.env.ALLOW_DIRTY) {
 }
 
 const commit = git("rev-parse", "HEAD");
-const server = await preview({
-  root: cockpit,
-  preview: { port: 4180, host: "127.0.0.1", strictPort: true },
-  logLevel: "warn",
+
+/**
+ * The built cockpit, served exactly the way production serves it.
+ *
+ * Twenty lines rather than a dependency. Importing vite's `preview` would put
+ * vite in the root manifest, and the root already resolves vite 5 transitively
+ * while the cockpit workspace is on 8: declaring it here forced a major-version
+ * bump across the tree, days from submission, to serve four files.
+ *
+ * The fallback to `index.html` is not a convenience. It mirrors the single
+ * rewrite in `vercel.json` -- `/(.*)` to `/index.html` -- so `/impact` resolves
+ * here the way it resolves on the deployed origin. A static server without it
+ * would 404 the route and capture nothing.
+ */
+const MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".webmanifest": "application/manifest+json",
+  ".woff2": "font/woff2",
+};
+const dist = join(cockpit, "dist");
+if (!existsSync(join(dist, "index.html"))) {
+  console.error(`No build at ${dist}. Run \`npm run build\` first.`);
+  process.exit(1);
+}
+const server = createServer((request, response) => {
+  const path = decodeURIComponent(new URL(request.url, "http://127.0.0.1").pathname);
+  const candidate = resolve(dist, `.${path}`);
+  // A request that escapes dist is a bug or an attack; either way it is not a
+  // file this server owns.
+  const inside = candidate.startsWith(`${dist}${sep}`) || candidate === dist;
+  const file = inside && existsSync(candidate) && statSync(candidate).isFile()
+    ? candidate
+    : join(dist, "index.html");
+  response.writeHead(200, { "content-type": MIME[extname(file)] ?? "application/octet-stream" });
+  response.end(readFileSync(file));
 });
-const origin = `http://127.0.0.1:4180`;
+await new Promise((ready) => server.listen(4180, "127.0.0.1", ready));
+const origin = "http://127.0.0.1:4180";
 
 const browser = await chromium.launch();
 try {
@@ -183,5 +222,5 @@ try {
   console.log(`\nWrote ${file}`);
 } finally {
   await browser.close();
-  await server.close();
+  await new Promise((closed) => server.close(closed));
 }
