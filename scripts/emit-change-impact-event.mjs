@@ -137,12 +137,6 @@ async function gqlSafe(query) {
 // stays in one place instead of branching through the whole emitter.
 // ---------------------------------------------------------------------------
 
-/** Query parameters the observation is only comparable under. */
-const LINEAGE_QUERY =
-  TRANSPORT === "mcp"
-    ? { surface: "mcp:get_lineage", query: "*", maxHops: 3, maxResults: 50 }
-    : { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
-
 const load = async (specifier) =>
   import(join(repoRoot, specifier)).catch(async () =>
     import("tsx/esm/api").then(async (api) => {
@@ -150,6 +144,51 @@ const load = async (specifier) =>
       return import(join(repoRoot, specifier));
     }),
   );
+
+/**
+ * The request each transport actually issues, built once.
+ *
+ * The evidence records the object that was sent, not a description of it. A
+ * normalised summary is *about* a request rather than being one, and an auditor
+ * handed camel-cased keys and a stringified direction cannot reissue the call —
+ * which is the substitution HAC-284 exists to remove, so recording one here
+ * would reintroduce it one layer down.
+ *
+ * The two shapes genuinely differ, and that is the point rather than an
+ * inconvenience to normalise away. MCP takes `upstream: boolean` and
+ * snake_cased bounds; `searchAcrossLineage` takes a `direction` string with
+ * `start`/`count`. Neither carries a `surface` key — the surface is which call
+ * was made, not an argument to it, so it travels beside the parameters.
+ */
+const { lineageRequest: mcpLineageRequest, LINEAGE_QUERY_STRING, LINEAGE_SURFACE } =
+  await load("src/integration/mcp-read.ts");
+
+const GMS_LINEAGE_SURFACE = "searchAcrossLineage";
+const GMS_LINEAGE_START = 0;
+const GMS_LINEAGE_COUNT = 50;
+
+/** The exact `searchAcrossLineage` input for one direction. */
+const gmsLineageRequest = (direction) => ({
+  urn: URN,
+  direction,
+  query: LINEAGE_QUERY_STRING,
+  start: GMS_LINEAGE_START,
+  count: GMS_LINEAGE_COUNT,
+});
+
+/** The executed-read evidence for one direction, under whichever transport ran. */
+const executedReadFor = (direction) =>
+  TRANSPORT === "mcp"
+    ? {
+        transport: "mcp",
+        surface: LINEAGE_SURFACE,
+        parameters: mcpLineageRequest(URN, direction === "UPSTREAM"),
+      }
+    : {
+        transport: "gms",
+        surface: GMS_LINEAGE_SURFACE,
+        parameters: gmsLineageRequest(direction),
+      };
 
 let dataset;
 let schemaFieldCount = null;
@@ -296,10 +335,13 @@ const customProperties = dataset.customProperties;
  * reports the same shape; both are reached through `lineage`.
  */
 async function lineageOverGraphQl(direction) {
+  // Serialised from the same object the evidence carries, so the recorded
+  // parameters cannot describe a query other than the one issued.
+  const input = gmsLineageRequest(direction);
   const { ok, data, error } = await gqlSafe(`{
     searchAcrossLineage(input: {
-      urn: ${JSON.stringify(URN)}, direction: ${direction},
-      query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count}
+      urn: ${JSON.stringify(input.urn)}, direction: ${input.direction},
+      query: ${JSON.stringify(input.query)}, start: ${input.start}, count: ${input.count}
     }) { total searchResults { degree entity { urn ... on Dataset { properties { name } } } } }
   }`);
 
@@ -355,7 +397,7 @@ if (READINESS_MANIFEST) {
         : async (signal) => {
             const response = await fetch(`${GMS}/api/graphql`, {
               method: "POST", headers: { "Content-Type": "application/json" }, signal,
-              body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(URN)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count} }) { searchResults { entity { urn } } } }` }),
+              body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(gmsLineageRequest(direction).urn)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY_STRING)}, start: ${GMS_LINEAGE_START}, count: ${GMS_LINEAGE_COUNT} }) { searchResults { entity { urn } } } }` }),
             });
             const body = await response.json();
             if (!response.ok || body.errors) throw new Error("readiness GraphQL request failed");
@@ -368,9 +410,26 @@ if (READINESS_MANIFEST) {
       const observed = (key === "upstreams" ? upstreams : downstreams).map((edge) => edge.urn).sort();
       const expected = [...new Set(manifest.expectedUrns)].sort();
       if (JSON.stringify(observed) === JSON.stringify(expected)) {
+        // Two parameter sets, because they describe two different requests.
+        //
+        // `declaredQueryParameters` is the manifest's own — how the expected
+        // set was derived. `executedRead` is this run's, and it is what
+        // produced `observedSetDigest`. Recording the manifest's under a name
+        // that reads as the observation's is the defect this replaces: under
+        // `--transport mcp` the observed set came from `mcp:get_lineage` at
+        // three hops while the recorded parameters described
+        // `searchAcrossLineage` at `maxDegree: 4`, so an auditor rerunning them
+        // ran a query this event never ran.
+        //
+        // Direction is not a field added here. Each transport states it in its
+        // own terms inside its own request — `upstream: boolean` for MCP, a
+        // `direction` string for searchAcrossLineage — and `executedDirection`
+        // in the contract is the only place that reads both.
         lineageObservation[key] = { read: "ok", completeness: "complete-against-pinned-manifest", observedCount: observed.length, verification: {
           manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
-          observedSetDigest: readiness.observedSetDigest, queryParameters: manifest.queryParameters,
+          observedSetDigest: readiness.observedSetDigest,
+          declaredQueryParameters: manifest.queryParameters,
+          executedRead: executedReadFor(direction),
         } };
       } else {
         note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "not-established", observedCount: observed.length });

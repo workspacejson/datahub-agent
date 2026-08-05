@@ -206,13 +206,30 @@ export const cockpitStateNameSchema = z.enum([
  * So the state is the discriminator, not the text:
  *
  * - `observed` — read from a named system. Carries its source tag.
+ * - `declared` — a real value that was stated rather than measured. It has
+ *   content, so it is not an absence; nothing executed it, so it is not an
+ *   observation.
+ * - `legacy` — a real value carried by a superseded contract, whose role that
+ *   contract did not record. Distinct from `declared` because `declared` is
+ *   itself a classification: rendering an unclassifiable value under a
+ *   "Declared" badge reasserts the one thing known to be unknown about it.
  * - `unavailable` — not carried, and the reason says *which* absence it is.
  * - `placeholder` — invented for layout. Rejected outside placeholder mode by
  *   the model refinement below, so this is a parse-time refusal rather than a
  *   render-time convention.
+ *
+ * `declared` exists because HAC-284 found the gap it fills being papered over.
+ * A readiness manifest's query parameters are a real, useful value that no read
+ * ever ran, and with only `observed` and `unavailable` available they were
+ * rendered as an observation attributed to DataHub. Neither existing state was
+ * honest: `unavailable` would deny a value that is right there, and `observed`
+ * claimed a measurement nobody took. A value can be present and unexecuted at
+ * once, and the type now says so.
  */
 export const evidenceValueSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("observed"), value: z.string().min(1), source: claimSourceSchema, identifier: identifierMetaSchema.optional() }),
+  z.object({ state: z.literal("declared"), value: z.string().min(1), note: z.string().min(1) }),
+  z.object({ state: z.literal("legacy"), value: z.string().min(1), note: z.string().min(1) }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
   z.object({ state: z.literal("placeholder"), value: z.string().min(1) }),
 ]);
@@ -318,7 +335,14 @@ export const receiptSchema = z.object({
     algorithmVersion: evidenceValueSchema,
     inputDigest: evidenceValueSchema,
     artifactDigest: evidenceValueSchema,
+    /** The request that produced the observed set. Only a 1.4 event carries one. */
     dataHubReadParameters: evidenceValueSchema,
+    /** Which instance was talked to. Not a query parameter, and not in that row. */
+    dataHubConnection: evidenceValueSchema,
+    /** The manifest's derivation parameters. Never an observation — see `declared`. */
+    manifestDerivationParameters: evidenceValueSchema,
+    /** A 1.3 block's parameters, whose role the contract never recorded. */
+    legacyQueryParameters: evidenceValueSchema,
     producerPath: evidenceValueSchema,
     immutableSourceUrl: evidenceValueSchema,
     limitations: evidenceValueSchema,

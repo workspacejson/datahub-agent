@@ -13,7 +13,7 @@ import {
   type ChangeImpactEvent,
   type EvidenceRecord,
   type Unavailable,
-  type VerificationEvidence,
+  type VerificationEvidenceV14,
 } from "../../src/integration/change-impact-event.js";
 
 /** A minimal event that passes validation — every test mutates one thing from here. */
@@ -287,14 +287,33 @@ describe("completeness as an axis of its own", () => {
 });
 
 describe("complete-against-pinned-manifest must carry its evidence", () => {
-  const EVIDENCE: VerificationEvidence = {
+  // The 1.4 shape: the manifest's derivation parameters and the executed read's
+  // own, kept apart. They deliberately differ here — the manifest declares
+  // `maxDegree: 4` and the read that produced the observed set never sent it —
+  // because a fixture where the two agree cannot show that they are two things.
+  const EVIDENCE: VerificationEvidenceV14 = {
     manifestDigest: "sha256:aaa",
     expectedSetDigest: "sha256:bbb",
     observedSetDigest: "sha256:bbb",
-    queryParameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", maxHops: 3 },
+    declaredQueryParameters: {
+      surface: "searchAcrossLineage",
+      direction: "UPSTREAM",
+      maxDegree: 4,
+    },
+    executedRead: {
+      transport: "gms",
+      surface: "searchAcrossLineage",
+      parameters: {
+        urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)",
+        direction: "UPSTREAM",
+        query: "*",
+        start: 0,
+        count: 50,
+      },
+    },
   };
 
-  const verifiedAbsence = (verification?: Partial<VerificationEvidence>): ChangeImpactEvent => {
+  const verifiedAbsence = (verification?: Partial<VerificationEvidenceV14>): ChangeImpactEvent => {
     const event = validEvent();
     event.datahub.upstreams = [];
     // The canonical observation mirrors the entry, because they describe one
@@ -338,10 +357,27 @@ describe("complete-against-pinned-manifest must carry its evidence", () => {
     },
   );
 
-  it("rejects complete-against-pinned-manifest with no query parameters", () => {
+  it("rejects complete-against-pinned-manifest with no declared parameters", () => {
     // Two sets are only comparable under the same parameters, so they are part
     // of the evidence rather than commentary on it.
-    expect(validateEvent(verifiedAbsence({ queryParameters: {} }))[0]).toMatch(/queryParameters/);
+    expect(validateEvent(verifiedAbsence({ declaredQueryParameters: {} }))[0]).toMatch(
+      /declaredQueryParameters/,
+    );
+  });
+
+  it("refuses an executed read whose parameters are not the request's own", () => {
+    // Refused at the parse, not by the completeness gate, and that is the
+    // stronger place. The direction invariant reads this key; if it could go
+    // missing, that invariant would silently stop being able to fail — which is
+    // exactly how the fix for a mislabelled evidence block reintroduces the
+    // class of defect it was meant to remove.
+    const problems = validateEvent(
+      verifiedAbsence({
+        executedRead: { transport: "gms", surface: "searchAcrossLineage", parameters: {} as never },
+      }),
+    );
+    expect(problems[0]).toMatch(/verification/);
+    expect(problems).not.toHaveLength(0);
   });
 
   it("does not require evidence when completeness was not established", () => {

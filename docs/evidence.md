@@ -211,7 +211,39 @@ evidence the join added.
 
 ## Versioning
 
-The contract is versioned (`CHANGE_IMPACT_EVENT_VERSION`, currently `"1.3"`).
+The contract is versioned (`CHANGE_IMPACT_EVENT_VERSION`, currently `"1.4"`).
 Superseded versions are listed in `SUPERSEDED_EVENT_VERSIONS`. A version bump
 is a breaking change; the golden fixtures must be re-emitted and the tests
 must pass against the new version.
+
+### 1.4 — what a verification block describes
+
+`VerificationEvidence` carries two parameter sets, and they are two different
+things:
+
+| Field | Describes |
+| -- | -- |
+| `declaredQueryParameters` | how the readiness manifest's *expected* set was derived |
+| `executedRead` | the request that produced `observedSetDigest` — its transport, surface and parameters |
+
+Under 1.3 a single `queryParameters` field held the first while the contract's
+own documentation, the completeness gate and the cockpit all read it as the
+second. On `--transport mcp` those were different requests: the observed set
+came from `mcp:get_lineage` at three hops, and the recorded parameters
+described `searchAcrossLineage` at `maxDegree: 4`. An auditor rerunning them
+ran a query the event had never run — a false statement inside the structure
+whose whole purpose is letting someone re-derive the result. The digests
+agreed, which is exactly what kept it quiet.
+
+`executedRead.parameters.direction` is required. The direction invariant reads
+it to confirm the evidence describes the lineage side it is attached to, and a
+parameter set that could omit it would leave that check unable to fail.
+
+**1.3 events are still read, and are not upgraded.** They are the first version
+to stay readable after its successor shipped, because what a 1.3 event lacks is
+not a field but a *distinction* — which of the two things its `queryParameters`
+described is unrecoverable. So the cockpit renders them as *"Legacy verification
+metadata. Execution provenance is not distinguishable in contract 1.3"* rather
+than promoting them to an executed read. A verification block must match the
+version that declared it, in both directions, and `validateEvent` refuses an
+event where it does not.

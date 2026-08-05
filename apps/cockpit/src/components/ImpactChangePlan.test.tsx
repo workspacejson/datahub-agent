@@ -80,6 +80,11 @@ const withProvenance = (overrides: Record<string, unknown>) => {
 
 const attested = {
   dataHubReadParameters: { state: "observed", value: "gms http://localhost:8080", source: "DataHub" },
+  manifestDerivationParameters: {
+    state: "declared",
+    value: '{"direction":"UPSTREAM"}',
+    note: "Declared query parameters. Execution was not observed.",
+  },
   subjectRevision: { state: "observed", value: "59fa295c", source: "workspace.json" },
 } as const;
 

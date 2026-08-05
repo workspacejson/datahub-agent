@@ -154,7 +154,11 @@ describe("projecting the frozen contract onto the cockpit", () => {
       observedCount: 1,
       verification: {
         manifestDigest: "m", expectedSetDigest: "e", observedSetDigest: "e",
-        queryParameters: { direction: "UPSTREAM" },
+        declaredQueryParameters: { direction: "UPSTREAM" },
+        executedRead: {
+          transport: "gms", surface: "searchAcrossLineage",
+          parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", direction: "UPSTREAM", query: "*", start: 0, count: 50 },
+        },
       },
     };
     expect(projectEvent(event, "impact").completeness).toBe("complete-against-pinned-manifest");
@@ -350,5 +354,136 @@ describe("the receipt projection", () => {
   it("pairs every stated gap with the item the state strip shows", () => {
     const model = projectEvent(contractEvent(), "receipts");
     expect(model.receipt.statedGaps.map((gap) => `${gap.field}: ${gap.reason}`)).toEqual(model.unresolvedItems);
+  });
+});
+
+describe("query parameters, and which request they describe", () => {
+  /** An event whose upstream observation carries 1.4 execution provenance. */
+  const MCP_READ = {
+    transport: "mcp",
+    surface: "mcp:get_lineage",
+    parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", upstream: true, max_hops: 3, max_results: 50, query: "*" },
+  } as const;
+  const GMS_READ = {
+    transport: "gms",
+    surface: "searchAcrossLineage",
+    parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", direction: "UPSTREAM", query: "*", start: 0, count: 50 },
+  } as const;
+
+  const withExecutedRead = (executedRead: typeof MCP_READ | typeof GMS_READ) => {
+    const event = contractEvent();
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: event.datahub.upstreams.length,
+      verification: {
+        manifestDigest: "m",
+        expectedSetDigest: "e",
+        observedSetDigest: "e",
+        declaredQueryParameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", maxDegree: 4 },
+        executedRead,
+      },
+    };
+    return event;
+  };
+
+  it("renders the executed read as the DataHub observation it actually is", () => {
+    const { provenance } = projectEvent(withExecutedRead(MCP_READ), "receipts").receipt;
+    expect(provenance.dataHubReadParameters.state).toBe("observed");
+    if (provenance.dataHubReadParameters.state !== "observed") return;
+    expect(provenance.dataHubReadParameters.value).toContain("mcp:get_lineage");
+    expect(provenance.dataHubReadParameters.source).toBe("DataHub");
+  });
+
+  it("never attributes the manifest's own parameters to a DataHub read", () => {
+    // The judge-facing half of HAC-284. The manifest declares
+    // `searchAcrossLineage` at `maxDegree: 4`; the read ran `mcp:get_lineage`.
+    // Rendering the first as a DataHub observation is a positive false
+    // attribution, and it is what this slot used to do.
+    const { provenance } = projectEvent(withExecutedRead(MCP_READ), "receipts").receipt;
+    expect(provenance.dataHubReadParameters.state).toBe("observed");
+    if (provenance.dataHubReadParameters.state !== "observed") return;
+    expect(provenance.dataHubReadParameters.value).not.toContain("maxDegree");
+    expect(provenance.dataHubReadParameters.value).not.toContain("searchAcrossLineage");
+  });
+
+  it("shows the manifest's parameters as declared, with no source attribution", () => {
+    const { provenance } = projectEvent(withExecutedRead(GMS_READ), "receipts").receipt;
+    expect(provenance.manifestDerivationParameters.state).toBe("declared");
+    if (provenance.manifestDerivationParameters.state !== "declared") return;
+    expect(provenance.manifestDerivationParameters.value).toContain("maxDegree");
+    expect(provenance.manifestDerivationParameters.note).toMatch(/Execution was not observed/);
+    // No `source` key at all: a source tag is an attribution, and nothing
+    // measured this.
+    expect("source" in provenance.manifestDerivationParameters).toBe(false);
+  });
+
+  it("renders a 1.3 event as legacy rather than inventing provenance for it", () => {
+    const event = contractEvent();
+    event.eventVersion = "1.3";
+    event.datahub.lineageObservation.upstreams = {
+      read: "ok",
+      completeness: "complete-against-pinned-manifest",
+      observedCount: event.datahub.upstreams.length,
+      verification: {
+        manifestDigest: "m",
+        expectedSetDigest: "e",
+        observedSetDigest: "e",
+        queryParameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", maxDegree: 4 },
+      },
+    };
+    const { provenance } = projectEvent(event, "receipts").receipt;
+    // Not upgraded, not guessed at, and above all not attributed to DataHub.
+    expect(provenance.dataHubReadParameters.state).toBe("unavailable");
+    if (provenance.dataHubReadParameters.state !== "unavailable") return;
+    expect(provenance.dataHubReadParameters.reason).toMatch(/contract 1\.3/);
+
+    // And not classified as *declared* either. 1.3 cannot say which of the two
+    // its parameters describe, so claiming the declared half is the same
+    // invention as claiming the executed half — in the row added to respect the
+    // distinction.
+    expect(provenance.manifestDerivationParameters.state).toBe("unavailable");
+
+    // They are still shown, in a state that claims nothing about their role.
+    // Not `declared`: that is itself a classification, and badging the
+    // unclassifiable with one reasserts the thing known to be unknown.
+    expect(provenance.legacyQueryParameters.state).toBe("legacy");
+    if (provenance.legacyQueryParameters.state !== "legacy") return;
+    expect(provenance.legacyQueryParameters.value).toContain("maxDegree");
+    expect(provenance.legacyQueryParameters.note).toMatch(/role unknown/i);
+    expect(provenance.legacyQueryParameters.note).not.toMatch(/declared/i);
+  });
+
+  it("says no executed read was recorded, rather than showing the connection", () => {
+    // `gms <url> (<version>)` says which instance was talked to, not what was
+    // asked of it. Putting it in this row made the row's own label false, which
+    // is the same substitution as the defect this contract version fixes.
+    const { provenance } = projectEvent(contractEvent(), "receipts").receipt;
+    expect(provenance.dataHubReadParameters.state).toBe("unavailable");
+    if (provenance.dataHubReadParameters.state !== "unavailable") return;
+    expect(provenance.dataHubReadParameters.reason).not.toContain("gms ");
+  });
+
+  it("keeps the connection, in a field that says it is a connection", () => {
+    const { provenance } = projectEvent(contractEvent(), "receipts").receipt;
+    expect(provenance.dataHubConnection.state).toBe("observed");
+    if (provenance.dataHubConnection.state !== "observed") return;
+    expect(provenance.dataHubConnection.value).toContain("gms ");
+  });
+
+  it("shows no declared or legacy parameters when there is no verification", () => {
+    const { provenance } = projectEvent(contractEvent(), "receipts").receipt;
+    expect(provenance.manifestDerivationParameters.state).toBe("unavailable");
+    expect(provenance.legacyQueryParameters.state).toBe("unavailable");
+  });
+
+  it("renders the executed parameters as the request, urn and all", () => {
+    const { provenance } = projectEvent(withExecutedRead(MCP_READ), "receipts").receipt;
+    expect(provenance.dataHubReadParameters.state).toBe("observed");
+    if (provenance.dataHubReadParameters.state !== "observed") return;
+    // The tool's own vocabulary, reissuable as shown.
+    expect(provenance.dataHubReadParameters.value).toContain("upstream");
+    expect(provenance.dataHubReadParameters.value).toContain("max_hops");
+    expect(provenance.dataHubReadParameters.value).toContain("urn:li:dataset");
   });
 });
