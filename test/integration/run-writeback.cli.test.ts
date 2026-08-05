@@ -26,6 +26,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  EVIDENCE_TIER_PROPERTY_DEFINITION,
   EVIDENCE_TIER_PROPERTY_ID,
   LINK_LABEL,
   type EnrichedChangeImpactEvent,
@@ -49,14 +50,31 @@ interface StubBehavior {
   staleReads?: number;
   /** Never show the write, so the observation must hit its bound. */
   neverConverges?: boolean;
-  /** Answer every read with a non-JSON error body. */
+  /**
+   * Answer every *dataset* read with a non-JSON error body.
+   *
+   * Scoped to dataset reads on purpose. These cases exist to drive the
+   * observation loop, and the script now also reads the deployed property
+   * definition — which fails closed, so folding it into this knob would stop
+   * every one of them before the loop they were written to exercise. The
+   * instance-is-entirely-down case is covered separately by
+   * `definitionUnreadable`, where the fail-closed refusal is the subject.
+   */
   failReads?: boolean;
   /**
-   * Accept post-mutation reads and never answer them. This is the case a
-   * between-reads deadline cannot bound: the request is in flight, so nothing
+   * Accept post-mutation dataset reads and never answer them. This is the case
+   * a between-reads deadline cannot bound: the request is in flight, so nothing
    * re-checks the clock until the socket resolves.
    */
   hangReadsAfterMutation?: boolean;
+  /** Answer the definition readback with an error, so nothing can be reconciled. */
+  definitionUnreadable?: boolean;
+  /** Answer the definition readback with no such property. */
+  definitionAbsent?: boolean;
+  /** Serve a deployed definition that diverges from the one this tool requires. */
+  driftDefinition?: (definition: DeployedDefinitionPayload) => DeployedDefinitionPayload;
+  /** Report the create mutation as rejected because the property is already defined. */
+  propertyAlreadyExists?: boolean;
 }
 
 interface Stub {
@@ -69,6 +87,33 @@ interface Stub {
 const emptyDataset = {
   data: { dataset: { institutionalMemory: { elements: [] }, structuredProperties: { properties: [] } } },
 };
+
+/** The definition readback as GMS shapes it, before the script flattens it. */
+interface DeployedDefinitionPayload {
+  displayName: string;
+  description: string;
+  cardinality: string;
+  valueType: { urn: string };
+  entityTypes: Array<{ urn: string }>;
+  allowedValues: Array<{ value: { stringValue: string }; description: string }>;
+}
+
+/**
+ * A catalog holding exactly what this tool requires, derived from the
+ * requirement rather than retyped. A hand-copied fixture here would be a second
+ * place the definition lives, which is the defect these tests exist to close.
+ */
+const deployedDefinition = (): DeployedDefinitionPayload => ({
+  displayName: EVIDENCE_TIER_PROPERTY_DEFINITION.displayName,
+  description: EVIDENCE_TIER_PROPERTY_DEFINITION.description,
+  cardinality: EVIDENCE_TIER_PROPERTY_DEFINITION.cardinality,
+  valueType: { urn: EVIDENCE_TIER_PROPERTY_DEFINITION.valueTypeUrn },
+  entityTypes: EVIDENCE_TIER_PROPERTY_DEFINITION.entityTypeUrns.map((urn) => ({ urn })),
+  allowedValues: EVIDENCE_TIER_PROPERTY_DEFINITION.allowedValues.map((v) => ({
+    value: { stringValue: v.stringValue },
+    description: v.description,
+  })),
+});
 
 const enrichedDataset = {
   data: {
@@ -94,8 +139,11 @@ async function startStub(behavior: StubBehavior = {}): Promise<Stub> {
     req.on("end", () => {
       const { query } = JSON.parse(body) as { query: string };
       const isRead = query.trimStart().startsWith("query");
+      const isDefinitionRead = isRead && query.includes("structuredProperty(");
       const name = isRead
-        ? "readState"
+        ? isDefinitionRead
+          ? "readDefinition"
+          : "readState"
         : (query.match(/createStructuredProperty|upsertLink|upsertStructuredProperties/)?.[0] ??
           "unknown");
       requests.push({ kind: isRead ? "read" : "mutation", name });
@@ -104,6 +152,23 @@ async function startStub(behavior: StubBehavior = {}): Promise<Stub> {
         res.writeHead(status, { "Content-Type": raw ? "text/plain" : "application/json" });
         res.end(raw ? String(payload) : JSON.stringify(payload));
       };
+
+      if (isDefinitionRead) {
+        if (behavior.definitionUnreadable) {
+          return send(502, "upstream is down, and this is not JSON", true);
+        }
+        if (behavior.definitionAbsent) return send(200, { data: { structuredProperty: null } });
+        const definition = deployedDefinition();
+        return send(200, {
+          data: {
+            structuredProperty: {
+              definition: behavior.driftDefinition
+                ? behavior.driftDefinition(definition)
+                : definition,
+            },
+          },
+        });
+      }
 
       if (isRead) {
         if (behavior.failReads) return send(502, "upstream is down, and this is not JSON", true);
@@ -119,7 +184,11 @@ async function startStub(behavior: StubBehavior = {}): Promise<Stub> {
 
       mutationsApplied = true;
       if (name === "createStructuredProperty") {
-        return send(200, { data: { createStructuredProperty: { urn: PROPERTY_URN } } });
+        return behavior.propertyAlreadyExists
+          ? send(200, {
+              errors: [{ message: `Structured property ${PROPERTY_URN} already exists` }],
+            })
+          : send(200, { data: { createStructuredProperty: { urn: PROPERTY_URN } } });
       }
       if (name === "upsertLink") return send(200, { data: { upsertLink: true } });
       return send(200, {
@@ -444,6 +513,149 @@ describe("the observation bound itself", () => {
     const result = await runCli(["--gms", stub.url, "--observe-timeout", "not-a-number", "--dry-run"]);
 
     expect(result.stderr).toMatch(/must be a positive number/);
+    expect(result.code).toBe(0);
+  }, 20_000);
+});
+
+describe("the deployed property definition the tier values mean something under", () => {
+  // A tier token is not self-describing. `VERIFIED` in a catalog means what
+  // that catalog's property definition says it means, and this tool writes tier
+  // values into a catalog it does not own. Until HAC-270's closure the runner
+  // reported `already exists` as success outright, so an instance defining
+  // `VERIFIED` as something else was indistinguishable from one that agreed —
+  // and the receipt claimed the contract was deployed either way.
+
+  it("reads the definition back after creating it, rather than trusting the mutation", async () => {
+    // A create that returns a URN does not establish what the server stored.
+    stub = await startStub({ staleReads: 1 });
+    const result = await runCli(bounded(stub));
+
+    const order = stub.requests.map((r) => r.name);
+    expect(order).toContain("readDefinition");
+    expect(order.indexOf("readDefinition")).toBeGreaterThan(
+      order.indexOf("createStructuredProperty"),
+    );
+    expect(receiptFrom(result).succeeded).toBe(true);
+  }, 20_000);
+
+  it("reconciles an existing definition instead of calling `already exists` success", async () => {
+    // The swallow this closes. The mutation is rejected, and the run still
+    // succeeds — but on the strength of the readback, not the rejection.
+    stub = await startStub({ staleReads: 1, propertyAlreadyExists: true });
+    const result = await runCli(bounded(stub));
+    const receipt = receiptFrom(result);
+    const create = receipt.attempts.find((a) => a.mutation === "createStructuredProperty");
+
+    expect(create?.succeeded).toBe(true);
+    expect(create?.response).toContain("already defined");
+    expect(create?.response).toContain("reconciled");
+    expect(receipt.succeeded).toBe(true);
+    expect(result.code).toBe(0);
+  }, 20_000);
+
+  it("applies nothing when the deployed definition states a different rule", async () => {
+    // The mutation would have been accepted. What stops the write is the
+    // meaning the catalog would have published it under.
+    stub = await startStub({
+      propertyAlreadyExists: true,
+      driftDefinition: (definition) => ({
+        ...definition,
+        allowedValues: definition.allowedValues.map((v) =>
+          v.value.stringValue === "VERIFIED"
+            ? { ...v, description: "at least one check was executed" }
+            : v,
+        ),
+      }),
+    });
+    const result = await runCli(bounded(stub));
+    const receipt = receiptFrom(result);
+
+    expect(receipt.attempts.map((a) => a.mutation)).toEqual(["createStructuredProperty"]);
+    expect(stub.requests.map((r) => r.name)).not.toContain("upsertStructuredProperties");
+    expect(stub.requests.map((r) => r.name)).not.toContain("upsertLink");
+    expect(receipt.succeeded).toBe(false);
+    expect(result.code).not.toBe(0);
+  }, 20_000);
+
+  it("names the divergence with both values, so the operator can act on it", async () => {
+    stub = await startStub({
+      propertyAlreadyExists: true,
+      driftDefinition: (definition) => ({ ...definition, description: "Evidence tier." }),
+    });
+    const result = await runCli(bounded(stub));
+
+    expect(result.stderr).toContain("NOTHING WAS APPLIED");
+    expect(result.stderr).toContain("Evidence tier.");
+    expect(result.stderr).toContain(EVIDENCE_TIER_PROPERTY_DEFINITION.description.slice(0, 40));
+    // Detection and reconciliation, never a silent rewrite of a definition
+    // this tool did not create.
+    expect(result.stderr).toContain("does not rewrite");
+  }, 20_000);
+
+  it("refuses a definition offering a tier the lattice cannot derive", async () => {
+    stub = await startStub({
+      propertyAlreadyExists: true,
+      driftDefinition: (definition) => ({
+        ...definition,
+        allowedValues: [
+          ...definition.allowedValues,
+          { value: { stringValue: "TRUSTED" }, description: "hand-set" },
+        ],
+      }),
+    });
+    const result = await runCli(bounded(stub));
+
+    expect(receiptFrom(result).succeeded).toBe(false);
+    expect(result.stderr).toContain("TRUSTED");
+  }, 20_000);
+
+  it("fails closed when the definition cannot be read at all", async () => {
+    // Unreadable is not unknown-and-therefore-fine. It is the state where
+    // writing a tier value is least defensible, because nothing is known about
+    // how that value will be read back.
+    stub = await startStub({ definitionUnreadable: true });
+    const result = await runCli(bounded(stub));
+    const receipt = receiptFrom(result);
+
+    expect(receipt.attempts.map((a) => a.mutation)).toEqual(["createStructuredProperty"]);
+    expect(receipt.succeeded).toBe(false);
+    expect(result.stderr).toContain("could not be read");
+    expect(result.code).not.toBe(0);
+  }, 20_000);
+
+  it("fails closed when the property is absent after its own create", async () => {
+    stub = await startStub({ definitionAbsent: true });
+    const result = await runCli(bounded(stub));
+
+    expect(receiptFrom(result).succeeded).toBe(false);
+    expect(result.code).not.toBe(0);
+  }, 20_000);
+
+  it("does not poll for a write it deliberately never sent", async () => {
+    // Fail closed and then observe would spend the whole bound waiting for a
+    // tier nobody submitted, and report a timeout for a decision.
+    stub = await startStub({
+      propertyAlreadyExists: true,
+      driftDefinition: (definition) => ({ ...definition, displayName: "Evidence" }),
+    });
+    const receipt = receiptFrom(await runCli(bounded(stub)));
+
+    expect(receipt.observation).toBeNull();
+  }, 20_000);
+
+  it("still emits a parseable receipt when it refuses", async () => {
+    stub = await startStub({ definitionUnreadable: true });
+    const result = await runCli(bounded(stub));
+
+    expect(() => JSON.parse(result.stdout)).not.toThrow();
+    expect(result.stdout.trimStart().startsWith("{")).toBe(true);
+  }, 20_000);
+
+  it("does not read or reconcile anything on a dry run", async () => {
+    stub = await startStub();
+    const result = await runCli([...bounded(stub), "--dry-run"]);
+
+    expect(stub.requests.map((r) => r.name)).not.toContain("readDefinition");
     expect(result.code).toBe(0);
   }, 20_000);
 });

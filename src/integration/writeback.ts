@@ -28,10 +28,140 @@
  * prose.
  */
 
+import { EVIDENCE_TIER_LATTICE } from "./change-impact-event.js";
 import type { ChangeImpactEvent, EvidenceTier } from "./change-impact-event.js";
 
 /** Stable identifier for the property this tool owns. */
 export const EVIDENCE_TIER_PROPERTY_ID = "workspacejson_evidence_tier";
+
+/**
+ * The structured-property definition this tool requires the catalog to hold,
+ * built from the lattice rather than restating it.
+ *
+ * Every sentence describing a tier comes from `EVIDENCE_TIER_LATTICE`, so the
+ * definition a catalog is asked to hold and the derivation the code performs
+ * cannot drift apart by editing one of them. That was possible until now: the
+ * definition lived as string literals in the runner script, and the tier
+ * correction changed the derivation in this package while the deployed
+ * definition kept whatever wording it was created with.
+ */
+export const EVIDENCE_TIER_PROPERTY_DEFINITION = {
+  qualifiedName: EVIDENCE_TIER_PROPERTY_ID,
+  displayName: "Evidence tier (workspace.json)",
+  description:
+    "Mechanically derived from the evidence records supporting the dataset-to-code resolution. " +
+    EVIDENCE_TIER_LATTICE.map(({ tier, rule }) => `${tier}: ${rule}.`).join(" "),
+  valueTypeUrn: "urn:li:dataType:datahub.string",
+  cardinality: "SINGLE",
+  entityTypeUrns: ["urn:li:entityType:datahub.dataset"],
+  allowedValues: EVIDENCE_TIER_LATTICE.map(({ tier, rule }) => ({
+    stringValue: tier,
+    description: rule,
+  })),
+} as const;
+
+/**
+ * A structured-property definition as the catalog reports it.
+ *
+ * Every field is nullable because this is a *reading*, not a construction. A
+ * catalog that answers with a missing description is telling us something, and
+ * coercing that to `""` here would let it compare equal to a definition that
+ * genuinely carries no description.
+ */
+export interface DeployedPropertyDefinition {
+  displayName: string | null;
+  description: string | null;
+  cardinality: string | null;
+  valueTypeUrn: string | null;
+  entityTypeUrns: readonly string[];
+  allowedValues: readonly { stringValue: string; description: string | null }[];
+}
+
+export interface DefinitionReconciliation {
+  reconciled: boolean;
+  /** One line per divergence, each naming the required and deployed values. */
+  problems: string[];
+}
+
+/** `null` and `undefined` both read as "the catalog said nothing here". */
+const shown = (value: string | null): string => (value === null ? "(none)" : JSON.stringify(value));
+
+/**
+ * Compare the deployed definition against the one this tool requires.
+ *
+ * Detection only. Nothing here repairs, migrates or overwrites deployed
+ * catalog state: a definition that disagrees is an operator's decision to
+ * make, and a tool that silently rewrote it would be destroying metadata it
+ * does not own for the sake of its own convenience — the thing this module
+ * refuses to do everywhere else.
+ *
+ * `null` means the definition could not be read, and that is a failure rather
+ * than a skip. An unreadable definition is precisely the state where writing
+ * tier values is least defensible, because nothing is known about what those
+ * values will be interpreted to mean.
+ *
+ * Order is not compared. Allowed values are matched by their token and entity
+ * types as a set, because neither carries meaning in its position — the
+ * cardinality is `SINGLE`, so an allowed value is selected by name and never
+ * by index. Comparing order would fail closed on a catalog that agrees.
+ */
+export function reconcileDeployedDefinition(
+  deployed: DeployedPropertyDefinition | null,
+): DefinitionReconciliation {
+  if (deployed === null) {
+    return {
+      reconciled: false,
+      problems: [
+        `the deployed definition of ${EVIDENCE_TIER_PROPERTY_ID} could not be read, so it cannot be reconciled`,
+      ],
+    };
+  }
+
+  const required = EVIDENCE_TIER_PROPERTY_DEFINITION;
+  const problems: string[] = [];
+
+  const scalars = [
+    ["displayName", required.displayName, deployed.displayName],
+    ["description", required.description, deployed.description],
+    ["cardinality", required.cardinality, deployed.cardinality],
+    ["valueType", required.valueTypeUrn, deployed.valueTypeUrn],
+  ] as const;
+  for (const [field, want, got] of scalars) {
+    if (want !== got) problems.push(`${field}: required ${shown(want)}, deployed ${shown(got)}`);
+  }
+
+  const wantEntities = [...required.entityTypeUrns].sort();
+  const gotEntities = [...deployed.entityTypeUrns].sort();
+  if (JSON.stringify(wantEntities) !== JSON.stringify(gotEntities)) {
+    problems.push(
+      `entityTypes: required ${JSON.stringify(wantEntities)}, deployed ${JSON.stringify(gotEntities)}`,
+    );
+  }
+
+  const deployedValues = new Map(deployed.allowedValues.map((v) => [v.stringValue, v.description]));
+  for (const { stringValue, description } of required.allowedValues) {
+    if (!deployedValues.has(stringValue)) {
+      problems.push(`allowedValues: required value ${JSON.stringify(stringValue)} is not deployed`);
+      continue;
+    }
+    const got = deployedValues.get(stringValue) ?? null;
+    if (got !== description) {
+      problems.push(
+        `allowedValues[${stringValue}]: required ${shown(description)}, deployed ${shown(got)}`,
+      );
+    }
+  }
+  const requiredTokens = new Set<string>(required.allowedValues.map((v) => v.stringValue));
+  for (const { stringValue } of deployed.allowedValues) {
+    if (!requiredTokens.has(stringValue)) {
+      problems.push(
+        `allowedValues: deployed value ${JSON.stringify(stringValue)} is not part of the evidence lattice`,
+      );
+    }
+  }
+
+  return { reconciled: problems.length === 0, problems };
+}
 
 export interface WritebackTarget {
   gmsUrl: string;
