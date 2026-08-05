@@ -664,6 +664,48 @@ const _drift: [
 void _drift;
 
 /**
+ * The lattice as data: one row per tier, carrying both the predicate that
+ * selects it and the sentence that states it.
+ *
+ * `deriveTier` below stays written out longhand because HAC-270 froze that
+ * derivation verbatim, and a frozen spec is worth more than the small saving
+ * of routing it through a table. What the table is for is the other two
+ * consumers. The deployed structured-property definition used to keep its own
+ * hand-written paraphrase of these rules, so the catalog could describe a
+ * lattice the code did not implement and nothing would notice — the exact
+ * failure the tier correction was filed against, displaced one surface
+ * outwards. `rule` is now the only place those sentences exist, and the
+ * catalog definition is built from them.
+ *
+ * `holds` earns its place by making the prose checkable: a test runs every row
+ * against `deriveTier` over all four input classes, so a sentence that stops
+ * describing the derivation fails rather than merely reading as though it
+ * still fits.
+ */
+export const EVIDENCE_TIER_LATTICE: readonly {
+  readonly tier: EvidenceTier;
+  /** The sentence the catalog and a reader both get. Stated positively. */
+  readonly rule: string;
+  readonly holds: (records: readonly EvidenceRecord[]) => boolean;
+}[] = [
+  {
+    tier: "ASSERTED",
+    rule: "claimed, with no supporting record",
+    holds: (records) => records.length === 0,
+  },
+  {
+    tier: "OBSERVED",
+    rule: "at least one record; not all have checkExecuted: true",
+    holds: (records) => records.length > 0 && !records.every((r) => r.checkExecuted),
+  },
+  {
+    tier: "VERIFIED",
+    rule: "every supporting record has checkExecuted: true",
+    holds: (records) => records.length > 0 && records.every((r) => r.checkExecuted),
+  },
+];
+
+/**
  * Derive the tier from the records. Mechanical by construction — there is no
  * threshold to tune and no argument to pass that could override it.
  */

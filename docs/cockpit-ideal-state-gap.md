@@ -157,7 +157,7 @@ Nothing else in the description changed. HAC-154's message lock already used the
 | Gate | Ruling | Status | Delta |
 | --- | --- | --- | --- |
 | PR #70 baseline | Merge first | **Merged** ✅ verified | None |
-| HAC-270 / PR #71 | Land PR | PR **merged** ✅ verified; issue In Progress | Close issue after reconciling remaining acceptance (deployed property reconciliation; the `already exists` swallow note was descoped — reconcile explicitly) |
+| HAC-270 / PR #71 | Land PR | PR **merged** ✅ verified; issue In Progress | Remaining acceptance closed separately: the deployed definition is now read back and reconciled before any write, and the `already exists` swallow is gone. See `reconcileDeployedDefinition` and `test/integration/deployed-definition.test.ts` |
 | HAC-145 golden fixture | Sign off and freeze | In Review | Validate deferred states, freeze |
 | HAC-226 receipt binding | Close | In Progress, due 2026-08-04 | Finish binding; truth boundary for Receipts |
 | HAC-150 repeated eval | Run — no n=1 causal claim | Todo, due 2026-08-03 | Not started; highest-risk slippage |

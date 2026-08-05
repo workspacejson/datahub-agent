@@ -56,6 +56,14 @@ const eventPath =
   argv.find((a) => a.endsWith(".json")) ??
   join(repoRoot, "test/fixtures/golden/change-impact-event.nested.json");
 
+// tsx is registered up front rather than as a fallback, for the same reason
+// `reset-writeback.mjs` does it: `writeback.ts` now imports `./change-impact-event.js`
+// for the evidence lattice the deployed property definition is built from, and
+// Node's own type-stripping does not rewrite that specifier — so the failure
+// happens while linking the module graph, where a `.catch` on the dynamic
+// import does not reliably get to retry it.
+await import("tsx/esm/api").then((api) => api.register());
+
 const {
   planWriteback,
   refusalReason,
@@ -67,7 +75,9 @@ const {
   notQueriedState,
   unreadableState,
   LINK_LABEL,
-  EVIDENCE_TIER_PROPERTY_ID, linkOmission,} = await import(join(repoRoot, "src/integration/writeback.ts"));
+  EVIDENCE_TIER_PROPERTY_ID, linkOmission,
+  EVIDENCE_TIER_PROPERTY_DEFINITION,
+  reconcileDeployedDefinition,} = await import(join(repoRoot, "src/integration/writeback.ts"));
 
 const event = JSON.parse(readFileSync(resolve(eventPath), "utf8"));
 
@@ -192,33 +202,110 @@ async function observeUntilIntent(urn, intent, timeoutMs, intervalMs) {
   }
 }
 
-/** Define the structured property once. Safe to repeat — an existing id is not an error we propagate. */
+const PROPERTY_URN = `urn:li:structuredProperty:${EVIDENCE_TIER_PROPERTY_ID}`;
+
+/**
+ * Read the deployed definition back, in the shape the reconciler compares.
+ *
+ * Returns `null` for every way this can fail to produce a reading — transport
+ * error, absent property, absent definition — because the reconciler treats
+ * "could not be read" as one condition and fails closed on it. Distinguishing
+ * *why* it could not be read would suggest some of those reasons are
+ * survivable, and none of them are: each leaves us equally ignorant of what a
+ * written tier value would be taken to mean.
+ *
+ * The selection set is taken from DataHub's published GraphQL schema, and was
+ * confirmed against a live quickstart at the pinned GMS `v1.5.0.6` on
+ * 2026-08-05: every compared field came back populated. That check was not
+ * optional. The stub in `test/integration/run-writeback.cli.test.ts` proves the
+ * reconciliation logic and the fail-closed path but cannot prove the wire
+ * shape, and a wrong shape here returns `null` and refuses every run — safe
+ * against corruption, still a total outage. This repository has been bitten
+ * once already by trusting DataHub prose over resolver source (see
+ * `planWriteback`), so re-confirm against a live instance if the GMS pin moves.
+ */
+async function readDeployedDefinition() {
+  const { ok, body } = await gql(`query($urn: String!) {
+    structuredProperty(urn: $urn) {
+      definition {
+        displayName
+        description
+        cardinality
+        valueType { urn }
+        entityTypes { urn }
+        allowedValues { value { ... on StringValue { stringValue } } description }
+      }
+    }
+  }`, { urn: PROPERTY_URN });
+
+  if (!ok) return null;
+  const definition = body?.data?.structuredProperty?.definition;
+  if (!definition) return null;
+
+  return {
+    displayName: definition.displayName ?? null,
+    description: definition.description ?? null,
+    cardinality: definition.cardinality ?? null,
+    valueTypeUrn: definition.valueType?.urn ?? null,
+    entityTypeUrns: (definition.entityTypes ?? []).map((t) => t.urn).filter(Boolean),
+    allowedValues: (definition.allowedValues ?? [])
+      .map((v) => ({
+        stringValue: v.value?.stringValue ?? null,
+        description: v.description ?? null,
+      }))
+      .filter((v) => v.stringValue !== null),
+  };
+}
+
+/**
+ * Define the structured property, then prove the catalog holds the definition
+ * this tool's tier values are only meaningful under.
+ *
+ * The create is attempted unconditionally and `already exists` is not an
+ * error — but it is not success either, which is the correction here. It used
+ * to be reported as success outright, so a catalog carrying a definition that
+ * disagreed with this package's lattice was indistinguishable from one that
+ * agreed, and the receipt said the contract was deployed either way. A tier
+ * token means nothing on its own; it means what its definition says it means.
+ * Writing `VERIFIED` into a catalog that defines `VERIFIED` as something else
+ * publishes a claim this tool did not make.
+ *
+ * So the definition is read back in both cases — after a fresh create as much
+ * as after discovering an existing one, because a create that reports a URN
+ * still does not establish what the server stored — and the reading, not the
+ * mutation's own report, decides the outcome.
+ */
 async function ensureProperty() {
   const { body, error } = await gql(`mutation($input: CreateStructuredPropertyInput!) {
     createStructuredProperty(input: $input) { urn }
   }`, {
     input: {
       id: EVIDENCE_TIER_PROPERTY_ID,
-      qualifiedName: EVIDENCE_TIER_PROPERTY_ID,
-      displayName: "Evidence tier (workspace.json)",
-      description:
-        "Mechanically derived from the evidence records supporting the dataset-to-code resolution. ASSERTED: no supporting record. OBSERVED: at least one record, not all with checkExecuted. VERIFIED: every supporting record has checkExecuted: true.",
-      valueType: "urn:li:dataType:datahub.string",
-      cardinality: "SINGLE",
-      entityTypes: ["urn:li:entityType:datahub.dataset"],
-      allowedValues: [
-        { stringValue: "ASSERTED", description: "claimed, with no supporting record" },
-        { stringValue: "OBSERVED", description: "at least one record; not all have checkExecuted: true" },
-        { stringValue: "VERIFIED", description: "every supporting record has checkExecuted: true" },
-      ],
+      qualifiedName: EVIDENCE_TIER_PROPERTY_DEFINITION.qualifiedName,
+      displayName: EVIDENCE_TIER_PROPERTY_DEFINITION.displayName,
+      description: EVIDENCE_TIER_PROPERTY_DEFINITION.description,
+      valueType: EVIDENCE_TIER_PROPERTY_DEFINITION.valueTypeUrn,
+      cardinality: EVIDENCE_TIER_PROPERTY_DEFINITION.cardinality,
+      entityTypes: [...EVIDENCE_TIER_PROPERTY_DEFINITION.entityTypeUrns],
+      allowedValues: EVIDENCE_TIER_PROPERTY_DEFINITION.allowedValues.map((v) => ({
+        stringValue: v.stringValue,
+        description: v.description,
+      })),
     },
   });
+
   const created = body?.data?.createStructuredProperty?.urn ?? null;
-  const already = JSON.stringify(body?.errors ?? "").match(/already exists|Conflict|duplicate/i);
+  const already = Boolean(
+    JSON.stringify(body?.errors ?? "").match(/already exists|Conflict|duplicate/i),
+  );
+  const reconciliation = reconcileDeployedDefinition(await readDeployedDefinition());
+
+  const origin = created ? `created ${created}` : already ? "already defined" : (error ?? JSON.stringify(body).slice(0, 200));
   return {
-    created,
-    already: Boolean(already),
-    raw: error ?? JSON.stringify(body).slice(0, 300),
+    reconciled: reconciliation.reconciled,
+    response: reconciliation.reconciled
+      ? `${origin}; deployed definition reconciled`
+      : `${origin}; deployed definition NOT reconciled — ${reconciliation.problems.join("; ")}`,
   };
 }
 
@@ -233,16 +320,32 @@ const before = DRY
 const plan = planWriteback(event);
 const attempts = [];
 
+// Set when the deployed definition could not be reconciled, so the phases below
+// can tell "nothing was applied because we refused to" apart from "nothing was
+// applied because there was nothing to do".
+let definitionBlocked = false;
+
 if (!refused && !DRY) {
   const prop = await ensureProperty();
   attempts.push({
     mutation: "createStructuredProperty",
     variables: { input: { id: EVIDENCE_TIER_PROPERTY_ID } },
-    succeeded: Boolean(prop.created) || prop.already,
-    response: prop.created ? `created ${prop.created}` : prop.already ? "already defined" : prop.raw,
+    succeeded: prop.reconciled,
+    response: prop.response,
   });
+  definitionBlocked = !prop.reconciled;
 
-  for (const step of plan) {
+  // Fail closed, and close the whole gate rather than half of it.
+  //
+  // The tier value is the write that is unsafe under a divergent definition,
+  // and the link carries no tier semantics, so there is an argument for
+  // applying the link anyway. It is the wrong trade. Applying half the plan
+  // leaves the catalog in a state no single run produced, and `intendedState`
+  // covers both writes, so the observation loop would then poll to its full
+  // bound waiting for a tier that was deliberately never sent — a receipt
+  // reporting a timeout for a decision. Refusing both keeps the receipt's
+  // account of the run true: nothing was applied, and the reason is named.
+  for (const step of definitionBlocked ? [] : plan) {
     const query =
       step.mutation === "upsertLink"
         ? `mutation($input: UpsertLinkInput!) { upsertLink(input: $input) }`
@@ -260,7 +363,7 @@ if (!refused && !DRY) {
 // Nothing was applied, so there is nothing to observe. `after` repeats `before`
 // rather than inventing a second reading nobody took.
 const observed =
-  DRY || refused || intent === null
+  DRY || refused || intent === null || definitionBlocked
     ? { state: before, record: null }
     : await observeUntilIntent(event.subject.urn, intent, OBSERVE_TIMEOUT_MS, OBSERVE_INTERVAL_MS);
 
@@ -310,6 +413,16 @@ console.error(`refused      ${refused ?? "no"}`);
 console.error(`before       ${describe(before)}`);
 console.error(`after        ${describe(after)}`);
 for (const a of attempts) console.error(`  ${a.succeeded ? "ok  " : "FAIL"} ${a.mutation}  ${a.response.slice(0, 110)}`);
+if (definitionBlocked) {
+  // Truncated above, in full here: this is the one message the operator has to
+  // act on, and it names each divergence with both values.
+  const detail = attempts.find((a) => a.mutation === "createStructuredProperty")?.response ?? "";
+  console.error(`\nNOTHING WAS APPLIED. The deployed definition of ${EVIDENCE_TIER_PROPERTY_ID}`);
+  console.error(`disagrees with the evidence lattice this tool derives tiers from:\n`);
+  console.error(`  ${detail}\n`);
+  console.error(`Reconcile the definition in DataHub, then re-run. This tool does not rewrite a`);
+  console.error(`definition it did not create.`);
+}
 if (observed.record) {
   const { status, polls, elapsedMs, timeoutMs } = observed.record;
   console.error(`observation  ${status} after ${polls} read(s) in ${elapsedMs}ms (bound ${timeoutMs}ms)`);

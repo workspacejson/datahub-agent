@@ -140,6 +140,16 @@ node scripts/run-writeback.mjs event.json
 
 It is idempotent, so the second run reports `noop`.
 
+Before applying anything it reads back the deployed `workspacejson_evidence_tier`
+property definition and compares it against the evidence lattice this tool
+derives tiers from. If the instance defines the tiers differently — a changed
+description, a missing or extra allowed value — nothing is applied, each
+divergence is printed, and the run exits non-zero. Writing `VERIFIED` into a
+catalog that defines `VERIFIED` as something else would publish a claim this
+tool did not make. Reconcile the definition in DataHub and re-run; the tool will
+not rewrite a definition it did not create. See
+[`docs/evidence.md`](evidence.md#evidencetier--the-mechanical-summary).
+
 On the pinned GMS `v1.5.0.6`, both mutations are additive. Reading the resolver
 sources at that tag shows `upsertStructuredProperties` merging into the
 properties already on the dataset, and `upsertLink` appending to institutional

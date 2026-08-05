@@ -82,6 +82,23 @@ pure: given the records, the tier is determined. `VERIFIED` is never rendered
 alone — it carries the record count that produced it, so a reader can see
 whether "VERIFIED" means one check or twenty.
 
+**The tier also has to mean the same thing in the catalog it is written to.** A
+tier token is not self-describing: `VERIFIED` in DataHub means whatever that
+instance's structured-property definition says it means, and this tool writes
+tier values into a catalog it does not own. So the three sentences above are
+held in one place, `EVIDENCE_TIER_LATTICE`, and the deployed property
+definition is built from them rather than restating them.
+
+Before `run-writeback.mjs` applies anything it reads that definition back and
+compares it — allowed values, their descriptions, the property description,
+value type, cardinality and entity types. If they diverge, or if the definition
+cannot be read at all, **nothing is applied** and the run exits non-zero with
+each divergence named. It does not repair the definition: rewriting a
+definition this tool did not create would destroy metadata it does not own, so
+reconciliation is an operator's decision. An `already exists` response is
+therefore not success on its own — it is the point at which the comparison
+becomes necessary.
+
 ---
 
 ## Invariants
