@@ -4,6 +4,9 @@ This document separates pre-existing work from new work, so a hackathon judge
 can tell what was built during the event and what was adopted from prior
 development.
 
+All new work recorded below was built independently by one person; the commit
+history corroborates it.
+
 ---
 
 ## Pre-existing work
