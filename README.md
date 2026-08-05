@@ -263,6 +263,8 @@ Both were open as of the asset review date, 2026-08-04. No claim of upstream acc
 - **New work:** Non-silent node extraction, the change-impact event contract, the MCP read path, writeback with observed receipts, the paired plan comparison, the cockpit, and all evaluation evidence.
 - **Clean-room boundary:** Tally consumes only released, published `@workspacejson/*` packages. No source-level cross-org imports. See [`docs/clean-room.md`](docs/clean-room.md).
 
+**Authorship:** Built independently by Qwynn Marcelle. The repository history and provenance records reflect the project's development.
+
 **Challenge category:** Metadata-Aware Code Generation & Development
 
 **Technologies demonstrated:** DataHub, dbt, TypeScript, Node.js, DuckDB, Python, Vitest, React, Vite, Tailwind, Playwright
