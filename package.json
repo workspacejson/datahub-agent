@@ -31,13 +31,6 @@
     "validate:asset-registry": "node scripts/validate-asset-registry.mjs",
     "parity:datahub-adapter": "tsx migration/parity-datahub-shim.mjs",
     "lint": "biome lint --error-on-warnings",
-    "demo:validate": "node scripts/demo/validate-packet.mjs",
-    "demo:audio": "node scripts/demo/generate-narration.mjs",
-    "demo:captions": "node scripts/demo/generate-captions.mjs",
-    "demo:concat": "node scripts/demo/concatenate-narration.mjs",
-    "demo:rehearse": "node scripts/demo/run-storyboard.mjs",
-    "demo:capture": "node scripts/demo/obs-director.mjs",
-    "demo:verify": "node scripts/demo/verify-output.mjs",
     "verify:judging": "node scripts/verify-judging.mjs"
   },
   "dependencies": {

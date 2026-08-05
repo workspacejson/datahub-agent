@@ -1,7 +1,7 @@
 # Audit report — HAC-247: GraphQL ↔ MCP parity and version-drift
 
 > **Date:** 2026-07-31
-> **Auditor:** Cascade (automated)
+> **Audit mode:** automated adversarial review
 > **DataHub:** GMS v1.6.0 at `http://localhost:8080`
 
 ## Summary

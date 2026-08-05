@@ -1,10 +1,9 @@
 # Audit report — HAC-252: Writeback transaction audit
 
-> **Branch:** `audit/hac-252-writeback-transaction`
 > **Base commit:** `1563e74` (main)
-> **Worktree:** `/Users/user1/Documents/hackathons/audit-wt-08`
+> **Environment:** isolated clean worktree
 > **Date:** 2026-07-30
-> **Auditor:** Cascade (automated)
+> **Audit mode:** automated adversarial review
 
 ## Summary
 

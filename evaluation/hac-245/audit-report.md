@@ -1,7 +1,7 @@
 # Audit report — HAC-245: Contract and invariant adversary
 
 > **Date:** 2026-07-31
-> **Auditor:** Cascade (automated)
+> **Audit mode:** automated adversarial review
 
 ## Summary
 

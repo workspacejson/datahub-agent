@@ -1,11 +1,10 @@
 # Audit report — HAC-256: DataHub integration-surface exploration
 
-> **Branch:** `audit/hac-256-integration-surface`
 > **Base commit:** `1563e74` (main)
-> **Worktree:** `/Users/user1/Documents/hackathons/audit-wt-13`
+> **Environment:** isolated clean worktree
 > **Date:** 2026-07-30
-> **Auditor:** Cascade (automated)
-> **Mode:** Strictly read-only — no ingestion, no mutation
+> **Audit mode:** automated adversarial review
+> **Access:** Strictly read-only — no ingestion, no mutation
 
 ## Summary
 
