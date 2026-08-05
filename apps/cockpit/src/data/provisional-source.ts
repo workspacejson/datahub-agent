@@ -47,6 +47,8 @@ export const provisionalSource = {
       artifactDigest: { state: "placeholder", value: "<artifact digest>" },
       dataHubReadParameters: { state: "placeholder", value: "<DataHub parameters>" },
       manifestDerivationParameters: { state: "placeholder", value: "<manifest parameters>" },
+      legacyQueryParameters: { state: "placeholder", value: "<legacy parameters>" },
+      dataHubConnection: { state: "placeholder", value: "<gms connection>" },
       producerPath: { state: "placeholder", value: "<producer path>" },
       immutableSourceUrl: { state: "placeholder", value: "<immutable source URL>" },
       limitations: { state: "placeholder", value: "<limitations>" },

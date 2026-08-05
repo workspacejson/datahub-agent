@@ -118,20 +118,65 @@ export interface VerificationDigests {
  * Naming the transport makes that difference part of the evidence instead of
  * something a reader has to already know.
  */
-export interface ExecutedRead {
-  transport: "mcp" | "gms";
-  /** The surface on that transport, e.g. `mcp:get_lineage`. */
-  surface: string;
-  /**
-   * The parameters that request carried.
-   *
-   * `direction` is required, and required *here* rather than inferred. The
-   * direction invariant reads it to confirm the evidence describes the lineage
-   * side it is attached to, and a parameter set without it would leave that
-   * check unable to fail — the failure mode this contract change exists to
-   * prevent, reintroduced by the fix for it.
-   */
-  parameters: Record<string, string | number> & { direction: string };
+/**
+ * The `get_lineage` arguments, exactly as the MCP server receives them.
+ *
+ * Snake-cased and boolean-directioned because that is the tool's own contract.
+ * Normalising these into a shared camel-cased shape would produce something
+ * *about* the request rather than the request, and an auditor handed it could
+ * not reissue the call — the substitution this contract version exists to
+ * remove, displaced one layer down.
+ */
+export interface McpLineageParameters {
+  urn: string;
+  /** The server's own parameter name and polarity: true for upstream. */
+  upstream: boolean;
+  max_hops: number;
+  max_results: number;
+  query: string;
+}
+
+/** The `searchAcrossLineage` input, exactly as GMS receives it. */
+export interface GmsLineageParameters {
+  urn: string;
+  direction: string;
+  query: string;
+  start: number;
+  count: number;
+}
+
+/**
+ * The request that actually produced `observedSetDigest`.
+ *
+ * Discriminated by transport, so the surface and the parameter shape cannot
+ * contradict each other. A flat `{ transport, surface: string, parameters:
+ * Record<…> }` accepted `{ transport: "mcp", surface: "searchAcrossLineage" }`
+ * — evidence describing a request neither transport could have issued, which is
+ * the class of statement this whole version exists to make unrepresentable.
+ *
+ * `surface` sits beside the parameters rather than inside them, because which
+ * call was made is not an argument to that call. It was previously recorded as
+ * a parameter, which is why a reader could not tell the two apart.
+ */
+export type ExecutedRead =
+  | { transport: "mcp"; surface: "mcp:get_lineage"; parameters: McpLineageParameters }
+  | { transport: "gms"; surface: "searchAcrossLineage"; parameters: GmsLineageParameters };
+
+/**
+ * The direction a read was actually taken in, per transport.
+ *
+ * Each transport states direction in its own terms, and this is the only place
+ * that knows both. The direction invariant calls it rather than reaching for a
+ * `direction` key, because MCP requests have no such key — inventing one to
+ * make a shared lookup work is how the invariant would end up reading a field
+ * the request never carried.
+ */
+export function executedDirection(read: ExecutedRead): string {
+  return read.transport === "mcp"
+    ? read.parameters.upstream
+      ? "UPSTREAM"
+      : "DOWNSTREAM"
+    : read.parameters.direction;
 }
 
 /**
@@ -177,15 +222,20 @@ export function hasExecutedRead(
 }
 
 /**
- * The parameters an expectation was derived under, whichever contract recorded
- * it. Never the parameters of a read — see `hasExecutedRead` for those.
+ * A 1.3 block's parameters, whose role was never recorded.
+ *
+ * Named for what is known about them and nothing more. There was a
+ * `declaredParameters` helper here that returned 1.4's declared set *or* 1.3's
+ * ambiguous one under a single name, which quietly classified the 1.3 values as
+ * declared — asserting the very distinction 1.3 cannot make, in the helper
+ * written to respect it. A caller that wants the declared set narrows with
+ * `hasExecutedRead` and reads `declaredQueryParameters`; a caller that wants
+ * these gets them under a name that says their role is unknown.
  */
-export function declaredParameters(
-  verification: VerificationEvidence,
+export function legacyQueryParameters(
+  verification: VerificationEvidenceLegacy13,
 ): Record<string, string | number> {
-  return hasExecutedRead(verification)
-    ? verification.declaredQueryParameters
-    : verification.queryParameters;
+  return verification.queryParameters;
 }
 
 export interface Unavailable {
@@ -622,16 +672,35 @@ const verificationEvidenceSchema = z.union([
     expectedSetDigest: z.string(),
     observedSetDigest: z.string(),
     declaredQueryParameters: queryParameterMap,
-    executedRead: z.strictObject({
-      transport: z.enum(["mcp", "gms"]),
-      surface: z.string().min(1),
-      // `direction` is required by the type and by the parse. The invariant
-      // that reads it must be able to fail.
-      parameters: z.intersection(
-        queryParameterMap,
-        z.object({ direction: z.string().min(1) }),
-      ),
-    }),
+    // Discriminated on transport, with each arm's parameters strict and exact.
+    // Strictness is the point: the contract claims these *are* the request, so
+    // a key the request does not carry must not parse, and a key it does carry
+    // must not be droppable. Each arm also pins its own surface, so a block
+    // cannot describe an MCP transport reaching a GraphQL surface.
+    executedRead: z.discriminatedUnion("transport", [
+      z.strictObject({
+        transport: z.literal("mcp"),
+        surface: z.literal("mcp:get_lineage"),
+        parameters: z.strictObject({
+          urn: z.string().min(1),
+          upstream: z.boolean(),
+          max_hops: z.number(),
+          max_results: z.number(),
+          query: z.string(),
+        }),
+      }),
+      z.strictObject({
+        transport: z.literal("gms"),
+        surface: z.literal("searchAcrossLineage"),
+        parameters: z.strictObject({
+          urn: z.string().min(1),
+          direction: z.string().min(1),
+          query: z.string(),
+          start: z.number(),
+          count: z.number(),
+        }),
+      }),
+    ]),
   }),
   z.strictObject({
     manifestDigest: z.string(),
@@ -992,7 +1061,7 @@ function lineageDirectionProblems(
   if (holder === undefined) return [];
   const executed = hasExecutedRead(holder);
   const stated = executed
-    ? holder.executedRead.parameters.direction
+    ? executedDirection(holder.executedRead)
     : holder.queryParameters["direction"];
   if (stated === undefined || stated === QUERY_DIRECTION[direction]) return [];
   return [
@@ -1066,15 +1135,21 @@ function sameVerification(
   ) {
     return false;
   }
-  if (hasExecutedRead(a) !== hasExecutedRead(b)) return false;
-  if (!hasExecutedRead(a) || !hasExecutedRead(b)) {
-    return sameParameters(declaredParameters(a), declaredParameters(b));
+  // Shape first, and narrowed one side at a time so each branch knows which
+  // contract it is holding rather than asserting it.
+  if (!hasExecutedRead(a)) {
+    return hasExecutedRead(b) ? false : sameParameters(a.queryParameters, b.queryParameters);
   }
+  if (!hasExecutedRead(b)) return false;
   return (
     sameParameters(a.declaredQueryParameters, b.declaredQueryParameters) &&
     a.executedRead.transport === b.executedRead.transport &&
     a.executedRead.surface === b.executedRead.surface &&
-    sameParameters(a.executedRead.parameters, b.executedRead.parameters)
+    // Compared whole rather than key by key: the parameter shapes differ per
+    // transport, and two requests are the same request only if every argument
+    // matches.
+    JSON.stringify(Object.entries(a.executedRead.parameters).sort()) ===
+      JSON.stringify(Object.entries(b.executedRead.parameters).sort())
   );
 }
 

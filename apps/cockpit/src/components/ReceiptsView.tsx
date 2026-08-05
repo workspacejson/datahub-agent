@@ -76,6 +76,8 @@ const provenanceRows = [
   ["artifactDigest", "Artifact digest"],
   ["dataHubReadParameters", "Executed query parameters"],
   ["manifestDerivationParameters", "Declared query parameters"],
+  ["legacyQueryParameters", "Legacy query parameters"],
+  ["dataHubConnection", "DataHub connection"],
   ["producerPath", "Producer path"],
   ["immutableSourceUrl", "Immutable source URL"],
   // `limitations` is deliberately absent. It is the source-capability limits

@@ -99,11 +99,11 @@
             "transport": "gms",
             "surface": "searchAcrossLineage",
             "parameters": {
-              "surface": "searchAcrossLineage",
+              "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+              "direction": "UPSTREAM",
               "query": "*",
               "start": 0,
-              "count": 50,
-              "direction": "UPSTREAM"
+              "count": 50
             }
           }
         }
@@ -128,11 +128,11 @@
             "transport": "gms",
             "surface": "searchAcrossLineage",
             "parameters": {
-              "surface": "searchAcrossLineage",
+              "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+              "direction": "DOWNSTREAM",
               "query": "*",
               "start": 0,
-              "count": 50,
-              "direction": "DOWNSTREAM"
+              "count": 50
             }
           }
         }

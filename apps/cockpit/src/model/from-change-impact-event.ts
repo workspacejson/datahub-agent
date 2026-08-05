@@ -21,7 +21,7 @@
  */
 
 import {
-  declaredParameters,
+  legacyQueryParameters,
   describeTier,
   emittedEventSchema,
   hasExecutedRead,
@@ -286,8 +286,12 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
       // parameters, so the cockpit was attributing to a DataHub read a set of
       // parameters no DataHub read had used — a mislabelled contract field
       // promoted into a judge-facing claim (HAC-284).
+      // The connection is not a query parameter, and putting it in this slot
+      // made the row's own label false. `gms <url> (<version>)` says which
+      // instance was talked to, not what was asked of it, so it has its own
+      // field and this one says plainly that no executed read was recorded.
       dataHubReadParameters: !verification
-        ? observed(`gms ${event.provenance.datahub.gmsUrl} (${event.provenance.datahub.gmsVersion ?? "version not reported"})`, "DataHub")
+        ? missing(noVerification)
         : hasExecutedRead(verification)
           ? observed(
               `${verification.executedRead.surface} ${JSON.stringify(verification.executedRead.parameters)}`,
@@ -298,12 +302,30 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
           // the ambiguity is the honest render; picking a reading for it would
           // reintroduce the defect on the surface a judge actually looks at.
           : missing(LEGACY_VERIFICATION),
-      manifestDerivationParameters: verification
-        ? declared(
-            JSON.stringify(declaredParameters(verification)),
-            "Declared query parameters. Execution was not observed.",
-          )
-        : missing(noVerification),
+      dataHubConnection: observed(
+        `gms ${event.provenance.datahub.gmsUrl} (${event.provenance.datahub.gmsVersion ?? "version not reported"})`,
+        "DataHub",
+      ),
+      // Only a 1.4 block has a *declared* set to show. A 1.3 block's parameters
+      // are not declared parameters — their role was never recorded, and
+      // rendering them here would assert the distinction 1.3 cannot make, in
+      // the row added to respect it.
+      manifestDerivationParameters: !verification
+        ? missing(noVerification)
+        : hasExecutedRead(verification)
+          ? declared(
+              JSON.stringify(verification.declaredQueryParameters),
+              "Declared query parameters. Execution was not observed.",
+            )
+          : missing(LEGACY_VERIFICATION),
+      // The 1.3 values themselves, under a name that claims nothing about
+      // which request they describe.
+      legacyQueryParameters: !verification || hasExecutedRead(verification)
+        ? missing("This event records declared and executed parameters separately, so there is no unclassified set.")
+        : declared(
+            JSON.stringify(legacyQueryParameters(verification)),
+            "Legacy query parameters, role unknown. Contract 1.3 did not record whether these describe the manifest or the read.",
+          ),
       producerPath: fromNullable(event.code.repositoryRelativePath, "workspace.json", `The producing file was not resolved to a repository path (method: ${event.code.method}).`),
       immutableSourceUrl: viewSourceToEvidence(viewSource),
       limitations: capabilityLimits.length > 0

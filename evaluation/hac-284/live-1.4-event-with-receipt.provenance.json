@@ -8,5 +8,5 @@
   "capturedAt": "2026-08-05",
   "sourceEvent": "test/fixtures/golden/change-impact-event.nested.json",
   "note": "Unmodified script output: the re-baked 1.4 golden fixture with the writeback receipt attached. The createStructuredProperty attempt reads `already defined; deployed definition reconciled` \u2014 the sentence HAC-270 added. noop is true because the tier was already present from an earlier run on the same instance, which the receipt states rather than reporting a second success.",
-  "fixtureSha256": "f4a9fd2394427a04c2bf9d541856cb97e762d47ccf2749d87b1d2a3bec134f49"
+  "fixtureSha256": "1a6c75a2c2499adaea8fd74df021840604046d7bbfc79d64eac5986594bd93b6"
 }

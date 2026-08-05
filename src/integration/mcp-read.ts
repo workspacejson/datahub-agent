@@ -91,13 +91,34 @@ export interface SchemaFieldCountRead {
   error: string | null;
 }
 
-/** The parameters a lineage observation is only comparable under. */
-export const LINEAGE_QUERY_PARAMETERS = {
-  surface: "mcp:get_lineage",
-  query: "*",
-  maxHops: LINEAGE_MAX_HOPS,
-  maxResults: LINEAGE_MAX_RESULTS,
-} as const;
+/** The lineage query string, as the tool receives it. */
+export const LINEAGE_QUERY_STRING = "*";
+
+/** The tool this read path calls for lineage, named as it is invoked. */
+export const LINEAGE_SURFACE = "mcp:get_lineage";
+
+/**
+ * The exact argument object `get_lineage` is invoked with.
+ *
+ * One builder, used by the call and by the evidence, because those must be the
+ * same object and not two descriptions of one. A normalised summary — the
+ * camel-cased, direction-stringified shape this used to record — is *about* the
+ * request rather than being it, and an auditor handed it cannot reissue the
+ * call. That is the same substitution HAC-284 exists to remove, one layer down:
+ * `upstream` is a boolean here, not a `direction` string, and there is no
+ * `surface` key inside a request.
+ */
+export function lineageRequest(urn: string, upstream: boolean) {
+  return {
+    urn,
+    upstream,
+    max_hops: LINEAGE_MAX_HOPS,
+    max_results: LINEAGE_MAX_RESULTS,
+    query: LINEAGE_QUERY_STRING,
+  } as const;
+}
+
+export type McpLineageRequest = ReturnType<typeof lineageRequest>;
 
 /**
  * Confirm the server advertises every tool this path calls.
@@ -171,13 +192,8 @@ function toEdge(row: unknown): LineageEdge | null {
  * direction string, so the call site reads the same as the tool's contract.
  */
 export async function readLineage(call: ToolCaller, urn: string, upstream: boolean): Promise<LineageRead> {
-  const result = await call("get_lineage", {
-    urn,
-    upstream,
-    max_hops: LINEAGE_MAX_HOPS,
-    max_results: LINEAGE_MAX_RESULTS,
-    query: LINEAGE_QUERY_PARAMETERS.query,
-  });
+  // The same object the evidence records. Built once so the two cannot drift.
+  const result = await call("get_lineage", lineageRequest(urn, upstream));
 
   if (!result.ok) return { edges: [], read: "failed", error: result.error };
 

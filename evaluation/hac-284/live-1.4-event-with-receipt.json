@@ -99,11 +99,11 @@
             "transport": "gms",
             "surface": "searchAcrossLineage",
             "parameters": {
-              "surface": "searchAcrossLineage",
+              "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+              "direction": "UPSTREAM",
               "query": "*",
               "start": 0,
-              "count": 50,
-              "direction": "UPSTREAM"
+              "count": 50
             }
           }
         }
@@ -128,11 +128,11 @@
             "transport": "gms",
             "surface": "searchAcrossLineage",
             "parameters": {
-              "surface": "searchAcrossLineage",
+              "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+              "direction": "DOWNSTREAM",
               "query": "*",
               "start": 0,
-              "count": 50,
-              "direction": "DOWNSTREAM"
+              "count": 50
             }
           }
         }
@@ -191,7 +191,7 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-08-05T13:31:50.152Z",
+    "attemptedAt": "2026-08-05T14:05:35.253Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -247,7 +247,7 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 36,
+      "elapsedMs": 12,
       "timeoutMs": 60000,
       "lastError": null
     },

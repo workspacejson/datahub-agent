@@ -303,7 +303,13 @@ describe("complete-against-pinned-manifest must carry its evidence", () => {
     executedRead: {
       transport: "gms",
       surface: "searchAcrossLineage",
-      parameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", start: 0, count: 50 },
+      parameters: {
+        urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)",
+        direction: "UPSTREAM",
+        query: "*",
+        start: 0,
+        count: 50,
+      },
     },
   };
 
@@ -359,7 +365,7 @@ describe("complete-against-pinned-manifest must carry its evidence", () => {
     );
   });
 
-  it("refuses an executed read that does not say which direction it ran", () => {
+  it("refuses an executed read whose parameters are not the request's own", () => {
     // Refused at the parse, not by the completeness gate, and that is the
     // stronger place. The direction invariant reads this key; if it could go
     // missing, that invariant would silently stop being able to fail — which is

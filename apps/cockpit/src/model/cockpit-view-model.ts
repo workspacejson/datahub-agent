@@ -330,9 +330,14 @@ export const receiptSchema = z.object({
     algorithmVersion: evidenceValueSchema,
     inputDigest: evidenceValueSchema,
     artifactDigest: evidenceValueSchema,
+    /** The request that produced the observed set. Only a 1.4 event carries one. */
     dataHubReadParameters: evidenceValueSchema,
+    /** Which instance was talked to. Not a query parameter, and not in that row. */
+    dataHubConnection: evidenceValueSchema,
     /** The manifest's derivation parameters. Never an observation — see `declared`. */
     manifestDerivationParameters: evidenceValueSchema,
+    /** A 1.3 block's parameters, whose role the contract never recorded. */
+    legacyQueryParameters: evidenceValueSchema,
     producerPath: evidenceValueSchema,
     immutableSourceUrl: evidenceValueSchema,
     limitations: evidenceValueSchema,

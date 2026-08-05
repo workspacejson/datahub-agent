@@ -189,7 +189,7 @@ describe("V-1 · completeness without the manifest it names", () => {
         executedRead: {
           transport: "gms",
           surface: "searchAcrossLineage",
-          parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+          parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", direction: "UPSTREAM", query: "*", start: 0, count: 50 },
         },
       },
     };
@@ -213,7 +213,7 @@ describe("V-1 · completeness without the manifest it names", () => {
     executedRead: {
       transport: "gms",
       surface: "searchAcrossLineage",
-      parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+      parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", direction: "UPSTREAM", query: "*", start: 0, count: 50 },
     },
       },
     };
@@ -268,7 +268,7 @@ describe("V-1b · `absent` claimed without the evidence that alone permits it", 
     executedRead: {
       transport: "gms",
       surface: "searchAcrossLineage",
-      parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+      parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", direction: "UPSTREAM", query: "*", start: 0, count: 50 },
     },
   } as const;
 
@@ -360,7 +360,7 @@ describe("V-1c · `unavailable` disagreeing with the canonical lineage observati
     executedRead: {
       transport: "gms",
       surface: "searchAcrossLineage",
-      parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+      parameters: { urn: "urn:li:dataset:(urn:li:dataPlatform:dbt,db.schema.model,PROD)", direction: "UPSTREAM", query: "*", start: 0, count: 50 },
     },
   } as const;
 
@@ -426,7 +426,7 @@ describe("V-1c · `unavailable` disagreeing with the canonical lineage observati
         // because only the executed parameters say which closure was asked for.
         verification: {
           ...ATTESTED,
-          executedRead: { ...ATTESTED.executedRead, parameters: { direction: "DOWNSTREAM", degree: 1 } },
+          executedRead: { ...ATTESTED.executedRead, parameters: { ...ATTESTED.executedRead.parameters, direction: "DOWNSTREAM" } },
         },
       },
     ));

@@ -1,7 +1,7 @@
 {
   "eventVersion": "1.4",
   "provenance": {
-    "producedAt": "2026-08-05T13:31:07.187Z",
+    "producedAt": "2026-08-05T14:05:26.760Z",
     "producer": {
       "name": "@workspacejson/datahub-agent",
       "version": "0.0.1"
@@ -99,11 +99,11 @@
             "transport": "mcp",
             "surface": "mcp:get_lineage",
             "parameters": {
-              "surface": "mcp:get_lineage",
-              "query": "*",
-              "maxHops": 3,
-              "maxResults": 50,
-              "direction": "UPSTREAM"
+              "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+              "upstream": true,
+              "max_hops": 3,
+              "max_results": 50,
+              "query": "*"
             }
           }
         }

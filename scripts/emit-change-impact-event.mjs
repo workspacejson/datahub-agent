@@ -146,26 +146,49 @@ const load = async (specifier) =>
   );
 
 /**
- * The parameters the read this emitter is about to perform will carry.
+ * The request each transport actually issues, built once.
  *
- * The MCP arm is imported rather than restated. `LINEAGE_QUERY_PARAMETERS` was
- * exported and documented for exactly this — "the parameters a lineage
- * observation is only comparable under" — and nothing read it, while a
- * hand-copy of the same four values sat here. A constant with no consumer does
- * not look like dead code; it looks like the thing being used, which is how
- * this stayed wrong.
+ * The evidence records the object that was sent, not a description of it. A
+ * normalised summary is *about* a request rather than being one, and an auditor
+ * handed camel-cased keys and a stringified direction cannot reissue the call —
+ * which is the substitution HAC-284 exists to remove, so recording one here
+ * would reintroduce it one layer down.
  *
- * `direction` is not here because it is per-read, and is added at the point the
- * read is made.
+ * The two shapes genuinely differ, and that is the point rather than an
+ * inconvenience to normalise away. MCP takes `upstream: boolean` and
+ * snake_cased bounds; `searchAcrossLineage` takes a `direction` string with
+ * `start`/`count`. Neither carries a `surface` key — the surface is which call
+ * was made, not an argument to it, so it travels beside the parameters.
  */
-const { LINEAGE_QUERY_PARAMETERS } = await load("src/integration/mcp-read.ts");
-const LINEAGE_QUERY =
-  TRANSPORT === "mcp"
-    ? { ...LINEAGE_QUERY_PARAMETERS }
-    : { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
+const { lineageRequest: mcpLineageRequest, LINEAGE_QUERY_STRING, LINEAGE_SURFACE } =
+  await load("src/integration/mcp-read.ts");
 
-/** Which transport actually issued the read, in the contract's vocabulary. */
-const EXECUTED_TRANSPORT = TRANSPORT === "mcp" ? "mcp" : "gms";
+const GMS_LINEAGE_SURFACE = "searchAcrossLineage";
+const GMS_LINEAGE_START = 0;
+const GMS_LINEAGE_COUNT = 50;
+
+/** The exact `searchAcrossLineage` input for one direction. */
+const gmsLineageRequest = (direction) => ({
+  urn: URN,
+  direction,
+  query: LINEAGE_QUERY_STRING,
+  start: GMS_LINEAGE_START,
+  count: GMS_LINEAGE_COUNT,
+});
+
+/** The executed-read evidence for one direction, under whichever transport ran. */
+const executedReadFor = (direction) =>
+  TRANSPORT === "mcp"
+    ? {
+        transport: "mcp",
+        surface: LINEAGE_SURFACE,
+        parameters: mcpLineageRequest(URN, direction === "UPSTREAM"),
+      }
+    : {
+        transport: "gms",
+        surface: GMS_LINEAGE_SURFACE,
+        parameters: gmsLineageRequest(direction),
+      };
 
 let dataset;
 let schemaFieldCount = null;
@@ -312,10 +335,13 @@ const customProperties = dataset.customProperties;
  * reports the same shape; both are reached through `lineage`.
  */
 async function lineageOverGraphQl(direction) {
+  // Serialised from the same object the evidence carries, so the recorded
+  // parameters cannot describe a query other than the one issued.
+  const input = gmsLineageRequest(direction);
   const { ok, data, error } = await gqlSafe(`{
     searchAcrossLineage(input: {
-      urn: ${JSON.stringify(URN)}, direction: ${direction},
-      query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count}
+      urn: ${JSON.stringify(input.urn)}, direction: ${input.direction},
+      query: ${JSON.stringify(input.query)}, start: ${input.start}, count: ${input.count}
     }) { total searchResults { degree entity { urn ... on Dataset { properties { name } } } } }
   }`);
 
@@ -371,7 +397,7 @@ if (READINESS_MANIFEST) {
         : async (signal) => {
             const response = await fetch(`${GMS}/api/graphql`, {
               method: "POST", headers: { "Content-Type": "application/json" }, signal,
-              body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(URN)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY.query)}, start: ${LINEAGE_QUERY.start}, count: ${LINEAGE_QUERY.count} }) { searchResults { entity { urn } } } }` }),
+              body: JSON.stringify({ query: `{ searchAcrossLineage(input: { urn: ${JSON.stringify(gmsLineageRequest(direction).urn)}, direction: ${direction}, query: ${JSON.stringify(LINEAGE_QUERY_STRING)}, start: ${GMS_LINEAGE_START}, count: ${GMS_LINEAGE_COUNT} }) { searchResults { entity { urn } } } }` }),
             });
             const body = await response.json();
             if (!response.ok || body.errors) throw new Error("readiness GraphQL request failed");
@@ -402,11 +428,7 @@ if (READINESS_MANIFEST) {
           manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
           observedSetDigest: readiness.observedSetDigest,
           declaredQueryParameters: manifest.queryParameters,
-          executedRead: {
-            transport: EXECUTED_TRANSPORT,
-            surface: LINEAGE_QUERY.surface,
-            parameters: { ...LINEAGE_QUERY, direction },
-          },
+          executedRead: executedReadFor(direction),
         } };
       } else {
         note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "not-established", observedCount: observed.length });
