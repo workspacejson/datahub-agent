@@ -288,8 +288,15 @@ corpus and quietly proves nothing about the one under inspection.
   by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still
   carries `not-established` because no readiness manifest was derived for it.
   Observed counts are not exhaustiveness claims on their own.
-- **No statistical co-change evidence.** The proof corpus has 92 commits over
-  five years. Any co-change figure is illustrative, not statistical.
+- **No co-change evidence at all.** The producer used here,
+  `@workspacejson/cli@0.5.0`, emits no commit-graph evidence — `generated.coChange`
+  is specified by the spec and left unemitted — so it is absent from every
+  artifact in this repository and Tally asserts no behavioral partners.
+  Separately, the *root* corpus (Jaffle Shop) has 92 commits over five years, so
+  any co-change figure drawn from it would be illustrative rather than
+  statistical. The nested corpus (Transfermarkt) is not shallow — roughly seven
+  years of history — so its absence of co-change has the first cause, not the
+  second.
 - **No `externalUrl` workaround.** The gap is stated, not papered over. The fix
   is filed upstream.
 - **No credential in any committed artifact.** The live evidence package

@@ -220,7 +220,7 @@ finding.
 | -- | -- |
 | No completeness claim | `evaluation/proof-corpus.md`, every event carries `not-established` |
 | `externalUrl` dropped at MCP boundary | `evaluation/mcp-field-coverage.md` |
-| Shallow corpus history (92 commits) | `evaluation/proof-corpus.md` |
+| Shallow *root* corpus history (92 commits, Jaffle Shop only) | `evaluation/proof-corpus.md` |
 | No co-change evidence from producer | `docs/provenance.md` — producer withholds behavioral values |
 | Sources point at declaration YAML | `evaluation/dbt-node-coverage.md` |
 | One subject per golden fixture | `test/fixtures/golden/` — root and nested, one dataset each |
