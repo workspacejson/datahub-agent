@@ -1,10 +1,9 @@
 # Audit report — HAC-250: Causal plan-difference audit
 
-> **Branch:** `audit/hac-250-causal-plan-diff`
 > **Base commit:** `1563e74` (main)
-> **Worktree:** `/Users/user1/Documents/hackathons/audit-wt-07`
+> **Environment:** isolated clean worktree
 > **Date:** 2026-07-30
-> **Auditor:** Cascade (automated)
+> **Audit mode:** automated adversarial review
 
 ## Summary
 

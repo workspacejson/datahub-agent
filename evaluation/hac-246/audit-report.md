@@ -1,7 +1,7 @@
 # Audit report — HAC-246: Independent lineage-oracle audit
 
 > **Date:** 2026-07-31
-> **Auditor:** Cascade (automated)
+> **Audit mode:** automated adversarial review
 > **DataHub:** GMS v1.6.0 at `http://localhost:8080`
 
 ## Summary
