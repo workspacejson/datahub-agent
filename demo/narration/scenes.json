@@ -1,1 +1,109 @@
-[]
+{
+  "version": 1,
+  "specification": {
+    "spokenWordTarget": {
+      "min": 230,
+      "max": 270
+    },
+    "masterDurationCeilingSeconds": 170,
+    "note": "The word target and the duration ceiling are separate constraints. The ceiling is a ceiling, not a target."
+  },
+  "totals": {
+    "wordCount": 264,
+    "durationSeconds": 162,
+    "wordsPerMinute": 97.8
+  },
+  "source": "demo/narration/script.md",
+  "scenes": [
+    {
+      "id": "scene-01",
+      "order": 1,
+      "title": "Silent zero",
+      "startSeconds": 0,
+      "endSeconds": 12,
+      "durationSeconds": 12,
+      "narration": "Move the same dbt project into a monorepo and the naive join can fall from five matches to zero without throwing an error. Nothing crashed. Zero looked like a valid answer.",
+      "wordCount": 31
+    },
+    {
+      "id": "scene-02",
+      "order": 2,
+      "title": "Why the failure exists",
+      "startSeconds": 12,
+      "endSeconds": 25,
+      "durationSeconds": 13,
+      "narration": "DataHub carries a dbt path relative to the dbt project. Git and coding agents need a path relative to the repository root. Same file, different coordinates. The handoff silently breaks.",
+      "wordCount": 30
+    },
+    {
+      "id": "scene-03",
+      "order": 3,
+      "title": "DataHub establishes the asset context",
+      "startSeconds": 25,
+      "endSeconds": 45,
+      "durationSeconds": 20,
+      "narration": "Tally starts with DataHub: the canonical dataset identity, declared lineage, schema, ownership, and governance context. DataHub establishes which asset matters and which upstream and downstream dependencies are recorded.",
+      "wordCount": 28
+    },
+    {
+      "id": "scene-04",
+      "order": 4,
+      "title": "Resolve to exact repository source",
+      "startSeconds": 45,
+      "endSeconds": 70,
+      "durationSeconds": 25,
+      "narration": "Tally follows the DataHub-carried dbt path, restores the missing project prefix, and resolves the exact repository source at a pinned revision. It preserves the limits too. Missing evidence stays named. Unknown never becomes empty.",
+      "wordCount": 34
+    },
+    {
+      "id": "scene-05",
+      "order": 5,
+      "title": "The joined plan changes",
+      "startSeconds": 70,
+      "endSeconds": 98,
+      "durationSeconds": 28,
+      "narration": "With DataHub alone, the agent correctly refuses because the repository source is unavailable. Joined context supplies the exact path and revision. Across ten controlled pairs, the revision appeared in zero DataHub-only plans and all ten joined-context plans.",
+      "wordCount": 37
+    },
+    {
+      "id": "scene-06",
+      "order": 6,
+      "title": "Evidence discipline",
+      "startSeconds": 98,
+      "endSeconds": 118,
+      "durationSeconds": 20,
+      "narration": "Tally keeps a successful read separate from a complete answer. It records what was observed, what resolved, which checks ran, and which conclusions remain explicitly not established.",
+      "wordCount": 27
+    },
+    {
+      "id": "scene-07",
+      "order": 7,
+      "title": "Durable DataHub writeback",
+      "startSeconds": 118,
+      "endSeconds": 140,
+      "durationSeconds": 22,
+      "narration": "Tally writes a narrow evidence tier back to DataHub, then reads the intended state again. A mutation is not called successful until the after-state is observed.",
+      "wordCount": 26
+    },
+    {
+      "id": "scene-08",
+      "order": 8,
+      "title": "Reproducibility and OSS proof",
+      "startSeconds": 140,
+      "endSeconds": 155,
+      "durationSeconds": 15,
+      "narration": "The evidence is preserved in a public Apache-2.0 repository with checksums, fixtures, assertions, and a judge path to verify it. I created and maintain workspace.json. Tally is the DataHub application I built for this hackathon.",
+      "wordCount": 35
+    },
+    {
+      "id": "scene-09",
+      "order": 9,
+      "title": "Close",
+      "startSeconds": 155,
+      "endSeconds": 162,
+      "durationSeconds": 7,
+      "narration": "DataHub identifies the asset. Tally resolves it to code, changes the plan, and attaches the evidence.",
+      "wordCount": 16
+    }
+  ]
+}
