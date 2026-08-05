@@ -247,9 +247,16 @@ For the same check with bounded polling instead of by hand, emit an event
 against the pinned manifest:
 
 ```bash
-node scripts/emit-change-impact-event.mjs <urn> \
+node scripts/emit-change-impact-event.mjs \
+  "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)" \
+  --transport gms --gms http://localhost:8080 \
   --readiness-manifest test/fixtures/readiness/game_events.upstream.json
 ```
+
+`--transport gms` is not optional here. The emitter defaults to MCP, and this
+manifest declares the `searchAcrossLineage` surface — so the default would poll
+one surface against an expectation derived for another. Quote the URN: it
+contains parentheses and commas the shell would otherwise eat.
 
 It polls to a deadline and upgrades completeness to
 `complete-against-pinned-manifest` only once the observed and expected sets are
@@ -302,8 +309,8 @@ corpus and quietly proves nothing about the one under inspection.
   Observed counts are not exhaustiveness claims on their own.
 - **Behavioral partners are not asserted.** The pinned CLI does not yet emit
   co-change evidence, so Tally has no such records to consume and does not
-  guess. Transfermarkt has sufficient git history; the limitation is evidence
-  production, not repository depth.
+  guess. History depth is not the evidenced cause: the limitation is evidence
+  production.
 
   <details>
   <summary>Which producer, which field, and the corpus figures</summary>
