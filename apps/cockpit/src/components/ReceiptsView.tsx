@@ -302,7 +302,7 @@ export function ReceiptsView({ model, datasetKey }: { model: CockpitViewModel; d
           rendered enabled whenever evidence was bound and carried no handler at
           all, so the one affordance this product offers for taking the evidence
           away and checking it did nothing. Receipt export is the whole thesis:
-          a judge who cannot leave with the receipt has to take our word for it.
+          a judge who cannot leave with the receipt has to trust an unsupported assertion.
 
           Both export `rawEvidence.value` verbatim, which is the same string the
           `pre` above renders. Re-serialising here would let the file and the
