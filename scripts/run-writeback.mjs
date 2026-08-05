@@ -214,16 +214,15 @@ const PROPERTY_URN = `urn:li:structuredProperty:${EVIDENCE_TIER_PROPERTY_ID}`;
  * survivable, and none of them are: each leaves us equally ignorant of what a
  * written tier value would be taken to mean.
  *
- * UNVERIFIED AGAINST A LIVE INSTANCE. This selection set is taken from
- * DataHub's published GraphQL schema for structured properties, not from the
- * resolver sources at the pinned GMS `v1.5.0.6`, and it has only been exercised
- * against the stub in `test/integration/run-writeback.cli.test.ts`. That stub
- * proves the reconciliation logic and the fail-closed path; it cannot prove the
- * wire shape. If the real schema differs, this returns `null` and the writeback
- * refuses every run rather than misreporting one — the safe direction, but a
- * total outage of the enrichment. Confirm against a live quickstart before
- * relying on it, and note that this repository has been bitten once already by
- * trusting DataHub prose over resolver source (see `planWriteback`).
+ * The selection set is taken from DataHub's published GraphQL schema, and was
+ * confirmed against a live quickstart at the pinned GMS `v1.5.0.6` on
+ * 2026-08-05: every compared field came back populated. That check was not
+ * optional. The stub in `test/integration/run-writeback.cli.test.ts` proves the
+ * reconciliation logic and the fail-closed path but cannot prove the wire
+ * shape, and a wrong shape here returns `null` and refuses every run — safe
+ * against corruption, still a total outage. This repository has been bitten
+ * once already by trusting DataHub prose over resolver source (see
+ * `planWriteback`), so re-confirm against a live instance if the GMS pin moves.
  */
 async function readDeployedDefinition() {
   const { ok, body } = await gql(`query($urn: String!) {
