@@ -1,10 +1,10 @@
 # Platform feedback from building against DataHub
 
-We built an agent that joins a repository artifact (`workspace.json`) to a DataHub
+I built an agent that joins a repository artifact (`workspace.json`) to a DataHub
 catalog, derives a per-dataset evidence tier from what it can actually verify, and
 writes that tier plus a commit-pinned link back to the catalog. Every finding below
 came out of making that work against a real instance, not out of reading source for
-its own sake. Where we did read source, it was to settle a question the API's
+its own sake. Where source was read, it was to settle a question the API's
 response could not answer.
 
 Everything here was observed against DataHub OSS `datahub docker quickstart`, GMS
@@ -15,12 +15,12 @@ Everything here was observed against DataHub OSS `datahub docker quickstart`, GM
 inspection rather than a runtime observation, and say so.
 
 **Eleven findings and one open question.** The open question is paging, and it is
-kept separate because we could not reproduce it: our corpus never approached the
-result limit, so we are not going to assert a truncation from a parameter default.
+kept separate because I could not reproduce it: the corpus never approached the
+result limit, so I am not going to assert a truncation from a parameter default.
 It is at the end, phrased for a maintainer to answer.
 
-One finding was **excluded** on inspection. A silent-drop defect we had recorded
-against the join path turned out to be our own adapter filtering on
+One finding was **excluded** on inspection. A silent-drop defect I had recorded
+against the join path turned out to be Tally's own adapter filtering on
 `resource_type === "model"`, not anything DataHub does.
 
 Precisely, because a maintainer who checks will find the filter still there: the
@@ -31,7 +31,7 @@ original `extractModels` is **deliberately frozen byte-identical**, because a
 parity harness pins its behaviour, so it still filters and always will. Saying it
 was "fixed" would be wrong about the function and right only about the join.
 
-We mention the exclusion rather than quietly dropping it, because a feedback
+I mention the exclusion rather than quietly dropping it, because a feedback
 document that misattributes one item earns a reader's right to discount the rest.
 
 ## The pattern
@@ -68,7 +68,7 @@ The CLI keys its generated ingestion source by a hash of the pipeline, so every
 **overwrites that source's stored recipe**. The catalog therefore records only how
 the most recent run was configured.
 
-Observed. Our demo corpus was ingested from `transfermarkt-datasets`; a later
+Observed. The demo corpus was ingested from `transfermarkt-datasets`; a later
 audit workflow ingested `jaffle_shop` through the same source type. Reading the
 source afterwards:
 
@@ -94,9 +94,9 @@ dbt-2026_07_28-21_32_27-3ecyuy   SUCCESS  15,617ms  acryl-datahub 1.6.0.16
 ```
 
 That history is not durable either. `datahub-gc` runs `execution_request_cleanup`
-with `keep_history_min_count: 10` and `keep_history_max_days: 90`. We were three
-runs deep, under the floor, so the recipe was recoverable. A busier instance would
-not have been.
+with `keep_history_min_count: 10` and `keep_history_max_days: 90`. This instance
+was three runs deep, under the floor, so the recipe was recoverable. A busier
+instance would not have been.
 
 **Why it is hard to notice.** The source still exists and still looks correct. It
 describes a real recipe that really ran. Nothing indicates that it used to
@@ -105,7 +105,7 @@ present, so the catalog looks complete while the provenance for most of it is
 gone.
 
 **Who else it affects.** Anyone running more than one dbt project through the CLI
-into one instance, which we would expect to be common. The recipe is the only
+into one instance, which is likely common. The recipe is the only
 artifact that says which repository and commit a set of datasets came from, so
 losing it means losing the ability to reproduce or attribute the ingest. It is
 worst for exactly the case DataHub is for: a shared catalog fed by several teams.
@@ -118,8 +118,8 @@ is entitled to reap.
 **Reproduction.** Ingest two different dbt projects through the CLI into one
 instance, then read `listIngestionSources`. The first project's recipe is absent.
 
-**Status:** observation only. Not filed upstream yet; we would value a maintainer's
-read on whether the shared source URN is deliberate before we propose a change.
+**Status:** observation only. Not filed upstream yet; I would value a maintainer's
+read on whether the shared source URN is deliberate before proposing a change.
 
 ---
 
@@ -170,21 +170,21 @@ needs no credentials.
 
 ## 3. GraphQL errors arrive under HTTP 200
 
-**Severity: silent-wrong**, and it is the finding that most directly caused us to
-produce a confidently incorrect result.
+**Severity: silent-wrong**, and it is the finding that most directly caused a
+confidently incorrect result here.
 
 This is GraphQL behaving to specification: a partial failure returns HTTP 200 with
-both `data` and `errors`. We raise it because DataHub's own examples read `.data`
+both `data` and `errors`. I raise it because DataHub's own examples read `.data`
 without inspecting `errors`, and because a partial response to a set-difference
 query is indistinguishable from a correct one.
 
-We audited all nine of our GraphQL clients for this. Eight were correct. One was
-not, and it was the one producing an independence oracle: a probe deriving the
-expected URN set, whose entire output is a set difference. A total failure would
-have thrown loudly. A partial one would have looked like our derivation inventing
-URNs the catalog lacks, which is precisely the conclusion the probe existed to
-rule out. We would have read a broken instrument as evidence against the thing it
-was measuring.
+I audited all nine GraphQL clients in this repository for this. Eight were
+correct. One was not, and it was the one producing an independence oracle: a
+probe deriving the expected URN set, whose entire output is a set difference. A
+total failure would have thrown loudly. A partial one would have looked like the
+derivation inventing URNs the catalog lacks, which is precisely the conclusion
+the probe existed to rule out. A broken instrument would have been read as
+evidence against the thing it was measuring.
 
 **Why it is hard to notice.** `response.ok` is `true`. `body.data` is present and
 well-shaped. The missing entries look like a finding rather than a fault, and they
@@ -199,7 +199,7 @@ is missing things," never as "the read failed."
 `errors` before `data` in the example snippets. Right now the examples teach the
 unsafe pattern.
 
-**Status:** fixed on our side. Observation only upstream.
+**Status:** fixed in Tally. Observation only upstream.
 
 ---
 
@@ -223,11 +223,11 @@ MCP get_lineage (max_hops=3) (8 edges):
   degree 4: 2 edges  [duckdb:2]     <- returned, though max_hops=3
 ```
 
-The two surfaces agreed on 8 URNs, which is what we were checking. They agreed
+The two surfaces agreed on 8 URNs, which is what the check compared. They agreed
 *because* `3+` is unbounded, not because three hops and four hops are the same
 question.
 
-**Why it is hard to notice.** It looks like agreement. Our own gate recorded
+**Why it is hard to notice.** It looks like agreement. The gate here recorded
 "SETS MATCH" and passed, and the match was real; the interpretation "MCP respects
 max_hops" would have been wrong. On a deeper graph the caller silently receives an
 unbounded closure and has no way to tell from the response.
@@ -260,11 +260,11 @@ Verified live for `duck.dev.game_events`: the aspect read returned both direct
 upstreams plus `fineGrainedLineages` immediately, while the graph-index surfaces
 are subject to post-ingest lag.
 
-This mattered concretely for us. We needed an independent cross-check on a lineage
+This mattered concretely here. I needed an independent cross-check on a lineage
 derivation, and `Dataset.relationships` is not one: it shares a failure mode with
 `searchAcrossLineage` because both read the graph index. The aspect read does not
 share it, so it is a genuine cross-check along the index-lag dimension. Nothing in
-the API told us that. We established it by reading how each surface is served.
+the API states that. I established it by reading how each surface is served.
 
 **Why it is hard to notice.** All three return plausible lineage. A lagging index
 returns fewer edges, not an error, so the difference between "this dataset has two
@@ -279,7 +279,7 @@ resolve this: which tier served the read, and for index-backed reads, how far
 behind it is. Failing that, documenting the tier per surface would let clients
 choose deliberately.
 
-**Status:** observation only. We compensated by reading the aspect endpoint and
+**Status:** observation only. Tally compensates by reading the aspect endpoint and
 polling for convergence.
 
 ---
@@ -297,9 +297,9 @@ three different facts:
 - the aspect exists but is empty
 - the aspect has not been written yet
 
-We were checking whether a lineage closure terminated at degree 4. The absent
-aspect was consistent with termination, and we deliberately declined to read it as
-proof, because doing so would have put the exact inference our evidence contract
+The check was whether a lineage closure terminated at degree 4. The absent
+aspect was consistent with termination, and I deliberately declined to read it as
+proof, because doing so would have put the exact inference the evidence contract
 exists to forbid into the record that ratifies it. The termination claim rests on
 the pinned dbt manifest instead:
 
@@ -309,8 +309,8 @@ source.transfermarkt_datasets.transfermarkt_scraper.games
   its own upstream nodes: (none, nothing lies beyond it)
 ```
 
-That is verifiable without asking DataHub anything, which is the point: we could
-not get the answer from DataHub, so we got it somewhere else.
+That is verifiable without asking DataHub anything, which is the point: the answer
+was not available from DataHub, so it came from somewhere else.
 
 **Why it is hard to notice.** The safe reading and the useful reading differ, and
 the useful one is the natural one. "No upstreams returned" reads as "no upstreams"
@@ -325,9 +325,9 @@ got nothing back."
 explicit empty aspect, or a field stating that the aspect has never been written,
 would let a client tell a fact from a silence.
 
-**Status:** observation only. This is the single finding that most shaped our
-product: our contract carries `ok` / `failed` / `not-queried` and `absent` as
-distinct states precisely because DataHub cannot distinguish them for us.
+**Status:** observation only. This is the single finding that most shaped the
+product: Tally's contract carries `ok` / `failed` / `not-queried` and `absent` as
+distinct states precisely because DataHub cannot distinguish them for a caller.
 
 ---
 
@@ -373,10 +373,10 @@ never saw are gone. The documentation manufactures the hazard it warns about.
 The sentence also steers readers toward PATCH to avoid a replacement GraphQL does
 not perform, which moves them off the safe surface onto the one that does replace.
 
-**What it cost us.** We filed an internal P0 to migrate our writeback off
+**What it cost.** I raised a P0 against my own backlog to migrate the writeback off
 `upsertStructuredProperties` onto a property-scoped PATCH, on the strength of this
 sentence, and planned a CI guard banning the mutation. Reading the resolver retired
-the issue with no code change. Had we shipped the guard, it would have forbidden
+the issue with no code change. Had the guard shipped, it would have forbidden
 the safe call and signposted the replacing one.
 
 **Status:** [datahub-project/datahub#18754](https://github.com/datahub-project/datahub/pull/18754).
@@ -401,7 +401,7 @@ wrong with the recipe rather than with the install. The fix is
 **Suggestion.** Name the extra in the dbt ingestion quickstart, or have
 `datahub docker quickstart` warn when no source extras are present.
 
-**Status:** observation only. Documented in our own quickstart so the next reader
+**Status:** observation only. Documented in Tally's quickstart so the next reader
 does not lose the time.
 
 ---
@@ -430,10 +430,10 @@ environment variable when the first attempt fails.
 **Severity: documentation / noise.**
 
 CLI `1.6.0.15` against GMS `v1.5.0.6` prints an incompatibility warning
-recommending a downgrade. It did not affect ingestion or reads in any of our
-sessions, including the ones that produced our committed evidence.
+recommending a downgrade. It did not affect ingestion or reads in any session
+here, including the ones that produced the committed evidence.
 
-We raise it because the pairing is what a first-time user gets: `datahub docker
+I raise it because the pairing is what a first-time user gets: `datahub docker
 quickstart` pins the server, `pip install acryl-datahub` takes the newest client,
 and the combination warns on every invocation. A user cannot tell from the message
 whether their results are trustworthy.
@@ -466,23 +466,24 @@ error.
 
 ## The open question: does a full page of lineage results say so?
 
-We expected to be able to report a paging finding here and cannot honestly do so.
-Our lineage reads used `count: 50` on `searchAcrossLineage` and `max_results: 50`
-on MCP `get_lineage`, and our corpus is small enough (8 edges on the deepest
-subject) that we never approached the limit. So we have no observed instance of a
-result being silently truncated at a page boundary, and we are not going to assert
+I expected to be able to report a paging finding here and cannot honestly do so.
+The lineage reads used `count: 50` on `searchAcrossLineage` and `max_results: 50`
+on MCP `get_lineage`, and the corpus is small enough (8 edges on the deepest
+subject) that they never approached the limit. So there is no observed instance of
+a result being silently truncated at a page boundary, and I am not going to assert
 one from the parameter defaults.
 
 Stated as a latent concern rather than a finding: combined with finding 4, a
 caller who receives exactly `max_results` edges has no field telling them whether
 more exist. If a maintainer knows this to be a real truncation rather than a
-non-issue, we would rather record it correctly than leave it out.
+non-issue, I would rather record it correctly than leave it out.
 
-## What we built because of this
+## What this changed in the product
 
-The product is the compensating control. Because a read cannot tell us which tier
-answered or whether an absence is a fact, our change-impact contract refuses to
-collapse those cases: every observation carries `ok`, `failed`, or `not-queried`,
+The product is the compensating control. Because a read cannot tell a caller
+which tier answered or whether an absence is a fact, Tally's change-impact
+contract refuses to collapse those cases: every observation carries `ok`,
+`failed`, or `not-queried`,
 an absence is recorded with its reason and its source, and the evidence tier a
 dataset earns is derived only from checks that actually executed. The writeback
 emits a receipt whether or not it succeeded, polls the after-state rather than
@@ -498,9 +499,9 @@ one does not.
 - [acryldata/mcp-server-datahub#149](https://github.com/acryldata/mcp-server-datahub/pull/149)
   expose `Dataset.externalUrl` through `get_entities` (finding 2)
 
-Findings 1, 3, 4, 5, 6 and 8 through 11 are observations we have not filed, either
-because the right fix is not ours to choose (1, 5, 6) or because they are small
-documentation changes we would rather bundle after a maintainer's reaction to the
+Findings 1, 3, 4, 5, 6 and 8 through 11 are observations I have not filed, either
+because the right fix is not mine to choose (1, 5, 6) or because they are small
+documentation changes I would rather bundle after a maintainer's reaction to the
 first two.
 
 ## Reproduction
@@ -518,5 +519,5 @@ instance, then reading `listIngestionSources`.
 `scripts/capture-catalog-baseline.mjs` records an instance's datasets, per-run
 ingestion recipes recovered from execution-request history, and GMS version, with
 secret-shaped keys redacted before anything reaches a file. It is read-only: it
-issues no mutation and writes nothing to the catalog. We wrote it because of
+issues no mutation and writes nothing to the catalog. I wrote it because of
 finding 1, to capture the recipe before a teardown could destroy it.
