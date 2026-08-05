@@ -137,12 +137,6 @@ async function gqlSafe(query) {
 // stays in one place instead of branching through the whole emitter.
 // ---------------------------------------------------------------------------
 
-/** Query parameters the observation is only comparable under. */
-const LINEAGE_QUERY =
-  TRANSPORT === "mcp"
-    ? { surface: "mcp:get_lineage", query: "*", maxHops: 3, maxResults: 50 }
-    : { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
-
 const load = async (specifier) =>
   import(join(repoRoot, specifier)).catch(async () =>
     import("tsx/esm/api").then(async (api) => {
@@ -150,6 +144,28 @@ const load = async (specifier) =>
       return import(join(repoRoot, specifier));
     }),
   );
+
+/**
+ * The parameters the read this emitter is about to perform will carry.
+ *
+ * The MCP arm is imported rather than restated. `LINEAGE_QUERY_PARAMETERS` was
+ * exported and documented for exactly this — "the parameters a lineage
+ * observation is only comparable under" — and nothing read it, while a
+ * hand-copy of the same four values sat here. A constant with no consumer does
+ * not look like dead code; it looks like the thing being used, which is how
+ * this stayed wrong.
+ *
+ * `direction` is not here because it is per-read, and is added at the point the
+ * read is made.
+ */
+const { LINEAGE_QUERY_PARAMETERS } = await load("src/integration/mcp-read.ts");
+const LINEAGE_QUERY =
+  TRANSPORT === "mcp"
+    ? { ...LINEAGE_QUERY_PARAMETERS }
+    : { surface: "searchAcrossLineage", query: "*", start: 0, count: 50 };
+
+/** Which transport actually issued the read, in the contract's vocabulary. */
+const EXECUTED_TRANSPORT = TRANSPORT === "mcp" ? "mcp" : "gms";
 
 let dataset;
 let schemaFieldCount = null;
@@ -368,9 +384,29 @@ if (READINESS_MANIFEST) {
       const observed = (key === "upstreams" ? upstreams : downstreams).map((edge) => edge.urn).sort();
       const expected = [...new Set(manifest.expectedUrns)].sort();
       if (JSON.stringify(observed) === JSON.stringify(expected)) {
+        // Two parameter sets, because they describe two different requests.
+        //
+        // `declaredQueryParameters` is the manifest's own — how the expected
+        // set was derived. `executedRead` is this run's, and it is what
+        // produced `observedSetDigest`. Recording the manifest's under a name
+        // that reads as the observation's is the defect this replaces: under
+        // `--transport mcp` the observed set came from `mcp:get_lineage` at
+        // three hops while the recorded parameters described
+        // `searchAcrossLineage` at `maxDegree: 4`, so an auditor rerunning them
+        // ran a query this event never ran.
+        //
+        // `direction` is added here rather than carried on LINEAGE_QUERY,
+        // because it is a property of the individual read and the contract's
+        // direction invariant reads it from exactly this place.
         lineageObservation[key] = { read: "ok", completeness: "complete-against-pinned-manifest", observedCount: observed.length, verification: {
           manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
-          observedSetDigest: readiness.observedSetDigest, queryParameters: manifest.queryParameters,
+          observedSetDigest: readiness.observedSetDigest,
+          declaredQueryParameters: manifest.queryParameters,
+          executedRead: {
+            transport: EXECUTED_TRANSPORT,
+            surface: LINEAGE_QUERY.surface,
+            parameters: { ...LINEAGE_QUERY, direction },
+          },
         } };
       } else {
         note(`datahub.${key}`, "datahub", "indeterminate", "Readiness polls settled, but the event lineage read differed from the declared expected set; completeness was not upgraded.", { completeness: "not-established", observedCount: observed.length });

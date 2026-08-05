@@ -206,13 +206,25 @@ export const cockpitStateNameSchema = z.enum([
  * So the state is the discriminator, not the text:
  *
  * - `observed` — read from a named system. Carries its source tag.
+ * - `declared` — a real value that was stated rather than measured. It has
+ *   content, so it is not an absence; nothing executed it, so it is not an
+ *   observation.
  * - `unavailable` — not carried, and the reason says *which* absence it is.
  * - `placeholder` — invented for layout. Rejected outside placeholder mode by
  *   the model refinement below, so this is a parse-time refusal rather than a
  *   render-time convention.
+ *
+ * `declared` exists because HAC-284 found the gap it fills being papered over.
+ * A readiness manifest's query parameters are a real, useful value that no read
+ * ever ran, and with only `observed` and `unavailable` available they were
+ * rendered as an observation attributed to DataHub. Neither existing state was
+ * honest: `unavailable` would deny a value that is right there, and `observed`
+ * claimed a measurement nobody took. A value can be present and unexecuted at
+ * once, and the type now says so.
  */
 export const evidenceValueSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("observed"), value: z.string().min(1), source: claimSourceSchema, identifier: identifierMetaSchema.optional() }),
+  z.object({ state: z.literal("declared"), value: z.string().min(1), note: z.string().min(1) }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
   z.object({ state: z.literal("placeholder"), value: z.string().min(1) }),
 ]);
@@ -319,6 +331,8 @@ export const receiptSchema = z.object({
     inputDigest: evidenceValueSchema,
     artifactDigest: evidenceValueSchema,
     dataHubReadParameters: evidenceValueSchema,
+    /** The manifest's derivation parameters. Never an observation — see `declared`. */
+    manifestDerivationParameters: evidenceValueSchema,
     producerPath: evidenceValueSchema,
     immutableSourceUrl: evidenceValueSchema,
     limitations: evidenceValueSchema,

@@ -1,0 +1,168 @@
+{
+  "eventVersion": "1.4",
+  "provenance": {
+    "producedAt": "2026-08-05T13:31:07.187Z",
+    "producer": {
+      "name": "@workspacejson/datahub-agent",
+      "version": "0.0.1"
+    },
+    "datahub": {
+      "gmsUrl": "http://localhost:8080",
+      "gmsVersion": null
+    },
+    "corpus": {
+      "repository": null,
+      "commit": null
+    },
+    "workspaceArtifact": {
+      "producedBy": null,
+      "fileIndexKeys": null,
+      "repository": null,
+      "revision": null,
+      "integrity": "artifact-unavailable"
+    }
+  },
+  "subject": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)"
+  },
+  "datahub": {
+    "name": "game_events",
+    "platform": "dbt",
+    "description": "",
+    "upstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_game_events,PROD)",
+        "name": "base_game_events",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.base_games,PROD)",
+        "name": "base_games",
+        "degree": 2
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "game_lineups",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.transfermarkt_scraper.games,PROD)",
+        "name": "games",
+        "degree": 3
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_game_events,PROD)",
+        "name": "duck.dev.base_game_events",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.base_games,PROD)",
+        "name": "duck.dev.base_games",
+        "degree": 1
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.game_lineups,PROD)",
+        "name": "duck.transfermarkt_scraper.game_lineups",
+        "degree": 4
+      },
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.transfermarkt_scraper.games,PROD)",
+        "name": "duck.transfermarkt_scraper.games",
+        "degree": 4
+      }
+    ],
+    "downstreams": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:duckdb,duck.dev.game_events,PROD)",
+        "name": "duck.dev.game_events",
+        "degree": 1
+      }
+    ],
+    "lineageObservation": {
+      "upstreams": {
+        "read": "ok",
+        "completeness": "complete-against-pinned-manifest",
+        "observedCount": 8,
+        "verification": {
+          "manifestDigest": "770a1e8e46fc0f2fcdeb84b2f12decf2895c2182590fd3631f2a10f7972405d7",
+          "expectedSetDigest": "888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6",
+          "observedSetDigest": "888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6",
+          "declaredQueryParameters": {
+            "surface": "searchAcrossLineage",
+            "direction": "UPSTREAM",
+            "maxDegree": 4,
+            "query": "*",
+            "start": 0,
+            "count": 50
+          },
+          "executedRead": {
+            "transport": "mcp",
+            "surface": "mcp:get_lineage",
+            "parameters": {
+              "surface": "mcp:get_lineage",
+              "query": "*",
+              "maxHops": 3,
+              "maxResults": 50,
+              "direction": "UPSTREAM"
+            }
+          }
+        }
+      },
+      "downstreams": {
+        "read": "ok",
+        "completeness": "not-established",
+        "observedCount": 1
+      }
+    },
+    "schemaFieldCount": 2,
+    "owners": [],
+    "domain": null
+  },
+  "code": {
+    "dbtUniqueId": "model.transfermarkt_datasets.game_events",
+    "dbtFilePath": "models/curated/game_events.sql",
+    "repositoryRelativePath": null,
+    "projectPrefix": null,
+    "method": "unresolved",
+    "sourceUrl": null
+  },
+  "partners": [],
+  "evidence": {
+    "records": [],
+    "tier": "ASSERTED"
+  },
+  "accounting": {
+    "datasetsRequested": 1,
+    "datasetsResolved": 0,
+    "datasetsUnresolved": 1,
+    "nodesDropped": 0,
+    "nodesExcluded": {},
+    "unresolvedRecords": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)",
+        "reason": "No workspace.json artifact was supplied, so no repository-relative path could be looked up for this dataset."
+      }
+    ]
+  },
+  "unavailable": [
+    {
+      "field": "provenance.datahub.gmsVersion",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP server exposes no tool reporting the GMS version, and this event was produced over MCP. The MCP server's own name and version are recorded on stderr."
+    },
+    {
+      "field": "code.repositoryRelativePath",
+      "source": "datahub",
+      "reason": "not-exposed-by-source",
+      "detail": "The official DataHub MCP projection exposes the dbt model path but not repository, revision, or project prefix. Exact resolution requires a corpus-matched workspace artifact."
+    },
+    {
+      "field": "partners",
+      "source": "workspacejson",
+      "reason": "not-queried",
+      "detail": "No workspace.json artifact was available for this corpus."
+    }
+  ]
+}
+

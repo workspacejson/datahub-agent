@@ -191,7 +191,7 @@
       "tool": "@workspacejson/datahub-agent",
       "version": "0.0.1"
     },
-    "attemptedAt": "2026-07-28T03:11:42.968Z",
+    "attemptedAt": "2026-08-05T13:31:50.152Z",
     "revision": {
       "repository": "https://github.com/dcaribou/transfermarkt-datasets",
       "commit": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
@@ -201,13 +201,13 @@
       "evidenceTier": "VERIFIED"
     },
     "before": {
-      "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+      "linkUrl": null,
       "evidenceTier": "VERIFIED",
       "read": "ok",
       "readError": null
     },
     "after": {
-      "linkUrl": "https://github.com/dcaribou/transfermarkt-datasets/blob/59fa295c51fc23466f3a71542f8bf3d1335daa83/dbt/models/curated/game_events.sql",
+      "linkUrl": null,
       "evidenceTier": "VERIFIED",
       "read": "ok",
       "readError": null
@@ -221,7 +221,7 @@
           }
         },
         "succeeded": true,
-        "response": "already defined"
+        "response": "already defined; deployed definition reconciled"
       },
       {
         "mutation": "upsertStructuredProperties",
@@ -247,8 +247,8 @@
     "observation": {
       "status": "settled",
       "polls": 1,
-      "elapsedMs": 8,
-      "timeoutMs": 20000,
+      "elapsedMs": 36,
+      "timeoutMs": 60000,
       "lastError": null
     },
     "succeeded": true,

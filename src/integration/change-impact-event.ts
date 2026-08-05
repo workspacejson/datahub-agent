@@ -98,19 +98,94 @@ export type Completeness = "complete-against-pinned-manifest" | "not-established
  * wrong twelve, and a count that matches while the members differ is exactly
  * the failure a count-based oracle cannot see.
  */
-export interface VerificationEvidence {
+export interface VerificationDigests {
   /** Digest of the readiness manifest the expectation came from. */
   manifestDigest: string;
   /** Digest of the sorted expected URN set. */
   expectedSetDigest: string;
   /** Digest of the sorted observed URN set. */
   observedSetDigest: string;
+}
+
+/**
+ * The request that actually produced `observedSetDigest`.
+ *
+ * Keyed by transport because the two surfaces are not interchangeable. MCP's
+ * `get_lineage` and GMS's `searchAcrossLineage` return the same URN *set* on
+ * this corpus — HAC-231's hop-semantics gate established that, with MCP
+ * collapsing degree 4 into `3+` while preserving membership — but they are
+ * different requests, and an auditor rerunning one does not rerun the other.
+ * Naming the transport makes that difference part of the evidence instead of
+ * something a reader has to already know.
+ */
+export interface ExecutedRead {
+  transport: "mcp" | "gms";
+  /** The surface on that transport, e.g. `mcp:get_lineage`. */
+  surface: string;
   /**
-   * Query surface, direction and hop parameters. Two sets are only comparable
-   * under the same parameters, so recording them is part of the evidence rather
-   * than commentary on it.
+   * The parameters that request carried.
+   *
+   * `direction` is required, and required *here* rather than inferred. The
+   * direction invariant reads it to confirm the evidence describes the lineage
+   * side it is attached to, and a parameter set without it would leave that
+   * check unable to fail — the failure mode this contract change exists to
+   * prevent, reintroduced by the fix for it.
    */
+  parameters: Record<string, string | number> & { direction: string };
+}
+
+/**
+ * What a `complete-against-pinned-manifest` claim rests on, in contract 1.4.
+ *
+ * Two parameter sets, because they are two different things and collapsing
+ * them is what went wrong. `declaredQueryParameters` describes how the
+ * *expectation* was derived — the manifest's own query. `executedRead`
+ * describes how the *observation* was obtained. Under 1.3 a single
+ * `queryParameters` field held the first while the surrounding prose, the
+ * completeness gate and the cockpit all read it as the second.
+ *
+ * The governing rule: evidence may describe only the request that produced
+ * that observation. A declared parameter may never populate an observed field.
+ */
+export interface VerificationEvidenceV14 extends VerificationDigests {
+  /** The manifest's derivation parameters. Not a description of any read. */
+  declaredQueryParameters: Record<string, string | number>;
+  executedRead: ExecutedRead;
+}
+
+/**
+ * Contract 1.3's shape, accepted from committed events and never emitted.
+ *
+ * `queryParameters` is retained exactly as it was recorded. It is *not*
+ * migrated into `executedRead`: under 1.3 nothing distinguished a declared
+ * parameter set from an executed one, so promoting it would manufacture
+ * execution provenance that was never captured. A reader that needs to know
+ * how the observation was obtained cannot learn it from a 1.3 event, and the
+ * honest rendering says so.
+ */
+export interface VerificationEvidenceLegacy13 extends VerificationDigests {
   queryParameters: Record<string, string | number>;
+}
+
+export type VerificationEvidence = VerificationEvidenceV14 | VerificationEvidenceLegacy13;
+
+/** Narrow to the shape that carries execution provenance. */
+export function hasExecutedRead(
+  verification: VerificationEvidence,
+): verification is VerificationEvidenceV14 {
+  return "executedRead" in verification;
+}
+
+/**
+ * The parameters an expectation was derived under, whichever contract recorded
+ * it. Never the parameters of a read — see `hasExecutedRead` for those.
+ */
+export function declaredParameters(
+  verification: VerificationEvidence,
+): Record<string, string | number> {
+  return hasExecutedRead(verification)
+    ? verification.declaredQueryParameters
+    : verification.queryParameters;
 }
 
 export interface Unavailable {
@@ -438,12 +513,49 @@ export interface Provenance {
  * first. Mapping it silently onto `checkExecuted` would launder that ambiguity
  * into the new vocabulary and call it migrated.
  *
+ * 1.4 split `VerificationEvidence.queryParameters` into
+ * `declaredQueryParameters` and `executedRead` (HAC-284).
+ *
+ * Under 1.3 one field held the readiness manifest's *derivation* parameters
+ * while the contract's own documentation, the completeness gate and the cockpit
+ * all read it as the parameters of the read that produced `observedSetDigest`.
+ * Under `--transport mcp` those were different requests, so an auditor
+ * rerunning the recorded parameters ran a query the event had not run — a
+ * positive false statement inside the structure whose whole purpose is letting
+ * someone re-derive the result.
+ *
+ * **This is the first version that stays readable after its successor ships.**
+ * Every earlier bump superseded its predecessor because the old event was
+ * missing information the new contract required, and no in-place upgrade could
+ * invent it. Here the 1.3 event is not missing a field — it is missing a
+ * *distinction*, and which of the two things its `queryParameters` described is
+ * unrecoverable. So 1.3 events keep validating and keep being rendered, and
+ * what they are rendered as is "execution provenance is not distinguishable
+ * under 1.3". Translating them into `executedRead` would fabricate exactly the
+ * claim this version exists to stop making.
+ *
+ * A reader therefore accepts `READABLE_EVENT_VERSIONS`, while emitters write
+ * only `CHANGE_IMPACT_EVENT_VERSION`, and the verification block's shape must
+ * match the version that declared it.
+ *
  * Note on the number: this project does not claim semver for this contract, and
  * 1.0 → 1.1 already established that a breaking change takes a minor. **All
- * three bumps are breaking.** The version string distinguishes shapes; it is not
+ * four bumps are breaking.** The version string distinguishes shapes; it is not
  * a compatibility promise, and `SUPERSEDED_EVENT_VERSIONS` is the signal to read.
  */
-export const CHANGE_IMPACT_EVENT_VERSION = "1.3" as const;
+export const CHANGE_IMPACT_EVENT_VERSION = "1.4" as const;
+
+/**
+ * Versions a reader still validates, newest last.
+ *
+ * Emitters never consult this — they write `CHANGE_IMPACT_EVENT_VERSION`. It
+ * exists so a committed 1.3 event stays checkable rather than becoming
+ * unreadable evidence, and so the one place that decides "can this be read"
+ * is not a comparison scattered across call sites.
+ */
+export const READABLE_EVENT_VERSIONS = ["1.3", "1.4"] as const;
+
+export type ReadableEventVersion = (typeof READABLE_EVENT_VERSIONS)[number];
 
 /** Versions this contract knows about but can no longer validate. */
 export const SUPERSEDED_EVENT_VERSIONS: Record<string, string> = {
@@ -453,7 +565,7 @@ export const SUPERSEDED_EVENT_VERSIONS: Record<string, string> = {
 };
 
 export interface ChangeImpactEvent {
-  eventVersion: typeof CHANGE_IMPACT_EVENT_VERSION;
+  eventVersion: ReadableEventVersion;
   provenance: Provenance;
 
   subject: { urn: string };
@@ -493,12 +605,41 @@ export interface ChangeImpactEvent {
 const contextSourceSchema = z.enum(["datahub", "workspacejson"]);
 const completenessSchema = z.enum(["complete-against-pinned-manifest", "not-established"]);
 
-const verificationEvidenceSchema = z.strictObject({
-  manifestDigest: z.string(),
-  expectedSetDigest: z.string(),
-  observedSetDigest: z.string(),
-  queryParameters: z.record(z.string(), z.union([z.string(), z.number()])),
-});
+const queryParameterMap = z.record(z.string(), z.union([z.string(), z.number()]));
+
+/**
+ * Both contracts, as strict alternatives rather than one loose object.
+ *
+ * Strictness on each arm is what makes the two shapes tell themselves apart. A
+ * permissive schema carrying every field as optional would accept a block with
+ * `queryParameters` *and* `executedRead`, which is precisely the ambiguity this
+ * change removes: a reader could not then say whether the parameters described
+ * the manifest or the read.
+ */
+const verificationEvidenceSchema = z.union([
+  z.strictObject({
+    manifestDigest: z.string(),
+    expectedSetDigest: z.string(),
+    observedSetDigest: z.string(),
+    declaredQueryParameters: queryParameterMap,
+    executedRead: z.strictObject({
+      transport: z.enum(["mcp", "gms"]),
+      surface: z.string().min(1),
+      // `direction` is required by the type and by the parse. The invariant
+      // that reads it must be able to fail.
+      parameters: z.intersection(
+        queryParameterMap,
+        z.object({ direction: z.string().min(1) }),
+      ),
+    }),
+  }),
+  z.strictObject({
+    manifestDigest: z.string(),
+    expectedSetDigest: z.string(),
+    observedSetDigest: z.string(),
+    queryParameters: queryParameterMap,
+  }),
+]);
 
 const unavailableSchema = z.strictObject({
   field: z.string(),
@@ -598,7 +739,7 @@ const accountingSchema = z.strictObject({
 
 /** The pure contract. Nothing beyond these keys is part of it. */
 export const changeImpactEventSchema = z.strictObject({
-  eventVersion: z.literal(CHANGE_IMPACT_EVENT_VERSION),
+  eventVersion: z.enum(READABLE_EVENT_VERSIONS),
   provenance: provenanceSchema,
   subject: z.strictObject({ urn: z.string() }),
   datahub: dataHubContextSchema,
@@ -824,18 +965,116 @@ const QUERY_DIRECTION = {
   downstreams: "DOWNSTREAM",
 } as const;
 
-/** Two evidence blocks describe the same attestation, or they do not. */
+/**
+ * A manifest taken in the other direction is not evidence about this one.
+ *
+ * Upstream and downstream closures are different sets; comparing an answer
+ * against the wrong one would pass or fail for reasons unrelated to the field
+ * being described.
+ *
+ * Under 1.4 this reads the *executed* read's direction, not the manifest's. The
+ * manifest's direction says which closure was expected; only the executed
+ * parameters say which closure was actually asked for, and it is the second
+ * that has to match the field. A 1.3 block has one field and no way to tell
+ * which it was, so it keeps the older, weaker check.
+ *
+ * The `undefined` short-circuit therefore survives for 1.3 only. On a 1.4 block
+ * `direction` is required by the type and by the parse, so it cannot go missing
+ * and quietly leave this with nothing to compare — which is precisely how a
+ * naive version of the 1.4 change disarms this invariant while appearing to
+ * preserve it.
+ */
+function lineageDirectionProblems(
+  holder: VerificationEvidence | undefined,
+  label: string,
+  direction: keyof typeof QUERY_DIRECTION,
+): string[] {
+  if (holder === undefined) return [];
+  const executed = hasExecutedRead(holder);
+  const stated = executed
+    ? holder.executedRead.parameters.direction
+    : holder.queryParameters["direction"];
+  if (stated === undefined || stated === QUERY_DIRECTION[direction]) return [];
+  return [
+    executed
+      ? `${label} is evidenced by a read executed ${String(stated)} on ${holder.executedRead.surface}, but the field describes ${QUERY_DIRECTION[direction]} lineage`
+      : `${label} is evidenced by a manifest queried ${String(stated)}, but the field describes ${QUERY_DIRECTION[direction]} lineage`,
+  ];
+}
+
+/**
+ * Every place an event can carry verification evidence, with its label.
+ *
+ * One traversal, so a new holder cannot be added without this seeing it. The
+ * alternative — repeating the two lineage sides and the `unavailable` walk at
+ * each call site — is how one of them ends up unchecked.
+ */
+function verificationHolders(event: {
+  // Structural rather than `ChangeImpactEvent`, because this reads the output
+  // of a schema parse: under `exactOptionalPropertyTypes` an absent optional
+  // surfaces as `undefined`, which the declared interface does not admit.
+  datahub: {
+    lineageObservation: {
+      upstreams: { verification?: VerificationEvidence | undefined };
+      downstreams: { verification?: VerificationEvidence | undefined };
+    };
+  };
+  unavailable: ReadonlyArray<{
+    field: string;
+    verification?: VerificationEvidence | undefined;
+  }>;
+}): Array<[string, VerificationEvidence | undefined]> {
+  return [
+    [
+      "datahub.lineageObservation.upstreams",
+      event.datahub.lineageObservation.upstreams.verification,
+    ],
+    [
+      "datahub.lineageObservation.downstreams",
+      event.datahub.lineageObservation.downstreams.verification,
+    ],
+    ...event.unavailable.map(
+      (entry): [string, VerificationEvidence | undefined] => [entry.field, entry.verification],
+    ),
+  ];
+}
+
+const sameParameters = (
+  a: Record<string, string | number>,
+  b: Record<string, string | number>,
+): boolean =>
+  JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
+
+/**
+ * Two evidence blocks describe the same attestation, or they do not.
+ *
+ * Shape is compared before contents. A 1.3 block and a 1.4 block are never the
+ * same attestation even when every digest matches, because one of them states
+ * how the observation was obtained and the other cannot. Treating them as equal
+ * would let a legacy entry satisfy the check against a 1.4 observation and
+ * quietly acquire its execution provenance.
+ */
 function sameVerification(
   a: VerificationEvidence | undefined,
   b: VerificationEvidence | undefined,
 ): boolean {
   if (a === undefined || b === undefined) return a === b;
+  if (
+    a.manifestDigest !== b.manifestDigest ||
+    a.expectedSetDigest !== b.expectedSetDigest ||
+    a.observedSetDigest !== b.observedSetDigest
+  ) {
+    return false;
+  }
+  if (hasExecutedRead(a) !== hasExecutedRead(b)) return false;
+  if (!hasExecutedRead(a) || !hasExecutedRead(b)) {
+    return sameParameters(declaredParameters(a), declaredParameters(b));
+  }
   return (
-    a.manifestDigest === b.manifestDigest &&
-    a.expectedSetDigest === b.expectedSetDigest &&
-    a.observedSetDigest === b.observedSetDigest &&
-    JSON.stringify(Object.entries(a.queryParameters).sort()) ===
-      JSON.stringify(Object.entries(b.queryParameters).sort())
+    sameParameters(a.declaredQueryParameters, b.declaredQueryParameters) &&
+    a.executedRead.transport === b.executedRead.transport &&
+    a.executedRead.surface === b.executedRead.surface &&
+    sameParameters(a.executedRead.parameters, b.executedRead.parameters)
   );
 }
 
@@ -913,17 +1152,25 @@ function lineageAgreementProblems(
   // Upstream and downstream closures are different sets; comparing an answer
   // against the wrong one would pass or fail for reasons unrelated to the field
   // being described.
-  for (const [holder, label] of [
-    [entry.verification, entry.field],
-    [observation.verification, canonical],
-  ] as const) {
-    const stated = holder?.queryParameters?.["direction"];
-    if (stated !== undefined && stated !== QUERY_DIRECTION[direction]) {
-      problems.push(
-        `${label} is evidenced by a manifest queried ${String(stated)}, but the field describes ${QUERY_DIRECTION[direction]} lineage`,
-      );
-    }
-  }
+  //
+  // Under 1.4 this reads the *executed* read's direction, not the manifest's.
+  // The manifest's direction says which closure was expected; only the executed
+  // parameters say which closure was actually asked for, and it is the second
+  // that has to match the field. Under 1.3 there is one field and no way to
+  // tell which it was, so the legacy path keeps the older, weaker check.
+  //
+  // The `undefined` short-circuit is retained *only* for 1.3. On a 1.4 block
+  // `direction` is required by the type and by the parse, so it cannot go
+  // missing and silently leave this loop with nothing to compare — which is the
+  // way a naive version of this fix disarms the invariant while appearing to
+  // preserve it.
+  //
+  // Only the entry is checked here. The canonical observation used to be
+  // checked in this same loop, which meant its direction was examined only when
+  // some `unavailable` entry happened to exist for the field — an observation
+  // carrying wrong-direction evidence and nothing else went unchecked. It is
+  // now checked once, unconditionally, at its own site in `validateEvent`.
+  problems.push(...lineageDirectionProblems(entry.verification, entry.field, direction));
 
   // `absent` on lineage is the strongest thing this contract can say about a
   // catalog: it was asked, it answered, the answer was established complete, and
@@ -983,9 +1230,24 @@ function completenessEvidenceProblems(
   const missing = !v
     ? ["verification"]
     : (["manifestDigest", "expectedSetDigest", "observedSetDigest"] as const).filter((k) => !v[k]);
-  if (!v || missing.length > 0 || Object.keys(v.queryParameters ?? {}).length === 0) {
+  // An empty parameter set names nothing.
+  //
+  // Only the declared side is checked here. `executedRead.parameters` requires
+  // `direction` in the schema, so an empty one never survives the parse and a
+  // check for it here could not fail — an unreachable branch that would read as
+  // a defended invariant while defending nothing.
+  const emptyParameters = !v
+    ? []
+    : hasExecutedRead(v)
+      ? Object.keys(v.declaredQueryParameters).length === 0
+        ? ["declaredQueryParameters"]
+        : []
+      : Object.keys(v.queryParameters).length === 0
+        ? ["queryParameters"]
+        : [];
+  if (!v || missing.length > 0 || emptyParameters.length > 0) {
     return [
-      `${label} claims complete-against-pinned-manifest without naming the manifest (${missing.join(", ") || "queryParameters"})`,
+      `${label} claims complete-against-pinned-manifest without naming the manifest (${[...missing, ...emptyParameters].join(", ")})`,
     ];
   }
 
@@ -1043,7 +1305,7 @@ export function validateEvent(event: unknown): string[] {
   // Version first, before shape. A superseded event has a *different* shape, so
   // reporting its missing fields would bury the one fact that explains them.
   const declaredVersion = (event as { eventVersion?: unknown } | null)?.eventVersion;
-  if (declaredVersion !== CHANGE_IMPACT_EVENT_VERSION) {
+  if (!READABLE_EVENT_VERSIONS.includes(declaredVersion as ReadableEventVersion)) {
     const superseded = SUPERSEDED_EVENT_VERSIONS[declaredVersion as string];
     return [
       superseded
@@ -1074,6 +1336,29 @@ export function validateEvent(event: unknown): string[] {
   // fields directly without guarding each access.
   const valid = parsed.data;
 
+  // A verification block must be the shape its own version defines.
+  //
+  // The union accepts either arm anywhere, which is right for parsing and wrong
+  // as a final answer: a 1.4 event carrying a legacy block would be an emitter
+  // that forgot to record how it read, and a 1.3 event carrying `executedRead`
+  // would be execution provenance added after the fact to an event that never
+  // captured any. The second is the more dangerous, because it is exactly what
+  // a well-meaning migration script produces.
+  for (const [label, holder] of verificationHolders(valid)) {
+    if (holder === undefined) continue;
+    const carriesExecuted = hasExecutedRead(holder);
+    if (valid.eventVersion === "1.4" && !carriesExecuted) {
+      problems.push(
+        `${label} carries a 1.3 verification block on a 1.4 event — an executed read was never recorded`,
+      );
+    }
+    if (valid.eventVersion === "1.3" && carriesExecuted) {
+      problems.push(
+        `${label} carries a 1.4 executed read on a 1.3 event — 1.3 did not distinguish declared from executed parameters, so this provenance was not captured`,
+      );
+    }
+  }
+
 
   // Stated on every event, in both directions, whether or not anything is
   // missing — a partial answer is the case that looks like a complete one.
@@ -1098,6 +1383,7 @@ export function validateEvent(event: unknown): string[] {
     const observation = valid.datahub.lineageObservation[direction];
 
     problems.push(...completenessEvidenceProblems(observation, label));
+    problems.push(...lineageDirectionProblems(observation.verification, label, direction));
 
     if (observation.read === "ok") {
       if (observation.observedCount === undefined) {

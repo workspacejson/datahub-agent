@@ -1,0 +1,12 @@
+{
+  "fixture": "live-1.4-event-mcp-transport.json",
+  "kind": "captured",
+  "why": "Contract 1.4 splits declared from executed query parameters (HAC-284). The defect it corrects is invisible in any fixture that agrees with itself, so this is a live MCP-transport emission where the two genuinely differ: the observed set came from mcp:get_lineage at three hops while the manifest declares searchAcrossLineage at maxDegree 4.",
+  "capturedAgainst": "local DataHub OSS quickstart, acryldata/datahub-gms:v1.5.0.6, Transfermarkt corpus",
+  "generated_by": "scripts/emit-change-impact-event.mjs",
+  "command": "node scripts/emit-change-impact-event.mjs \"urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)\" --transport mcp --readiness-manifest test/fixtures/readiness/game_events.upstream.json",
+  "capturedAt": "2026-08-05",
+  "mcpServer": "mcp-server-datahub (datahub 3.4.5)",
+  "note": "Unmodified emitter output. The identical run over --transport gms produces the same observedSetDigest (888a1578...), which is HAC-231's hop-semantics finding holding and the reason the 1.3 mislabel was not caught by any check on the numbers: the comparison was sound and only the label was false.",
+  "fixtureSha256": "749ba996637b98dacb3cc569e1fd9e21b332fa2ea0bca636791b679d016cf9dc"
+}

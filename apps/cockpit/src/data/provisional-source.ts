@@ -46,6 +46,7 @@ export const provisionalSource = {
       inputDigest: { state: "placeholder", value: "<input digest>" },
       artifactDigest: { state: "placeholder", value: "<artifact digest>" },
       dataHubReadParameters: { state: "placeholder", value: "<DataHub parameters>" },
+      manifestDerivationParameters: { state: "placeholder", value: "<manifest parameters>" },
       producerPath: { state: "placeholder", value: "<producer path>" },
       immutableSourceUrl: { state: "placeholder", value: "<immutable source URL>" },
       limitations: { state: "placeholder", value: "<limitations>" },

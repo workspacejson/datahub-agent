@@ -20,6 +20,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   CHANGE_IMPACT_EVENT_VERSION,
+  READABLE_EVENT_VERSIONS,
+  SUPERSEDED_EVENT_VERSIONS,
   describeTier,
   validateEvent,
   type ChangeImpactEvent,
@@ -183,7 +185,12 @@ describe("V-1 · completeness without the manifest it names", () => {
         // that a comparison coming out unequal supports a completeness claim.
         expectedSetDigest: "set-digest",
         observedSetDigest: "set-digest",
-        queryParameters: { direction: "UPSTREAM", degree: 1 },
+        declaredQueryParameters: { direction: "UPSTREAM", degree: 1 },
+        executedRead: {
+          transport: "gms",
+          surface: "searchAcrossLineage",
+          parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+        },
       },
     };
     expect(validateEvent(event)).toEqual([]);
@@ -202,7 +209,12 @@ describe("V-1 · completeness without the manifest it names", () => {
         manifestDigest: "m",
         expectedSetDigest: "expected",
         observedSetDigest: "observed",
-        queryParameters: { direction: "UPSTREAM", degree: 1 },
+        declaredQueryParameters: { direction: "UPSTREAM", degree: 1 },
+    executedRead: {
+      transport: "gms",
+      surface: "searchAcrossLineage",
+      parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+    },
       },
     };
     expect(validateEvent(event)).toContainEqual(
@@ -252,7 +264,12 @@ describe("V-1b · `absent` claimed without the evidence that alone permits it", 
     manifestDigest: "manifest-digest",
     expectedSetDigest: "set-digest",
     observedSetDigest: "set-digest",
-    queryParameters: { direction: "UPSTREAM", degree: 1 },
+    declaredQueryParameters: { direction: "UPSTREAM", degree: 1 },
+    executedRead: {
+      transport: "gms",
+      surface: "searchAcrossLineage",
+      parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+    },
   } as const;
 
   /** The observation that permits `absent`: read, empty, and established complete. */
@@ -339,7 +356,12 @@ describe("V-1c · `unavailable` disagreeing with the canonical lineage observati
     manifestDigest: "manifest-digest",
     expectedSetDigest: "set-digest",
     observedSetDigest: "set-digest",
-    queryParameters: { direction: "UPSTREAM", degree: 1 },
+    declaredQueryParameters: { direction: "UPSTREAM", degree: 1 },
+    executedRead: {
+      transport: "gms",
+      surface: "searchAcrossLineage",
+      parameters: { direction: "UPSTREAM", start: 0, count: 50 },
+    },
   } as const;
 
   const build = (
@@ -399,10 +421,17 @@ describe("V-1c · `unavailable` disagreeing with the canonical lineage observati
         read: "ok",
         completeness: "complete-against-pinned-manifest",
         observedCount: 0,
-        verification: { ...ATTESTED, queryParameters: { direction: "DOWNSTREAM", degree: 1 } },
+        // The *executed* direction is what has to match the field. Under 1.4 the
+        // manifest's declared direction is no longer what this invariant reads,
+        // because only the executed parameters say which closure was asked for.
+        verification: {
+          ...ATTESTED,
+          executedRead: { ...ATTESTED.executedRead, parameters: { direction: "DOWNSTREAM", degree: 1 } },
+        },
       },
     ));
     expect(problems).toContainEqual(expect.stringContaining("describes UPSTREAM lineage"));
+    expect(problems).toContainEqual(expect.stringContaining("executed DOWNSTREAM"));
   });
 
   it("refuses two different attestations for the same read", () => {
@@ -646,6 +675,34 @@ describe("V-4 · a naked tier token reaching a reader", () => {
   });
 });
 
+/**
+ * The same event, with every verification block rewritten back to the 1.3 shape.
+ *
+ * Built by dropping `executedRead` rather than by hand-writing a fixture, so a
+ * legacy event under test is provably the current one minus the distinction 1.4
+ * added — and cannot drift into testing some other shape entirely.
+ */
+function legacyVerificationEvent(event: ChangeImpactEvent): ChangeImpactEvent {
+  const clone = JSON.parse(JSON.stringify(event)) as ChangeImpactEvent;
+  const downgrade = (holder: { verification?: unknown }) => {
+    const v = holder.verification as
+      | { declaredQueryParameters?: Record<string, unknown>; executedRead?: unknown }
+      | undefined;
+    if (!v?.executedRead) return;
+    holder.verification = {
+      manifestDigest: (v as Record<string, unknown>)["manifestDigest"],
+      expectedSetDigest: (v as Record<string, unknown>)["expectedSetDigest"],
+      observedSetDigest: (v as Record<string, unknown>)["observedSetDigest"],
+      queryParameters: v.declaredQueryParameters,
+    };
+  };
+  downgrade(clone.datahub.lineageObservation.upstreams);
+  downgrade(clone.datahub.lineageObservation.downstreams);
+  for (const entry of clone.unavailable) downgrade(entry);
+  clone.eventVersion = "1.3";
+  return clone;
+}
+
 describe("V-5 · a committed fixture left on stale vocabulary", () => {
   const SUPERSEDED = [
     // The exact spellings HAC-146 retired. A fixture regenerated before the
@@ -681,12 +738,51 @@ describe("V-5 · a committed fixture left on stale vocabulary", () => {
     expect(SUPERSEDED.some((token) => reverted.includes(token))).toBe(true);
   });
 
-  it("refuses a fixture pinned to the previous contract version, naming where to migrate", () => {
+  it("refuses a fixture pinned to a superseded contract version, naming where to migrate", () => {
     const raw = readFileSync(join(goldenDir, GOLDEN[0]!), "utf8");
     const stale = { ...(JSON.parse(raw) as ChangeImpactEvent), eventVersion: "1.2" };
     const problems = validateEvent(stale);
     expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/1\.2 is superseded by 1\.3/);
+    expect(problems[0]).toMatch(
+      new RegExp(`1\\.2 is superseded by ${CHANGE_IMPACT_EVENT_VERSION.replace(".", "\\.")}`),
+    );
     expect(problems[0]).toMatch(/re-emit/);
+  });
+
+  it("keeps reading 1.3, because what it lacks is a distinction and not a field", () => {
+    // Every earlier bump superseded its predecessor: the old event was missing
+    // information the new contract required, and no upgrade could invent it.
+    // 1.3 is different. It carries a `queryParameters` set — what is gone is any
+    // record of whether it described the manifest or the read. A 1.3 event is
+    // therefore still fully checkable, and stays readable rather than becoming
+    // unreadable evidence. What it must never do is acquire an `executedRead`,
+    // which is asserted in the pair below.
+    expect(SUPERSEDED_EVENT_VERSIONS["1.3"]).toBeUndefined();
+    expect(READABLE_EVENT_VERSIONS).toContain("1.3");
+
+    const raw = readFileSync(join(goldenDir, GOLDEN[1]!), "utf8");
+    const current = JSON.parse(raw) as ChangeImpactEvent;
+    const legacy = legacyVerificationEvent(current);
+    expect(validateEvent(legacy)).toEqual([]);
+  });
+
+  it("refuses a 1.3 event carrying execution provenance it could not have captured", () => {
+    // The migration a well-meaning script writes: stamp `1.3` down to the
+    // fixture, keep the 1.4 evidence block. It would manufacture the exact
+    // claim this version exists to stop making.
+    const raw = readFileSync(join(goldenDir, GOLDEN[1]!), "utf8");
+    const forged = { ...(JSON.parse(raw) as ChangeImpactEvent), eventVersion: "1.3" as const };
+    expect(validateEvent(forged)).toContainEqual(
+      expect.stringContaining("carries a 1.4 executed read on a 1.3 event"),
+    );
+  });
+
+  it("refuses a 1.4 event whose evidence never says how it read", () => {
+    const raw = readFileSync(join(goldenDir, GOLDEN[1]!), "utf8");
+    const downgraded = legacyVerificationEvent(JSON.parse(raw) as ChangeImpactEvent);
+    downgraded.eventVersion = "1.4";
+    expect(validateEvent(downgraded)).toContainEqual(
+      expect.stringContaining("carries a 1.3 verification block on a 1.4 event"),
+    );
   });
 });

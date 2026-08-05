@@ -608,6 +608,12 @@
 .evidence__reason { color: var(--text-muted); font-family: var(--font-sans); font-size: var(--fs-sm); line-height: var(--lh-normal); }
 .evidence--placeholder { color: var(--wj-danger); }
 .evidence--placeholder em { font-style: normal; font-weight: 700; }
+/* Declared shares the unavailable treatment because it shares its standing: a
+   reader must not take either as measured. It keeps the value at normal weight,
+   because unlike an absence there is a real value to read — the caveat sits
+   under it in the same muted sans as a stated reason. */
+.evidence--declared { display: block; color: var(--text-primary); }
+.evidence--declared .evidence__reason { display: block; }
 
 .deferred-surface { margin: var(--sp-5) 0; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: var(--sp-5); color: var(--text-muted); }
 details { margin: 0 0 var(--sp-4); color: var(--text-muted); font-size: var(--fs-xs); }

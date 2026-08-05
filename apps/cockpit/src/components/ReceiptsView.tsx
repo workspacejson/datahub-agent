@@ -35,6 +35,18 @@ function Evidence({ value }: { value: EvidenceValue }) {
   if (value.state === "placeholder") {
     return <span className="evidence evidence--placeholder">{value.value} <em>(placeholder, not observed)</em></span>;
   }
+  // A stated value with no read behind it. It carries no `SourceTag`, because a
+  // source tag is an attribution and nothing here measured anything — which is
+  // the exact confusion this state was added to end.
+  if (value.state === "declared") {
+    return (
+      <span className="evidence evidence--declared">
+        <span className="evidence__tag">Declared</span>
+        {value.value}
+        <span className="evidence__reason">{value.note}</span>
+      </span>
+    );
+  }
   if (value.identifier) {
     return (
       <span className="evidence">
@@ -62,7 +74,8 @@ const provenanceRows = [
   ["algorithmVersion", "Algorithm version"],
   ["inputDigest", "Input digest"],
   ["artifactDigest", "Artifact digest"],
-  ["dataHubReadParameters", "DataHub read parameters"],
+  ["dataHubReadParameters", "Executed query parameters"],
+  ["manifestDerivationParameters", "Declared query parameters"],
   ["producerPath", "Producer path"],
   ["immutableSourceUrl", "Immutable source URL"],
   // `limitations` is deliberately absent. It is the source-capability limits

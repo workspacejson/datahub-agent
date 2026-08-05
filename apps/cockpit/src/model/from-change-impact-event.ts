@@ -21,8 +21,10 @@
  */
 
 import {
+  declaredParameters,
   describeTier,
   emittedEventSchema,
+  hasExecutedRead,
   validateEvent,
   type ChangeImpactEvent,
   type WorkspaceIntegrity,
@@ -166,6 +168,13 @@ const observed = (value: string, source: ClaimSource, identifier?: IdentifierMet
 /** An absence, stating which absence it is. Never an empty string. */
 const missing = (reason: string): EvidenceValue => ({ state: "unavailable", reason });
 
+/** A real value that was stated rather than measured, carrying that caveat. */
+const declared = (value: string, note: string): EvidenceValue => ({
+  state: "declared",
+  value,
+  note,
+});
+
 /** `observed` when the event carries the value, `unavailable` with the reason when it does not. */
 function fromNullable(value: string | null | undefined, source: ClaimSource, reason: string, identifier?: IdentifierMeta): EvidenceValue {
   return value ? observed(value, source, identifier) : missing(reason);
@@ -209,6 +218,7 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
   const verification = event.datahub.lineageObservation.upstreams.verification
     ?? event.datahub.lineageObservation.downstreams.verification;
   const noVerification = "The lineage read did not establish completeness, so the contract carries no attestation digests for it.";
+  const LEGACY_VERIFICATION = "Legacy verification metadata. Execution provenance is not distinguishable in contract 1.3.";
 
   const capabilityLimits = event.unavailable
     .filter((u) => u.reason === "not-exposed-by-source")
@@ -269,9 +279,31 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
             copyLabel: "Copy digest",
           })
         : missing(noVerification),
-      dataHubReadParameters: verification
-        ? observed(JSON.stringify(verification.queryParameters), "DataHub")
-        : observed(`gms ${event.provenance.datahub.gmsUrl} (${event.provenance.datahub.gmsVersion ?? "version not reported"})`, "DataHub"),
+      // Three cases, because there are three different things to say.
+      //
+      // This slot used to render `verification.queryParameters` as a DataHub
+      // observation. Those were the readiness manifest's *derivation*
+      // parameters, so the cockpit was attributing to a DataHub read a set of
+      // parameters no DataHub read had used — a mislabelled contract field
+      // promoted into a judge-facing claim (HAC-284).
+      dataHubReadParameters: !verification
+        ? observed(`gms ${event.provenance.datahub.gmsUrl} (${event.provenance.datahub.gmsVersion ?? "version not reported"})`, "DataHub")
+        : hasExecutedRead(verification)
+          ? observed(
+              `${verification.executedRead.surface} ${JSON.stringify(verification.executedRead.parameters)}`,
+              "DataHub",
+            )
+          // A 1.3 event recorded one parameter set and no way to tell whether it
+          // described the manifest or the read. It is not upgraded here. Naming
+          // the ambiguity is the honest render; picking a reading for it would
+          // reintroduce the defect on the surface a judge actually looks at.
+          : missing(LEGACY_VERIFICATION),
+      manifestDerivationParameters: verification
+        ? declared(
+            JSON.stringify(declaredParameters(verification)),
+            "Declared query parameters. Execution was not observed.",
+          )
+        : missing(noVerification),
       producerPath: fromNullable(event.code.repositoryRelativePath, "workspace.json", `The producing file was not resolved to a repository path (method: ${event.code.method}).`),
       immutableSourceUrl: viewSourceToEvidence(viewSource),
       limitations: capabilityLimits.length > 0
