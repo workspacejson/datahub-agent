@@ -156,13 +156,18 @@ scripts/ingest-transfermarkt-corpus.sh --build-only            # no DataHub need
 scripts/ingest-transfermarkt-corpus.sh --gms http://localhost:8080   # build, then ingest
 ```
 
-**Prerequisites.** Python 3.11 (set `PYTHON311` if it is not on `PATH` under
-that name), `git`, and network access to clone the pinned corpus. The `--gms`
-form additionally needs a DataHub instance already running — the script neither
-creates nor destroys one. `CORPUS_WORKDIR` controls where the checkout and
-virtualenv live; the default is a fresh `mktemp -d`.
+**Prerequisites.** For `--build-only`: Python 3.11 (set `PYTHON311` if it is not
+on `PATH` under that name), `git`, **Node.js** — the lineage derivation and its
+digest check run through `scripts/derive-readiness-manifest.mjs` — and network
+access to clone the pinned corpus. Ingest additionally needs **`curl`** and a
+DataHub instance already running; the script neither creates nor destroys one.
 
-**Expected output.** dbt reports the corpus it parsed, reproducing the counts in
+Only `git` and Python are checked up front, so a missing Node or `curl` surfaces
+partway through rather than at the prerequisite step. `CORPUS_WORKDIR` controls
+where the checkout and virtualenv live; the default is a fresh `mktemp -d`.
+
+**Expected output**, abridged. dbt reports the corpus it parsed, reproducing the
+counts in
 [`evaluation/corpus-forge-screen.md`](evaluation/corpus-forge-screen.md):
 
 ```text
@@ -182,16 +187,23 @@ corpus     /tmp/transfermarkt-corpus.XXXXXX/transfermarkt
 manifest   /tmp/transfermarkt-corpus.XXXXXX/transfermarkt/dbt/target/manifest.json
 ```
 
-Those are the same two digests carried by
+That is a representative excerpt, not a transcript: the `mktemp` suffix is
+normalized to `XXXXXX`, and the surrounding dbt log is omitted — including a
+block of `MissingArgumentsPropertyInGenericTestDeprecation` warnings the pinned
+corpus emits, which are expected and not a failure.
+
+The two digests are the same ones carried by
 [`test/fixtures/readiness/`](test/fixtures/readiness/), so a match is a real
 comparison against committed expectation rather than a self-check. A mismatch
-fails the run rather than warning. dbt also emits a block of
-`MissingArgumentsPropertyInGenericTestDeprecation` warnings from the pinned
-corpus — expected, and not a failure.
+fails the run rather than warning.
 
-The two phases exit separately on purpose: a build failure means the corpus or
-toolchain moved, an ingest failure means the catalog did, and one exit code for
-both would lose which.
+`--build-only` is the boundary between validating the corpus and touching a
+catalog: it stops after the digest check, so a judge with no DataHub running can
+complete it. A normal invocation is a single process with a single exit code —
+the phases are not separate runs — and on failure the diagnostics name the step
+that failed alongside the exit code and the work directory, so a build failure
+(the corpus or toolchain moved) is distinguishable from an ingest failure (the
+catalog did).
 
 **Cleanup.** The script writes to its work directory and, with `--gms`, to the
 instance you named. It does not reset or tear down a DataHub — teardown belongs
@@ -199,17 +211,44 @@ to whoever owns the instance (`datahub docker nuke` for a quickstart). Remove
 the work directory yourself if you set `CORPUS_WORKDIR`; a default `mktemp`
 path is left in place so a failed run can be inspected.
 
-After ingesting, the search index settles asynchronously. Confirm the topology
-rather than assuming it:
+**After ingesting, the search index settles asynchronously**, so an immediate
+read can be incomplete without erroring. Capture what the catalog currently
+holds:
 
 ```bash
 node scripts/capture-catalog-baseline.mjs --gms http://localhost:8080
 ```
 
+That is a **point-in-time capture, not a readiness assertion**. It is read-only,
+it exits 0 whether or not the index has settled, it asserts nothing against the
+committed manifests, and its console line prints only the first 16 characters of
+each digest. Confirmation is the comparison you make against what it writes to
+`evaluation/hac-248/catalog-baseline-<timestamp>.json`. Find the
+`duck.dev.game_events` entry under `subjects` and check both digests:
+
+| Capture field | Must equal | Committed source |
+| --- | --- | --- |
+| `upstream.setDigest` | `888a1578…b784dc6` | `test/fixtures/readiness/game_events.upstream.json` → `expectedSetDigest` |
+| `downstream.setDigest` | `0bd21096…7457c260` | `test/fixtures/readiness/game_events.downstream.json` → `expectedSetDigest` |
+
+The capture uses the same digest recipe as
+`scripts/derive-readiness-manifest.mjs` — `sha256` over the sorted URN set — so
+the values are directly comparable. If either differs, the index has not settled
+or the ingest was incomplete: wait and run the capture again. It is a series
+instrument by design, and one observation of a moving system cannot establish
+that it has stopped moving.
+
+For the same check with bounded polling rather than by hand, emit an event
+against the pinned manifest — `scripts/emit-change-impact-event.mjs <urn>
+--readiness-manifest test/fixtures/readiness/game_events.upstream.json` — which
+polls to a deadline and only upgrades completeness to
+`complete-against-pinned-manifest` once the observed and expected sets are equal.
+
 **What is verified, and what is not.** `--build-only` has been run from a clean
 clone twice — on 2026-08-02 and again on 2026-08-05 — reproducing the counts and
-both digests each time. The output above is transcribed from the second run, not
-reconstructed from the script.
+both digests each time. The excerpt above is taken from the second run rather
+than written from reading the script, which is why it names dbt's line as dbt's
+and the digest lines as the script's.
 
 The ingest limb has **not** been exercised against a freshly rebuilt instance.
 That is deferred to HAC-248's clean rebuild, where it becomes that rebuild's own
