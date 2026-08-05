@@ -136,6 +136,127 @@ quickstart proof.
 - The full verification suite passes: tests, typecheck, lint, clean-room audit,
   production build, and adapter parity.
 
+**What this does not establish.** Steps 1–5 are Transfermarkt evidence you can
+verify *as artifact* — the checksums match — but not reproduce *as process*.
+Step 6 is the only "destroyed and rebuilt immediately beforehand" claim on this
+page, and it rebuilds Jaffle Shop, the regression corpus. If you want to rebuild
+the demo corpus itself, that is the next section, and it is deliberately outside
+the fifteen minutes.
+
+---
+
+## Rebuild the demo corpus
+
+Transfermarkt is the demo subject and the only corpus that exercises the nested
+`dbt/` layout the adapter exists for. It is rebuildable from a clean clone with
+no credential, no paid API and no access to this project's tenant:
+
+```bash
+scripts/ingest-transfermarkt-corpus.sh --build-only            # no DataHub needed
+scripts/ingest-transfermarkt-corpus.sh --gms http://localhost:8080   # build, then ingest
+```
+
+**Prerequisites.** For `--build-only`: Python 3.11 (set `PYTHON311` if it is not
+on `PATH` under that name), `git`, **Node.js** — the lineage derivation and its
+digest check run through `scripts/derive-readiness-manifest.mjs` — and network
+access to clone the pinned corpus. Ingest additionally needs **`curl`** and a
+DataHub instance already running; the script neither creates nor destroys one.
+
+Only `git` and Python are checked up front, so a missing Node or `curl` surfaces
+partway through rather than at the prerequisite step. `CORPUS_WORKDIR` controls
+where the checkout and virtualenv live; the default is a fresh `mktemp -d`.
+
+**Expected output**, abridged. dbt reports the corpus it parsed, reproducing the
+counts in
+[`evaluation/corpus-forge-screen.md`](evaluation/corpus-forge-screen.md):
+
+```text
+Found 23 models, 97 data tests, 10 sources, 883 macros
+```
+
+The script then checks the lineage it derived against the committed readiness
+manifests and prints, on success:
+
+```text
+=== checking derived lineage against the committed expectation ===
+  UPSTREAM  matches 888a1578dcf6048aa1e8e031babac1d0f0db00538f8bb681a030dfe70b784dc6
+  DOWNSTREAM  matches 0bd210967c1a5c17de6d45d166c9f38ec934026a37579d49ab37292a7457c260
+
+=== build-only: stopping before ingest ===
+corpus     /tmp/transfermarkt-corpus.XXXXXX/transfermarkt
+manifest   /tmp/transfermarkt-corpus.XXXXXX/transfermarkt/dbt/target/manifest.json
+```
+
+That is a representative excerpt, not a transcript: the `mktemp` suffix is
+normalized to `XXXXXX`, and the surrounding dbt log is omitted — including a
+block of `MissingArgumentsPropertyInGenericTestDeprecation` warnings the pinned
+corpus emits, which are expected and not a failure.
+
+The two digests are the same ones carried by
+[`test/fixtures/readiness/`](test/fixtures/readiness/), so a match is a real
+comparison against committed expectation rather than a self-check. A mismatch
+fails the run rather than warning.
+
+`--build-only` is the boundary between validating the corpus and touching a
+catalog: it stops after the digest check, so a judge with no DataHub running can
+complete it. A normal invocation is a single process with a single exit code —
+the phases are not separate runs — and on failure the diagnostics name the step
+that failed alongside the exit code and the work directory, so a build failure
+(the corpus or toolchain moved) is distinguishable from an ingest failure (the
+catalog did).
+
+**Cleanup.** The script writes to its work directory and, with `--gms`, to the
+instance you named. It does not reset or tear down a DataHub — teardown belongs
+to whoever owns the instance (`datahub docker nuke` for a quickstart). Remove
+the work directory yourself if you set `CORPUS_WORKDIR`; a default `mktemp`
+path is left in place so a failed run can be inspected.
+
+**After ingesting, the search index settles asynchronously**, so an immediate
+read can be incomplete without erroring. Capture what the catalog currently
+holds:
+
+```bash
+node scripts/capture-catalog-baseline.mjs --gms http://localhost:8080
+```
+
+That is a **point-in-time capture, not a readiness assertion**. It is read-only,
+it exits 0 whether or not the index has settled, it asserts nothing against the
+committed manifests, and its console line prints only the first 16 characters of
+each digest. Confirmation is the comparison you make against what it writes to
+`evaluation/hac-248/catalog-baseline-<timestamp>.json`. Find the
+`duck.dev.game_events` entry under `subjects` and check both digests:
+
+| Capture field | Must equal | Committed source |
+| --- | --- | --- |
+| `upstream.setDigest` | `888a1578…b784dc6` | `test/fixtures/readiness/game_events.upstream.json` → `expectedSetDigest` |
+| `downstream.setDigest` | `0bd21096…7457c260` | `test/fixtures/readiness/game_events.downstream.json` → `expectedSetDigest` |
+
+The capture uses the same digest recipe as
+`scripts/derive-readiness-manifest.mjs` — `sha256` over the sorted URN set — so
+the values are directly comparable. If either differs, the index has not settled
+or the ingest was incomplete: wait and run the capture again. It is a series
+instrument by design, and one observation of a moving system cannot establish
+that it has stopped moving.
+
+For the same check with bounded polling rather than by hand, emit an event
+against the pinned manifest — `scripts/emit-change-impact-event.mjs <urn>
+--readiness-manifest test/fixtures/readiness/game_events.upstream.json` — which
+polls to a deadline and only upgrades completeness to
+`complete-against-pinned-manifest` once the observed and expected sets are equal.
+
+**What is verified, and what is not.** `--build-only` has been run from a clean
+clone twice — on 2026-08-02 and again on 2026-08-05 — reproducing the counts and
+both digests each time. The excerpt above is taken from the second run rather
+than written from reading the script, which is why it names dbt's line as dbt's
+and the digest lines as the script's.
+
+The ingest limb has **not** been exercised against a freshly rebuilt instance.
+That is deferred to HAC-248's clean rebuild, where it becomes that rebuild's own
+verification rather than an assumption resting on it. Two builds are also not
+stability: both were on one machine, against upstream repositories that can move
+under their pins in ways a commit SHA does not catch — a deleted release asset,
+a yanked wheel.
+
 ---
 
 ## Two corpora, two roles
@@ -150,6 +271,13 @@ path are the same string. There is no prefix to normalize, so the silent zero
 cannot occur there, and it is not offered in the cockpit's dataset selector. It
 is what `scripts/clean-quickstart-proof.sh` rebuilds from the official
 quickstart, which is the role it is good at.
+
+Each corpus has its own rebuild script, and they are not interchangeable:
+`scripts/clean-quickstart-proof.sh` for Jaffle Shop, and
+`scripts/ingest-transfermarkt-corpus.sh` for the demo subject — see
+[Rebuild the demo corpus](#rebuild-the-demo-corpus). Reaching for the
+clean-quickstart script to reproduce a Transfermarkt claim rebuilds the wrong
+corpus and quietly proves nothing about the one under inspection.
 
 ---
 
