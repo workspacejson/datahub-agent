@@ -444,11 +444,14 @@ describe("query parameters, and which request they describe", () => {
     // distinction.
     expect(provenance.manifestDerivationParameters.state).toBe("unavailable");
 
-    // They are still shown, under a name that claims nothing about their role.
-    expect(provenance.legacyQueryParameters.state).toBe("declared");
-    if (provenance.legacyQueryParameters.state !== "declared") return;
+    // They are still shown, in a state that claims nothing about their role.
+    // Not `declared`: that is itself a classification, and badging the
+    // unclassifiable with one reasserts the thing known to be unknown.
+    expect(provenance.legacyQueryParameters.state).toBe("legacy");
+    if (provenance.legacyQueryParameters.state !== "legacy") return;
     expect(provenance.legacyQueryParameters.value).toContain("maxDegree");
     expect(provenance.legacyQueryParameters.note).toMatch(/role unknown/i);
+    expect(provenance.legacyQueryParameters.note).not.toMatch(/declared/i);
   });
 
   it("says no executed read was recorded, rather than showing the connection", () => {

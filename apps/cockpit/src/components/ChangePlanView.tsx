@@ -79,7 +79,7 @@ function ParityValue({ value }: { value: EvidenceValue }) {
   if (value.state === "placeholder") return <span className="parity-value parity-value--open">{value.value}</span>;
   // Declared reads as open, not held. The value is real and shown; what is
   // missing is any execution behind it, so it cannot count toward parity.
-  if (value.state === "declared") {
+  if (value.state === "declared" || value.state === "legacy") {
     return <span className="parity-value parity-value--open">{value.value} — {value.note}</span>;
   }
   return <span className="parity-value parity-value--open">Not attested. {value.reason}</span>;

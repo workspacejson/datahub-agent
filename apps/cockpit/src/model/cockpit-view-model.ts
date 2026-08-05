@@ -209,6 +209,10 @@ export const cockpitStateNameSchema = z.enum([
  * - `declared` — a real value that was stated rather than measured. It has
  *   content, so it is not an absence; nothing executed it, so it is not an
  *   observation.
+ * - `legacy` — a real value carried by a superseded contract, whose role that
+ *   contract did not record. Distinct from `declared` because `declared` is
+ *   itself a classification: rendering an unclassifiable value under a
+ *   "Declared" badge reasserts the one thing known to be unknown about it.
  * - `unavailable` — not carried, and the reason says *which* absence it is.
  * - `placeholder` — invented for layout. Rejected outside placeholder mode by
  *   the model refinement below, so this is a parse-time refusal rather than a
@@ -225,6 +229,7 @@ export const cockpitStateNameSchema = z.enum([
 export const evidenceValueSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("observed"), value: z.string().min(1), source: claimSourceSchema, identifier: identifierMetaSchema.optional() }),
   z.object({ state: z.literal("declared"), value: z.string().min(1), note: z.string().min(1) }),
+  z.object({ state: z.literal("legacy"), value: z.string().min(1), note: z.string().min(1) }),
   z.object({ state: z.literal("unavailable"), reason: z.string().min(1) }),
   z.object({ state: z.literal("placeholder"), value: z.string().min(1) }),
 ]);

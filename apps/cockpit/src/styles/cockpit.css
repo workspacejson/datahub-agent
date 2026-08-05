@@ -614,6 +614,11 @@
    under it in the same muted sans as a stated reason. */
 .evidence--declared { display: block; color: var(--text-primary); }
 .evidence--declared .evidence__reason { display: block; }
+/* Same treatment as declared, because the standing is the same: a real value a
+   reader must not take as measured. Only the badge word differs, and that is
+   the entire point of the separate state. */
+.evidence--legacy { display: block; color: var(--text-primary); }
+.evidence--legacy .evidence__reason { display: block; }
 
 .deferred-surface { margin: var(--sp-5) 0; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: var(--sp-5); color: var(--text-muted); }
 details { margin: 0 0 var(--sp-4); color: var(--text-muted); font-size: var(--fs-xs); }

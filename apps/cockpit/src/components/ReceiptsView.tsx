@@ -38,6 +38,18 @@ function Evidence({ value }: { value: EvidenceValue }) {
   // A stated value with no read behind it. It carries no `SourceTag`, because a
   // source tag is an attribution and nothing here measured anything — which is
   // the exact confusion this state was added to end.
+  // Neutral by construction: the badge names the contract the value came from,
+  // never a role. `Declared` here would reassert the classification the note
+  // says was never recorded.
+  if (value.state === "legacy") {
+    return (
+      <span className="evidence evidence--legacy">
+        <span className="evidence__tag">Legacy</span>
+        {value.value}
+        <span className="evidence__reason">{value.note}</span>
+      </span>
+    );
+  }
   if (value.state === "declared") {
     return (
       <span className="evidence evidence--declared">

@@ -162,3 +162,49 @@ it("renders provenance rows without identifier metadata as before", () => {
   // No proof indicator summary should be present in this row
   expect(producerRow?.querySelector("summary.proof-indicator__summary")).toBeNull();
 });
+
+/**
+ * A 1.3 event, whose verification block cannot say whether its parameters
+ * describe the manifest or the read.
+ */
+function legacyProjected() {
+  const event = contractEvent();
+  event.eventVersion = "1.3";
+  event.datahub.lineageObservation.upstreams = {
+    read: "ok",
+    completeness: "complete-against-pinned-manifest",
+    observedCount: event.datahub.upstreams.length,
+    verification: {
+      manifestDigest: "m",
+      expectedSetDigest: "e",
+      observedSetDigest: "e",
+      queryParameters: { surface: "searchAcrossLineage", direction: "UPSTREAM", maxDegree: 4 },
+    },
+  };
+  return { ...projectEvent(event, "receipts"), sourceMode: "committed" as const };
+}
+
+it("badges 1.3 parameters as legacy, never as declared", () => {
+  // The view model can be neutral and the screen can still classify. This
+  // asserts the rendered output, because the badge is what a judge reads and it
+  // was contradicting the note beside it.
+  render(<ReceiptsView model={legacyProjected()} />);
+  const row = screen.getByText("Legacy query parameters").closest("div");
+  expect(row?.textContent).toContain("Legacy");
+  expect(row?.textContent).toContain("Role unknown");
+  expect(row?.textContent).not.toContain("Declared");
+});
+
+it("leaves the declared row unavailable on a 1.3 receipt, rather than filling it", () => {
+  render(<ReceiptsView model={legacyProjected()} />);
+  const row = screen.getByText("Declared query parameters").closest("div");
+  expect(row?.textContent).toContain("Unavailable");
+  expect(row?.textContent).not.toContain("maxDegree");
+});
+
+it("attributes no executed read on a 1.3 receipt", () => {
+  render(<ReceiptsView model={legacyProjected()} />);
+  const row = screen.getByText("Executed query parameters").closest("div");
+  expect(row?.textContent).toContain("Unavailable");
+  expect(row?.textContent).toContain("contract 1.3");
+});

@@ -421,9 +421,10 @@ if (READINESS_MANIFEST) {
         // `searchAcrossLineage` at `maxDegree: 4`, so an auditor rerunning them
         // ran a query this event never ran.
         //
-        // `direction` is added here rather than carried on LINEAGE_QUERY,
-        // because it is a property of the individual read and the contract's
-        // direction invariant reads it from exactly this place.
+        // Direction is not a field added here. Each transport states it in its
+        // own terms inside its own request — `upstream: boolean` for MCP, a
+        // `direction` string for searchAcrossLineage — and `executedDirection`
+        // in the contract is the only place that reads both.
         lineageObservation[key] = { read: "ok", completeness: "complete-against-pinned-manifest", observedCount: observed.length, verification: {
           manifestDigest: readiness.manifestDigest, expectedSetDigest: readiness.expectedSetDigest,
           observedSetDigest: readiness.observedSetDigest,

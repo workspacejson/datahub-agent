@@ -175,6 +175,20 @@ const declared = (value: string, note: string): EvidenceValue => ({
   note,
 });
 
+/**
+ * A value from a superseded contract, whose role that contract did not record.
+ *
+ * Deliberately not `declared`. "Declared" is a classification, and these are
+ * the values whose classification is the thing that was lost — badging them
+ * with one reasserts it on the surface a judge reads, which is the defect this
+ * row exists to avoid.
+ */
+const legacy = (value: string, note: string): EvidenceValue => ({
+  state: "legacy",
+  value,
+  note,
+});
+
 /** `observed` when the event carries the value, `unavailable` with the reason when it does not. */
 function fromNullable(value: string | null | undefined, source: ClaimSource, reason: string, identifier?: IdentifierMeta): EvidenceValue {
   return value ? observed(value, source, identifier) : missing(reason);
@@ -322,9 +336,9 @@ function projectReceipt(event: ChangeImpactEvent, axes: WritebackAxes, viewSourc
       // which request they describe.
       legacyQueryParameters: !verification || hasExecutedRead(verification)
         ? missing("This event records declared and executed parameters separately, so there is no unclassified set.")
-        : declared(
+        : legacy(
             JSON.stringify(legacyQueryParameters(verification)),
-            "Legacy query parameters, role unknown. Contract 1.3 did not record whether these describe the manifest or the read.",
+            "Role unknown. Contract 1.3 did not record whether these describe the manifest or the read.",
           ),
       producerPath: fromNullable(event.code.repositoryRelativePath, "workspace.json", `The producing file was not resolved to a repository path (method: ${event.code.method}).`),
       immutableSourceUrl: viewSourceToEvidence(viewSource),
