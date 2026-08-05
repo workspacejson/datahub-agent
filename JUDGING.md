@@ -219,30 +219,42 @@ holds:
 node scripts/capture-catalog-baseline.mjs --gms http://localhost:8080
 ```
 
-That is a **point-in-time capture, not a readiness assertion**. It is read-only,
-it exits 0 whether or not the index has settled, it asserts nothing against the
-committed manifests, and its console line prints only the first 16 characters of
-each digest. Confirmation is the comparison you make against what it writes to
-`evaluation/hac-248/catalog-baseline-<timestamp>.json`. Find the
-`duck.dev.game_events` entry under `subjects` and check both digests:
+That command **records** a snapshot; it does not check one, and it exits 0
+either way. To confirm the index has settled, compare the two lineage digests it
+writes against the committed readiness manifests: matching digests mean the
+catalog now holds the topology the fixtures describe. If they differ, the index
+is still settling or the ingest was incomplete — wait and capture again.
+
+<details>
+<summary>The exact comparison, and an automated alternative</summary>
+
+The capture writes `evaluation/hac-248/catalog-baseline-<timestamp>.json`. Find
+the `duck.dev.game_events` entry under `subjects` and check both digests — the
+console line prints only their first 16 characters, so read the file rather than
+the terminal:
 
 | Capture field | Must equal | Committed source |
 | --- | --- | --- |
 | `upstream.setDigest` | `888a1578…b784dc6` | `test/fixtures/readiness/game_events.upstream.json` → `expectedSetDigest` |
 | `downstream.setDigest` | `0bd21096…7457c260` | `test/fixtures/readiness/game_events.downstream.json` → `expectedSetDigest` |
 
-The capture uses the same digest recipe as
-`scripts/derive-readiness-manifest.mjs` — `sha256` over the sorted URN set — so
-the values are directly comparable. If either differs, the index has not settled
-or the ingest was incomplete: wait and run the capture again. It is a series
-instrument by design, and one observation of a moving system cannot establish
-that it has stopped moving.
+The recipe is shared with `scripts/derive-readiness-manifest.mjs` — `sha256`
+over the sorted URN set — so the values are directly comparable. The capture is
+a series instrument by design: one observation of a moving system cannot
+establish that it has stopped moving.
 
-For the same check with bounded polling rather than by hand, emit an event
-against the pinned manifest — `scripts/emit-change-impact-event.mjs <urn>
---readiness-manifest test/fixtures/readiness/game_events.upstream.json` — which
-polls to a deadline and only upgrades completeness to
-`complete-against-pinned-manifest` once the observed and expected sets are equal.
+For the same check with bounded polling instead of by hand, emit an event
+against the pinned manifest:
+
+```bash
+node scripts/emit-change-impact-event.mjs <urn> \
+  --readiness-manifest test/fixtures/readiness/game_events.upstream.json
+```
+
+It polls to a deadline and upgrades completeness to
+`complete-against-pinned-manifest` only once the observed and expected sets are
+equal.
+</details>
 
 **What is verified, and what is not.** `--build-only` has been run from a clean
 clone twice — on 2026-08-02 and again on 2026-08-05 — reproducing the counts and
@@ -288,15 +300,27 @@ corpus and quietly proves nothing about the one under inspection.
   by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still
   carries `not-established` because no readiness manifest was derived for it.
   Observed counts are not exhaustiveness claims on their own.
-- **No co-change evidence at all.** The producer used here,
-  `@workspacejson/cli@0.5.0`, emits no commit-graph evidence — `generated.coChange`
-  is specified by the spec and left unemitted — so it is absent from every
-  artifact in this repository and Tally asserts no behavioral partners.
-  Separately, the *root* corpus (Jaffle Shop) has 92 commits over five years, so
-  any co-change figure drawn from it would be illustrative rather than
-  statistical. The nested corpus (Transfermarkt) is not shallow — roughly seven
-  years of history — so its absence of co-change has the first cause, not the
-  second.
+- **Behavioral partners are not asserted.** The pinned CLI does not yet emit
+  co-change evidence, so Tally has no such records to consume and does not
+  guess. Transfermarkt has sufficient git history; the limitation is evidence
+  production, not repository depth.
+
+  <details>
+  <summary>Which producer, which field, and the corpus figures</summary>
+
+  `generated.coChange` is defined by `@workspacejson/spec` v0.4 and left
+  unemitted by `@workspacejson/cli@0.5.0`, the producer pinned here — its own
+  changelog records `coChange` and `fragility` as unemitted. The field is
+  therefore absent from every committed workspace artifact, and both golden
+  fixtures carry `partners: []` alongside an `indeterminate` entry naming the
+  cause rather than an empty list a reader could mistake for a finding.
+
+  Corpus depth, for the record: Transfermarkt has roughly seven years of
+  history, first commit 2019-08-04. Jaffle Shop, the root regression corpus, has
+  92 commits over about five years, so a co-change figure drawn from *it* would
+  be illustrative rather than statistically strong. Neither figure is the reason
+  partners are absent.
+  </details>
 - **No `externalUrl` workaround.** The gap is stated, not papered over. The fix
   is filed upstream.
 - **No credential in any committed artifact.** The live evidence package
