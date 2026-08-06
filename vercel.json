@@ -4,8 +4,11 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "apps/cockpit/dist",
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/impact", "destination": "/index.html" },
+    { "source": "/change-plan", "destination": "/index.html" },
+    { "source": "/receipts", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -53,6 +56,12 @@
     },
     {
       "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/404.html",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]

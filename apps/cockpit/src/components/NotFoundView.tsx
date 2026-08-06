@@ -36,8 +36,24 @@ import { Wordmark } from "./Wordmark";
  */
 const PATH_DISPLAY_LIMIT = 96;
 
-export function NotFoundView({ path, onReturn }: { path: string; onReturn(): void }) {
-  const shown = path.length > PATH_DISPLAY_LIMIT ? `${path.slice(0, PATH_DISPLAY_LIMIT)}…` : path;
+/**
+ * Both props are optional, because this component has two producers.
+ *
+ * `App` renders it with both: it knows the path the reader asked for, and the
+ * return is an in-app navigation. `vite.config.ts` also renders it to static
+ * markup at build time for `404.html`, the document Vercel serves with a real
+ * 404 status, and that document is one file answering every unmatched path --
+ * so at build time there is no path to name and no app state to update.
+ *
+ * The static document says so rather than guessing: "No route is bound to this
+ * path." The script then boots the app on the same URL, which knows the path and
+ * states it. What a reader sees with JavaScript disabled is the true subset of
+ * what they see with it enabled, never a different claim.
+ */
+export function NotFoundView({ path, onReturn }: { path?: string; onReturn?(): void }) {
+  const shown = path !== undefined && path.length > PATH_DISPLAY_LIMIT
+    ? `${path.slice(0, PATH_DISPLAY_LIMIT)}…`
+    : path;
 
   /*
     A real link, not a button styled as one. It can be copied, opened in a new
@@ -47,6 +63,7 @@ export function NotFoundView({ path, onReturn }: { path: string; onReturn(): voi
     the browser for modified and non-primary clicks.
   */
   const returnToReview = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (onReturn === undefined) return;
     if (event.defaultPrevented || event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -80,7 +97,9 @@ export function NotFoundView({ path, onReturn }: { path: string; onReturn(): voi
           <h1 id="not-found-title" className="not-found__code">404</h1>
           <p className="eyebrow">Nothing to count here</p>
           <p className="not-found__path">
-            No route is bound to <span className="mono">{shown}</span>.
+            {shown === undefined
+              ? "No route is bound to this path."
+              : <>No route is bound to <span className="mono">{shown}</span>.</>}
           </p>
           <a className="cta not-found__return" href="/" onClick={returnToReview}>
             Go to the impact review

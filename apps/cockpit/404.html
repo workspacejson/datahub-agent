@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      The document Vercel serves, with a real 404 status, for any path that
+      matches no route and no file. One document answers every unmatched path,
+      so it cannot name the path in its markup; the script below boots the app
+      on the same URL, which can, and states it.
+
+      The title says what happened rather than naming a dataset. `App.tsx`
+      rewrites it to the same sentence once it has read the location, so the tab
+      reads identically with the script and without it.
+    -->
+    <title>tally · no route at this path</title>
+    <meta name="description" content="No route is bound to this path." />
+    <!-- Not indexable: this document exists for every path that has no page. -->
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#07100e" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href="/brand/tally-mark-16.svg" type="image/svg+xml" sizes="any" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <!--
+    `#root` is not empty in the built document: `vite.config.ts` renders
+    `NotFoundView` to static markup into it at build time. A reader whose script
+    fails, or who has JavaScript off, still gets the refusal and the way back --
+    which is the whole claim of this page, and the one it must not need a bundle
+    to keep.
+  -->
+  <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+</html>
