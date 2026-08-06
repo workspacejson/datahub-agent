@@ -87,7 +87,8 @@ is listed here so the figure has one accurate home rather than an alarming one.
 | Root fixture: lineage completeness | `not-established` | `test/fixtures/golden/change-impact-event.root.json` | `jq '.datahub.lineageObservation.upstreams.completeness' test/fixtures/golden/change-impact-event.root.json` |
 | Nested fixture: `projectPrefix` | `dbt` | `test/fixtures/golden/change-impact-event.nested.json` | `jq '.code.projectPrefix' test/fixtures/golden/change-impact-event.nested.json` |
 | Nested fixture: path difference | `dbt/` prefix | `test/fixtures/golden/change-impact-event.nested.json` | `jq '.code | .repositoryRelativePath != .dbtFilePath' test/fixtures/golden/change-impact-event.nested.json` |
-| Contract version | `1.3` | `src/integration/change-impact-event.ts` | `grep CHANGE_IMPACT_EVENT_VERSION src/integration/change-impact-event.ts` |
+| Contract version | `1.4` | `src/integration/change-impact-event.ts` | `grep CHANGE_IMPACT_EVENT_VERSION src/integration/change-impact-event.ts` |
+| Versions a reader still validates | `1.3`, `1.4` | `src/integration/change-impact-event.ts` `READABLE_EVENT_VERSIONS` | `grep -A2 'READABLE_EVENT_VERSIONS =' src/integration/change-impact-event.ts` |
 | Both fixtures pass contract validation | yes | `test/integration/golden-fixture.test.ts` | `npm test` |
 
 ## Live evidence package (HAC-152)
@@ -174,7 +175,7 @@ finding.
 | Claim | Value | Source | Verify |
 | -- | -- | -- | -- |
 | Cockpit architecture boundary | committed events cross Zod into `CockpitViewModel`; no browser-loaded module reaches the network; the three routes render offline | `docs/cockpit-architecture.md`, `apps/cockpit/src/data/architecture-invariants.test.ts` | `npm run test:cockpit` |
-| Components accept only `CockpitViewModel` | yes | `apps/cockpit/src/data/from-change-impact-event.ts` | `npm run test:cockpit` |
+| Components accept only `CockpitViewModel` | yes | `apps/cockpit/src/model/from-change-impact-event.ts` | `npm run test:cockpit` |
 | No browser-loaded module can reach the network | yes | `apps/cockpit/src/data/architecture-invariants.test.ts` — "keeps every module the browser loads free of network calls" | `npm run test:cockpit` |
 | No stylesheet loads a remote font or asset | yes | `apps/cockpit/src/data/architecture-invariants.test.ts` | `npm run test:cockpit` |
 | The committed build never leaves its origin | yes | `apps/cockpit/e2e/first-frame.spec.ts` — "the committed build renders the golden subject and never leaves its origin" | `npm run e2e` *(manual — requires browsers)* |
