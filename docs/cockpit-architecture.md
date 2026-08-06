@@ -126,3 +126,23 @@ both deliberate:
 Recorded here rather than only in the issue, for the same reason the motion beat
 order is recorded in `tally-architecture-motion.md`: a ruling that lives beside
 the losing statement lets the next consumer pick either one.
+
+### Refused a second time, 2026-08-06
+
+`Screen reduction spec.dc.html` proposes the same demotion in a different shape:
+five causally ordered receipt bands with "Not written, or still unknown" placed
+**last**, on the reasoning that residuals are "the closing statement of the
+receipt, which is where a reviewer looks for what is missing."
+
+Refused, and the reasoning above is unchanged by the new shape. Leading with the
+absence is not a claim about where a reviewer looks; it is a claim about what
+outranks what. A receipt that opens with what it checked and closes with what it
+could not establish reads as a process log with a caveat appended, which is the
+exact reading HAC-218 ruled against. The rest of that spec's Receipts proposal
+is compatible and was not implemented only because it travels with the reorder.
+
+This is now the second distinct canvas to propose it, which is why the refusal is
+recorded here with the proposal named rather than left in a commit message. The
+first refusal cited the canvas by name and a later spec still arrived proposing
+it, so naming this one too is the cheapest thing that makes a third proposal
+answerable by reading rather than by re-litigating.

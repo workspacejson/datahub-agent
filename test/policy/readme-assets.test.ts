@@ -168,14 +168,28 @@ describe("the README shows the new assets and not the ones they replaced", () =>
 });
 
 describe("the README's images appear in the narrative order", () => {
-  it("runs product, walkthrough, poster, HAC-150, context gap, architecture, node accounting, feedback", () => {
+  it("runs product, walkthrough, HAC-150, context gap, architecture, contribution poster, node accounting, feedback", () => {
+    /*
+      The poster moved, and the order moved with it.
+
+      It used to sit third, illustrating the silent-failure section, because the
+      frame it captured held the naive join beside the resolved path. The cockpit
+      reduction pass moved the naive join below the fold on Impact, so the frame
+      no longer shows it and the poster no longer illustrates that section. It now
+      captures the contribution band, which is exactly the claim "What each side
+      contributes" makes, and it is placed there.
+
+      A poster captioned "the naive join returns zero matches" over an image
+      containing no naive join was the alternative, and that is the failure this
+      whole ordering guard exists to make visible rather than tolerable.
+    */
     const expected = [
       "readme-tally-hero-1280x440",
       "readme-walkthrough-1440x1100/",
-      "readme-poster-impact-2560x756",
       "readme-hac-150-paired-evaluation-1400x620",
       "readme-context-gap-1200x780",
       "readme-cockpit-architecture-boundary-1800x1100",
+      "readme-poster-impact-2560x642",
       "readme-node-accounting-1200x780",
       "readme-datahub-feedback-synthesis-1400x1110",
     ];

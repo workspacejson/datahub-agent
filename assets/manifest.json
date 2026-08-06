@@ -1194,12 +1194,12 @@
       }
     },
     {
-      "id": "readme-poster-impact-2560x756",
-      "title": "README product poster, Impact band (2560 x 756)",
-      "storyBeat": "Opens the README: the silent join failure and its resolution, in one frame from the shipped cockpit.",
-      "intendedConclusion": "A naive path join returns nothing and exits 0; Tally resolves the same dataset to an exact repository path at a pinned revision. Coverage remains unestablished and is shown as such.",
-      "canonicalPath": "assets/exports/readme-poster-impact-2560x756/readme-poster-impact-2560x756.png",
-      "sha256": "f7c5061de2d6d120610e5589f8a02c0c0c8ad871ae63e4a8c4a284b24db99c45",
+      "id": "readme-poster-impact-2560x642",
+      "title": "README product poster, contribution band (2560 x 642)",
+      "storyBeat": "Names the contributors: the dataset under review, the exact file it resolved to, and which system supplied each fact, in one frame from the shipped cockpit.",
+      "intendedConclusion": "The dataset resolves to an exact repository file at a pinned revision, and every fact on the frame carries the system that supplied it: DataHub the identity and declared lineage, workspace.json the repository prefix and revision, Tally the join between them.",
+      "canonicalPath": "assets/exports/readme-poster-impact-2560x642/readme-poster-impact-2560x642.png",
+      "sha256": "1af3345c06832084430c6e6f8a0467bb6c4135c9c9872ae7252d5f7028d4153e",
       "claimIds": [
         "TALLY-CLAIM-002",
         "TALLY-CLAIM-004",
@@ -1207,32 +1207,32 @@
       ],
       "sourceType": "captured-from-committed-build",
       "export": {
-        "filename": "readme-poster-impact-2560x756.png",
+        "filename": "readme-poster-impact-2560x642.png",
         "format": "png",
         "width": 2560,
-        "height": 756,
-        "aspectRatio": "10:3",
+        "height": 642,
+        "aspectRatio": "20:5",
         "colorMode": "RGB, 8-bit per channel, sRGB",
         "safeArea": null,
         "cssViewport": {
           "width": 1280,
-          "height": 378
+          "height": 321
         },
         "deviceScaleFactor": 2,
         "colorScheme": "dark"
       },
-      "proposedCaption": "The naive join returns zero matches and exits cleanly. Tally resolves the same dataset to `dbt/models/curated/game_events.sql` through a manifest join at the pinned revision.",
-      "proposedAltText": "Tally change-impact cockpit comparing a silent naive join with a resolved repository path. The naive join reports zero matches, no error, no warning, and exit code 0. Beside it, Tally resolves the same dataset to dbt/models/curated/game_events.sql through a manifest join at pinned revision 59fa295c. The status strip also shows coverage is not established and three limitations remain.",
+      "proposedCaption": "Every fact on this frame names the system that supplied it. DataHub gives identity and declared lineage, `workspace.json` gives the missing `dbt/` prefix at a pinned revision, and Tally is the join between them.",
+      "proposedAltText": "Tally change-impact cockpit, Impact view. A three-step rail reads 01 Impact, 02 Change plan, 03 Receipts, with Impact current. Below it the dataset under review, game_events, under the label evidence review before any edit. To its right the source under review is marked exact: dbt/models/curated/game_events.sql with the dbt/ prefix highlighted, pinned revision 59fa295c, attributed to workspace.json. A band of three cells names who contributed what. DataHub supplied dataset identity and declared lineage, 8 upstream and 1 downstream declared edges. workspace.json supplied the repository file and the revision it is bound to, the missing dbt/ prefix read at 59fa295c. Tally joined the two coordinate systems and compared the plans, and the writeback was observed in DataHub on reread.",
       "approvalState": "approved",
       "publicUse": "allowed",
       "productEvidenceRevision": {
-        "productRevision": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+        "productRevision": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
       },
       "isQuantitative": true,
-      "stalenessRule": "Regenerate with `npm run build && node scripts/capture-readme-assets.mjs` whenever the Impact hero, the outcome bar, or the bound event changes. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
+      "stalenessRule": "Regenerate with `npm run build && node scripts/capture-readme-assets.mjs` whenever the subject band, the contribution band, or the bound event changes. The crop is anchored on `.spine` and `.contribution-band`; the six-cell outcome bar it was previously anchored on was removed in the cockpit reduction pass. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
       "limitations": [
-        "The capture requires a 1280 CSS-pixel viewport. At narrower widths the outcome bar reflows to three columns by two rows and the hero stacks, which destroys the side-by-side naive-join and resolved comparison this frame exists to make. The width is part of the reproducible method, not an incidental setting.",
+        "The capture requires a 1280 CSS-pixel viewport. Below 1100 the contribution band reflows to two columns and then to one, and the subject band stacks, which destroys the side-by-side attribution this frame exists to show. The width is part of the reproducible method, not an incidental setting.",
         "Dark scheme only. The cockpit ships one surface and the capture pins `colorScheme: dark`, so there is no light-theme variant of this asset.",
         "A crop of a live surface, not a composition. It shows what the Impact route rendered at the recorded commit and asserts nothing beyond that frame.",
         "Coverage is not established in the frame and the asset must never be captioned as though lineage were complete.",
@@ -1249,24 +1249,24 @@
       "editableSource": {
         "type": "generated-in-repository",
         "repository": "workspacejson/datahub-agent",
-        "commitOrRef": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+        "commitOrRef": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
         "path": "scripts/capture-readme-assets.mjs",
-        "sha256": "5a34c2462ae70738d84950c4461420cebd1d13cdaf1314903e75989a4d55cad0",
+        "sha256": "2571a6c8682e616932b8e26dd09c0775a67819d63e6ecaae2c96a450f9624edd",
         "detail": "Regenerated by a checked-in script from a committed-mode production build: `npm run build && node scripts/capture-readme-assets.mjs`. The script refuses to run on a dirty tree, so the recorded commit always describes the source state the bytes were produced from. That is the parent commit rather than the commit carrying the asset, because a commit cannot contain its own hash, and it is a commit that survives squash-merge onto main."
       },
       "generatedAt": {
-        "value": "2026-08-04T02:27:12.340Z",
-        "source": "Filesystem mtime of the export. The capture script wrote the PNG and assets/exports/readme-poster-impact-2560x756/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
+        "value": "2026-08-06T11:38:17.619Z",
+        "source": "Filesystem mtime of the export. The capture script wrote the PNG and assets/exports/readme-poster-impact-2560x642/capture.json in the same run, so this is when the file was produced rather than when it was noticed."
       },
-      "refreshTrigger": "Regenerate when the Impact hero, outcome bar, bound event, or design tokens change.",
+      "refreshTrigger": "Regenerate when the subject band, contribution band, bound event, or design tokens change.",
       "publicDestination": {
         "url": null,
         "uploadReceipt": null,
         "verifiedLoggedOut": false,
         "detail": "Not published. Pending README placement and rendering review."
       },
-      "supersedes": [],
-      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. The Impact poster, placed in the README's silent-failure section by this change."
+      "supersedes": ["readme-poster-impact-2560x756"],
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, and re-approved it on 2026-08-06 after the cockpit reduction pass changed the frame. The re-approval was explicit: the height gate refused the first capture because the band had changed shape, the owner was given the measured options and chose to accept the new crop, and the caption and alt text were rewritten from the produced image rather than carried over. The frame no longer contains the naive join or the coverage line, so it also moved out of the silent-failure section into \"What each side contributes\", which is the claim it makes. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. Supersedes readme-poster-impact-2560x756."
     },
     {
       "id": "readme-walkthrough-1440x1100",
@@ -1274,7 +1274,7 @@
       "storyBeat": "The category proof: one click takes an agent from refusing an edit to proposing a checkable one.",
       "intendedConclusion": "With DataHub-only context the plan refuses, because the repository-relative source location is unknown. With joined context the same task produces an edit bound to an exact file at a pinned revision. Coverage remains unestablished in both.",
       "canonicalPath": "assets/exports/readme-walkthrough-1440x1100/readme-walkthrough-1440x1100.gif",
-      "sha256": "ce2767bb8edd5544a50cc88d6ded4ef879690961bb29cf8e10c84c5e96f08745",
+      "sha256": "60d50fa9a3bf6171406478590a532bd604babc8220e2b4fbafa0b57b9dbe0dec",
       "claimIds": [
         "TALLY-CLAIM-002",
         "TALLY-CLAIM-005",
@@ -1292,21 +1292,21 @@
         "frames": 4,
         "durationSeconds": 8.04,
         "loops": false,
-        "bytes": 281172
+        "bytes": 240228
       },
       "proposedCaption": "One click. With DataHub-only context the plan refuses the edit because the repository-relative source location is unknown. With joined context the same task adds the quality check at `dbt/models/curated/game_events.sql`, pinned to revision 59fa295c.",
-      "proposedAltText": "An eight-second walkthrough of the Tally change-impact cockpit. It opens on the Impact view, where the DataHub coordinate carries no project prefix and the repository coordinate resolves to dbt/models/curated/game_events.sql. One click on Continue to change plan moves to the plan comparison. There, DataHub-only context refuses to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed, while joined context adds it using that source at pinned revision 59fa295c. The status strip shows coverage is not established throughout.",
+      "proposedAltText": "An eight-second walkthrough of the Tally change-impact cockpit. It opens on the Impact view, where the dataset game_events resolves to dbt/models/curated/game_events.sql at pinned revision 59fa295c, and below that a naive join reports zero matches, no error, no warning, and exit code 0 while the DataHub coordinate carries no project prefix. One click on Continue to change plan moves to the plan comparison. There, DataHub-only context refuses to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed, while joined context adds it using that source at pinned revision 59fa295c. The scope strip shows lineage completeness is not established throughout.",
       "approvalState": "approved",
       "publicUse": "allowed",
       "productEvidenceRevision": {
-        "productRevision": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+        "productRevision": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
       },
       "isQuantitative": true,
-      "stalenessRule": "Regenerate with `npm run build && node scripts/capture-readme-assets.mjs` whenever the Impact view, the Change plan comparison, the decision rail, or the bound event changes. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
+      "stalenessRule": "Regenerate with `npm run build && node scripts/capture-readme-assets.mjs` whenever the Impact view, the Change plan comparison, the decision band, or the bound event changes. Recalculate the byte hash and re-review approval, public-use, caption and alt text on every change.",
       "limitations": [
         "A GIF cannot read the viewer prefers-reduced-motion setting. This capture is taken under reducedMotion: reduce so the calmer behaviour is the one shipped, but a viewer who needs reduced motion cannot opt out of what is baked in. The static poster frame carries the opening state for anyone who cannot use the animation.",
-        "A 1440 CSS-pixel viewport is required to preserve the complete stated-gaps list and the refusal-versus-action comparison without clipping. Narrower widths trigger the product's compact gap-list layout, which is valid for the application but unsuitable for this walkthrough frame.",
+        "A 1440 CSS-pixel viewport is required to preserve the complete named-residual list and the refusal-versus-action comparison without clipping. Narrower widths trigger the product's compact scope-strip layout, which is valid for the application but unsuitable for this walkthrough frame.",
         "Does not loop. It plays once and holds the closing frame, which is where the claim is. Any tool that re-loops it changes the asset behaviour.",
         "Dark scheme only, no audio, no narration, and no captions track.",
         "Shows two of the three routes. Receipts is deliberately absent: it is too dense to read at this runtime, and it is reached from the product rather than from this asset.",
@@ -1324,16 +1324,16 @@
       "editableSource": {
         "type": "generated-in-repository",
         "repository": "workspacejson/datahub-agent",
-        "commitOrRef": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+        "commitOrRef": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
         "path": "scripts/capture-readme-assets.mjs",
-        "sha256": "5a34c2462ae70738d84950c4461420cebd1d13cdaf1314903e75989a4d55cad0",
+        "sha256": "2571a6c8682e616932b8e26dd09c0775a67819d63e6ecaae2c96a450f9624edd",
         "detail": "Regenerated by a checked-in script from a committed-mode production build: `npm run build && node scripts/capture-readme-assets.mjs`. The script refuses to run on a dirty tree, so the recorded commit always describes the source state the bytes were produced from. That is the parent commit rather than the commit carrying the asset, because a commit cannot contain its own hash, and it is a commit that survives squash-merge onto main."
       },
       "generatedAt": {
-        "value": "2026-08-04T02:40:33.447Z",
+        "value": "2026-08-06T11:38:20.116Z",
         "source": "Filesystem mtime of the export, written by the capture script in the run that produced it."
       },
-      "refreshTrigger": "Regenerate when either route in the sequence, the decision rail, the bound event, or the design tokens change.",
+      "refreshTrigger": "Regenerate when either route in the sequence, the decision band, the bound event, or the design tokens change.",
       "publicDestination": {
         "url": null,
         "uploadReceipt": null,
@@ -1341,7 +1341,7 @@
         "detail": "Not published. Pending README placement and rendering review."
       },
       "supersedes": [],
-      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, in the instruction that directed this README implementation. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed. The product walkthrough, placed in the README's product section by this change."
+      "approvalRecord": "Owner Qwynn Marcelle approved this asset for use in this repository's GitHub README on 2026-08-04, and re-approved it on 2026-08-06 after the cockpit reduction pass. The bytes were recaptured from the reduced cockpit and the alt text corrected: it described a status strip that the reduction removed, and now names the scope strip that carries the completeness claim. The opening frame was re-measured at 1440x1100 and still holds the naive join and both coordinate rows wholly in view, so the rest of the description stands. Scoped to the GitHub README: website, Devpost and video use were explicitly left unchanged and remain unreviewed."
     },
     {
       "id": "readme-walkthrough-1440x1100-poster",
@@ -1349,7 +1349,7 @@
       "storyBeat": "The still shown before the walkthrough plays: the Impact view exactly as playback begins.",
       "intendedConclusion": "The catalog coordinate cannot name a file; the repository coordinate resolves the same dataset to an exact path. Three gaps are named rather than hidden.",
       "canonicalPath": "assets/exports/readme-walkthrough-1440x1100-poster/readme-walkthrough-1440x1100-poster.png",
-      "sha256": "238078243211c3fd85ba7789ff97c5ebaef1250b9d0957e0dbdf9b10caa20c3d",
+      "sha256": "30a7c9f8ce2d5d39f75d597d9ea39722275f50a9c2e0fc422dc982217e98705a",
       "claimIds": [
         "TALLY-CLAIM-002",
         "TALLY-CLAIM-004",
@@ -1370,7 +1370,7 @@
       "approvalState": "approved",
       "publicUse": "allowed",
       "productEvidenceRevision": {
-        "productRevision": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+        "productRevision": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
         "evidenceRevision": "59fa295c51fc23466f3a71542f8bf3d1335daa83"
       },
       "isQuantitative": true,
@@ -1393,13 +1393,13 @@
       "editableSource": {
         "type": "generated-in-repository",
         "repository": "workspacejson/datahub-agent",
-        "commitOrRef": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+        "commitOrRef": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
         "path": "scripts/capture-readme-assets.mjs",
-        "sha256": "5a34c2462ae70738d84950c4461420cebd1d13cdaf1314903e75989a4d55cad0",
+        "sha256": "2571a6c8682e616932b8e26dd09c0775a67819d63e6ecaae2c96a450f9624edd",
         "detail": "Regenerated by a checked-in script from a committed-mode production build: `npm run build && node scripts/capture-readme-assets.mjs`. The script refuses to run on a dirty tree, so the recorded commit always describes the source state the bytes were produced from. That is the parent commit rather than the commit carrying the asset, because a commit cannot contain its own hash, and it is a commit that survives squash-merge onto main."
       },
       "generatedAt": {
-        "value": "2026-08-04T02:40:33.450Z",
+        "value": "2026-08-06T11:38:20.119Z",
         "source": "Filesystem mtime of the export, written by the capture script in the run that produced the walkthrough."
       },
       "refreshTrigger": "Regenerate with the walkthrough.",

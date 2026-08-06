@@ -1,6 +1,7 @@
 import type { CockpitViewModel, EvidenceValue } from "../model/cockpit-view-model";
 import { Database, FileSearch2, GitMerge, Link2 } from "lucide-react";
 import { Icon } from "./Icon";
+import { PlanDelta } from "./PlanDelta";
 import { ProofPopover } from "./ProofPopover";
 import { SourceTag } from "./SourceTag";
 
@@ -58,20 +59,16 @@ function formatList(items: string[]): string {
   return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
-/**
- * The first entry of a plan, promoted so the two plans can be compared without
- * reading both lists to the bottom. It is labelled as what it is: the first
- * planned action, not the plan's decision.
- */
-function firstAction(steps: string[]) {
-  if (steps.length === 0) return null;
-  return (
-    <div className="first-action">
-      <p className="first-action__label">First planned action</p>
-      <p className="first-action__value">{steps[0]}</p>
-    </div>
-  );
-}
+/*
+  `firstAction` is gone from this route, and so is `reversal-label`.
+
+  Both existed so the two plans could be compared without reading each list to
+  the bottom: the first entry of each was promoted above its panel, and a label
+  said when they differed. `PlanDelta` now opens the route with exactly that
+  comparison, in the same component the first frame uses, so the promotion was
+  the same two strings restated a few hundred pixels lower. The panels keep the
+  full ordered lists, which is what they are for.
+*/
 
 /** A control dimension in the disclosure, showing its state when it has no value. */
 function ParityValue({ value }: { value: EvidenceValue }) {
@@ -117,6 +114,28 @@ function EvaluationCitation() {
         DataHub-only produced five distinct normalized step sequences across 10 runs. Joined
         context produced one.
       </p>
+      {/*
+        The bounds, on the same card as the result.
+
+        The two sentences above are cited from a real ten-pair experiment, and
+        every figure in them reproduces from `evaluation/hac-150/` with the
+        verification commands in `docs/claims.md`. What the card did not say is
+        how narrow the experiment is, and it sits directly under the parity
+        caveat for the single on-screen comparison -- so a reader meeting "10
+        controlled paired runs" next to "controls not established" can read the
+        citation as the more rigorous of the two without ever learning it is one
+        task and one model.
+
+        Every value here is recorded: `manifest.json` carries the task, the model
+        and `{"temperature": 0}`, and `aggregate.json` records the counterbalance
+        as 5 pairs assigned to each arm order. README limitation 7 states the same
+        bound; this is the surface a judge is actually on.
+      */}
+      <p className="evaluation-claim__scope">
+        Scope: one task, one model, temperature 0, arm order counterbalanced 5 and 5. A
+        controlled comparison on the pinned corpus, not a significance test and not a claim
+        about model families.
+      </p>
       <a
         className="evaluation-claim__source"
         href="https://github.com/workspacejson/datahub-agent/tree/main/evaluation/hac-150"
@@ -144,28 +163,17 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
   }
 
   const parity = parityControls(model, comparison);
-  const [firstDatahub] = comparison.datahubOnlySteps;
-  const [firstJoined] = comparison.joinedSteps;
-  const firstStepChanged = firstDatahub !== undefined && firstJoined !== undefined && firstDatahub !== firstJoined;
 
   return (
     <section aria-label="Plan comparison">
       {/*
-        Causal copy is gated on the controls. "What the join added" says the
-        workspace context is what changed the plan, which is only sayable if the
-        run held everything else constant. When it did not, the plans are still
-        worth showing -- they are what was recorded -- but the sentence that
-        explains them is not.
+        The route opens on the decisive delta, in the same component the first
+        frame uses, and the tab's own subtitle now names the job the heading
+        states in full. "The two plans as recorded. What differs is shown below."
+        was a caption for a layout rather than a claim about evidence, and the
+        delta says the same thing by being it.
       */}
-      {/*
-        Unconditional and descriptive. This line used to carry the causal claim
-        ("What the join added") gated on `parityControls`, which was the wrong
-        truth condition: parity establishes that the comparison was fair, not
-        what the join caused. A fair comparison of one run is still one run.
-        The measured claim moved to the cited block below, where it is bound to
-        an evaluation rather than to this render.
-      */}
-      <p className="route-intro">The two plans as recorded. What differs is shown below.</p>
+      <PlanDelta model={model} heading="How joined evidence changed the agent's plan" />
 
       {/*
         The assertion stays visible; only its verification collapses. Hiding the
@@ -233,21 +241,10 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
       </div>
       </details>
 
-      {/*
-        "First step changed", not "decision changed". The two values below are
-        the first entry of each plan and nothing in the model calls either one a
-        decision -- naming them that would assert a disposition the artifact does
-        not record, and it would put a second source of truth beside the step
-        lists that could contradict them. The label states exactly what was
-        compared, and only when the two actually differ.
-      */}
-      {firstStepChanged && <p className="reversal-label">First step changed</p>}
-
       <div className="comparison">
         <article className="plan-panel">
           <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub only</span></p>
           <h3>Declared context alone</h3>
-          {firstAction(comparison.datahubOnlySteps)}
           {/* Index keys: two plan steps may legitimately carry identical text, and the
               list is static per render, so position is the stable identity. */}
           <ol>{comparison.datahubOnlySteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
@@ -255,7 +252,6 @@ export function ChangePlanView({ model }: { model: CockpitViewModel }) {
         <article className="plan-panel plan-panel--joined">
           <p className="eyebrow"><Icon icon={GitMerge} className="semantic-icon" /> <span>Joined context</span></p>
           <h3>Declared context plus repository evidence</h3>
-          {firstAction(comparison.joinedSteps)}
           <ol>{comparison.joinedSteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
         </article>
       </div>

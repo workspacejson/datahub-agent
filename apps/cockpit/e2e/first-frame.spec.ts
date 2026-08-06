@@ -26,10 +26,12 @@ import { COMMITTED_ORIGIN } from "../playwright.config";
 const VIEWPORTS = [{ width: 1440, height: 900 }, { width: 1280, height: 800 }];
 
 /**
- * Mobile viewports where the layout collapses to a single column and the rail
- * becomes static. The failure must still be visible above the fold; the CTA is
- * expected to be below the fold here because the rail follows the main content
- * in flow, which is the correct trade for a narrow screen.
+ * Mobile viewports where every band collapses to a single column.
+ *
+ * The frame is shorter here, not compressed: the subject, what it resolved to
+ * and the three contributions fit, and the delta, the decision and the scope
+ * strip follow in the same order below the fold. The CTA is expected to be below
+ * it, which is the correct trade for a narrow screen.
  */
 const MOBILE_VIEWPORTS = [{ width: 390, height: 844 }];
 
@@ -95,19 +97,66 @@ for (const viewport of VIEWPORTS) {
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height - FOLD_HEADROOM);
 
     // The frame must not buy the CTA's place by dropping what the reader needs
-    // to judge it. All four have to be in the same unscrolled frame.
-    // The coverage panel now carries the epistemic state and the thesis together,
-    // which is the point of collapsing three registers into one. It is still
-    // asserted, so dropping either would fail here.
+    // to judge it. All of these have to be in the same unscrolled frame.
+    // The labels outlived the elements that carried them: coverage moved from a
+    // hero panel to the scope strip and the gaps from a sticky rail to the
+    // decision band, and both kept their names so this guard did not have to be
+    // rewritten to keep asserting the same thing.
     for (const locator of [
-      page.getByRole("heading", { level: 1 }),                       // dataset identity
-      page.getByLabel("Coverage of this review"),                    // epistemic state + how much is known
-      page.getByLabel("Stated gaps and next action"),                // material gaps
+      page.getByRole("heading", { level: 1 }),                        // dataset identity
+      page.getByLabel("Standing of this review"),                     // what it resolved to
+      page.getByLabel("What each system contributed"),                // per-fact attribution
+      page.getByLabel("How joined evidence changed the plan"),        // the decisive delta
+      page.getByLabel("Coverage of this review"),                     // both scopes + named residuals
+      page.getByLabel("Stated gaps and next action"),                 // the decision
     ]) {
       const region = await locator.first().boundingBox();
       expect(region).not.toBeNull();
       expect(region!.y).toBeLessThan(viewport.height);
     }
+
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
+  test(`every named residual is whole in the first frame at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    /*
+      The names, in full, without scrolling or interacting.
+
+      The band-level check above asserts the scope strip's *top* is in frame,
+      which is what a strip of one-line claims needs. It is not what the residual
+      names need, and the difference was live: the third name rendered across the
+      fold at 1440x900, sliced in half, with a green suite. A half-rendered field
+      name is not a named residual -- it is the density problem this pass exists
+      to fix, solved by pushing evidence off the screen.
+
+      Every row, not the list box: the list is capped and scrollable, so a box
+      that fits can still hold a row that does not. The rows are what a reader
+      reads.
+    */
+    await page.setViewportSize(viewport);
+    await page.goto(`${COMMITTED_ORIGIN}/impact`);
+
+    const rows = page.locator(".scope__residuals li");
+    await expect(rows).not.toHaveCount(0);
+
+    for (const row of await rows.all()) {
+      const box = await row.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(
+        box!.y + box!.height,
+        `"${(await row.textContent())?.trim()}" is cut off by the fold`,
+      ).toBeLessThanOrEqual(viewport.height);
+    }
+
+    // And nothing is hiding inside the cap. With the observed gap count the list
+    // must not be scrolling at all; if it ever does, a name is reachable only by
+    // interacting with a strip that is supposed to state them outright.
+    const scrolls = await page.evaluate(() => {
+      const list = document.querySelector<HTMLElement>(".scope__residuals");
+      return list ? list.scrollHeight > list.clientHeight : true;
+    });
+    expect(scrolls, "no residual may be hidden behind the list cap at rest").toBe(false);
 
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
@@ -120,21 +169,22 @@ for (const viewport of VIEWPORTS) {
     // that can really vary are grown, because a test of impossible growth
     // reports a failure nobody can cause and hides the one they can:
     //
-    //   stated gaps   contract-supplied, unbounded in count and length. This is
-    //                 the real vector, and the rail caps the list and scrolls it
-    //                 rather than growing. Twenty is well past any observed event.
+    //   residuals     contract-supplied, unbounded in count and length. This is
+    //                 the real vector. The strip caps the list and scrolls it, and
+    //                 it now sits below the decision as well, so growth cannot
+    //                 reach the controls. Twenty is well past any observed event.
     //   caveat        composed from a count, so it can gain a line, not a page.
     //
     // The completeness headline and the count subjects are fixed strings from a
     // closed enum and from this file's own markup; they cannot grow at runtime,
     // and doubling them was testing the frame against an edit no event can make.
     await page.evaluate(() => {
-      const list = document.querySelector(".rail-group ul");
+      const list = document.querySelector(".scope__residuals");
       const template = list?.querySelector("li");
       if (list && template) {
         for (let i = 0; i < 20; i += 1) {
           const clone = template.cloneNode(true) as HTMLElement;
-          const name = clone.querySelector("strong");
+          const name = clone.querySelector(".mono");
           if (name) name.textContent = `provenance.datahub.someLongerFieldName${i}`;
           list.append(clone);
         }
@@ -148,12 +198,16 @@ for (const viewport of VIEWPORTS) {
     expect(box).not.toBeNull();
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
 
-    // The cap is what made that true, so it is asserted rather than assumed.
+    // The cap is what keeps the strip a reference rather than a list, so it is
+    // asserted rather than assumed. The residual names moved from the rail to the
+    // scope strip, which sits *below* the decision, so growth there can no longer
+    // push the controls down at all; the cap and the fold check are now two
+    // independent guarantees rather than one propping up the other.
     const capped = await page.evaluate(() => {
-      const list = document.querySelector<HTMLElement>(".rail-group ul");
+      const list = document.querySelector<HTMLElement>(".scope__residuals");
       return list ? list.scrollHeight > list.clientHeight : false;
     });
-    expect(capped, "the stated-gap list must scroll rather than grow the rail").toBe(true);
+    expect(capped, "the named-residual list must scroll rather than grow the strip").toBe(true);
   });
 }
 
@@ -183,30 +237,34 @@ for (const viewport of MOBILE_VIEWPORTS) {
     expect(pageOverflow).toBeLessThanOrEqual(1);
   });
 
-  test(`the silent zero is visible above the fold at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`the first frame identifies its subject and its contributors at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto(`${COMMITTED_ORIGIN}/impact`);
 
-    // The failure must be visible without scrolling. The layout collapses to a
-    // single column on mobile, so the silent zero callout follows the hero and
-    // spine. It must still fit within the first frame.
-    const callout = page.getByLabel("Silent zero: naive join failure");
-    await expect(callout).toBeVisible();
+    /*
+      What a phone reader gets in one frame, after the reduction.
 
-    const box = await callout.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.y).toBeGreaterThanOrEqual(0);
-    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+      This used to assert the silent-zero callout, which sat in the hero and was
+      the first thing under it. The frame now leads with the subject, the file it
+      resolved to, and the three contributions -- and the callout is the mechanism
+      behind the plan delta, which is below the fold on a 390px column along with
+      the decision and the scope strip. That is the same trade the CTA already
+      makes here: a narrow screen shows fewer bands, in order, rather than a
+      compressed version of all of them.
 
-    // The dataset identity and coverage must also be in the first frame, so the
-    // failure is contextualised — a failure without a subject is not information.
+      What must not slip is per-fact attribution. The contribution band is where
+      it lives, so the band is what is asserted -- if anything grows above it the
+      frame stops saying who supplied what, and this fails.
+    */
     for (const locator of [
-      page.getByRole("heading", { level: 1 }),
-      page.getByLabel("Coverage of this review"),
+      page.getByRole("heading", { level: 1 }),        // dataset identity
+      page.getByLabel("Standing of this review"),     // the file it resolved to
+      page.getByLabel("What each system contributed"), // per-fact attribution
     ]) {
       const region = await locator.first().boundingBox();
       expect(region).not.toBeNull();
-      expect(region!.y).toBeLessThan(viewport.height);
+      expect(region!.y).toBeGreaterThanOrEqual(0);
+      expect(region!.y + region!.height).toBeLessThanOrEqual(viewport.height);
     }
 
     expect(await page.evaluate(() => window.scrollY)).toBe(0);

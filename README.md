@@ -23,7 +23,7 @@ Built with [DataHub](https://datahubproject.io/). Powered by [workspace.json](ht
 <p align="center">
   <picture>
     <source media="(prefers-reduced-motion: reduce)" srcset="assets/exports/readme-walkthrough-1440x1100-poster/readme-walkthrough-1440x1100-poster.png">
-    <img src="assets/exports/readme-walkthrough-1440x1100/readme-walkthrough-1440x1100.gif" alt="An eight-second walkthrough of the Tally change-impact cockpit. It opens on the Impact view, where the DataHub coordinate carries no project prefix and the repository coordinate resolves to dbt/models/curated/game_events.sql. One click on Continue to change plan moves to the plan comparison. There, DataHub-only context refuses to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed, while joined context adds it using that source at pinned revision 59fa295c. The status strip shows coverage is not established throughout." width="820">
+    <img src="assets/exports/readme-walkthrough-1440x1100/readme-walkthrough-1440x1100.gif" alt="An eight-second walkthrough of the Tally change-impact cockpit. It opens on the Impact view, where the dataset game_events resolves to dbt/models/curated/game_events.sql at pinned revision 59fa295c, and below that a naive join reports zero matches, no error, no warning, and exit code 0 while the DataHub coordinate carries no project prefix. One click on Continue to change plan moves to the plan comparison. There, DataHub-only context refuses to add the dbt quality check because the repository-relative source location is unknown and cannot be guessed, while joined context adds it using that source at pinned revision 59fa295c. The scope strip shows lineage completeness is not established throughout." width="820">
   </picture>
 </p>
 
@@ -38,12 +38,6 @@ DataHub knows a dataset's lineage, schema, and ownership. workspace.json knows t
 It returns zero rows, with no error.
 
 dbt reports `original_file_path` relative to the **dbt project root**. Repository evidence is keyed relative to the **git root**. The moment a dbt project lives in a subdirectory, `dbt/` being the common real-world layout, the two path representations differ by exactly that prefix, every lookup misses, and the join hands back an empty result indistinguishable from "this dataset has no interesting history."
-
-<p align="center">
-  <img src="assets/exports/readme-poster-impact-2560x756/readme-poster-impact-2560x756.png" alt="Tally change-impact cockpit comparing a silent naive join with a resolved repository path. The naive join reports zero matches, no error, no warning, and exit code 0. Beside it, Tally resolves the same dataset to dbt/models/curated/game_events.sql through a manifest join at pinned revision 59fa295c. The status strip also shows coverage is not established and three limitations remain." width="880">
-</p>
-
-The naive join returns zero matches and exits cleanly. Tally resolves the same dataset to `dbt/models/curated/game_events.sql` through a manifest join at the pinned revision.
 
 A silent zero is the worst failure shape for a metadata join. It alerts nobody and quietly makes the integration useless. Closing it is what Tally exists for.
 
@@ -82,7 +76,7 @@ The two conditions differ in what identity is available, not in how hard the mod
 
 - **DataHub-only correctly refuses.** Repository identity is unavailable, so the source location cannot be guessed. Each withheld field is recorded as `not-queried`, which reads as scoped rather than empty.
 - **Joined context supplies the exact repository-relative path and pinned revision.** That is the coordinate the catalog does not carry, and having it is what makes a checkable edit possible.
-- **Coverage stays qualified.** Supplying identity does not upgrade a completeness claim. The status strip still reads `not-established` where completeness was never established.
+- **Coverage stays qualified.** Supplying identity does not upgrade a completeness claim. Scope B of the scope strip still reads completeness `not-established` where completeness was never established, beside a Scope A that resolved exactly.
 
 ## How the cockpit stays honest
 
@@ -108,6 +102,12 @@ See [`docs/cockpit-architecture.md`](docs/cockpit-architecture.md).
 **[workspace.json](https://github.com/workspacejson) provides what no catalog can.** The `fileIndex` is keyed by repository-root-relative POSIX paths produced at a pinned commit: the coordinate system that makes the join work, and the one DataHub does not expose through MCP. The artifact carries its own provenance, so Tally can verify that it describes the same repository revision before asserting the exact source location. This bound event does not establish behavioral co-change partners, so Tally does not assert them.
 
 **Tally is the product joining both.** It resolves one through the other and attaches a bounded receipt.
+
+<p align="center">
+  <img src="assets/exports/readme-poster-impact-2560x642/readme-poster-impact-2560x642.png" alt="Tally change-impact cockpit, Impact view. A three-step rail reads 01 Impact, 02 Change plan, 03 Receipts, with Impact current. Below it the dataset under review, game_events, under the label evidence review before any edit. To its right the source under review is marked exact: dbt/models/curated/game_events.sql with the dbt/ prefix highlighted, pinned revision 59fa295c, attributed to workspace.json. A band of three cells names who contributed what. DataHub supplied dataset identity and declared lineage, 8 upstream and 1 downstream declared edges. workspace.json supplied the repository file and the revision it is bound to, the missing dbt/ prefix read at 59fa295c. Tally joined the two coordinate systems and compared the plans, and the writeback was observed in DataHub on reread." width="880">
+</p>
+
+Every fact on this frame names the system that supplied it. DataHub gives identity and declared lineage, `workspace.json` gives the missing `dbt/` prefix at a pinned revision, and Tally is the join between them.
 
 ### One concrete example
 
