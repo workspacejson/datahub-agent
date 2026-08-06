@@ -1266,6 +1266,80 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   .cockpit-footer__role { font-size: var(--fs-xs); }
 }
 
+/* ── Path with no route ───────────────────────────────────────
+   The 404 surface, from option 1c of `404 mark.dc.html`: the mark's gate in
+   accent, its five strokes reduced to a ghost, the code and the status beside
+   it. An empty gate is the mark's own notation for a count that never happened.
+
+   Three things the canvas proposes are deliberately not copied, and each is a
+   rule this app already settled:
+
+     atmosphere  the artboard washes the frame in two radial gradients and a
+                 scanline texture. The cockpit's canvas is flat, and the hero's
+                 own glow was removed for the reason that rule exists: on an
+                 evidence surface, atmosphere reads as chrome.
+     display     the canvas sets the code at 96px, which is not on the type
+                 scale. `--fs-4xl` is, and carries the display treatment the
+                 contract states -- 800 weight at `--ls-tight`.
+     colour      the canvas hard-codes the ramp it was drawn against. Every
+                 value here is a token, so a theme change moves this surface
+                 with the rest of the app rather than stranding it in dark.
+
+   Emerald is the brand mark, the same role it plays in the wordmark. It carries
+   no attribution and no resolution meaning here: nothing on this path was
+   contributed or resolved by anything. */
+.not-found { display: flex; flex-direction: column; }
+/* The frame takes the space the shell's `100vh` leaves between the lockup and
+   the footer, so the composition centres in it rather than sitting under the
+   header with the page empty below. */
+.not-found__frame {
+  flex: 1;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: var(--sp-10);
+  padding: var(--sp-12) 0;
+}
+/* Sized in `vw` between two fixed bounds rather than at the canvas's 290px: the
+   gate and the statement sit on one row down to the wrap point, and a fixed
+   mark forces the wrap early on the 1280px viewport the fold gate binds on. */
+.not-found__gate { flex: none; width: clamp(8rem, 16vw, 14rem); height: auto; }
+.not-found__brackets { fill: var(--wj-accent); }
+/* `currentColor` rather than the canvas's near-white, so the ghost is the page's
+   own text colour at 8% in either theme. Decorative and `aria-hidden`, so the
+   contrast floor that governs text does not apply to it. */
+.not-found__strokes { fill: currentColor; stroke: currentColor; opacity: .08; }
+
+.not-found__statement { min-width: 0; display: grid; gap: var(--sp-3); justify-items: start; }
+.not-found__code {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: var(--fs-4xl); font-weight: var(--fw-extrabold);
+  letter-spacing: var(--ls-tight); line-height: var(--lh-tight);
+}
+.not-found__path {
+  margin: 0; max-width: 34rem;
+  color: var(--text-muted); font-size: var(--fs-sm); line-height: var(--lh-normal);
+}
+/* The one control, at its own width. `.cta` is full-width for the decision band,
+   which is a column; here it is a link in a statement and sizes to its label. */
+.not-found__return {
+  display: inline-flex; align-items: center;
+  width: auto; margin-top: var(--sp-3);
+  text-decoration: none;
+}
+
+/* Stacked rather than wrapped. `flex-wrap` alone does not fire here: the
+   statement's intrinsic minimum is a short line, so on a 390px column the row
+   stays a row and squeezes the code and the status against the right edge
+   instead of breaking. Declaring the direction is what actually changes the
+   composition at the width where the row stops working. */
+@media (max-width: 700px) {
+  .not-found__frame {
+    flex-direction: column; align-items: center;
+    gap: var(--sp-6); padding: var(--sp-10) 0;
+  }
+  .not-found__gate { width: clamp(6rem, 26vw, 9rem); }
+}
+
 /* ── Term definition ─────────────────────────────────────────
    A term a reader may not know, defined on demand. Same primitive and
    panel language as the proof popover; different payload — prose, not a

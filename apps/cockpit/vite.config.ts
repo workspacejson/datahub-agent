@@ -1,11 +1,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { codeToHtml } from "shiki";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 import { toComparisonState } from "../../src/integration/plan-comparison";
+import { NotFoundView } from "./src/components/NotFoundView";
 import { NO_COMPARISON_SUPPLIED, projectComparison } from "./src/model/project-comparison";
 
 /**
@@ -179,6 +182,49 @@ if (sourceMode !== "placeholder" && event !== null) {
 }
 
 /**
+ * `404.html`, with the refusal already in it.
+ *
+ * `vercel.json` no longer rewrites every path to `index.html`. It rewrites the
+ * three real routes, and anything else falls through to this document, which
+ * Vercel serves with a real 404 status. Getting the status right is the reason
+ * the rewrite was narrowed; getting the *page* right is this plugin's job.
+ *
+ * The markup is rendered from `NotFoundView` at build time rather than written
+ * out as a second copy of it in HTML. A hand-written copy is a second surface
+ * free to drift from the component every gate in this app checks -- the copy
+ * rules, the token discipline, the one-control rule -- while looking maintained.
+ *
+ * Static, and complete without the bundle. The document still loads the app,
+ * which upgrades it to name the path it was served for, but the claim and the
+ * way back are in the HTML: a reader who has already hit a path that does not
+ * exist should not also need a working script to get out.
+ */
+function notFoundDocument(): Plugin {
+  const ROOT = '<div id="root"></div>';
+  return {
+    name: "cockpit-not-found-document",
+    transformIndexHtml: {
+      order: "pre",
+      handler(html, context) {
+        if (!context.filename.endsWith("404.html")) return html;
+        // Rendered with no `path` and no `onReturn`: one document answers every
+        // unmatched path, so it knows neither. `NotFoundView` states the absence
+        // rather than inventing either one.
+        const markup = renderToStaticMarkup(createElement(NotFoundView));
+        if (!html.includes(ROOT)) {
+          throw new Error(
+            "404.html no longer contains the empty root element this build renders the refusal into. " +
+            `Expected to find \`${ROOT}\`. Without it the deployed 404 document would be blank until ` +
+            "the bundle loads, which is the failure the prerender exists to prevent.",
+          );
+        }
+        return html.replace(ROOT, `<div id="root">${markup}</div>`);
+      },
+    },
+  };
+}
+
+/**
  * The placeholder guard keys on `command`, not on `NODE_ENV`.
  *
  * It used to read `process.env.NODE_ENV === "production"`. That does fire under a
@@ -212,7 +258,17 @@ export default defineConfig(async ({ command }) => {
         "@comparison": fileURLToPath(new URL("../../src/integration/plan-comparison.ts", import.meta.url)),
       },
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), notFoundDocument()],
+    build: {
+      rollupOptions: {
+        // Two documents, one bundle. `404.html` is an entry rather than a copied
+        // file so it carries the same hashed script and stylesheet as the app.
+        input: {
+          index: fileURLToPath(new URL("index.html", import.meta.url)),
+          notFound: fileURLToPath(new URL("404.html", import.meta.url)),
+        },
+      },
+    },
     define: {
       __COCKPIT_SOURCE_MODE__: JSON.stringify(sourceMode),
       __COCKPIT_EVENT__: JSON.stringify(event),

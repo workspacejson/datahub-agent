@@ -24,6 +24,12 @@ export const COMMITTED_ORIGIN = "http://127.0.0.1:4174";
  * failure, and an unknown key throwing to a blank page -- were invisible to a
  * green suite and reproducible only against `vite preview`.
  *
+ * `vite preview` is no longer what serves it. Preview answers every path with
+ * `index.html` at 200, so it could not tell a route from a path that has none --
+ * exactly the distinction `vercel.json` now makes, and the one `not-found.spec.ts`
+ * asserts. `serve-built.mjs` applies that file's own rules instead, which is what
+ * makes the sentence above true rather than aspirational.
+ *
  * Scoped to the specs that need it rather than made the default, because it
  * costs a production build per run.
  */
@@ -58,9 +64,9 @@ export default defineConfig({
       port: 4174,
       reuseExistingServer: !process.env.CI,
     },
-    // The artifact, not a dev server. See BUILT_ORIGIN.
+    // The artifact under the deployment's own routing rules. See BUILT_ORIGIN.
     {
-      command: "npm run build && npx vite preview --host 127.0.0.1 --port 4185 --outDir dist",
+      command: "npm run build && node e2e/serve-built.mjs 4185",
       port: 4185,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
