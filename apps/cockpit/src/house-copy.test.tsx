@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { CockpitShell } from "./components/CockpitShell";
+import { NotFoundView } from "./components/NotFoundView";
 import { createAdapter } from "./data/cockpit-adapter";
 import { contractEvent } from "./test/contract-event";
 import { cockpitRouteSchema } from "./model/cockpit-view-model";
@@ -81,6 +82,42 @@ describe("house copy rules hold on every rendered route", () => {
     const byRoute = new Map<string, number>();
     for (const [route] of renderedText()) byRoute.set(route, (byRoute.get(route) ?? 0) + 1);
     for (const route of ROUTES) expect(byRoute.get(route) ?? 0).toBeGreaterThan(10);
+  });
+});
+
+describe("the house copy rules reach the surface outside the review sequence", () => {
+  /*
+    `ROUTES` is the three review routes, and the 404 is deliberately not one of
+    them: it renders no model, so adding it to `cockpitRouteSchema` would put a
+    routeless surface through every assertion that expects a dataset. It is still
+    a page a reader can land on, so the rules that scan what a reader sees have to
+    scan it too. Extended here rather than worked around.
+  */
+  const notFoundText = () => {
+    cleanup();
+    render(<NotFoundView path="/recipts" onReturn={() => {}} />);
+    const found: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent ?? "";
+      if (text.trim()) found.push(text);
+    }
+    return found;
+  };
+
+  it("uses no em dash and no pictograph on the refusal surface", () => {
+    const text = notFoundText();
+    // The guard's own failure mode first: a surface that rendered nothing would
+    // pass both filters below without saying anything.
+    expect(text.length).toBeGreaterThan(4);
+    expect(text.filter((line) => line.includes("—"))).toEqual([]);
+    expect(text.filter((line) => /\p{Extended_Pictographic}/u.test(line))).toEqual([]);
+  });
+
+  it("keeps workspace.json lowercase where it names the substrate", () => {
+    const text = notFoundText().join(" ");
+    expect(text).toContain("workspace.json");
+    expect(text).not.toContain("Workspace.json");
   });
 });
 
