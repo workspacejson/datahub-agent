@@ -8,10 +8,14 @@
   "assist": { "enabled": false },
 
   // Scoped to what nothing else checks. `tsconfig.json` covers `src/**/*.ts` and
-  // `test/**/*.ts`; these ~3.7k lines had no automated check of any kind, and ten
-  // of the files are not exercised by any test either. They produce evidence, so
-  // a defect here emits a claim rather than failing a build.
-  "files": { "includes": ["scripts/**/*.mjs", "migration/**/*.mjs"] },
+  // `test/**/*.ts`; the ~3.7k lines of `scripts/*.mjs` had no automated check of
+  // any kind, and ten of those files are not exercised by any test either. They
+  // produce evidence, so a defect here emits a claim rather than failing a build.
+  // `apps/cockpit/e2e/serve-built.mjs` joined the scope the same way the scripts
+  // did — caught unchecked by the file-placement test — and it serves the built
+  // artifact under `vercel.json`'s own rules, so a defect there would make the
+  // e2e suite describe a deployment that is not real.
+  "files": { "includes": ["scripts/**/*.mjs", "migration/**/*.mjs", "apps/cockpit/e2e/**/*.mjs"] },
 
   "linter": {
     "enabled": true,

@@ -28,7 +28,7 @@ const OUTPUT = resolve(REPO_ROOT, config.outputDirectory ?? "public");
 
 const rewrites = config.rewrites ?? [];
 for (const rule of rewrites) {
-  if (/[(*:\[]/.test(rule.source)) {
+  if (/[(*:[]/.test(rule.source)) {
     throw new Error(
       `serve-built.mjs models literal rewrite sources only, and vercel.json now carries ` +
       `\`${rule.source}\`. Teach this server the pattern syntax before relying on the e2e ` +

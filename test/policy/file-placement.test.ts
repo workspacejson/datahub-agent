@@ -2,11 +2,11 @@
  * Where a file lives decides whether anything checks it.
  *
  * This is not a tidiness rule. `tsconfig.json` covers `src/**` and `test/**`,
- * and biome covers `scripts/**` and `migration/**` — so a `.mjs` written
- * anywhere else is checked by nothing at all, silently. That is not a
- * hypothetical: ~3,705 lines of `scripts/*.mjs` sat unchecked until 2026-07-29,
- * and the gap was invisible precisely because nothing was out of place. It was
- * the *directory* that was uncovered, not the files.
+ * and biome covers `scripts/**`, `migration/**`, and the cockpit e2e server —
+ * so a `.mjs` written anywhere else is checked by nothing at all, silently.
+ * That is not a hypothetical: ~3,705 lines of `scripts/*.mjs` sat unchecked
+ * until 2026-07-29, and the gap was invisible precisely because nothing was
+ * out of place. It was the *directory* that was uncovered, not the files.
  *
  * So the rule ties placement to coverage rather than to convention, and asserts
  * the coverage config agrees. Widening one without the other fails here.
@@ -28,7 +28,7 @@ import { describe, expect, it } from "vitest";
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /** Directories the biome gate lints. Kept in step with `biome.jsonc` below. */
-const LINTED_DIRS = ["scripts", "migration"];
+const LINTED_DIRS = ["scripts", "migration", join("apps", "cockpit", "e2e")];
 
 /**
  * Where a test may live, and what runs it there. A home with no runner is not a
