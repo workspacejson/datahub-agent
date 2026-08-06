@@ -2,43 +2,59 @@ import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model
 import { Database } from "lucide-react";
 import { MotionConfig } from "motion/react";
 import { ChangePlanView } from "./ChangePlanView";
+import { ContributionBand } from "./ContributionBand";
+import { DecisionBar } from "./DecisionBar";
 import { DecisionRail } from "./DecisionRail";
 import { Icon } from "./Icon";
 import { ImpactView } from "./ImpactView";
-import { OutcomeBar } from "./OutcomeBar";
+import { PlanDelta } from "./PlanDelta";
 import { ProofPopover } from "./ProofPopover";
 import { ReceiptsView } from "./ReceiptsView";
+import { ScopeStrip } from "./ScopeStrip";
 import { SourceTag } from "./SourceTag";
 import type { DatasetOption } from "../data/select-adapter";
-import { TermDefinition } from "./TermDefinition";
+import { revisionLabel } from "./format";
 
-function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
-  const dbtPath = model.dbtFilePath;
+/**
+ * The resolved file, beside the subject that resolved to it.
+ *
+ * This is what the boxed "Result" card became. As a card floating under the hero
+ * it announced a result twice: once as its own heading and again as the path
+ * inside it, and it sat in the same row as the failure it was the answer to, so
+ * the two competed. Beside the dataset name it answers "what am I looking at" in
+ * one fixation, which is the only job the top of this screen has.
+ *
+ * The disposition word is the vocabulary term, printed rather than glossed:
+ * `exact`, `ambiguous`, `unavailable`, `mismatch` and `indeterminate` each mean
+ * something a reader can look up, and a friendlier synonym would lose that. It is
+ * also the one place the standing of the resolution is stated on every route now
+ * that the six-cell strip is gone, so `house-copy.test.tsx` asserts it here.
+ */
+function ResolvedSource({ model }: { model: CockpitViewModel }) {
   const prefix = model.projectPrefix;
-
-  if (!dbtPath || !prefix) return null;
+  const dbtPath = model.dbtFilePath;
+  const revision = revisionLabel(model.receipt.provenance.subjectRevision);
 
   return (
-    <article className="silent-zero silent-zero--inline" aria-label="Silent zero: naive join failure">
-      <p className="silent-zero__result">
-        <TermDefinition term="Naive join" definition="A direct path lookup with no prefix normalization: the dbt path is compared to the repository path exactly as each system spells it." />: 0 matches. No error. No warning. Exit code 0.
+    <div className="resolved-source" aria-label="Standing of this review">
+      <p className="eyebrow">Source under review, {model.resolutionDisposition}</p>
+      {/*
+        The prefix renders as its own slot when the model carries one, because
+        the prefix is the whole contribution: highlighting it makes the segment
+        DataHub never exposes visible as a shape rather than as a substring a
+        reader has to find. Without one the path prints whole rather than being
+        sliced on an assumption.
+      */}
+      <p className="resolved-source__path mono">
+        {prefix && dbtPath && model.producerPath.text === `${prefix}/${dbtPath}`
+          ? <><span className="resolved-source__prefix">{prefix}/</span>{dbtPath}</>
+          : model.producerPath.text}
       </p>
-      <p className="silent-zero__path">
-        dbt: {dbtPath} | workspace.json: {prefix}/{dbtPath}
+      <p className="resolved-source__pin">
+        {revision ? `pinned revision ${revision}` : "no pinned revision recorded"}
+        <SourceTag source={model.producerPath.source} />
       </p>
-    </article>
-  );
-}
-
-function ResolvedPathSummary({ model }: { model: CockpitViewModel }) {
-  if (model.resolutionDisposition !== "exact") return null;
-  return (
-    <article className="resolved-summary" aria-label="Resolved path via manifest join">
-      <p className="resolved-summary__result">
-        Resolved: <span className="mono">{model.producerPath.text}</span>
-      </p>
-      <p className="resolved-summary__method">via <TermDefinition term="manifest-join" definition="Reading the dbt manifest to learn the project prefix, then normalizing it away so the DataHub path and the repository path resolve to the same file." /></p>
-    </article>
+    </div>
   );
 }
 
@@ -77,18 +93,21 @@ function DatasetSelector({ datasetKey, options, onChange }: {
  * Now: the spine is the navigation, every step is reachable and marks itself
  * visited, going back is a text link in the spine, and the two-button pattern is
  * reserved for the one place there is a real decision to make.
+ *
+ * Each step also says what it is for.
+ *
+ * The labels are the accessible names and stay exactly as they were: "Change
+  plan" reads as a changelog on its own, which is the complaint the subtitle
+ * answers, and renaming the control instead would have moved the four e2e
+ * assertions that reach for it without making the rail any clearer. The subtitle
+ * is `aria-hidden`, so the name a screen reader and a Playwright locator both get
+ * is still the label.
  */
-const routes: Array<{ route: CockpitRoute; label: string }> = [
-  { route: "impact", label: "Impact" },
-  { route: "change-plan", label: "Change plan" },
-  { route: "receipts", label: "Receipts" },
+const routes: Array<{ route: CockpitRoute; label: string; subtitle: string }> = [
+  { route: "impact", label: "Impact", subtitle: "Subject, contributions, the decision" },
+  { route: "change-plan", label: "Change plan", subtitle: "How joined evidence changed the plan" },
+  { route: "receipts", label: "Receipts", subtitle: "Checked, written, still unknown" },
 ];
-
-const READ_LABEL: Record<CockpitViewModel["read"], string> = {
-  ok: "returned",
-  failed: "failed",
-  "not-queried": "was never made",
-};
 
 /**
  * The tally lockup, per the approved nav spec.
@@ -101,8 +120,8 @@ const READ_LABEL: Record<CockpitViewModel["read"], string> = {
  * three brand rules directly: not tinted emerald, not set in mono, and the mark
  * never sits on an accent fill.
  *
- * `workspace.json` is the substrate, not the application, so it appears as an
- * endorsement on the right rather than as the wordmark on the left.
+ * `workspace.json` is the substrate, not the application, so it never appears
+ * here. It is named in the footer, in the sentence that says what tally is.
  */
 function Wordmark() {
   return (
@@ -125,97 +144,6 @@ function Wordmark() {
   );
 }
 
-/**
- * Coverage, stated once, here.
- *
- * It used to be asserted twice: this panel, and a sentence in the rail 900px
- * away restating the same fact in different words, on all three routes. Neither
- * was authoritative and a reviewer trusted it less each time they met it. This
- * is the only place coverage is asserted; the rail carries the consequence.
- *
- * The counters are four figures on one rule rather than a bordered panel with a
- * nested grid. They are one line of information and do not need a second border.
- *
- * A live region, inherited from the chip strip this replaced: the panel changes
- * when the route or the model changes and neither reloads the page, so without it
- * a screen-reader user is told the route changed and not that the evidence state
- * under it did.
- */
-function Coverage({ model }: { model: CockpitViewModel }) {
-  const { accounting } = model.receipt;
-  const complete = model.completeness === "complete-against-pinned-manifest";
-  /*
-    The headline and its eyebrow used to sit at the top of this block, stating
-    completeness in the same words the outcome bar now uses. Two renderings of
-    one fact on one route is what `house-copy.test.tsx` forbids, and the bar
-    states it on every route rather than only where the hero renders, so the bar
-    is the one that keeps it.
-
-    The note stays. It is not a restatement: the bar gives the state, this gives
-    the consequence, that an absent edge is not evidence of no impact, which is
-    the part a reader cannot derive from the words "not established". Same
-    division HAC-218 settled for the gap rows: short state tag, explanation in
-    muted body text.
-  */
-  return (
-    <div className="coverage" aria-label="Coverage of this review" aria-live="polite">
-      {/*
-        "that set", not "the set". The counters sit three inches below this
-        sentence, and a reader who has just crossed 1/1 supplies the nearest
-        referent for a bare "the set" — the path set, which is complete — and
-        reads the note as contradicting the headline. "that" is anaphoric and can
-        only bind to what the preceding sentence says the read returned, which is
-        the other denominator. The fix is the pronoun, not a qualifying clause:
-        the clause was already tried and rejected for the evidence tier, and a
-        sentence restating the counters is the double assertion this panel exists
-        to avoid.
-      */}
-      <p className="coverage__note">
-        The lineage read {READ_LABEL[model.read]}.{" "}
-        {complete
-          ? "That set is complete against the pinned manifest."
-          : "Whether that set is complete is not established, so an absent edge is not evidence of no impact."}
-      </p>
-      {/*
-        "files", not "paths". This counter sits under a headline about lineage
-        completeness, and in that neighbourhood "path" reads as a graph path
-        between datasets. It is not: it counts datasets whose repository source
-        file was resolved, which is the other denominator entirely — the same
-        confusion the note's pronoun fixes, arriving by a different word.
-
-        "source paths resolved" was the obvious repair and is the one wording
-        that cannot ship: measured, it wraps the strip onto a second row. So does
-        "source files resolved" under a wide fallback face. "files resolved" is
-        the same length as the label it replaces and renders *narrower*, so the
-        strip keeps more slack than it has today under every face tested — which
-        matters because `tokens/fonts.css` resolves these through a system stack
-        on purpose, and the metrics move per machine.
-
-        The fourth counter stays "path resolution". It reads against the word
-        `exact` and is about resolution quality, not about a set of edges.
-      */}
-      <dl className="coverage__counts">
-        <div>
-          <dt>{accounting.datasetsResolved}<span className="coverage__of">/{accounting.datasetsRequested}</span></dt>
-          <dd>files resolved</dd>
-        </div>
-        <div>
-          <dt>{accounting.datasetsUnresolved}</dt>
-          <dd>unresolved</dd>
-        </div>
-        <div>
-          <dt className="coverage__count--open">{model.receipt.statedGaps.length}</dt>
-          <dd>gaps, each named</dd>
-        </div>
-        <div>
-          <dt className="coverage__count--word">{model.resolutionDisposition}</dt>
-          <dd>path resolution</dd>
-        </div>
-      </dl>
-    </div>
-  );
-}
-
 export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetOptions, onDatasetChange }: {
   model: CockpitViewModel;
   route: CockpitRoute;
@@ -230,100 +158,31 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
   return <MotionConfig reducedMotion="user"><main className="cockpit-shell">
     {model.sourceMode === "placeholder" && <p className="placeholder-banner" role="status">DESIGN PLACEHOLDER · NOT OBSERVED DATA</p>}
 
+    {/*
+      The app bar states what this surface does and nothing else.
+
+      The trust pill it replaces glossed `workspace.json` in the one place a
+      reader has not yet been given a reason to care, and the build claim it
+      carried belongs to Receipts, where it can be checked. The standard is still
+      one click away, from the footer, where the same sentence already names it.
+    */}
     <header className="product-header">
       <Wordmark />
-      {/*
-        The endorsement names a standard, so it resolves to the standard.
-
-        It was a bare <b>: the one term on this page a reader is least likely to
-        already know, styled like a proper noun and pointing nowhere. A judge
-        asking "what is workspace.json" had to leave and search for it.
-
-        A plain followed link, deliberately — no rel="nofollow". This is a
-        first-party reference to the specification the product is built on, and
-        the anchor text is the term itself, which is what a reader and a crawler
-        both need it to say. New tab because the cockpit is a working surface and
-        a reviewer mid-review should not lose their place; the accessible name
-        keeps the visible text as its prefix, so speech input still matches it.
-      */}
-      <p className="endorsement">
-        built on{" "}
-        <a
-          href="https://github.com/workspacejson/standard"
-          target="_blank"
-          rel="noopener"
-          aria-label="workspace.json standard on GitHub, opens in a new tab"
-        >
-          workspace.json
-        </a>
-        <span className="endorsement__subtitle">a <TermDefinition term="repo-evidence artifact" definition="A JSON file committed to the repository and pinned to a Git commit, recording what the repository knows about itself: its source tree, its producing files, and the revision they were read at." /> at a pinned commit</span>
-      </p>
-      <DatasetSelector datasetKey={datasetKey} options={datasetOptions} onChange={onDatasetChange} />
+      <div className="product-header__aside">
+        <p className="app-status">read-only review, nothing is applied here</p>
+        <DatasetSelector datasetKey={datasetKey} options={datasetOptions} onChange={onDatasetChange} />
+      </div>
     </header>
 
-    <OutcomeBar model={model} />
-
     {/*
-      The glow and the scanline grid stop at the bottom of this band, so the eye
-      reads the band as chrome and everything below it as data.
+      The rail sits directly under the app bar and above the subject, because it
+      is chrome and the subject is the first piece of evidence. It used to follow
+      the hero, which put a navigation control between the dataset name and the
+      argument about it.
     */}
-    <section className="hero" aria-label="Dataset under review">
-      {/*
-        The stakes sentence moved into `ImpactView`. It is the argument the
-        Impact route makes, and stating it here put it *above* the sticky
-        decision rail, so its height pushed the primary action toward the fold on
-        every route including the two that do not make that argument. In the main
-        column it sits beside the rail instead of over it, which is worth 50px at
-        1280x800 and loses nothing: the sentence is unchanged and still leads the
-        route it belongs to.
-      */}
-      {/*
-        The *full* hero is Impact's. The silent-zero pair argues why a naive join
-        returns nothing and the coverage figures account for what this run
-        resolved; both are the Impact route's case, and the canvas renders them
-        there only.
-
-        The identity block stays on every route. Two reasons it is not gated with
-        the rest: `route-slot` labels itself `aria-labelledby="route-title"`, so
-        removing the h1 on two of three routes would leave a dangling reference
-        and a document with no heading; and the outcome bar carries the standing
-        of the review but never names its subject, so gating this too would leave
-        Change plan and Receipts unable to say which dataset they are about.
-      */}
-      {route === "impact" && (
-        <div className="hero__stakes-group">
-          {(model.dbtFilePath && model.projectPrefix) || model.resolutionDisposition === "exact" ? (
-            <div className="silent-zero-pair">
-              <SilentZeroCallout model={model} />
-              <ResolvedPathSummary model={model} />
-            </div>
-          ) : null}
-        </div>
-      )}
-      <div className="hero__identity">
-        <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>DataHub dataset</span></p>
-        <h1 id="route-title">{model.title}</h1>
-        <p className="subject-urn">
-          {model.datasetIdentityIdentifier ? (
-            <ProofPopover
-              label={model.datasetIdentityIdentifier.semanticLabel}
-              value={model.datasetIdentity.text}
-              identifierType={model.datasetIdentityIdentifier.type}
-              copyLabel={model.datasetIdentityIdentifier.copyLabel ?? "Copy URN"}
-              openUrl={model.datasetIdentityIdentifier.openUrl}
-            />
-          ) : (
-            <span className="mono">{model.datasetIdentity.text}</span>
-          )}
-          <SourceTag source={model.datasetIdentity.source} />
-        </p>
-      </div>
-      {route === "impact" && <Coverage model={model} />}
-    </section>
-
     <nav className="spine" aria-label="Review sequence">
       <ol>
-        {routes.map(({ route: itemRoute, label }, index) => (
+        {routes.map(({ route: itemRoute, label, subtitle }, index) => (
           <li key={itemRoute} className={index === step ? "is-current" : index < step ? "is-done" : ""}>
             <button
               type="button"
@@ -332,7 +191,7 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
             >
               <span className="spine__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <span className="spine__label">{label}</span>
-              {itemRoute === "receipts" && <span className="spine__subtitle" aria-hidden="true">every claim tied to a verification command</span>}
+              <span className="spine__subtitle" aria-hidden="true">{subtitle}</span>
             </button>
           </li>
         ))}
@@ -349,19 +208,98 @@ export function CockpitShell({ model, route, onRouteChange, datasetKey, datasetO
       )}
     </nav>
 
+    {/*
+      The subject and the file it resolved to, on one line of the grid.
+
+      This band carries the only display type on the screen. The radial glow that
+      used to wash it is gone: it marked the band as chrome, and this band is the
+      first evidence a reader meets rather than a header.
+
+      It renders on every route. `route-slot` labels itself
+      `aria-labelledby="route-title"`, so dropping the h1 on two of three routes
+      would leave a dangling reference and a document with no heading, and the
+      resolved-source block beside it is now the only statement of the
+      resolution's standing that every route carries.
+    */}
+    <section className="hero" aria-label="Dataset under review">
+      <div className="hero__identity">
+        <p className="eyebrow"><Icon icon={Database} className="semantic-icon" /> <span>Evidence review, before any edit</span></p>
+        <h1 id="route-title">{model.title}</h1>
+        <p className="subject-urn">
+          {model.datasetIdentityIdentifier ? (
+            <ProofPopover
+              label={model.datasetIdentityIdentifier.semanticLabel}
+              value={model.datasetIdentity.text}
+              identifierType={model.datasetIdentityIdentifier.type}
+              copyLabel={model.datasetIdentityIdentifier.copyLabel ?? "Copy URN"}
+              openUrl={model.datasetIdentityIdentifier.openUrl}
+            />
+          ) : (
+            <span className="mono">{model.datasetIdentity.text}</span>
+          )}
+          <SourceTag source={model.datasetIdentity.source} />
+        </p>
+      </div>
+      <ResolvedSource model={model} />
+    </section>
+
+    {/*
+      Impact's first frame, in the order the spec reads it: who contributed what,
+      then the decisive delta, then the decision, then the scope strip. Everything
+      the route says beyond that is below, disclosed rather than stacked.
+    */}
+    {route === "impact" && (
+      <>
+        <ContributionBand model={model} />
+        <PlanDelta model={model} onRouteChange={onRouteChange} heading="How joined evidence changed the agent's plan" />
+        <DecisionBar model={model} route={route} onRouteChange={onRouteChange} />
+        <ScopeStrip model={model} onRouteChange={onRouteChange} />
+      </>
+    )}
+
     <section className="route-slot" aria-labelledby="route-title">
-      <div className="route-body">
+      <div className={route === "receipts" ? "route-body route-body--indexed" : "route-body"}>
         <div className="route-body__main">
           {route === "impact" ? <ImpactView model={model} />
             : route === "change-plan" ? <ChangePlanView model={model} />
             : <ReceiptsView model={model} datasetKey={datasetKey} />}
         </div>
-        <DecisionRail model={model} route={route} onRouteChange={onRouteChange} />
+        {/*
+          The rail survives on exactly one route, as the wayfinding it always was
+          there. On the other two it held the decision, which is now a band under
+          the evidence it decides on.
+        */}
+        {route === "receipts" && <DecisionRail />}
       </div>
     </section>
+
+    {/*
+      Change plan's forward move follows its plan rather than preceding it. Impact
+      renders both of these inside the first frame, above; Receipts is terminal
+      and states its coverage in full in the accounting section, so restating it
+      here would be the same fact twice on one route.
+    */}
+    {route === "change-plan" && (
+      <>
+        <DecisionBar model={model} route={route} onRouteChange={onRouteChange} />
+        <ScopeStrip model={model} onRouteChange={onRouteChange} />
+      </>
+    )}
+
     <footer className="cockpit-footer">
       <a className="cta" href="https://github.com/workspacejson/datahub-agent/blob/main/JUDGING.md" target="_blank" rel="noopener">Verify this yourself</a>
-      <p className="cockpit-footer__role">Tally is the join between DataHub and workspace.json. Open-source, Apache 2.0.</p>
+      <p className="cockpit-footer__role">
+        Tally is the join between DataHub and{" "}
+        <a
+          href="https://github.com/workspacejson/standard"
+          target="_blank"
+          rel="noopener"
+          aria-label="workspace.json standard on GitHub, opens in a new tab"
+        >
+          workspace.json
+        </a>
+        . Open-source, Apache 2.0.
+      </p>
     </footer>
   </main></MotionConfig>;
 }

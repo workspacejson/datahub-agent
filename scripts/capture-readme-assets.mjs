@@ -40,11 +40,17 @@ const cockpit = join(root, "apps", "cockpit");
 /**
  * Capture width. Fixed, and the value matters.
  *
- * At 1280 the outcome bar keeps its six cells on one row and the hero keeps the
- * naive-join and resolved summaries side by side, which is the comparison the
- * whole frame exists to make. At 940 the bar reflows to 3x2 and the hero stacks:
- * the band grows from 3.4:1 to 1.6:1, the pairing is lost, and the image starts
- * dominating the README rather than opening it. Measured, both.
+ * At 1280 the subject band keeps the dataset name and the file it resolved to on
+ * one row, and the contribution band keeps its three cells side by side, which is
+ * the actor model the frame exists to show. Below 1100 the contribution band
+ * reflows to two columns and then to one, and the subject stacks: the band grows
+ * from roughly 3.4:1 to 1.6:1, the pairing is lost, and the image starts
+ * dominating the README rather than opening it.
+ *
+ * The six-cell status strip this used to be anchored on was removed in the
+ * reduction pass. Every fact it carried now appears once, in the band that owns
+ * it, which is why the crop below is anchored on the subject band rather than on
+ * a strip above it.
  */
 const WIDTH = 1280;
 /** 2x, so the band stays legible when GitHub scales it down to content width. */
@@ -71,8 +77,15 @@ const NEXT_ELEMENT_GAP = 2;
  * place. But a change large enough to move the height this far means the frame
  * is no longer the one that was approved, and the right response is to fail and
  * re-review rather than to publish a different picture under the same caption.
+ *
+ * 380 was the outcome-bar-plus-hero frame. The reduction pass removed that strip
+ * and the crop is now the step rail, the subject band and the contribution band,
+ * which measures 321. The gate did its job on the way here: it refused the first
+ * capture after the layout changed rather than republishing a different picture
+ * under the old caption, and the caption and alt text below were rewritten from
+ * the produced image before this number moved.
  */
-const EXPECTED_HEIGHT = 380;
+const EXPECTED_HEIGHT = 321;
 const HEIGHT_TOLERANCE = 40;
 
 /**
@@ -110,7 +123,7 @@ const GIF_HEIGHT = 1100;
  * evidence.
  */
 const GIF_TIMELINE = [
-  { name: "open", seconds: 2.0, note: "Impact: the naive join beside the resolved path" },
+  { name: "open", seconds: 2.0, note: "Impact: the subject, the file it resolved to, and the naive join below it" },
   { name: "press", seconds: 0.5, note: "the primary action under the pointer, before it is taken" },
   { name: "plan", seconds: 5.5, note: "Change plan: refusal beside evidence-backed action" },
 ];
@@ -186,8 +199,8 @@ try {
   });
 
   await page.goto(`${origin}/impact`, { waitUntil: "networkidle" });
-  await page.waitForSelector(".outcome-bar");
   await page.waitForSelector(".hero");
+  await page.waitForSelector(".contribution-band");
 
   // The build must be the one a judge is shown. A placeholder build renders
   // `<dataset-name>` and would produce a poster of invented values, which is the
@@ -202,13 +215,24 @@ try {
 
   const clip = await page.evaluate(
     ({ padTop, padBottom, gap }) => {
-      const heroEl = document.querySelector(".hero");
-      const bar = document.querySelector(".outcome-bar").getBoundingClientRect();
-      const hero = heroEl.getBoundingClientRect();
-      const next = heroEl.nextElementSibling?.getBoundingClientRect() ?? null;
+      // The frame is the step rail, the subject, and who contributed what. The
+      // rail is the orientation the poster used to get from the status strip;
+      // the contribution band is where the per-fact attribution now lives, and
+      // it is the last thing that belongs in an opening image.
+      const spineEl = document.querySelector(".spine");
+      const bandEl = document.querySelector(".contribution-band");
+      if (spineEl === null || bandEl === null) {
+        throw new Error(
+          "The poster crop is anchored on .spine and .contribution-band and one of them is missing. " +
+            "The cockpit layout changed; re-anchor the crop rather than capturing a frame of whatever is there.",
+        );
+      }
+      const spine = spineEl.getBoundingClientRect();
+      const band = bandEl.getBoundingClientRect();
+      const next = bandEl.nextElementSibling?.getBoundingClientRect() ?? null;
 
-      const top = Math.round(bar.y - padTop);
-      const padded = hero.y + hero.height + padBottom;
+      const top = Math.round(spine.y - padTop);
+      const padded = band.y + band.height + padBottom;
       // Whichever is higher: the padded hero edge, or a hairline above whatever
       // comes next. Half a row of the following element in frame is the failure
       // this clamp exists to prevent.
@@ -339,13 +363,19 @@ async function captureWalkthrough() {
   const closing = await page.evaluate(() => {
     const text = document.body.textContent ?? "";
     const panels = Array.from(document.querySelectorAll(".plan-panel"));
-    const gaps = document.querySelector(".rail-group ul");
+    // The named residuals moved from the sticky rail to the scope strip when the
+    // decision became a band. Same question as before: is the list complete in
+    // frame, or is it scrolling and therefore showing a partial set?
+    const gaps = document.querySelector(".scope__residuals");
     return {
       refusal: text.includes("refuse to add the dbt quality check"),
       repositoryPath: text.includes("dbt/models/curated/game_events.sql"),
       pinnedRevision: text.includes("59fa295c51fc23466f3a71542f8bf3d1335daa83"),
       proposedAction: text.includes("Add a dbt quality check for game_events"),
-      coverageVisible: (document.querySelector(".outcome-bar")?.textContent ?? "").includes("Not established"),
+      // Coverage is asserted once, in the scope strip, and Scope B is the cell
+      // that carries it. The old six-cell strip said "Not established"; the strip
+      // names the scope first, so the string to look for changed with it.
+      coverageVisible: (document.querySelector(".scope-strip")?.textContent ?? "").includes("Completeness not established"),
       panelsInViewport: panels.length > 0 && panels.every((p) => p.getBoundingClientRect().bottom <= window.innerHeight),
       gapsClipped: gaps ? gaps.scrollHeight > gaps.clientHeight + 1 : null,
       scrollY: window.scrollY,

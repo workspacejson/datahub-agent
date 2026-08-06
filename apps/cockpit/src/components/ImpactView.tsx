@@ -1,11 +1,7 @@
 import { motion, stagger, useReducedMotion, type Variants } from "motion/react";
-import { GAP_SOURCE_LABEL } from "../model/cockpit-view-model";
-import type { CockpitViewModel, ImpactEdge, StatedGap, ViewSource } from "../model/cockpit-view-model";
+import type { CockpitViewModel, ImpactEdge, ViewSource } from "../model/cockpit-view-model";
 import { SourceTag } from "./SourceTag";
 import { TermDefinition } from "./TermDefinition";
-
-/** The contract field the seam is about: the producing file's repository-relative path. */
-const PRODUCER_PATH_FIELD = "code.repositoryRelativePath";
 
 /**
  * The link, and never without its origin.
@@ -93,20 +89,23 @@ function CoordinateSeam({ model }: { model: CockpitViewModel }) {
   );
 }
 
-function ResolutionSeam({ model, gap }: { model: CockpitViewModel; gap: StatedGap | undefined }) {
+/**
+ * The producing file, and the commit-pinned way to open it.
+ *
+ * The withheld row is gone from here, not from the frame. It stated the catalog
+ * gap with its cause, which is now the `Why` line of the plan delta above the
+ * fold, where it is the reason the plan changed rather than a preamble to a path.
+ * Rendering it in both places put one recorded reason on one route twice, which
+ * is the duplication this pass exists to remove.
+ *
+ * What is left is the thing that exists nowhere else: the link, and never without
+ * its origin. The path stays as the link's subject at body weight; the display
+ * setting of it belongs to the subject band, which now carries it.
+ */
+function ResolutionSeam({ model }: { model: CockpitViewModel }) {
   return (
     <article className="seam" aria-label="Producing file resolution">
       <p className="eyebrow">Producing file</p>
-
-      {gap && (
-        <div className="seam__row seam__row--withheld">
-          <span className="seam__system">{GAP_SOURCE_LABEL[gap.source]}</span>
-          <span className="seam__value">
-            <span className="seam__field mono">{gap.field}</span>
-            <span className="seam__reason">{gap.detail}</span>
-          </span>
-        </div>
-      )}
 
       <div className="seam__row seam__row--resolved">
         <span className="seam__system">
@@ -134,14 +133,14 @@ function LineageNode({ edge, showSource }: { edge: ImpactEdge; showSource: boole
       <span className="topology__name">{edge.node}</span>
       <span className="topology__meta">
         {/*
-          The platform, because without it this column reads as untidy rather
-          than structured: four dbt models beside the four duckdb datasets they
-          are built from, half the names bare and half fully qualified. The
-          distinction is load-bearing and was invisible, so the only inference a
-          cold reader could draw was that the list had not been cleaned up.
+          The degree badge carries its unit. A bare integer beside a dataset name
+          reads as a count of anything -- rows, columns, incidents -- and the one
+          thing it is, a distance in the graph, was the one reading unavailable.
+          The direction is the column heading, so the badge does not repeat it.
         */}
-        {edge.platform && <span className="chip chip--platform">{edge.platform}</span>}
-        {edge.degree !== null && <span className="chip chip--degree">{edge.degree}</span>}
+        {edge.degree !== null && (
+          <span className="chip chip--degree">{edge.degree} hop{edge.degree === 1 ? "" : "s"}</span>
+        )}
         {/*
           The resolution axis, which this view never rendered at all: `state` was
           in the model and on no screen. It stays a separate chip from the source
@@ -151,6 +150,36 @@ function LineageNode({ edge, showSource }: { edge: ImpactEdge; showSource: boole
         {showSource && edge.source !== "unavailable" && <SourceTag source={edge.source} />}
       </span>
     </li>
+  );
+}
+
+/**
+ * The nodes of one direction, grouped under the platform that names them.
+ *
+ * The dbt and duckdb entries are two coordinate systems for the same models, not
+ * duplicate rows, and the platform was previously a chip repeated on every node:
+ * eight copies of two values, which is eight badges spent to make one
+ * distinction. As a group heading it is stated twice instead of eight times, and
+ * the grouping is what makes the two coordinate systems visible as two.
+ *
+ * Nodes with no platform on their URN fall into a final unlabelled group rather
+ * than being assigned one.
+ */
+function LineageGroups({ edges, showSource }: { edges: ImpactEdge[]; showSource: boolean }) {
+  const platforms = [...new Set(edges.map((edge) => edge.platform))];
+  return (
+    <>
+      {platforms.map((platform) => (
+        <div className="topology__group" key={platform ?? "unlabelled"}>
+          {platform && <p className="topology__platform">{platform}</p>}
+          <ul className="topology__nodes">
+            {edges.filter((edge) => edge.platform === platform).map((edge) => (
+              <LineageNode edge={edge} showSource={showSource} key={edge.node} />
+            ))}
+          </ul>
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -193,9 +222,12 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
           */}
           <h2>Lineage read and completeness are separate</h2>
         </div>
+        {/*
+          The legend is gone because the badges no longer need one: each carries
+          its own unit and each group carries its own platform. A key that repeats
+          what every badge already says is one more thing to read.
+        */}
         <div className="lineage-band__key">
-          {/* The badges were bare integers with no key anywhere on the page. */}
-          <span className="lineage-band__legend">platform · lineage degree</span>
           {sharedSource && <SourceTag source={sharedSource} />}
         </div>
       </header>
@@ -213,9 +245,7 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
         <div className="topology">
           <div className="topology__col">
             <p className="eyebrow">Upstream ({upstream.length})</p>
-            <ul className="topology__nodes">
-              {upstream.map((edge) => <LineageNode edge={edge} showSource={!sharedSource} key={edge.node} />)}
-            </ul>
+            <LineageGroups edges={upstream} showSource={!sharedSource} />
           </div>
           <div className="topology__col topology__col--subject">
             <p className="eyebrow">Under review</p>
@@ -227,9 +257,7 @@ function TopologyBand({ model }: { model: CockpitViewModel }) {
           </div>
           <div className="topology__col">
             <p className="eyebrow">Downstream ({downstream.length})</p>
-            <ul className="topology__nodes">
-              {downstream.map((edge) => <LineageNode edge={edge} showSource={!sharedSource} key={edge.node} />)}
-            </ul>
+            <LineageGroups edges={downstream} showSource={!sharedSource} />
           </div>
         </div>
       )}
@@ -261,8 +289,31 @@ const containerVariants: Variants = {
  * three small cards of preamble followed by a wall of catalog output, so a cold
  * reader's first seconds landed on the half that is not the product.
  */
+/**
+ * The naive join, and what it returned.
+ *
+ * Moved down from the shell's hero. Above the fold its job was to state the
+ * failure before the repair, and the plan delta now does that in the run's own
+ * recorded words: refuse to edit, versus edit one named file. This is the
+ * mechanism behind that pair, so it opens the disclosed half of the route rather
+ * than competing with the decision for the first frame.
+ *
+ * The path pair it used to print is gone: `CoordinateSeam` below renders the same
+ * two spellings as a shape, with the missing segment as a hole rather than as a
+ * substring a reader has to diff by eye.
+ */
+function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
+  if (!model.dbtFilePath || !model.projectPrefix) return null;
+  return (
+    <article className="silent-zero silent-zero--inline" aria-label="Silent zero: naive join failure">
+      <p className="silent-zero__result">
+        <TermDefinition term="Naive join" definition="A direct path lookup with no prefix normalization: the dbt path is compared to the repository path exactly as each system spells it." />: 0 matches. No error. No warning. Exit code 0.
+      </p>
+    </article>
+  );
+}
+
 export function ImpactView({ model }: { model: CockpitViewModel }) {
-  const producerGap = model.receipt.statedGaps.find((gap) => gap.field === PRODUCER_PATH_FIELD);
   const reduce = useReducedMotion();
 
   return (
@@ -288,10 +339,17 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
         what the artifact actually supplies: the file's location, which is
         exactly what the join below resolves.
       */}
+      {/*
+        The stakes sentence keeps its place at the head of the disclosed half and
+        loses the `route-intro` line that used to follow it. "What broke: the
+        catalog cannot resolve this dataset to a file" was the same statement one
+        register plainer, three lines below the sentence that already made it and
+        directly above the seam that exhibits it.
+      */}
       <p className="hero__stakes">DataHub says where data flows; git says where each file lives; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
-      <p className="route-intro">What broke: the catalog cannot resolve this dataset to a file.</p>
+      <SilentZeroCallout model={model} />
       <CoordinateSeam model={model} />
-      <ResolutionSeam model={model} gap={producerGap} />
+      <ResolutionSeam model={model} />
 
       <motion.article className="claim claim--evidence" variants={reduce ? undefined : itemVariants}>
         <p className="eyebrow">Repository evidence</p>

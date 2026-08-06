@@ -20,19 +20,17 @@
    Every stacking decision in the cockpit, in one place, because there is more
    than one of them now and the relationship between them is the whole rule.
 
-   `.outcome-bar` is sticky and was the only z-index in this file. Both popovers
-   portal to `document.body`, which makes them the last elements in the document
-   and looks like it should be enough — it is not. A positioned element with a
-   z-index beats a later positioned element whose z-index resolves to `auto`,
-   regardless of document order, so the status cells painted over the header's
-   definition panel.
+   Both popovers portal to `document.body`, which makes them the last elements in
+   the document and looks like it should be enough — it is not. A positioned
+   element with a z-index beats a later positioned element whose z-index resolves
+   to `auto`, regardless of document order, so the sticky status cells that used
+   to live here painted over the header's definition panel.
 
-   Named rather than numbered at each site so the next anchored surface reads the
-   ordering instead of guessing a number that happens to work. The gap between
-   the two values is deliberate: an overlay that must clear a popover has room to
-   land between them without renumbering anything. */
+   That bar is gone with the reduction and the value goes with it, but the popover
+   layer stays declared rather than left implicit: the failure it fixes returns
+   the moment anything on this page takes a z-index, and a number nobody can find
+   is a number the next person re-derives from a bug report. */
 :root {
-  --layer-sticky-bar: 5;
   --layer-popover: 20;
 }
 
@@ -78,12 +76,21 @@
 }
 
 /* ── Chrome ───────────────────────────────────────────────────
-   The application is tally. `workspace.json` is the substrate it is built on, so
-   it is an endorsement on the right rather than the wordmark on the left, which
-   is where it used to sit and where it read as the product's name. */
+   The application is tally. `workspace.json` is the substrate it is built on and
+   is never the wordmark; the reduction moved the endorsement pill it used to
+   carry here out of the bar entirely, leaving one line stating what this surface
+   does and the dataset switcher. */
 .product-header {
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6);
-  border-bottom: 1px solid var(--border-default); padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border-default); padding-bottom: var(--sp-3);
+}
+.product-header__aside { display: flex; align-items: center; gap: var(--sp-5); min-width: 0; }
+/* What this surface does, stated once, in the bar. Mono because it is a status
+   rather than prose, and muted because it is the least important true thing on
+   the page. */
+.app-status {
+  margin: 0; min-width: 0;
+  color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption);
 }
 
 /* Clear space is the bracket arm length on all four sides, which at a 24px mark
@@ -118,24 +125,6 @@
   font-size: var(--fs-caption); letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
 }
 
-.endorsement {
-  /* `flex: none` here cost the cockpit every viewport once its text grew: an
-     unshrinkable pill in a flex header pushed the dataset selector off screen
-     from 1024 to 1512. Shrinkable with a floor, so long copy wraps inside the
-     pill instead of widening the header past the page. */
-  margin: 0; flex: 0 1 auto; min-width: 0;
-  border: 1px solid var(--border-default); border-radius: var(--radius-pill);
-  padding: var(--sp-1) var(--sp-3);
-  color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-caption);
-}
-/* The term resolves to the standard. Underline discipline is the spine's back
-   link: a hairline rule that firms up on hover and focus, so the affordance is
-   visible at rest without the accent reading as a second CTA. */
-.endorsement a {
-  color: var(--wj-accent); font-weight: 500;
-  text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px;
-}
-.endorsement a:hover, .endorsement a:focus-visible { text-decoration-color: currentColor; }
 
 @media (max-width: 1100px) {
   /* Below the nav range the caption drops and only the lockup stays. */
@@ -152,69 +141,6 @@
   text-transform: uppercase;
 }
 
-
-/* ── Outcome bar ──────────────────────────────────────────────
-   The standing of the review, held on every route. It is chrome, so it is
-   full-bleed against the shell padding and sticks to the top edge: a reader who
-   has scrolled into the lineage list can still see that coverage is open.
-
-   `minmax(0, 1fr)` rather than `1fr`. A bare `1fr` is `minmax(auto, 1fr)`, so a
-   column cannot shrink below its longest unbreakable word, and the row overflows
-   its container instead of the cell wrapping. That is the containment failure
-   `first-frame.spec.ts` was written for, and six columns at 1280px is exactly
-   where it would recur.
-
-   The 1px grid gap over a hairline background draws the dividers, so the cells
-   carry no borders of their own.
-
-   It sits inside the shell padding rather than bleeding to the viewport edge.
-   The canvas shows it full-bleed, but reproducing that needs a negative margin
-   mirroring a clamped padding, and the two did not cancel at 390px: content came
-   out 398px in a 390px viewport. An inset bar reads as chrome just as well and
-   cannot overflow at any width. */
-.outcome-bar {
-  position: sticky; top: 0; z-index: var(--layer-sticky-bar);
-  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
-  margin: 0 0 var(--sp-5);
-  padding: 0;
-  background: var(--border-default);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.outcome-cell {
-  min-width: 0;
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--surface-page);
-}
-/* Amber is unsettled, and unestablished coverage is unsettled. Same hairline
-   marker as `.coverage__headline--open`, because it is the same statement in a
-   smaller place: the word carries the state and the colour only reinforces it,
-   so the cell still reads correctly in greyscale. */
-.outcome-cell--open { border-left: 2px solid var(--wj-experimental); }
-.outcome-cell--open .outcome-cell__value { color: var(--wj-experimental); }
-.outcome-cell__label {
-  margin-bottom: var(--sp-2);
-  color: var(--text-faint);
-  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
-  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
-}
-.outcome-cell__value {
-  margin: 0;
-  color: var(--text-heading);
-  font-size: var(--fs-xs); font-weight: 600; line-height: var(--lh-snug);
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-/* Six columns is a 1440px figure. Below that the cells stop being readable long
-   before they stop fitting, so the bar rewraps rather than compressing: three
-   columns of a legible width beat six of an illegible one. */
-@media (max-width: 1100px) {
-  .outcome-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 640px) {
-  .outcome-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 
 /* ── Coordinate seam ──────────────────────────────────────────
    Two rows, one per coordinate system, so the missing segment is a shape rather
@@ -255,41 +181,29 @@
   .coordinate { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
 }
 
-/* ── Hero band ────────────────────────────────────────────────
-   Identity left, the one coverage verdict right, on the same baseline grid. Both
-   are above the fold at 1440x900 and 1280x800; `first-frame.spec.ts` asserts that
-   mechanically rather than trusting this comment.
+/* ── Subject band ─────────────────────────────────────────────
+   The dataset on the left, the file it resolved to on the right, on one baseline
+   grid. This is the answer to "what am I looking at", and it is the only band on
+   the page carrying display type.
 
-   The dataset name stays the largest element. Setting the coverage verdict as
-   display type was considered and rejected: it makes a *limitation* the biggest
-   thing on the screen and demotes the subject to a caption, so a reviewer's first
-   impression becomes "this tool did not establish much" when the claim being made
-   is that resolution succeeded exactly and coverage is bounded. */
+   No glow. The radial wash used to mark this band as chrome, which was true when
+   it sat under a six-cell status strip and above a stakes sentence; it is now the
+   first evidence on the screen and an atmosphere behind evidence reads as
+   decoration on a claim. The hairline under it does the separating.
+
+   The dataset name stays the largest element. Setting the resolved path as
+   display type instead was considered and rejected: the subject has to be
+   identifiable before its result means anything, and a path set larger than the
+   thing it belongs to demotes the subject to a caption. */
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
-  gap: var(--sp-8);
-  align-items: center;
-  /* No top padding: `.product-header` already ends in `padding-bottom:
-     var(--sp-4)` above its rule, so a top pad here pays for the same boundary
-     twice. The band's glow starts at the rule, which is where the eye expects
-     it. */
-  padding: 0 0 var(--sp-5);
-  /* The glow and the scanline grid live in this band only, so the eye reads the
-     band as chrome and everything below it as data. */
-  margin: 0 calc(-1 * clamp(var(--sp-5), 4vw, var(--sp-10)));
-  padding-inline: clamp(var(--sp-5), 4vw, var(--sp-10));
-  background: var(--glow-page), var(--surface-page);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
+  gap: var(--sp-6) var(--sp-8);
+  align-items: end;
+  /* No top padding: `.spine` above already ends in a hairline, so a top pad here
+     pays for the same boundary twice. */
+  padding: var(--sp-4) 0;
   border-bottom: 1px solid var(--border-default);
-}
-.hero__stakes-group {
-  /* A full-bleed grid row. `.hero` already separates its rows with `gap:
-     var(--sp-8)`, so the old `margin-bottom: var(--sp-2)` applied the interval a
-     second time — spacing paid twice for one boundary. Removing it is what put
-     the next action back above the fold at 1280x800. */
-  grid-column: 1 / -1;
-  display: grid;
-  gap: var(--sp-1);
 }
 .hero__stakes {
   margin: 0;
@@ -309,6 +223,217 @@
   overflow-wrap: anywhere;
 }
 .subject-urn { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: 0; color: var(--text-muted); font-size: var(--fs-xs); }
+
+/* The resolved file, right-aligned against the subject so the two read as one
+   statement rather than as a heading and a card. The prefix is the only tinted
+   run in the path: it is the segment the catalog never exposes, so highlighting
+   it is source attribution, not a resolution colour. */
+.resolved-source { min-width: 0; text-align: right; }
+.resolved-source .eyebrow { margin-bottom: var(--sp-2); }
+.resolved-source__path {
+  margin: 0; color: var(--text-heading);
+  font-size: var(--fs-md); line-height: var(--lh-snug); overflow-wrap: anywhere;
+}
+.resolved-source__prefix {
+  padding: 2px var(--sp-1); border-radius: var(--radius-sm);
+  background: var(--accent-wash-25); color: var(--wj-accent-high);
+}
+.resolved-source__pin {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+  gap: var(--sp-2); margin: var(--sp-2) 0 0;
+  color: var(--text-muted); font-family: var(--font-mono); font-size: var(--fs-xs);
+}
+
+/* ── Contribution band ────────────────────────────────────────
+   Three responsibilities, read left to right as the actor model: supplied,
+   supplied, did. Each cell is badge, role, value — the same three lines in the
+   same order, so the band is one shape rather than three cards.
+
+   The badges carry the source encoding the rest of the surface already uses:
+   `workspace.json` takes emerald because emerald is its attribution and nothing
+   else, DataHub takes the informational blue, and tally takes the neutral ramp
+   because tally is neither source. The badge word states the same thing, so the
+   row survives greyscale.
+
+   `minmax(0, 1fr)` rather than `1fr`. A bare `1fr` is `minmax(auto, 1fr)`, so a
+   column cannot shrink below its longest unbreakable token and the row overflows
+   instead of the cell wrapping. That is the containment failure
+   `first-frame.spec.ts` exists for, and a mono path in a third of the width is
+   exactly where it recurs. */
+.contribution-band {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px;
+  margin: 0; padding: 0;
+  background: var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+}
+.contribution { min-width: 0; padding: var(--sp-3) var(--sp-4) var(--sp-3) 0; background: var(--surface-page); }
+.contribution + .contribution { padding-left: var(--sp-4); }
+.contribution__badge {
+  display: inline-block; margin: 0 0 var(--sp-3);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-pill);
+  padding: 2px var(--sp-3);
+  color: var(--text-muted);
+  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+}
+.contribution__badge--datahub { border-color: var(--wj-info); color: var(--wj-info); }
+.contribution__badge--workspacejson { border-color: var(--wj-accent); color: var(--wj-accent); }
+.contribution__role { margin: 0; color: var(--text-body); font-size: var(--fs-sm); line-height: var(--lh-normal); }
+.contribution__value {
+  margin: var(--sp-2) 0 0; color: var(--text-muted);
+  font-family: var(--font-mono); font-size: var(--fs-xs); line-height: var(--lh-normal);
+  overflow-wrap: anywhere;
+}
+
+/* ── Plan delta ───────────────────────────────────────────────
+   The product's claim, in three lines, and the only accent-filled panel above
+   the fold.
+
+   Amber on the `without` row because a refusal caused by an unknown location is
+   unsettled, which is what amber means here and everywhere else on this surface.
+   Emerald on the `with` row because `workspace.json` supplied the material that
+   changed it — the row carries a source tag saying so, because emerald alone
+   must never be read as "resolved". */
+.plan-delta { display: grid; gap: var(--sp-2); padding: var(--sp-4) 0; }
+.plan-delta__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-4); margin-bottom: var(--sp-2); }
+.plan-delta__heading {
+  margin: 0; color: var(--text-heading);
+  font-size: var(--fs-xl); font-weight: 800; letter-spacing: var(--ls-snug); line-height: var(--lh-snug);
+}
+.plan-delta__caption { margin: 0; color: var(--text-faint); font-size: var(--fs-xs); }
+.plan-delta__row {
+  display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-5); align-items: baseline;
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--border-default); border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+.plan-delta__label {
+  margin: 0; color: var(--text-muted);
+  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: var(--ls-wide); text-transform: uppercase; line-height: var(--lh-normal);
+}
+/* Set at body size rather than at the display size the canvas shows.
+
+   The canvas paraphrases the two plans into a clause each ("Refuse to edit.",
+   "Edit one named file."). These rows carry the recorded steps instead, because
+   a paraphrase of a plan is not the plan, and a real step runs to a couple of
+   hundred characters including the revision it pins. At 17px/700 that is three
+   bold lines, which pushed the decision 90px below the fold at 1280x800 and made
+   the loudest thing on the frame a paragraph rather than a claim. The contrast
+   between the rows is carried by colour, fill and the label column, none of which
+   needs the extra four points. */
+.plan-delta__value {
+  /* Block, not flex. As a wrapping flex row the source tag became its own flex
+     line whenever the step ran past one line, which it always does, so the
+     attribution sat on a line of its own and cost 24px of a frame that owed
+     those pixels to the residual names below. Inline, it reads as the end of the
+     claim it attributes, which is also where a reader expects it. */
+  display: block;
+  margin: 0; color: var(--text-heading);
+  font-size: var(--fs-sm); font-weight: 600; line-height: var(--lh-normal);
+  overflow-wrap: anywhere;
+}
+.plan-delta__value .source-tag { margin-left: var(--sp-2); font-weight: 400; }
+.plan-delta__row--without .plan-delta__value { color: var(--wj-experimental); }
+.plan-delta__row--with { border-color: var(--wj-accent-low); background: var(--accent-wash-6); }
+.plan-delta__row--with .plan-delta__value { color: var(--wj-accent-high); }
+/* The reason is prose, not a headline: normal weight, body colour, relaxed
+   measure. It explains the two rows above rather than competing with them. */
+.plan-delta__row--why { border-color: transparent; background: transparent; padding-inline: var(--sp-4); }
+.plan-delta__value--why {
+  display: block; color: var(--text-body);
+  font-size: var(--fs-sm); font-weight: 400; line-height: var(--lh-normal);
+  text-wrap: pretty;
+}
+.plan-delta__system { color: var(--text-heading); font-weight: 600; }
+.plan-delta__link {
+  margin-left: var(--sp-2);
+  border: 0; background: transparent; padding: 0; cursor: pointer;
+  color: var(--wj-accent); font: inherit; font-weight: 600;
+  text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px;
+}
+.plan-delta__link:hover { text-decoration-color: currentColor; }
+
+/* ── Decision bar ─────────────────────────────────────────────
+   One band across the frame: what proceeding accepts on the left, the controls
+   on the right. Proceed is the only filled control; stop is a real target of the
+   same height in outline, because declining has to be as reachable as
+   proceeding. */
+.decision-bar {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-3) var(--sp-8); align-items: center;
+  margin: 0; padding: var(--sp-3) 0;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+}
+.decision-bar__ask { min-width: 0; }
+.decision-bar__title {
+  margin: 0 0 var(--sp-1); color: var(--text-heading);
+  font-size: var(--fs-base); font-weight: 700; line-height: var(--lh-snug);
+}
+.decision-bar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+/* The band's buttons size to their labels rather than filling a rail column. */
+.decision-bar .cta { width: auto; }
+
+/* ── Scope strip ──────────────────────────────────────────────
+   Last and quietest: two named scopes that cannot contradict each other, and the
+   residual names. Scope B takes the amber hairline when completeness is open,
+   which is the same marker every other stated absence uses. */
+.scope-strip {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px;
+  margin: 0; background: var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+}
+.scope { min-width: 0; padding: var(--sp-3) var(--sp-4) var(--sp-3) 0; background: var(--surface-page); }
+.scope + .scope { padding-left: var(--sp-4); }
+.scope--open { border-left: 2px solid var(--wj-experimental); padding-left: var(--sp-3); }
+.scope--open .scope__claim { color: var(--wj-experimental); }
+.scope__claim { margin: var(--sp-2) 0 0; color: var(--text-body); font-size: var(--fs-xs); line-height: var(--lh-normal); }
+.scope__disposition { font-family: var(--font-mono); }
+/* Capped and scrollable. The count is contract-supplied and unbounded; the strip
+   is a reference and Receipts carries every residual with its cause. */
+.scope__residuals {
+  list-style: none; margin: var(--sp-2) 0 0; padding: 0;
+  display: grid; gap: 2px;
+  max-height: 4.5rem; overflow-y: auto;
+}
+.scope__residuals li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2);
+  color: var(--text-body); font-size: var(--fs-xs); overflow-wrap: anywhere;
+}
+.scope__residuals .mono { font-family: var(--font-mono); }
+.scope__source { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); }
+.scope__label { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-3); margin: 0; }
+.scope__explain {
+  border: 0; background: transparent; padding: 0; cursor: pointer;
+  color: var(--text-muted); font-size: var(--fs-caption);
+  text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px;
+}
+.scope__explain:hover { color: var(--text-body); text-decoration-color: currentColor; }
+
+/* Three columns is a 1440px figure for both bands. Below that the cells stop
+   being readable long before they stop fitting, so they rewrap. */
+@media (max-width: 1100px) {
+  .contribution-band, .scope-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .contribution, .scope { padding-left: var(--sp-4); }
+}
+@media (max-width: 700px) {
+  /* One column each. The bands stay in the same order and lose only their
+     side-by-side reading, which a 390px column cannot support anyway. */
+  .contribution-band, .scope-strip { grid-template-columns: minmax(0, 1fr); }
+  .contribution, .scope { padding-block: var(--sp-2); padding-inline: 0; }
+  /* The inline padding is the gutter between columns. In one column there is no
+     gutter, and keeping it left every cell but the first indented by 16px against
+     a band that is supposed to read as one stack. */
+  .contribution + .contribution, .scope + .scope { padding-left: 0; }
+  .scope--open { padding-left: var(--sp-3); }
+  .contribution__badge { margin-bottom: var(--sp-2); }
+  .plan-delta__row { grid-template-columns: minmax(0, 1fr); }
+  .decision-bar { grid-template-columns: minmax(0, 1fr); }
+  .decision-bar__actions { flex-direction: column-reverse; align-items: stretch; }
+  .decision-bar .cta { width: 100%; }
+}
 
 
 /* ── Chips: two independent axes, never collapsed ─────────────
@@ -340,24 +465,19 @@
   font-family: var(--font-mono); font-size: var(--fs-caption);
 }
 
-/* ── Route body: content, and a rail that carries the decision ─ */
+/* ── Route body ───────────────────────────────────────────────
+   One column, because the rail that used to take the second one carried the
+   decision and the decision is now a band. Receipts opts back into two, where
+   the rail is a section index and the route is tall enough to need one. */
 .route-slot { padding: var(--sp-4) 0 0; }
-.route-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 20rem); gap: var(--sp-6); align-items: start; }
+.route-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); align-items: start; }
+.route-body--indexed { grid-template-columns: minmax(0, 1fr) minmax(0, 18rem); }
 .route-body > * { min-width: 0; }
 
 .decision-rail { position: sticky; top: var(--sp-4); display: grid; gap: var(--sp-2); }
 .rail-group { border: 1px solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-card); padding: var(--sp-3) var(--sp-4); }
-/* The named gaps scroll inside the rail rather than pushing the decision below
-   the fold. The cap is deliberately tight: this list is a reference, the full
-   statement of every gap with its cause is the leading band on Receipts, and the
-   decision is what this frame exists to carry. `first-frame.spec.ts` grows the
-   list past the cap and asserts the decision is still readable. */
-.rail-group ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-2); max-height: 8rem; overflow-y: auto; }
-.rail-group li { font-size: var(--fs-xs); color: var(--text-muted); line-height: var(--lh-normal); overflow-wrap: anywhere; }
-.rail-group li strong { display: block; color: var(--text-body); font-family: var(--font-mono); font-weight: 500; }
-.rail-group__reason { display: block; color: var(--text-muted); }
-/* The consequence of proceeding, not a second statement of coverage. Coverage is
-   asserted once, in the hero. */
+/* The consequence of proceeding, on the decision band. Not a second statement of
+   coverage: coverage is asserted once, in the scope strip. */
 .rail-caveat { margin: 0; color: var(--text-body); font-size: var(--fs-sm); line-height: var(--lh-normal); }
 
 /* ── Receipt section index ────────────────────────────────────
@@ -365,7 +485,7 @@
    design system's 2px accent left border, which is the same device the coverage
    verdict uses for "unsettled", here meaning "you are here": both are a rule in
    the margin rather than a fill, so neither reads as a status on the text. */
-.rail-index ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: 0; max-height: none; overflow: visible; }
+.rail-index ul { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: 0; }
 .rail-index li { border-left: 2px solid transparent; }
 .rail-index a {
   display: block; padding: var(--sp-2) var(--sp-3);
@@ -448,6 +568,16 @@
 .topology__col .topology__nodes { flex: 1; align-content: center; }
 .topology__col--subject { border-inline: 1px solid var(--border-default); padding-inline: var(--sp-3); }
 .topology__nodes { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-1); }
+/* One group per platform. The dbt and duckdb entries are two coordinate systems
+   for the same models, not duplicate rows, and this was a chip repeated on every
+   node: eight badges spent making one distinction. */
+.topology__group + .topology__group { margin-top: var(--sp-3); }
+.topology__platform {
+  margin: 0; color: var(--text-muted);
+  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+}
+.topology__platform + .topology__nodes { margin-top: var(--sp-1); }
 .topology__node {
   min-width: 0;
   border: 1px solid var(--border-default); border-radius: var(--radius-sm);
@@ -471,7 +601,6 @@
 .chip--degree { border-color: transparent; background: var(--surface-sunken); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .chip--platform { border-color: var(--border-default); background: transparent; color: var(--text-faint); }
 .lineage-band__key { display: flex; align-items: center; gap: var(--sp-3); flex: none; }
-.lineage-band__legend { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; white-space: nowrap; }
 
 /* ── Change plan ──────────────────────────────────────────────
    Two panels, not tabs. The comparison is the argument, and a tab would hide
@@ -525,31 +654,20 @@
   color: var(--text-heading); font-size: var(--fs-sm);
   line-height: var(--lh-relaxed); text-wrap: pretty;
 }
-.evaluation-claim__result:last-of-type { margin-bottom: var(--sp-3); }
+.evaluation-claim__result:last-of-type { margin-bottom: var(--sp-2); }
+/* The bounds, quieter than the result but on the same card. Muted and smaller,
+   because it qualifies the two sentences above rather than competing with them,
+   and above the link so a reader meets the limit before the invitation. */
+.evaluation-claim__scope {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-normal);
+  text-wrap: pretty;
+}
 .evaluation-claim__source {
   color: var(--text-muted); font-size: var(--fs-xs);
   text-decoration: underline; text-underline-offset: 3px;
 }
 .evaluation-claim__source:hover { color: var(--text-body); }
-
-/* The first entry of each plan, promoted so the two are comparable without
-   reading both lists down. Labelled as a first planned action, never as a
-   decision: nothing in the model records a disposition. */
-.first-action {
-  margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--radius-sm); background: var(--surface-sunken);
-}
-.first-action__label {
-  margin: 0 0 var(--sp-1); color: var(--text-faint);
-  font-family: var(--font-mono); font-size: var(--fs-caption);
-  letter-spacing: var(--ls-wide); text-transform: uppercase;
-}
-.first-action__value { margin: 0; color: var(--text-heading); font-size: var(--fs-sm); font-weight: 600; line-height: var(--lh-snug); }
-.reversal-label {
-  margin: 0 0 var(--sp-3); color: var(--text-heading);
-  font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 500;
-  letter-spacing: var(--ls-eyebrow); text-transform: uppercase;
-}
 
 .parity-strip { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 0 0 var(--sp-4); border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); }
 .parity-strip div { min-width: 0; }
@@ -664,9 +782,11 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 .unresolved-list__reason { display: block; color: var(--text-muted); }
 
 @media (max-width: 1100px) {
-  /* Below the two asserted breakpoints the rail stops being a column and becomes
-     the first thing under the identity, so the decision stays reachable. */
-  .hero, .route-body { grid-template-columns: minmax(0, 1fr); }
+  /* Below the two asserted breakpoints the receipts index stops being a column
+     and follows the receipt in flow. */
+  .hero, .route-body--indexed { grid-template-columns: minmax(0, 1fr); }
+  .resolved-source { text-align: left; }
+  .resolved-source__pin { justify-content: flex-start; }
   .decision-rail { position: static; }
   .spine { flex-wrap: wrap; }
   /* The three-column topology grid reflows to a single column so upstream and
@@ -687,8 +807,8 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
      missed it by up to 26px on the CI runners, whose type metrics are larger.
      Halving them reclaims ~48px, which is headroom on both, and the stack still
      reads as separated groups. The other half of this pass sits in the mobile
-     block below `.spine`, because `.coverage__note` and `.spine` are declared
-     after this point and would otherwise win on source order. */
+     block below `.spine`, because `.spine` is declared after this point and
+     would otherwise win on source order. */
   .product-header {
     align-items: flex-start; flex-direction: column;
     gap: var(--sp-3); padding-bottom: var(--sp-2);
@@ -707,11 +827,7 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
      shrinking below their content width, which overflows by ~35px at 390px.
      Letting both yield on a phone keeps the band inside its column. */
   .lineage-band__key { min-width: 0; flex: 1 1 auto; flex-wrap: wrap; }
-  .lineage-band__legend { white-space: normal; }
-  /* The seam's producing-file path is the most important line on this screen.
-     At narrow widths it stays readable but does not dominate the frame. */
-  .seam__path { font-size: var(--fs-lg); }
-}
+  }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
@@ -723,51 +839,31 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
      already ends in `padding-bottom: var(--sp-3)`, and `.hero`'s grid `gap`
      already separates the full-bleed stakes row from the row beneath it. */
   .hero { padding: 0 0 var(--sp-3); }
-  .hero__stakes-group { gap: 2px; }
-  .silent-zero--inline { padding: var(--sp-1) var(--sp-3); }
+    .silent-zero--inline { padding: var(--sp-1) var(--sp-3); }
   .silent-zero__result { margin-top: var(--sp-1); }
   .route-slot { padding-top: var(--sp-2); }
-  /* The gap-list cap exists to stop the list pushing the decision below the
-     fold. At this width it was not tight enough to do that job: the decision
-     cleared the fold by -1px with every duplicate interval already removed.
-     Tightened here rather than globally, because above 1300px the decision
-     already clears with room and a shorter list there would cost reference
-     value for nothing. The list is a reference; Receipts carries every gap with
-     its cause. */
-  .rail-group ul { max-height: 6rem; }
+  /* The narrower of the two asserted viewports is the binding one, so the bands
+     between the subject and the decision give back their outer padding first.
+     The decision has to clear the fold with FOLD_HEADROOM to spare here, not by
+     a pixel. */
+  .hero { padding: var(--sp-3) 0; gap: var(--sp-3) var(--sp-6); }
+  .plan-delta { padding: var(--sp-3) 0; gap: var(--sp-1); }
+  .plan-delta__row { padding: var(--sp-2) var(--sp-3); }
+  .plan-delta__head { margin-bottom: var(--sp-1); }
+  .contribution { padding-block: var(--sp-2); }
+  .contribution__badge { margin-bottom: var(--sp-2); }
+  /* The role is one or two lines of body copy in a third of the width. Snug
+     rather than normal leading buys back a line's worth of the frame on the cell
+     that wraps, and reads the same at this size. */
+  .contribution__role { line-height: var(--lh-snug); }
+  .hero h1 { font-size: clamp(2rem, 3vw, 2.5rem); margin: var(--sp-1) 0 var(--sp-2); }
+  .plan-delta__heading { font-size: var(--fs-lg); }
+  /* Every pixel above the residual names is a pixel of the last one. 1280x800 is
+     the binding viewport and all three have to be whole in it. */
+  .scope__residuals { margin-top: var(--sp-1); }
+  .decision-bar { padding: var(--sp-2) 0; }
+  .scope { padding-block: var(--sp-2); }
 }
-
-/* ── Coverage: the single epistemic statement ─────────────────
-   This replaces three stacked registers that all said the same thing: a prose
-   tier line, four bare chips, and this panel. The chips lost because `exact` and
-   `not-established` standing alone had no visible subject; their axes survive
-   here as labelled rows. */
-/* No border. It is the right half of the hero, on the hero's own surface, rather
-   than a card floating in the top-right corner. */
-.coverage { min-width: 0; }
-.coverage__headline { margin: var(--sp-2) 0 var(--sp-2); color: var(--text-heading); font-size: var(--fs-xl); font-weight: 600; letter-spacing: var(--ls-snug); line-height: var(--lh-snug); }
-/* Amber is unsettled, and unestablished coverage is unsettled. It is a hairline
-   marker rather than coloured text: the word carries the state, the colour only
-   reinforces it, and the statement has to survive greyscale. */
-.coverage__headline--open { padding-left: var(--sp-3); border-left: 2px solid var(--wj-experimental); }
-.coverage__headline--open .semantic-icon { color: var(--wj-experimental); }
-.coverage__note { margin: 0 0 var(--sp-4); max-width: 44ch; color: var(--text-muted); font-size: var(--fs-xs); line-height: var(--lh-relaxed); }
-
-/* Four figures on one rule, not a bordered panel with a nested grid. They are one
-   line of information, so they get one line and no second border. */
-.coverage__counts {
-  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-6);
-  margin: 0; padding-top: var(--sp-3);
-  border-top: 1px solid var(--border-default);
-}
-.coverage__counts > div { min-width: 0; }
-.coverage__counts dt { color: var(--text-heading); font-family: var(--font-mono); font-size: var(--fs-lg); font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
-/* The gap count is the one figure that carries an unsettled state, so it is the
-   one that takes amber. The others are neutral because they are just counts. */
-.coverage__count--open { color: var(--wj-experimental); }
-.coverage__count--word { font-size: var(--fs-base); }
-.coverage__of { color: var(--text-faint); font-size: var(--fs-sm); }
-.coverage__counts dd { margin: var(--sp-1) 0 0; color: var(--text-muted); font-size: var(--fs-caption); }
 
 /* ── Spine ────────────────────────────────────────────────────
    The only navigation on the page. Numbered because the three views are a
@@ -776,18 +872,29 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
    locked. Going back is a text link here rather than a button in the decision
    card, where it had the weight of a secondary action and competed with the one
    real choice. */
-.spine { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin: var(--sp-4) 0 0; border-bottom: 1px solid var(--border-default); }
-.spine ol { display: flex; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
-.spine button {
-  display: flex; align-items: baseline; gap: var(--sp-2);
+.spine { display: flex; align-items: stretch; justify-content: space-between; gap: var(--sp-4); margin: var(--sp-3) 0 0; border-bottom: 1px solid var(--border-default); }
+/* Three equal cells rather than three tabs sized to their labels. Each cell now
+   carries a caption saying what its step is for, and captions of different
+   lengths in auto-width tabs made the rail read as ragged rather than as a
+   sequence of equal steps. `minmax(0, …)` so a long caption wraps inside its
+   cell instead of widening the row. */
+.spine ol { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+.spine li { min-width: 0; }
+/* Scoped to the list. `.spine button` also matched `.spine__back`, whose own rule
+   is one class less specific, so the back link inherited `width: 100%` and a grid
+   display and ate the whole rail. */
+.spine ol button {
+  width: 100%; min-width: 0;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 var(--sp-2); align-items: baseline;
   min-height: var(--tap-target);
   border: 0; border-bottom: 2px solid transparent; background: transparent;
-  padding: 0 var(--sp-4); cursor: pointer;
-  color: var(--text-muted); font-size: var(--fs-sm);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) 0; cursor: pointer; text-align: left;
+  color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600;
   transition: var(--transition-interactive);
 }
+.spine ol li + li button { padding-left: var(--sp-4); }
 .spine__index { font-family: var(--font-mono); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
-.spine button:hover { color: var(--text-body); }
+.spine ol button:hover { color: var(--text-body); }
 /* Three legible steps on the neutral ramp: upcoming muted, visited brighter,
    current brightest with the accent underline. Visited was `--wj-accent-low`,
    which measures 1.43:1 on the canvas at 11px and axe failed the frame on it.
@@ -806,16 +913,15 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 }
 .spine__back:hover { color: var(--text-body); text-decoration-color: currentColor; }
 
-/* The second half of the mobile first-frame pass. These two live here rather
-   than in the block above because `.coverage__note` and `.spine` are declared
-   after it and, at equal specificity, would win on source order. */
+/* The second half of the mobile first-frame pass. These live here rather than in
+   the block above because `.spine` is declared after it and, at equal
+   specificity, would win on source order. */
 @media (max-width: 1300px) {
   .spine { margin-top: var(--sp-3); }
 }
 @media (max-width: 640px) {
-  .coverage__note { margin-bottom: var(--sp-2); }
   .spine { margin-top: var(--sp-2); }
-  .spine button { padding: 0 var(--sp-2); }
+  .spine ol button { padding: var(--sp-1) var(--sp-2); }
 }
 
 /* ── The silent zero: the failure before the repair ──────────
@@ -829,21 +935,6 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   padding: var(--sp-4) var(--sp-5);
 }
 .silent-zero .eyebrow { color: var(--text-faint); }
-.silent-zero__row {
-  display: grid;
-  grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
-  gap: var(--sp-4);
-  padding: var(--sp-2) 0;
-}
-.silent-zero__row + .silent-zero__row { border-top: 1px solid var(--border-default); }
-.silent-zero__label {
-  font-family: var(--font-mono); font-size: var(--fs-caption);
-  letter-spacing: .04em; color: var(--text-muted);
-}
-.silent-zero__value {
-  font-family: var(--font-mono); font-size: var(--fs-sm);
-  color: var(--text-body); overflow-wrap: anywhere;
-}
 .silent-zero__result {
   color: var(--text-faint); font-size: var(--fs-sm);
   margin-top: var(--sp-3); margin-bottom: 0;
@@ -863,14 +954,12 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 .seam__row:first-child { padding-top: var(--sp-3); }
 .seam__row:last-child { padding-bottom: 0; }
 .seam__row + .seam__row { border-top: 1px solid var(--border-default); }
-.seam__row--withheld { color: var(--text-faint); }
 .seam__system { min-width: 0; font-family: var(--font-mono); font-size: var(--fs-caption); letter-spacing: .04em; color: var(--text-muted); }
 .seam__value { min-width: 0; }
-.seam__field { display: block; color: var(--text-muted); font-size: var(--fs-xs); text-decoration: line-through; text-decoration-color: var(--wj-gray-5); }
-.seam__reason { display: block; margin-top: var(--sp-1); color: var(--text-faint); font-size: var(--fs-xs); line-height: var(--lh-normal); }
-/* The resolved path is the largest text in the body of this screen, because it
-   is the fact the whole pipeline exists to produce. */
-.seam__path { display: block; color: var(--text-heading); font-size: var(--fs-xl); font-weight: 500; line-height: var(--lh-snug); overflow-wrap: anywhere; }
+/* The path is the link's subject here, not a second announcement of the result.
+   The subject band above carries it at display weight; this is body text so the
+   two do not compete for the same claim. */
+.seam__path { display: block; color: var(--text-heading); font-size: var(--fs-sm); font-weight: 500; line-height: var(--lh-snug); overflow-wrap: anywhere; }
 .seam__row--resolved .view-source { margin-top: var(--sp-3); }
 
 /* ── Receipts: the unestablished, banded and first ────────────
@@ -915,14 +1004,14 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 
   /* One staged entry on first paint. The identity resolves before the coverage
      that qualifies it, which is the order the page wants to be read in. */
-  .hero__identity, .coverage, .spine, .route-body { transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard); }
+  .hero__identity, .resolved-source, .spine, .route-body { transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard); }
   @starting-style {
     .hero__identity { opacity: 0; transform: translateY(6px); }
-    .coverage { opacity: 0; transform: translateY(6px); }
+    .resolved-source { opacity: 0; transform: translateY(6px); }
     .spine { opacity: 0; }
     .route-body { opacity: 0; transform: translateY(6px); }
   }
-  .coverage { transition-delay: 60ms; }
+  .resolved-source { transition-delay: 60ms; }
   .spine { transition-delay: 100ms; }
   .route-body { transition-delay: 140ms; }
 
@@ -1054,15 +1143,6 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   border-radius: var(--radius-md);
   background: var(--surface-card);
 }
-.silent-zero__path {
-  margin: var(--sp-1) 0 0;
-  font-family: var(--font-mono); font-size: var(--fs-caption);
-  color: var(--text-muted); overflow-wrap: anywhere;
-}
-.silent-zero__consequence {
-  margin: var(--sp-3) 0 0;
-  color: var(--text-body); font-size: var(--fs-sm); font-weight: 500;
-}
 
 /* ── Dataset selector ───────────────────────────────────────── */
 .dataset-selector {
@@ -1082,29 +1162,15 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 }
 .dataset-selector__select:hover { border-color: var(--wj-accent); }
 
-/* ── Endorsement subtitle ───────────────────────────────────── */
-.endorsement__subtitle {
-  margin-left: var(--sp-2);
-  color: var(--text-faint);
-}
-
 /* ── Spine subtitle ─────────────────────────────────────────── */
 .spine__subtitle {
-  display: block;
+  grid-column: 2; display: block;
   font-family: var(--font-sans); font-size: var(--fs-xs);
-  color: var(--text-muted); font-weight: 400;
+  color: var(--text-faint); font-weight: 400;
   letter-spacing: normal; text-transform: none;
+  line-height: var(--lh-normal);
   margin-top: var(--sp-1);
 }
-
-/* ── Rail verify link ───────────────────────────────────────── */
-.rail-verify {
-  display: inline-block; margin-top: var(--sp-2);
-  color: var(--wj-accent); font-weight: 600; font-size: var(--fs-xs);
-  text-decoration: underline; text-decoration-color: var(--border-strong);
-  text-underline-offset: 3px;
-}
-.rail-verify:hover { text-decoration-color: currentColor; }
 
 /* ── Evidence tier badge ────────────────────────────────────── */
 .evidence-tier-badge {
@@ -1136,44 +1202,6 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   font-size: var(--fs-sm);
   font-weight: 500;
   line-height: var(--lh-snug);
-}
-
-/* ── Silent-zero pair: failure and resolution in one glance ──
-   The naive-join card and the resolved path are wrapped together
-   so a judge sees the problem and the fix without scrolling. */
-.silent-zero-pair {
-  /* The failure and its resolution are a before/after, so they belong beside
-     each other where there is room: HAC-279 asks for the silent-zero comparison
-     to be legible "in one glance", and two stacked bands are two glances. It
-     also buys back the vertical space stacking them cost — the next action was
-     pushed below the fold at both required viewports. Falls back to one column
-     under ~44rem, where side-by-side would break the measure. */
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
-  align-items: start;
-  gap: var(--sp-2);
-  margin: 0 0 var(--sp-3);
-}
-.silent-zero-pair .silent-zero--inline { margin: 0; }
-.silent-zero-pair .resolved-summary {
-  margin: 0;
-  padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--border-default);
-  border-left: 2px solid var(--wj-accent);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-}
-.resolved-summary__result {
-  margin: 0;
-  color: var(--text-heading);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-}
-.resolved-summary__result .mono { font-family: var(--font-mono); font-size: var(--fs-xs); overflow-wrap: anywhere; }
-.resolved-summary__method {
-  margin: var(--sp-1) 0 0;
-  color: var(--text-muted);
-  font-size: var(--fs-caption);
 }
 
 /* ── Writeback state: distinct visual treatment ──────────────
@@ -1236,8 +1264,6 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   .route-intro { font-size: var(--fs-xs); }
   .cockpit-footer { padding-top: var(--sp-4); }
   .cockpit-footer__role { font-size: var(--fs-xs); }
-  .resolved-summary__result { font-size: var(--fs-xs); }
-  .resolved-summary__result .mono { font-size: var(--fs-caption); }
 }
 
 /* ── Term definition ─────────────────────────────────────────
@@ -1277,4 +1303,23 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
 .term-def__body {
   margin: 0; font-family: var(--font-sans); font-size: var(--fs-sm);
   line-height: 1.5; color: var(--text-body);
+}
+
+/* ── Narrow-viewport overrides that must win on source order ──
+   `.spine__subtitle` and `.lineage-band__head` are declared above this point, so
+   at equal specificity a media block placed earlier in the file loses to them.
+   The same trap the coverage note fell into; these live at the end for the same
+   reason. */
+@media (max-width: 700px) {
+  /* The step captions drop, as the wordmark's own caption already does below the
+     nav range. Three captions at a third of 390px wrap to three lines each and
+     cost 70px of the one frame a phone reader gets, to restate what the step
+     labels and the sequence already say. */
+  .spine__subtitle { display: none; }
+  .spine ol button { padding: var(--sp-2) var(--sp-2) var(--sp-2) 0; }
+  /* The band head is a title and a source tag, and the tag is one unbreakable
+     token. Side by side they burst the column by ~12px at 390px, so the tag drops
+     to its own line rather than the row overflowing. */
+  .lineage-band__head { flex-wrap: wrap; }
+  .lineage-band__key { flex: 1 1 100%; }
 }

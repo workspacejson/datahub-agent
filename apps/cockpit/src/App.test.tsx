@@ -14,11 +14,23 @@ it("derives the shell state from URL query state and writes navigation back to t
   render(<App />);
 
   expect(screen.getByRole("button", { name: "Receipts" }).getAttribute("aria-current")).toBe("step");
-  // The outcome bar states completeness in words with a subject rather than as
-  // the bare contract token, which had no visible referent on the frame. It
-  // moved here from the hero panel when the bar took over the fact: the bar
-  // holds it on every route, and the hero renders the consequence only.
-  expect(screen.getByLabelText("Standing of this review").textContent).toContain("Complete against pinned manifest");
+
+  /*
+    The route the URL selected still states where the review stands.
+
+    This used to read the six-cell status strip, which carried source, lineage,
+    coverage, plan, writeback and limitations on every route. The strip is gone:
+    each of those facts now appears once, in the band that owns it, so the check
+    is that both halves of the standing survived the redistribution rather than
+    that one element still holds all six.
+
+    Resolution is on the subject band, which every route renders. Completeness is
+    on the scope strip on Impact and Change plan, and here in the provenance line,
+    which is the route that states it in full — a scope strip on Receipts would
+    put the same claim on one route twice, which `house-copy.test.tsx` forbids.
+  */
+  expect(screen.getByLabelText("Standing of this review").textContent).toContain("exact");
+  expect(document.body.textContent).toContain("Complete against pinned manifest");
 
   await user.click(screen.getByRole("button", { name: "Change plan" }));
   expect(window.location.pathname).toBe("/change-plan");

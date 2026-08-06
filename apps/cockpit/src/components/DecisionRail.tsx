@@ -1,22 +1,14 @@
 import { useEffect, useState } from "react";
 
-import type { CockpitRoute, CockpitViewModel } from "../model/cockpit-view-model";
-
 /**
- * The named gaps, the consequence of proceeding, and the one action that does.
+ * Wayfinding for the one route that needs it.
  *
- * It is a rail rather than a footer because of where it has to be readable. The
- * primary action used to sit at the end of the Impact column, at `y = 1378` on a
- * 1533px page: 478px below a 1440x900 fold and 578px below a 1280x800 one.
- * HAC-228 shows a cold reader the first frame for five seconds and forbids
- * scrolling, then asks what the next action is, so an action below the fold is an
- * action that does not exist for the question being asked.
- *
- * It no longer restates coverage. Coverage is asserted once, in the hero band;
- * this card carries only what proceeding accepts and the control that proceeds.
- * Two wordings of one fact 900px apart made neither authoritative.
+ * This file used to carry two things: the sticky decision card on Impact and
+ * Change plan, and the section index on Receipts. The decision is now a band
+ * across the frame, under the evidence it decides on, so only the index is left
+ * -- which is what the rail was always good at and the only route tall enough to
+ * need it.
  */
-
 /** The sections a reader might want to reach on Receipts, in page order. */
 const RECEIPT_SECTIONS = [
   { id: "unestablished-title", label: "What is not established" },
@@ -106,57 +98,15 @@ function SectionIndex() {
   );
 }
 
-/** What proceeding accepts, composed from the count rather than asserted. */
-function consequence(model: CockpitViewModel): string {
-  const gaps = model.receipt.statedGaps.length;
-  if (gaps === 0) return "No gaps are stated. Proceeding accepts the review as it stands.";
-  return `Proceeding accepts ${gaps} stated gap${gaps === 1 ? "" : "s"}.`;
-}
 
-export function DecisionRail({ model, route, onRouteChange }: {
-  model: CockpitViewModel;
-  route: CockpitRoute;
-  onRouteChange(route: CockpitRoute): void;
-}) {
-  if (route === "receipts") return <SectionIndex />;
-
-  const gaps = model.receipt.statedGaps;
-  return (
-    <aside className="decision-rail" aria-label="Stated gaps and next action">
-      <div className="rail-group">
-        <p className="eyebrow">Stated gaps, named ({gaps.length})</p>
-        {gaps.length === 0 ? (
-          <ul><li>No gaps are stated for this event.</li></ul>
-        ) : (
-          <ul>
-            {gaps.map((gap) => (
-              <li key={gap.field}>
-                <strong>{gap.field}</strong>
-                <span className="rail-group__reason">{gap.reason}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/*
-        One decision per view, and only Impact has one: proceed with the stated
-        gaps accepted, or stop. Change plan has a single forward move, so it gets
-        a single button; offering a second there made back-navigation look like a
-        choice with consequences.
-      */}
-      <div className="rail-group">
-        <p className="rail-caveat">{consequence(model)}</p>
-        {route === "impact" ? (
-          <>
-            <button className="cta" type="button" onClick={() => onRouteChange("change-plan")}>Continue to change plan</button>
-            <button className="cta cta--secondary" type="button" onClick={() => onRouteChange("receipts")}>Stop, do not edit</button>
-          </>
-        ) : (
-          <button className="cta" type="button" onClick={() => onRouteChange("receipts")}>Review receipts</button>
-        )}
-        <a className="rail-verify" href="https://github.com/workspacejson/datahub-agent/blob/main/JUDGING.md" target="_blank" rel="noopener">Verify this yourself</a>
-      </div>
-    </aside>
-  );
+/**
+ * The rail, which is now exactly the section index.
+ *
+ * It takes no props. The decision card it used to sit above read the model for a
+ * gap count and a route for which buttons to offer; neither is this component's
+ * business any more, and keeping the parameters would leave a signature that
+ * implies it still decides something.
+ */
+export function DecisionRail() {
+  return <SectionIndex />;
 }

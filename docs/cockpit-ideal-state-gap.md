@@ -10,8 +10,8 @@ Gap analysis mapping every claim in the design audit against the actual state of
 
 The audit was written against older screenshots. These recommendations are **already implemented** — all confirmed by reading source:
 
-- **Persistent compact outcome bar** — `OutcomeBar.tsx` renders Source / Lineage / Coverage / Plan / Writeback / Limitations on every route. SHA shortening confirmed at `OutcomeBar.tsx:17` (`/^[0-9a-f]{40}$/i` → `slice(0, 8)`).
-- **Full hero only on Impact** — `CockpitShell.tsx:293-321` gates the silent-zero pair and coverage band to the Impact route.
+- **Persistent standing of the review** — ~~`OutcomeBar.tsx` renders Source / Lineage / Coverage / Plan / Writeback / Limitations on every route.~~ **Superseded by the reduction pass:** the six-cell strip was removed and each fact now appears once, in the band that owns it. Resolution and the pinned revision are on `ResolvedSource` (every route); coverage and the named residuals are in `ScopeStrip`; lineage counts and the writeback are in `ContributionBand`. SHA shortening moved to `format.ts` (`shortRevision`, `/^[0-9a-f]{40}$/i` → `slice(0, 8)`).
+- **Full hero only on Impact** — ~~`CockpitShell.tsx:293-321` gates the silent-zero pair and coverage band to the Impact route.~~ **Superseded:** the hero is now the subject band and renders on every route; the silent zero moved into `ImpactView` below the fold, and the coverage band became `ScopeStrip`, rendered on Impact and Change plan. What is Impact-only is now the contribution band and the plan delta.
 - **Join difference made structural** — `CoordinateSeam` at `ImpactView.tsx:74-94` renders the missing prefix as an explicit `?` slot vs the resolved prefix.
 - **VERIFIED no longer conflicts with coverage** — tier moved into "The tier is a count, not a warrant" (`ReceiptsView.tsx:158+`); no naked VERIFIED.
 - **Parity metadata collapsed** — task/model/digest behind `<details>How this comparison was controlled</details>` (`ChangePlanView.tsx:139-178`).
@@ -106,7 +106,9 @@ Nothing else in the description changed. HAC-154's message lock already used the
   > D7 is therefore a **contract question, not a layout question**. Two honest routes: (a) build the structured comparison using recorded vocabulary — *First planned action / Target / Revision / Reason* — which needs no contract change; or (b) add a real disposition field to the plan-comparison artifact and let the UI render it. Do not simply relabel the rows "Decision" — that is the failure mode this codebase exists to refuse.
 
 - **D8. Full SHAs.**
-  > ⚠️ **The audit has this backwards.** `OutcomeBar.tsx:17` is the *only* surface that truncates, and it truncates correctly. `ProofIndicator.tsx` contains no truncation at all — it renders the full 40-character value inline.
+  > ⚠️ **The audit has this backwards.** ~~`OutcomeBar.tsx:17` is the *only* surface that truncates~~, and it truncates correctly. `ProofIndicator.tsx` contains no truncation at all — it renders the full 40-character value inline.
+  >
+  > **Updated after the reduction pass:** truncation moved into `format.ts` as `shortRevision`, and three surfaces call it (`ResolvedSource`, `ContributionBand`, and `revisionLabel`'s callers). It is one implementation with three call sites rather than one surface, which is what the original finding was actually protecting: the short and long forms cannot drift apart. The full 40-character value still renders in the proof popover and in the joined plan step.
   >
   > The underlying work is still real, but restated: other surfaces currently show the **full 40-char SHA** where they should show `59fa295c` with a copy control and the full value behind disclosure. The machinery exists (`identifierMeta.copyLabel`, `type: "git-commit-sha"`, canonical value in `EvidenceValue.value`).
 
@@ -160,7 +162,7 @@ Nothing else in the description changed. HAC-154's message lock already used the
 | HAC-270 / PR #71 | Land PR | PR **merged** ✅ verified; issue In Progress | Remaining acceptance closed separately: the deployed definition is now read back and reconciled before any write, and the `already exists` swallow is gone. See `reconcileDeployedDefinition` and `test/integration/deployed-definition.test.ts` |
 | HAC-145 golden fixture | Sign off and freeze | In Review | Validate deferred states, freeze |
 | HAC-226 receipt binding | Close | In Progress, due 2026-08-04 | Finish binding; truth boundary for Receipts |
-| HAC-150 repeated eval | Run — no n=1 causal claim | Todo, due 2026-08-03 | Not started; highest-risk slippage |
+| HAC-150 repeated eval | Run — no n=1 causal claim | **Done** ✅ 2026-08-03, `6265f43` (#74) | 10 pairs requested, 10 observed, 0 failures. Exact source revision 10/10 joined and 0/10 DataHub-only; 5 distinct normalized step sequences DataHub-only against 1 joined. Raw outputs, aggregate and digests in `evaluation/hac-150/`, every figure with a verification command in `docs/claims.md`. The cockpit cites it rather than inferring cause from parity |
 | HAC-220 polish | Hierarchy pass | In Progress | Land D3–D15 here; do not open a new design issue |
 | HAC-282 judge discoverability | Finish | In Progress | ✅ **verified**: `scripts/ingest-transfermarkt-corpus.sh` exists and `JUDGING.md` mentions it **zero** times. Add the rebuild path; also fix `scripts/reproduce-hac-152-live.sh` hard-fail message |
 | HAC-228 cold reads | Reinstate as bounded pre-lock gate (2 × 10 min) | Backlog | Re-prioritize; DOM assertions cannot catch status-dominance or VERIFIED misreading |
@@ -183,7 +185,7 @@ Steps 1–2 of the audit's order are done (PR #70, PR #71 merged). Remaining:
 4. **Decide the D10 contract question before building it** — does `evidence-path` get a producer, or get deleted? Cheapest correct answer is derive the label in the view and delete the dead enum member.
 5. Sign off HAC-145; close HAC-226.
 6. **D3, D4, D5, D8, D12, D13, D14, D15** under HAC-220 (hierarchy pass) — none need a contract change, and none conflict with a ruling. D13 absorbs D11's legitimate concern by raising the writeback within the existing section order.
-7. Run HAC-150's repeated paired evaluation. **Highest-risk item on this board:** it is due today, not started, and without it the causal claim the whole cockpit displays rests on n=1 — which the project's own guardrails forbid.
+7. ~~Run HAC-150's repeated paired evaluation.~~ **Done** in `6265f43` (2026-08-03). It was the highest-risk item on this board precisely because the causal claim would otherwise have rested on n=1; the cockpit now cites the ten-pair result instead of inferring cause from parity, and the two are deliberately kept on separate truth conditions. This row stayed marked "not started" for two days after the run, which is its own failure mode: a board asserting that the highest-risk item was skipped reads as a fabricated measurement on every surface that cites it.
 8. Finish HAC-282 (JUDGING.md rebuild path + script error message).
 9. Reinstate and run HAC-228's two bounded cold reads.
 10. Lock HAC-154 video, then HAC-155 submission gate.

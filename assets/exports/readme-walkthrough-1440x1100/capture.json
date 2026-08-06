@@ -1,6 +1,6 @@
 {
   "id": "readme-walkthrough-1440x1100",
-  "capturedFromCommit": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+  "capturedFromCommit": "dcc303c1651073034c258e306a24b0df7e43a2c0",
   "sequence": [
     {
       "name": "open",
@@ -48,13 +48,13 @@
     "width": 1440,
     "height": 1100,
     "format": "gif",
-    "bytes": 281172
+    "bytes": 240228
   },
-  "sha256": "ce2767bb8edd5544a50cc88d6ded4ef879690961bb29cf8e10c84c5e96f08745",
+  "sha256": "60d50fa9a3bf6171406478590a532bd604babc8220e2b4fbafa0b57b9dbe0dec",
   "poster": {
     "id": "readme-walkthrough-1440x1100-poster",
     "path": "assets/exports/readme-walkthrough-1440x1100-poster/readme-walkthrough-1440x1100-poster.png",
-    "sha256": "238078243211c3fd85ba7789ff97c5ebaef1250b9d0957e0dbdf9b10caa20c3d"
+    "sha256": "30a7c9f8ce2d5d39f75d597d9ea39722275f50a9c2e0fc422dc982217e98705a"
   },
   "generationMethod": "npm run build && node scripts/capture-readme-assets.mjs"
 }

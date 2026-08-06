@@ -1,22 +1,22 @@
 {
-  "id": "readme-poster-impact-2560x756",
-  "capturedFromCommit": "4352b6f751f2cda76813f7a73342eb5f302a5379",
+  "id": "readme-poster-impact-2560x642",
+  "capturedFromCommit": "dcc303c1651073034c258e306a24b0df7e43a2c0",
   "route": "/impact",
   "datasetKey": "nested",
   "sourceMode": "committed",
   "cssViewport": {
     "width": 1280,
-    "height": 378
+    "height": 321
   },
   "deviceScaleFactor": 2,
   "export": {
     "width": 2560,
-    "height": 756,
+    "height": 642,
     "format": "png"
   },
   "colorScheme": "dark",
   "clampedToNextElement": true,
-  "sha256": "f7c5061de2d6d120610e5589f8a02c0c0c8ad871ae63e4a8c4a284b24db99c45",
-  "bytes": 318303,
+  "sha256": "1af3345c06832084430c6e6f8a0467bb6c4135c9c9872ae7252d5f7028d4153e",
+  "bytes": 147388,
   "generationMethod": "npm run build && node scripts/capture-readme-assets.mjs"
 }
