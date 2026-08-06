@@ -1323,3 +1323,17 @@ summary { cursor: pointer; padding: var(--sp-3) 0; }
   .lineage-band__head { flex-wrap: wrap; }
   .lineage-band__key { flex: 1 1 100%; }
 }
+
+/* A corpus with no prefix gap. Neutral, not amber and not emerald: nothing here
+   is unsettled and nothing was contributed, the two spellings simply coincide.
+   Colour would assert a state that the sentence already denies. */
+.coordinate--coincident {
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+}
+.coordinate__value {
+  min-width: 0; color: var(--text-body);
+  font-size: var(--fs-sm); line-height: var(--lh-normal);
+}
+.coordinate__value .coordinate__path { display: block; margin-top: var(--sp-2); }

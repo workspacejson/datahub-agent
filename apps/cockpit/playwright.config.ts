@@ -13,6 +13,23 @@ import { defineConfig, devices } from "@playwright/test";
 export const COMMITTED_ORIGIN = "http://127.0.0.1:4174";
 
 /**
+ * The built artifact, served the way Vercel serves it.
+ *
+ * The two origins above are dev servers, and `App.tsx` branches the entire model
+ * selection on `import.meta.env.DEV`: a dev server reads the state harness and
+ * ignores `?dataset=` altogether, while a build reads the dataset key and
+ * chooses the subject from it. Every e2e test therefore exercised a code path
+ * the deployment does not take, and the two states that made a judge's first
+ * frame useless -- `?dataset=root` rendering the one corpus that cannot show the
+ * failure, and an unknown key throwing to a blank page -- were invisible to a
+ * green suite and reproducible only against `vite preview`.
+ *
+ * Scoped to the specs that need it rather than made the default, because it
+ * costs a production build per run.
+ */
+export const BUILT_ORIGIN = "http://127.0.0.1:4185";
+
+/**
  * Three engines, because the fallback is part of the product.
  *
  * The route transition uses the View Transitions API, which Chromium has and
@@ -40,6 +57,13 @@ export default defineConfig({
       command: "COCKPIT_SOURCE_MODE=committed npm run dev -- --host 127.0.0.1 --port 4174",
       port: 4174,
       reuseExistingServer: !process.env.CI,
+    },
+    // The artifact, not a dev server. See BUILT_ORIGIN.
+    {
+      command: "npm run build && npx vite preview --host 127.0.0.1 --port 4185 --outDir dist",
+      port: 4185,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
     },
   ],
 });

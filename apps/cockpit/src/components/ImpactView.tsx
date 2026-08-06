@@ -68,7 +68,33 @@ function ViewSourceLink({ viewSource }: { viewSource: ViewSource }) {
  * appears once, on the row that actually supplies it.
  */
 function CoordinateSeam({ model }: { model: CockpitViewModel }) {
-  if (!model.dbtFilePath || !model.projectPrefix) return null;
+  /*
+    A corpus with no prefix gap states that, rather than rendering nothing.
+
+    `projectPrefix` is `""` when the dbt project sits at the repository root, so
+    the two coordinate systems spell the same file identically and there is no
+    hole to show. Returning null left the sentence above still promising proof of
+    a silent join failure, with no failure beneath it: a reader met a headline
+    and an absence, which reads as the product not working rather than as the
+    join not missing.
+
+    The absence is a result. It is the controlled case that makes the gap case
+    mean something, so it is stated in the same band, in the same terms.
+  */
+  if (!model.dbtFilePath || !model.projectPrefix) {
+    return (
+      <div className="coordinates" aria-label="The same file in two coordinate systems">
+        <div className="coordinate coordinate--coincident">
+          <span className="coordinate__system">Both coordinates</span>
+          <span className="coordinate__value">
+            No prefix gap on this corpus: the dbt project sits at the repository root, so both
+            systems spell the file the same way and the join cannot miss.
+            {model.dbtFilePath && <span className="coordinate__path mono">{model.dbtFilePath}</span>}
+          </span>
+        </div>
+      </div>
+    );
+  }
   const prefix = model.projectPrefix.endsWith("/") ? model.projectPrefix : `${model.projectPrefix}/`;
   return (
     <div className="coordinates" aria-label="The same file in two coordinate systems">
@@ -315,6 +341,7 @@ function SilentZeroCallout({ model }: { model: CockpitViewModel }) {
 
 export function ImpactView({ model }: { model: CockpitViewModel }) {
   const reduce = useReducedMotion();
+  const hasPrefixGap = Boolean(model.dbtFilePath && model.projectPrefix);
 
   return (
     <motion.section
@@ -346,7 +373,18 @@ export function ImpactView({ model }: { model: CockpitViewModel }) {
         register plainer, three lines below the sentence that already made it and
         directly above the seam that exhibits it.
       */}
-      <p className="hero__stakes">DataHub says where data flows; git says where each file lives; <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." /> silently returns nothing. Here is the proof.</p>
+      <p className="hero__stakes">
+        DataHub says where data flows; git says where each file lives;{" "}
+        <TermDefinition term="joining them" definition="Matching the dbt-project-relative path DataHub records against the repository-relative path Git uses. The two coordinate systems name the same file differently." />{" "}
+        silently returns nothing.{" "}
+        {/*
+          The closing clause is a claim about *this* subject, so it is gated on
+          this subject. On a corpus whose paths coincide there is no proof to
+          point at, and the sentence that pointed at one anyway was the reason an
+          empty section read as a broken product.
+        */}
+        {hasPrefixGap ? "Here is the proof." : "Not on this corpus, and the rows below show why."}
+      </p>
       <SilentZeroCallout model={model} />
       <CoordinateSeam model={model} />
       <ResolutionSeam model={model} />

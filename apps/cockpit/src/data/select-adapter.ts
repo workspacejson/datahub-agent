@@ -64,6 +64,40 @@ export const DATASET_OPTIONS: DatasetOption[] = [
   { key: "nested", label: "game_events (Transfermarkt)" },
 ];
 
+/** The subject a judge lands on when the URL does not name a valid one. */
+export const DEFAULT_DATASET_KEY = "nested";
+
+/**
+ * The dataset key a URL is allowed to select, or the default.
+ *
+ * Removing Jaffle Shop from `DATASET_OPTIONS` on 2026-08-02 removed the chrome
+ * and not the route. `readLocation` read `?dataset=` raw while its two siblings,
+ * `route` and `state`, were both parsed through a schema with a fallback, so the
+ * one field with no validation was the one that chose the subject.
+ *
+ * Two states were reachable on the deployed build and on neither dev server:
+ *
+ *   ?dataset=root        rendered `customers`, whose `projectPrefix` is `""`, so
+ *                        the coordinate seam renders nothing and the headline
+ *                        above it still promised proof of a silent join failure.
+ *   ?dataset=<anything>  threw out of `fixtureForKey` with nothing catching it,
+ *                        and the judge got a blank page.
+ *
+ * Both arrive without interaction, from a bookmark or a link predating the
+ * removal, and `writeLocation` rewrote the parameter on every navigation so the
+ * bad key outlived the tab it came in on.
+ *
+ * `root` stays a valid argument to `selectCockpitAdapterByKey` because it is the
+ * corpus `scripts/clean-quickstart-proof.sh` rebuilds and the fixture tests read.
+ * What it stops being is *selectable from a URL*: a link is an offer, and this is
+ * the one subject that cannot demonstrate the product.
+ */
+export function offeredDatasetKey(candidate: string | null | undefined): string {
+  return DATASET_OPTIONS.some((option) => option.key === candidate)
+    ? (candidate as string)
+    : DEFAULT_DATASET_KEY;
+}
+
 /** The fixture for a given dataset key. */
 function fixtureForKey(key: string): unknown {
   const path = key === "root"
