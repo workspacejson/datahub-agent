@@ -130,7 +130,7 @@ describe("the README claims no behavioral co-change the bound event does not car
 
     "DataHub says where data flows; git says what breaks together" claimed
     exactly the capability the receipt disclaims, and it was landed as "git says
-    where each file lives" (see `docs/cockpit-ideal-state-gap.md`). The README
+    where each file lives" (see `docs/internal/cockpit-ideal-state-gap.md`). The README
     then reintroduced the same claim in two different words: a reviewer seeing
     "behavioral coupling", and co-change partners listed among what
     `workspace.json` contributes.

@@ -6,7 +6,9 @@ import { CockpitShell } from "./components/CockpitShell";
 import { NotFoundView } from "./components/NotFoundView";
 import { createAdapter } from "./data/cockpit-adapter";
 import { contractEvent } from "./test/contract-event";
+import { comparison } from "./test/judge-run-bundle";
 import { cockpitRouteSchema } from "./model/cockpit-view-model";
+import { projectComparison } from "./model/project-comparison";
 
 afterEach(cleanup);
 
@@ -469,5 +471,106 @@ describe("progressive disclosure summaries carry semantic labels, not raw identi
     // The expanded panel should contain the full URN
     const panel = document.querySelector(".proof-popover__panel");
     expect(panel?.textContent).toContain("urn:li:dataset:(urn:li:dataPlatform:dbt,duck.dev.game_events,PROD)");
+  });
+});
+
+describe("no plan-comparison surface calls a recorded value a decision", () => {
+  /*
+    Nothing in the contract records a plan's disposition. `PlanDeltaKind` is
+    `added | removed | reordered | constrained | uncertainty-changed`, and there
+    is no approve/reject state anywhere in `plan-comparison.ts`. So the panels
+    promote the first entry of each list and label the comparison by what it
+    observed -- "Without joined evidence", "With joined evidence" -- and never by
+    what anyone concluded. Calling either value a decision would assert a
+    disposition the artifact does not carry, and would put a second source of
+    truth beside the step lists that could contradict them.
+
+    This is a ruling, and it is here because the last place that held it was a
+    code comment on `firstAction` that the reduction pass deleted along with the
+    code it annotated. A comment cannot survive the removal of its subject; an
+    assertion on the rendered output can. A design canvas has proposed the
+    decision word more than once, so the next proposal should fail a test rather
+    than reach a reviewer.
+
+    Scoped to label-shaped elements -- headings, eyebrows, field labels, and the
+    delta `kind`, which is the contract enum rendered verbatim. Values are
+    deliberately excluded: a step, a delta label and a reason are the run's own
+    recorded words, and banning a vocabulary inside them would censor the
+    artifact instead of governing the interface. `.delta__kind` is in scope
+    precisely because a `decision` member added to the contract enum should fail
+    here too.
+  */
+  const DECISION_VOCABULARY = /\b(decisions?|dispositions?|verdicts?|approv(e|ed|al)|reject(ed|ion)?)\b/i;
+
+  /**
+   * Label-shaped text inside the plan-comparison surfaces, with where it came
+   * from. `.plan-delta` renders on Impact as well, so both routes are read.
+   */
+  const LABEL_SELECTOR = [
+    ".plan-delta__heading",
+    ".plan-delta__caption",
+    ".plan-delta__label",
+    ".eyebrow",
+    "h2",
+    "h3",
+    "summary",
+    ".parity-label",
+    ".delta__kind",
+  ].join(", ");
+
+  /**
+   * The shared fixture carries no comparison, so the panels this rule governs
+   * never render from it. Projecting a real bundle through the carrier's own
+   * `projectComparison` puts the plan panels, the parity strip and the delta
+   * list on screen -- which is where the decision word would actually appear.
+   */
+  const comparedModel = () => {
+    const event = contractEvent();
+    return { ...model(), planComparison: projectComparison(comparison(event)) };
+  };
+
+  function comparisonLabels(): Array<[string, string]> {
+    const found: Array<[string, string]> = [];
+    for (const route of ROUTES) {
+      cleanup();
+      render(<CockpitShell model={comparedModel()} route={route} onRouteChange={() => {}} />);
+      // Two scopes, because the delta band is shared and the rest of the route
+      // is not. `.decision-bar` is deliberately outside both: "Decide: apply
+      // this plan, or stop here" asks the reader for an action, which is a
+      // different thing from labelling a recorded value.
+      const scopes = document.querySelectorAll('section[aria-label="Plan comparison"], .plan-delta');
+      for (const scope of Array.from(scopes)) {
+        for (const el of Array.from(scope.querySelectorAll(LABEL_SELECTOR))) {
+          const text = el.textContent ?? "";
+          if (text.trim()) found.push([route, text.trim()]);
+        }
+      }
+    }
+    cleanup();
+    return found;
+  }
+
+  it("finds the comparison labels, so a markup change cannot empty this suite", () => {
+    const labels = comparisonLabels().map(([, text]) => text);
+    // Without this the assertion below passes over an empty list the moment a
+    // class is renamed -- which is exactly how the previous home of this ruling
+    // was lost.
+    expect(labels.length).toBeGreaterThan(5);
+    for (const anchor of ["Without joined evidence", "With joined evidence", "Changed plan"]) {
+      expect(labels, `"${anchor}" is missing, so the scope no longer covers the plan comparison`).toContain(anchor);
+    }
+  });
+
+  it("labels every comparison value by what was recorded, not by a disposition", () => {
+    const offenders = comparisonLabels()
+      .filter(([, text]) => DECISION_VOCABULARY.test(text))
+      .map(([route, text]) => `${route}: "${text.slice(0, 80)}"`);
+    expect(
+      offenders,
+      "A plan-comparison label used decision vocabulary. Nothing in the contract records a plan's " +
+      "disposition, so naming one asserts a claim the artifact does not carry. Use the recorded " +
+      "vocabulary instead -- first planned action, target, revision, reason -- or add a typed " +
+      "planDisposition to the contract first. See docs/cockpit-architecture.md.",
+    ).toEqual([]);
   });
 });
