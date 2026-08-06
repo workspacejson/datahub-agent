@@ -1,5 +1,22 @@
 # Deltas Between Current Codebase and the Audited Ideal State
 
+> **Type:** Internal | **Status:** Superseded, retained as history | **Scope:** One audit, answered
+>
+> **Do not use this document to derive current behavior.** It was written against
+> source at `08b4260` and the reduction pass has since moved or deleted most of
+> what it anchors on: `DecisionRail` lost the CTAs and the one-decision comment to
+> `DecisionBar`, `firstAction` and the "First step changed" label were removed
+> from `ChangePlanView` outright, `provenanceRows` moved, `cockpit.css` grew from
+> 1195 to 1413 lines, and every `ImpactView` line number in Part 2 is stale. The
+> Linear board in Part 3 was already marked "not re-verified" when written.
+>
+> The two rulings this document was the last home for have been moved somewhere
+> that cannot drift: the no-decision-field ruling is now enforced by
+> `apps/cockpit/src/house-copy.test.tsx` and explained in
+> `docs/cockpit-architecture.md`, and D9's grouping constraint and D10's
+> `evidence-path` question are recorded as open questions in the same document.
+> Nothing else here is load-bearing.
+
 Gap analysis mapping every claim in the design audit against the actual state of the repo, ending in an updated execution order.
 
 **Verification status:** every code claim below was checked against source at `08b4260` (PR #72). Line numbers, file paths, fixture values, and PR timestamps are confirmed unless a `⚠️` note says otherwise. Where verification changed the finding, the correction is inline and marked.

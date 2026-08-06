@@ -1,4 +1,44 @@
 <!DOCTYPE html>
+<!--
+  ============================================================================
+  SUPERSEDED. INTERNAL DESIGN HISTORY. AUTHORITATIVE FOR NOTHING.
+  ============================================================================
+
+  This is the HAC-217 cockpit UX exploration canvas, kept as design history.
+  It is a proposal that was partly adopted, partly ruled against, and partly
+  overtaken by the reduction pass. It does not describe the shipped cockpit and
+  must not be used to derive, review, or reverse anything in `apps/cockpit`.
+
+  Where it conflicts with the shipped surface, these are authoritative, in
+  order: the validated event contract (`src/integration/change-impact-event.ts`),
+  the recorded rulings in `docs/cockpit-architecture.md`, and the enforced tests
+  (`apps/cockpit/src/house-copy.test.tsx`, `apps/cockpit/e2e/first-frame.spec.ts`).
+
+  SPECIFIC DISCLAIMER — the co-change language in this file is refused.
+
+  This canvas proposes a band reading "<n> code partners from the committed
+  artifact" (and elsewhere mentions fragility and a risk score). Tally asserts
+  no behavioral co-change and no code partners. The emitted receipt states the
+  opposite in the artifact itself:
+
+      { "field": "partners", "source": "workspacejson", "reason": "indeterminate",
+        "detail": "The artifact resolves the exact source but contains no
+                   behavioral co-change evidence, so no partners are asserted." }
+
+  The producer, `@workspacejson/cli`, deliberately withholds behavioral values;
+  its own changelog records `coChange` and `fragility` as unemitted. A later
+  frame in this same file says so. Read the file as internally inconsistent on
+  this point, and read the disclaimer as the settled side.
+
+  This claim has returned in several wordings and has already produced audit
+  recommendations that would have reversed ratified rulings. If you arrived here
+  from a design review, stop and read `docs/cockpit-architecture.md` first.
+
+  Rendering note: this file has never been standalone-renderable in this
+  repository. `./support.js` and the `_ds/` token stylesheets it links were
+  never committed. It is an archived source, not a runnable canvas.
+  ============================================================================
+-->
 <html>
 <head>
 <meta charset="utf-8">

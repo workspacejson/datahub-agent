@@ -88,15 +88,87 @@ weight. Where they conflict, the earlier entry wins:
    written beside them.
 3. **Route-specific specifications** (HAC-218 for Receipts, HAC-219 and HAC-226
    for writeback).
-4. **Design references and canvases** (`design/cockpit/*.dc.html`). Proposals.
-   Authoritative for nothing on their own.
+4. **Design references and canvases.** Proposals. Authoritative for nothing on
+   their own. The one kept in this repository is
+   `docs/internal/change-impact-cockpit.dc.html`, the HAC-217 exploration,
+   retained as history under a banner that names what in it is refused. The
+   others — `Tally cockpit ideal state.dc.html` and `Screen reduction spec.dc.html`
+   — live on their issues and have never been committed here.
 5. **Issue discussion.** Context for why a decision was taken, not the decision.
 
 A canvas is the most common source of accidental authority here, because it is
 the most finished-looking artifact in the list and the easiest to open. It is a
-proposal. Two of its frames have already been ruled against, and both rulings are
-recorded above rather than only in their issues, so that opening the canvas alone
-cannot reopen a settled question.
+proposal. Three of their frames have now been ruled against, and every ruling is
+recorded in this document rather than only in its issue, so that opening a canvas
+alone cannot reopen a settled question.
+
+The HAC-217 canvas is the sharpest case, and it is why the banner on it is
+specific rather than generic. It proposes a band reading "`<n>` code partners from
+the committed artifact". Tally asserts no behavioral co-change and no code
+partners; the receipt records `partners` as `indeterminate` with the reason
+stated. A generic "this is a proposal" note would not have stopped that frame
+being read as a requirement, because it was not the canvas's status that misled —
+it was one concrete claim inside it that looked like a specification.
+
+## No decision field — ruled and standing
+
+**Ruled 2026-08-04. Re-recorded 2026-08-06 after its previous home was deleted.**
+
+Nothing in the contract records a plan's disposition. `PlanDeltaKind` is
+`added | removed | reordered | constrained | uncertainty-changed`
+(`src/integration/plan-comparison.ts`), and no approve/reject/decide state exists
+anywhere in the plan-comparison artifact.
+
+So the Change plan route promotes the first entry of each plan and labels the
+comparison by what was observed — *Without joined evidence*, *With joined
+evidence*, *Why* — and **never calls either value a decision.** Naming one would
+assert a disposition the artifact does not carry, and would stand a second source
+of truth beside the step lists that could contradict them. A design canvas heads
+each plan panel with a decision word; that frame is refused. If a real
+approve/execute workflow is ever wanted, it wants a typed `planDisposition` with
+invariants tying it to the steps, not a display string.
+
+**Enforced by** `apps/cockpit/src/house-copy.test.tsx` — "no plan-comparison
+surface calls a recorded value a decision". The rule is asserted on rendered
+label-shaped elements: headings, eyebrows, field labels, and the delta `kind`,
+which is the contract enum rendered verbatim, so a `decision` member added to the
+enum fails there too. Recorded step text, delta labels and reasons are
+deliberately out of scope — those are the run's own words, and policing the
+vocabulary inside them would censor the artifact rather than govern the
+interface.
+
+This ruling is recorded here, and enforced there, because its previous home was a
+code comment on `firstAction` in `ChangePlanView.tsx`. The reduction pass removed
+`firstAction`, and the comment went with the code it annotated — leaving the
+ruling alive only in an internal gap document and in agent tooling outside the
+judging corpus. A comment cannot outlive its subject. That is the general lesson:
+a ruling attached to an implementation detail is retired by any refactor that
+touches the detail, so rulings belong in a test, this document, or both.
+
+## Recorded open questions
+
+Neither is a defect and neither has a deadline. They are written down because
+each was raised, deliberately not built, and would otherwise be rediscovered as
+if new.
+
+**Grouping rendered plan deltas.** A proposal to merge the `added` and `removed`
+deltas into a single card is defensible as layout, but merging two
+contract-recorded deltas into one rendered card makes the interface assert a
+relationship — *these two are one change* — that the artifact does not record. If
+it is ever built: union the `evidenceRefs` and keep both recorded `kind`s
+visible, so the grouping reads as presentation rather than as a new claim.
+
+**`evidence-path` has a label and no producer.** `identifierTypeSchema` includes
+`"evidence-path"` and `identifier-types.ts` maps it to "Evidence location", but
+nothing anywhere assigns one. `planDeltaSchema.evidenceRefs` is
+`z.array(z.string().min(1))` — bare strings with no `identifierMeta` slot — so
+`ChangePlanView` renders `evidence.records[0]` literally. Two honest routes:
+extend `evidenceRefs` to carry `identifierMeta`, which is a contract change and
+would give the enum member its first producer; or derive the display label in the
+view and **delete the unused enum member**, which is cheaper and consistent with
+"derived values render, they don't go in the contract". What is not acceptable is
+leaving a contract field that nothing writes, because it renders as an honest
+limitation while being dead weight.
 
 ## Receipts lead order — ruled and standing
 
