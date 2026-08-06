@@ -9,6 +9,8 @@ paragraph of prose.
 
 **Open [tally.workspacejson.dev](https://tally.workspacejson.dev).**
 
+[![The Tally change-impact cockpit on the Impact view. The source under review is marked exact: dbt/models/curated/game_events.sql with the dbt/ prefix highlighted, at pinned revision 59fa295c. At the foot, a naive join reports 0 matches, no error, no warning, exit code 0, above two coordinate rows: the DataHub coordinate reads models/curated/game_events.sql behind a dashed amber unknown-prefix marker, and the repository coordinate reads dbt/models/curated/game_events.sql with the dbt/ prefix in emerald.](assets/exports/readme-walkthrough-1440x1100-poster/readme-walkthrough-1440x1100-poster.png)](https://tally.workspacejson.dev)
+
 The first frame shows a dbt model whose catalog path and repository path differ
 by exactly one prefix. DataHub reports `models/curated/game_events.sql`. The
 repository holds `dbt/models/curated/game_events.sql`. A naive join between
