@@ -380,3 +380,64 @@ describe("the vendored design tokens have not drifted from the application's", (
     }
   });
 });
+
+describe("the judging guide carries exactly one governed image", () => {
+  /*
+    JUDGING.md became an image-bearing surface on 2026-08-06 and nothing checked
+    it. Every governance assertion above reads `README.md` by name, so an
+    unregistered, unapproved image placed here would have rendered to judges with
+    no record, no digest and no approval — the exact hole the registry was built
+    to close, reopened one file to the left.
+
+    The count is pinned at one, and that is a policy rather than an accident of
+    the current layout. This file is a routing document: its job is to get a
+    judge to the right artifact quickly, and every image is scroll paid before
+    reaching a link. The README carries the visual argument. One frame earns its
+    place here because the 60-second path describes a visual trap in prose and
+    the picture does it at a glance; a second would start turning this into a
+    second README. Pinning the count also means the guard cannot go vacuous — a
+    removed image fails here rather than silently emptying the checks below.
+
+    Markdown syntax, not `<img>`, because that is what this file uses. The inner
+    capture of `[![alt](img)](href)` is the image; the link target is not an
+    asset.
+  */
+  const JUDGING = readFileSync(join(repoRoot, "JUDGING.md"), "utf8");
+  const judgingImages: string[] = [...JUDGING.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)].flatMap((m) => m[1] ?? []);
+
+  it("renders exactly one image", () => {
+    expect(judgingImages, `JUDGING.md renders ${judgingImages.length} images: ${judgingImages.join(", ")}`).toHaveLength(1);
+  });
+
+  it.each(judgingImages)("%s exists on disk", (src) => {
+    expect(existsSync(join(repoRoot, src)), `JUDGING.md renders ${src} but it does not exist`).toBe(true);
+  });
+
+  it.each(judgingImages)("%s is registered and approved for github", (src) => {
+    const record = byPath.get(src);
+    expect(record, `JUDGING.md renders ${src} but no manifest record declares it`).toBeDefined();
+    if (!record) return;
+    expect(record.approvalState, `${src} approvalState`).toBe("approved");
+    expect(record.publicUse, `${src} publicUse`).toBe("allowed");
+    expect(record.destinationEligibility.github, `${src} github eligibility`).toBe("approved");
+  });
+
+  it.each(judgingImages)("%s matches its recorded digest", (src) => {
+    const record = byPath.get(src);
+    if (!record) return;
+    const actual = createHash("sha256").update(readFileSync(join(repoRoot, src))).digest("hex");
+    expect(actual, `${src} bytes have changed since registration`).toBe(record.sha256);
+  });
+
+  it("carries alt text describing the frame, not a filename", () => {
+    // An image on an evidence surface with empty or nominal alt text is an
+    // unlabelled claim to anyone reading with a screen reader, and this is the
+    // first thing a judge meets on the 60-second path.
+    const alts = [...JUDGING.matchAll(/!\[([^\]]*)\]\([^)\s]+\)/g)].map((m) => m[1] ?? "");
+    expect(alts).toHaveLength(1);
+    for (const alt of alts) {
+      expect(alt.length, "alt text is too short to describe the frame").toBeGreaterThan(80);
+      expect(alt, "alt text names the coordinate seam the section is about").toContain("dbt/models/curated/game_events.sql");
+    }
+  });
+});
