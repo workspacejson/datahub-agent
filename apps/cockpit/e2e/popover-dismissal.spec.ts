@@ -73,8 +73,18 @@ test("a small scroll keeps the definition open", async ({ page }) => {
   // Small enough that the trigger stays partly on screen. This is the case the
   // "close on any scroll" alternative would have broken, so it is asserted
   // before the close, not after.
+  //
+  // The settle is polled rather than timed. A flat wait made this the one test
+  // in the suite that failed under CPU contention -- the built-artifact server
+  // now runs a production build alongside the run -- because 300ms is a guess
+  // about scheduler latency rather than a statement about the page. Waiting for
+  // the scroll position to stop moving is the condition that was actually meant.
   await page.mouse.wheel(0, 40);
-  await page.waitForTimeout(300);
+  await expect.poll(async () => {
+    const first = await page.evaluate(() => window.scrollY);
+    await page.waitForTimeout(80);
+    return (await page.evaluate(() => window.scrollY)) === first;
+  }, { timeout: 5000 }).toBe(true);
 
   const box = await trigger(page).boundingBox();
   expect(box, "the trigger must still be in view for this case to be the one it claims").not.toBeNull();
