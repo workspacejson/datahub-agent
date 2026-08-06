@@ -48,8 +48,13 @@ anything under a `manual.*` path. The writeback test asserts this.
 
 **Merge semantics:** `upsertStructuredProperties` merges by property URN — it
 does not replace the aspect. Assignments written by other consumers survive.
-`upsertLink` appends; existing links are not removed. See
-[`docs/feedback-evidence.md`](feedback-evidence.md) for the resolver analysis.
+`upsertLink` appends; existing links are not removed. This is read from the
+resolver sources at the pinned GMS `v1.5.0.6`, which is source inspection at one
+tag rather than observed behaviour: it does not establish transaction-level
+safety, and DataHub's own tutorial describes an aspect-level replace instead. See
+[`docs/quickstart.md`](quickstart.md) for the scoped claim and
+[`src/integration/writeback.ts`](../src/integration/writeback.ts) for the note at
+the site.
 
 **After-state observation:** The writeback polls the catalog after each
 mutation to confirm the write landed. `bothStatesRead: true` means both the
@@ -82,17 +87,26 @@ No credentials are stored in committed artifacts. See
 
 ## Contract version and compatibility
 
-The `ChangeImpactEvent` contract is at version **1.3**. All version bumps are
+The `ChangeImpactEvent` contract is at version **1.4**. All version bumps are
 breaking — the version string distinguishes shapes, not a semver compatibility
-promise. `SUPERSEDED_EVENT_VERSIONS` in
-`src/integration/change-impact-event.ts` lists rejected versions.
+promise. Two lists in `src/integration/change-impact-event.ts` decide what a
+reader accepts: `READABLE_EVENT_VERSIONS` is what still validates, and
+`SUPERSEDED_EVENT_VERSIONS` is what no longer does, each with the reason.
 
-| Version | What changed | Migration |
+| Version | What changed | Status |
 |---------|-------------|-----------|
 | 1.0 | Initial | Superseded — re-emit |
 | 1.1 | Added `datahub.lineageObservation` (required) | Superseded — re-emit |
 | 1.2 | Added `provenance.workspaceArtifact.repository`, `.revision`, `.integrity` (required) | Superseded — re-emit |
-| 1.3 | Froze vocabulary: `verified` → `checkExecuted`, `bothStatesRead`, `complete-against-pinned-manifest` / `not-established` | Current |
+| 1.3 | Froze vocabulary: `verified` → `checkExecuted`, `bothStatesRead`, `complete-against-pinned-manifest` / `not-established` | **Readable, not emitted** |
+| 1.4 | Split `queryParameters` into `declaredQueryParameters` (how the expected set was derived) and `executedRead` (the request that produced `observedSetDigest`) | **Current** |
+
+1.3 is the first version to stay readable after its successor shipped, and that
+is deliberate rather than a courtesy. What a 1.3 event lacks is not a field but a
+*distinction* — which of the two things its `queryParameters` described is
+unrecoverable — so it cannot be upgraded in place, and the cockpit renders its
+verification block as legacy metadata rather than promoting it to an executed
+read. See the "Versioning" section of [`docs/evidence.md`](evidence.md).
 
 **No in-place upgrades.** Each breaking change requires re-emission because the
 new field records an observation the old event does not carry. Synthesising a
@@ -124,7 +138,7 @@ through the MCP server: [acryldata/mcp-server-datahub#149](https://github.com/ac
 |-----------|-------|--------|
 | dbt path-normalization adapter | This repo (transferred from `workspacejson/cli`) | Adopted, frozen |
 | Node extraction (`nodes.ts`) | This repo | New work |
-| ChangeImpactEvent contract | This repo | New work, v1.3 |
+| ChangeImpactEvent contract | This repo | New work, v1.4 |
 | Cockpit UI | This repo | New work |
 | `workspace.json` standard | `workspacejson/cli` (upstream) | Consumed at published versions |
 | DataHub MCP server | `acryldata/mcp-server-datahub` (upstream) | Consumed |

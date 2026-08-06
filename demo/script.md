@@ -216,7 +216,10 @@ details.
 
 The working directory for demo production — narration script, scene
 definitions, voice config, generated audio, and rendered video — lives in
-`demo/` at the repo root. It is gitignored and never pushed; judges see
-only the final upload on Devpost / YouTube. The directory shape mirrors
-the production-packet discipline: story order first, evidence-labeled
-runs, captions frozen alongside audio.
+`demo/` at the repo root. Its *source* is tracked, including this file;
+only the generated output is gitignored (`/demo/output/` and
+`/demo/narration/output/`), because that output is large, regenerable from
+the tracked source, and ships to Devpost / YouTube rather than here. The
+directory shape mirrors the production-packet discipline: story order
+first, evidence-labeled runs, captions frozen alongside audio. See
+[`demo/README.md`](README.md) for why internal material is still committed.
