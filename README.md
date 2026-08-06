@@ -249,8 +249,8 @@ Both were open as of the asset review date, 2026-08-04. No claim of upstream acc
 
 1. **Partial completeness claim.** The nested fixture (Transfermarkt) carries `complete-against-pinned-manifest` for both upstreams and downstreams, backed by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still carries `not-established` because no readiness manifest was derived for it. Observed counts are not exhaustiveness claims on their own.
 2. **`externalUrl` dropped at MCP boundary.** DataHub holds a commit-pinned source URL; the official MCP server does not project it for datasets. `code.sourceUrl` is null under MCP. The fix is filed upstream.
-3. **Shallow corpus history.** 92 commits over five years is thin for co-change and fragility evidence. Any such figure is illustrative, not statistical.
-4. **No co-change evidence from the producer.** The workspace.json producer withholds behavioral values by design. The join exercises key membership, not value reading.
+3. **Shallow history in the root corpus.** Jaffle Shop has 92 commits over five years, so any co-change or fragility figure drawn from it would be illustrative rather than statistically strong. Scoped to that corpus.
+4. **Behavioral partners are not asserted.** The pinned producer, `@workspacejson/cli@0.5.0`, does not emit the spec-defined `generated.coChange` evidence, so the submitted artifacts contain no co-change records for Tally to consume — and it does not guess. This is a producer limitation, not a lack-of-history conclusion: Transfermarkt has roughly seven years of history. The join exercises key membership, not value reading.
 5. **Sources point at declaration YAML.** A dbt source's `original_file_path` points at the YAML that declares it, not a model file. Per-source fragility is not separable.
 6. **One subject, one corpus per golden fixture.** The nested corpus is exercised by a perturbation test and the live evidence package, not by the root-level golden fixture.
 7. **The paired evaluation is one task with one model.** HAC-150 is a controlled comparison at temperature 0, not a significance test and not a claim about model families.

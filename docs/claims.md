@@ -220,8 +220,8 @@ finding.
 | -- | -- |
 | No completeness claim | `evaluation/proof-corpus.md`, every event carries `not-established` |
 | `externalUrl` dropped at MCP boundary | `evaluation/mcp-field-coverage.md` |
-| Shallow corpus history (92 commits) | `evaluation/proof-corpus.md` |
-| No co-change evidence from producer | `docs/provenance.md` — producer withholds behavioral values |
+| Shallow *root* corpus history (92 commits, Jaffle Shop only) | `evaluation/proof-corpus.md` |
+| No co-change evidence from producer | `evaluation/proof-corpus.md` — the producer, `@workspacejson/cli@0.5.0`, deliberately withholds behavioral values; its own `CHANGELOG.md` records `coChange` and `fragility` as unemitted |
 | Sources point at declaration YAML | `evaluation/dbt-node-coverage.md` |
 | One subject per golden fixture | `test/fixtures/golden/` — root and nested, one dataset each |
 | Artifact fidelity regeneration | SKIP — requires `WORKSPACEJSON_CORPUS_*` env var pointing at a live checkout; see `test/integration/artifact-fidelity.test.ts:220` |
