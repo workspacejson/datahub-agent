@@ -1,14 +1,70 @@
 # Judging guide
 
-Three paths through the project, each ending at a verified claim rather than a
-paragraph of prose. Every artifact named here is committed and can be inspected
-without running anything.
+Three paths through the project. Each ends at a verified claim rather than a
+paragraph of prose.
 
 ---
 
-## 60 seconds — what is this?
+## 60 seconds — see the trap fire
 
-**Read:** the [README](README.md) top section and the nested golden fixture.
+**Open [tally.workspacejson.dev](https://tally.workspacejson.dev).**
+
+The first frame shows a dbt model whose catalog path and repository path differ
+by exactly one prefix. DataHub reports `models/curated/game_events.sql`. The
+repository holds `dbt/models/curated/game_events.sql`. A naive join between
+them returns zero rows, no error, exit code 0 — and an agent working from that
+join cannot answer "which file do I edit?"
+
+Tally resolves the URN to the exact file at a pinned revision, shows what the
+joined evidence changed about the agent's plan, and names every gap it could
+not close.
+
+The deployed build replays a committed capture. The live DataHub instance is
+how that capture was made, not what the page is talking to — the checksums
+below are what make that verifiable.
+
+---
+
+## What is deliberately not claimed
+
+- **No general completeness claim.** The nested fixture (Transfermarkt) carries
+  `complete-against-pinned-manifest` for both upstreams and downstreams, backed
+  by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still
+  carries `not-established` because no readiness manifest was derived for it.
+  Observed counts are not exhaustiveness claims on their own.
+- **Behavioral partners are not asserted.** The pinned CLI does not yet emit
+  co-change evidence, so Tally has no such records to consume and does not
+  guess. History depth is not the evidenced cause: the limitation is evidence
+  production.
+
+  <details>
+  <summary>Which producer, which field, and the corpus figures</summary>
+
+  `generated.coChange` is defined by `@workspacejson/spec` v0.4 and left
+  unemitted by `@workspacejson/cli@0.5.0`, the producer pinned here — its own
+  changelog records `coChange` and `fragility` as unemitted. The field is
+  therefore absent from every committed workspace artifact, and both golden
+  fixtures carry `partners: []` alongside an `indeterminate` entry naming the
+  cause rather than an empty list a reader could mistake for a finding.
+
+  Corpus depth, for the record: Transfermarkt has roughly seven years of
+  history, first commit 2019-08-04. Jaffle Shop, the root regression corpus, has
+  92 commits over about five years, so a co-change figure drawn from *it* would
+  be illustrative rather than statistically strong. Neither figure is the reason
+  partners are absent.
+  </details>
+- **No `externalUrl` workaround.** The gap is stated, not papered over. The fix
+  is filed upstream.
+- **No credential in any committed artifact.** The live evidence package
+  explicitly redacts secret values and never stores them.
+
+---
+
+## 5 minutes — is the artifact real?
+
+**Read:** the [README](README.md) top section, both golden fixtures, and the
+node-type coverage evaluation. Every artifact named here is committed and can be
+inspected without running anything.
 
 **Corpus split.** Two corpora appear on judge surfaces. Transfermarkt (`dcaribou/transfermarkt-datasets@59fa295c`) is the judge-facing demo subject — it exercises the nested `dbt/` project layout where a naive join silently returns zero rows. Jaffle Shop DuckDB (`dbt-labs/jaffle_shop_duckdb@36bde6cb`) is the regression and proof corpus — it backs the node-coverage audit and the clean-room quickstart. A judge who sees both without being told which is the subject cannot read either.
 
@@ -28,18 +84,14 @@ without running anything.
 5. Check the `unavailable` block: two entries, each stating what is missing and
    why. No empty collection goes unexplained.
 
-**What you have verified in 60 seconds:**
+**What reading the fixture establishes:**
 
 - A dataset URN resolved to a repository-root-relative source path.
 - The evidence tier is mechanically derived from records, not asserted.
 - The writeback was observed, not just attempted.
 - Every absence is stated, never implied.
 
----
-
-## 5 minutes — does the join actually work?
-
-**Read:** the README, the golden fixtures, and the node-type coverage evaluation.
+Then, if you want the join tested rather than inspected:
 
 1. Open the [nested fixture](test/fixtures/golden/change-impact-event.nested.json)
    and the [root-level fixture](test/fixtures/golden/change-impact-event.root.json).
@@ -156,6 +208,9 @@ scripts/ingest-transfermarkt-corpus.sh --build-only            # no DataHub need
 scripts/ingest-transfermarkt-corpus.sh --gms http://localhost:8080   # build, then ingest
 ```
 
+<details>
+<summary>Full rebuild instructions, prerequisites, and verification</summary>
+
 **Prerequisites.** For `--build-only`: Python 3.11 (set `PYTHON311` if it is not
 on `PATH` under that name), `git`, **Node.js** — the lineage derivation and its
 digest check run through `scripts/derive-readiness-manifest.mjs` — and network
@@ -225,9 +280,6 @@ writes against the committed readiness manifests: matching digests mean the
 catalog now holds the topology the fixtures describe. If they differ, the index
 is still settling or the ingest was incomplete — wait and capture again.
 
-<details>
-<summary>The exact comparison, and an automated alternative</summary>
-
 The capture writes `evaluation/hac-248/catalog-baseline-<timestamp>.json`. Find
 the `duck.dev.game_events` entry under `subjects` and check both digests — the
 console line prints only their first 16 characters, so read the file rather than
@@ -261,7 +313,6 @@ contains parentheses and commas the shell would otherwise eat.
 It polls to a deadline and upgrades completeness to
 `complete-against-pinned-manifest` only once the observed and expected sets are
 equal.
-</details>
 
 **What is verified, and what is not.** `--build-only` has been run from a clean
 clone twice — on 2026-08-02 and again on 2026-08-05 — reproducing the counts and
@@ -275,6 +326,8 @@ verification rather than an assumption resting on it. Two builds are also not
 stability: both were on one machine, against upstream repositories that can move
 under their pins in ways a commit SHA does not catch — a deleted release asset,
 a yanked wheel.
+
+</details>
 
 ---
 
@@ -299,38 +352,5 @@ clean-quickstart script to reproduce a Transfermarkt claim rebuilds the wrong
 corpus and quietly proves nothing about the one under inspection.
 
 ---
-
-## What is deliberately not claimed
-
-- **No general completeness claim.** The nested fixture (Transfermarkt) carries
-  `complete-against-pinned-manifest` for both upstreams and downstreams, backed
-  by HAC-231's readiness manifests. The root fixture (Jaffle Shop) still
-  carries `not-established` because no readiness manifest was derived for it.
-  Observed counts are not exhaustiveness claims on their own.
-- **Behavioral partners are not asserted.** The pinned CLI does not yet emit
-  co-change evidence, so Tally has no such records to consume and does not
-  guess. History depth is not the evidenced cause: the limitation is evidence
-  production.
-
-  <details>
-  <summary>Which producer, which field, and the corpus figures</summary>
-
-  `generated.coChange` is defined by `@workspacejson/spec` v0.4 and left
-  unemitted by `@workspacejson/cli@0.5.0`, the producer pinned here — its own
-  changelog records `coChange` and `fragility` as unemitted. The field is
-  therefore absent from every committed workspace artifact, and both golden
-  fixtures carry `partners: []` alongside an `indeterminate` entry naming the
-  cause rather than an empty list a reader could mistake for a finding.
-
-  Corpus depth, for the record: Transfermarkt has roughly seven years of
-  history, first commit 2019-08-04. Jaffle Shop, the root regression corpus, has
-  92 commits over about five years, so a co-change figure drawn from *it* would
-  be illustrative rather than statistically strong. Neither figure is the reason
-  partners are absent.
-  </details>
-- **No `externalUrl` workaround.** The gap is stated, not papered over. The fix
-  is filed upstream.
-- **No credential in any committed artifact.** The live evidence package
-  explicitly redacts secret values and never stores them.
 
 See [`docs/claims.md`](docs/claims.md) for the full claim ledger.
