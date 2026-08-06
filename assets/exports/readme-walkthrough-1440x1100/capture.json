@@ -1,11 +1,11 @@
 {
   "id": "readme-walkthrough-1440x1100",
-  "capturedFromCommit": "dcc303c1651073034c258e306a24b0df7e43a2c0",
+  "capturedFromCommit": "43236f62a1921e9ed16b1d0f02611bc191ea5b56",
   "sequence": [
     {
       "name": "open",
       "seconds": 2,
-      "note": "Impact: the naive join beside the resolved path"
+      "note": "Impact: the subject, the file it resolved to, and the naive join below it"
     },
     {
       "name": "press",
